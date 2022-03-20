@@ -1,0 +1,3 @@
+[submodule "native/scheduler"]
+	path = native/scheduler
+	url = git@github.com:funlessdev/funless-scheduler.git
