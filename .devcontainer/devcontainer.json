@@ -1,0 +1,26 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.224.3/containers/elixir
+{
+	"name": "funless-core",
+	// "image": "TODO",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			// Elixir Version: 1.9, 1.10, 1.10.4, ...
+			"VARIANT": "latest"
+		}
+	},
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"jakebecker.elixir-ls",
+		"eamodio.gitlens",
+		"matklad.rust-analyzer",
+		"serayuzgur.crates"
+	],
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [],
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "mix deps.get",
+	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "funless"
+}
