@@ -27,11 +27,10 @@ defmodule Core do
   ## Examples
 
       iex> Core.hello()
-      :world
+      :ok
 
   """
   def hello do
     IO.puts(Scheduler.add(2, 3))
-    IO.puts(Scheduler.subtract(6, 8))
   end
 end

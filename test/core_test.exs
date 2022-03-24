@@ -20,6 +20,6 @@ defmodule CoreTest do
   doctest Core
 
   test "greets the world" do
-    assert Core.hello() == :world
+    assert Core.hello() == :ok
   end
 end
