@@ -15,30 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-repos:
-- hooks:
-  - id: fix-byte-order-marker
-  - id: check-case-conflict
-  - id: check-merge-conflict
-  - id: check-symlinks
-  - id: check-yaml
-  - id: end-of-file-fixer
-  - id: mixed-line-ending
-  - id: trailing-whitespace
-  repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.1.0
-- hooks:
-  - id: validate_manifest
-  repo: https://github.com/pre-commit/pre-commit
-  rev: v2.17.0
-- hooks:
-  - id: fmt
-  - id: cargo-check
-  repo: https://github.com/doublify/pre-commit-rust
-  rev: v1.0
-- hooks:
-  - id: commitizen
-    stages:
-    - commit-msg
-  repo: https://github.com/commitizen-tools/commitizen
-  rev: v2.21.2
+[tool]
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.0.1"
+tag_format = "$version"
