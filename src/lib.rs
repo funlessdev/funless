@@ -25,7 +25,7 @@ use futures_util::stream::StreamExt;
 
 use bollard::container::{
     Config, CreateContainerOptions, LogOutput, LogsOptions, RemoveContainerOptions,
-    StartContainerOptions, UploadToContainerOptions, WaitContainerOptions,
+    UploadToContainerOptions, WaitContainerOptions,
 };
 use bollard::{Docker, API_DEFAULT_VERSION};
 
@@ -61,8 +61,6 @@ pub async fn setup_container(
     main_file: &str,
     tar_file: &str,
 ) -> Result<(), Error> {
-    get_image(&docker, image_name).await?;
-
     let options = Some(CreateContainerOptions {
         name: container_name,
     });
@@ -90,10 +88,6 @@ pub async fn setup_container(
 
     docker
         .upload_to_container(container_name, upload_options, tar_body.into())
-        .await?;
-
-    docker
-        .start_container(container_name, None::<StartContainerOptions<String>>)
         .await?;
 
     Ok(())
