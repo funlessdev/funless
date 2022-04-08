@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
+mod nif;
 
 use std::fs::File;
 use std::io::Read;
