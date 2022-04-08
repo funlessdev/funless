@@ -1,0 +1,3 @@
+[submodule "native/funless-fn"]
+	path = native/funless-fn
+	url = git@github.com:funlessdev/funless-fn
