@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
+mod nif;
 
 use std::fs::File;
 use std::io::Read;
@@ -129,3 +130,8 @@ pub async fn cleanup_container(docker: &Docker, container_name: &str) -> Result<
         .await?;
     Ok(())
 }
+
+rustler::init!(
+    "Elixir.Fn",
+    [nif::prepare_container, nif::run_function, nif::cleanup]
+);

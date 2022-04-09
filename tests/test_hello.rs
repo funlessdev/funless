@@ -20,7 +20,7 @@ use bollard::{
     errors::Error,
 };
 use bytes::Bytes;
-use funless_fn::{
+use r#fn::{
     cleanup_container, connect_to_docker, container_logs, get_image, setup_container,
     wait_container,
 };
