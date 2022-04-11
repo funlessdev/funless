@@ -15,9 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-use crate::{connect_to_docker, get_image, setup_container};
+use crate::{
+    cleanup_container, connect_to_docker, container_logs, get_image, setup_container,
+    wait_container,
+};
+use bollard::container::StartContainerOptions;
 use futures_util::TryFutureExt;
 use once_cell::sync::Lazy;
+use std::{env, path::Path};
 use tokio::runtime::{Builder, Runtime};
 
 static TOKIO: Lazy<Runtime> = Lazy::new(|| {
@@ -28,10 +33,12 @@ static TOKIO: Lazy<Runtime> = Lazy::new(|| {
 });
 
 #[rustler::nif]
-fn prepare_container() -> i64 {
+fn prepare_container() -> String {
+    let project_path = Path::new(env!("CARGO_MANIFEST_DIR"));
+
     let container_name = "funless-node-container";
     let image_name = "node:lts-alpine";
-    let tar_file = "./hello.tar.gz";
+    let tar_file = project_path.join("js/hello.tar.gz").display().to_string();
     let main_file = "/opt/index.js";
 
     let docker = connect_to_docker("/run/user/1001/docker.sock")
@@ -40,13 +47,45 @@ fn prepare_container() -> i64 {
         setup_container(&docker, &container_name, &image_name, &main_file, &tar_file)
     });
 
-    let _result = TOKIO.block_on(f);
+    let result = TOKIO.block_on(f);
 
-    0
+    match result {
+        Ok(()) => "ok".to_string(),
+        Err(e) => e.to_string(),
+    }
 }
 
 #[rustler::nif]
-fn run_function() {}
+fn run_function() -> String {
+    let container_name = "funless-node-container";
+
+    let docker = connect_to_docker("/run/user/1001/docker.sock")
+        .expect("Failed to connect to docker socket");
+
+    let f = docker
+        .start_container(container_name, None::<StartContainerOptions<String>>)
+        .and_then(|_| wait_container(&docker, &container_name))
+        .and_then(|_| container_logs(&docker, &container_name));
+
+    let logs = TOKIO.block_on(f);
+
+    match logs {
+        Ok(v) => v[0].to_string(),
+        Err(e) => e.to_string(),
+    }
+}
 
 #[rustler::nif]
-fn cleanup() {}
+fn cleanup() -> String {
+    let container_name = "funless-node-container";
+
+    let docker = connect_to_docker("/run/user/1001/docker.sock")
+        .expect("Failed to connect to docker socket");
+
+    let result = TOKIO.block_on(cleanup_container(&docker, container_name));
+
+    match result {
+        Ok(()) => "ok".to_string(),
+        Err(e) => e.to_string(),
+    }
+}
