@@ -24,3 +24,8 @@ funless_worker-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+
+/native/**/Cargo.lock
+/priv/native/*.so
+.elixir_ls/
