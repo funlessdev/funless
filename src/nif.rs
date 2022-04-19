@@ -15,9 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-use crate::{connect_to_docker, get_image, setup_container};
+
+use crate::{
+    atoms::{error, ok},
+    cleanup_container, connect_to_docker, container_logs, get_image, setup_container,
+    wait_container,
+};
+use bollard::container::StartContainerOptions;
 use futures_util::TryFutureExt;
 use once_cell::sync::Lazy;
+use rustler::{Encoder, Env, OwnedEnv};
+use std::{env, path::Path, thread};
 use tokio::runtime::{Builder, Runtime};
 
 static TOKIO: Lazy<Runtime> = Lazy::new(|| {
@@ -28,25 +36,77 @@ static TOKIO: Lazy<Runtime> = Lazy::new(|| {
 });
 
 #[rustler::nif]
-fn prepare_container() -> i64 {
-    let container_name = "funless-node-container";
-    let image_name = "node:lts-alpine";
-    let tar_file = "./hello.tar.gz";
-    let main_file = "/opt/index.js";
+fn prepare_container(
+    env: Env,
+    container_name: String,
+    image_name: String,
+    tar_path: String,
+    main_file: String,
+) {
+    let pid = env.pid();
+    let project_path = Path::new(env!("CARGO_MANIFEST_DIR"));
 
-    let docker = connect_to_docker("/run/user/1001/docker.sock")
-        .expect("Failed to connect to docker socket");
-    let f = get_image(&docker, "node:lts-alpine").and_then(|_| {
-        setup_container(&docker, &container_name, &image_name, &main_file, &tar_file)
+    let tar_file = project_path.join(tar_path).display().to_string();
+
+    thread::spawn(move || {
+        let mut thread_env = OwnedEnv::new();
+        let docker = connect_to_docker("/run/user/1001/docker.sock")
+            .expect("Failed to connect to docker socket");
+        let f = get_image(&docker, "node:lts-alpine").and_then(|_| {
+            setup_container(&docker, &container_name, &image_name, &main_file, &tar_file)
+        });
+
+        let result = TOKIO.block_on(f);
+
+        match result {
+            Ok(()) => thread_env.send_and_clear(&pid, |env| ok().encode(env)),
+            Err(e) => thread_env.send_and_clear(&pid, |env| (error(), e.to_string()).encode(env)),
+        }
     });
-
-    let _result = TOKIO.block_on(f);
-
-    0
 }
 
 #[rustler::nif]
-fn run_function() {}
+fn run_function(env: Env, container_name: String) {
+    let pid = env.pid();
+    // let container_name = "funless-node-container";
+
+    thread::spawn(move || {
+        let mut thread_env = OwnedEnv::new();
+        let docker = connect_to_docker("/run/user/1001/docker.sock")
+            .expect("Failed to connect to docker socket");
+
+        let f = docker
+            .start_container(&container_name, None::<StartContainerOptions<String>>)
+            .and_then(|_| wait_container(&docker, &container_name))
+            .and_then(|_| container_logs(&docker, &container_name));
+
+        let result = TOKIO.block_on(f);
+
+        match result {
+            Ok(v) => {
+                let logs = v.iter().map(|l| l.to_string()).collect::<Vec<String>>();
+                thread_env.send_and_clear(&pid, |env| (ok(), logs).encode(env))
+            }
+            Err(e) => thread_env.send_and_clear(&pid, |env| (error(), e.to_string()).encode(env)),
+        };
+    });
+}
 
 #[rustler::nif]
-fn cleanup() {}
+fn cleanup(env: Env, container_name: String) {
+    let pid = env.pid();
+    // let container_name = "funless-node-container";
+
+    thread::spawn(move || {
+        let mut thread_env = OwnedEnv::new();
+        let docker = connect_to_docker("/run/user/1001/docker.sock")
+            .expect("Failed to connect to docker socket");
+
+        let result = TOKIO.block_on(cleanup_container(&docker, &container_name));
+
+        match result {
+            Ok(()) => thread_env.send_and_clear(&pid, |env| ok().encode(env)),
+            Err(e) => thread_env.send_and_clear(&pid, |env| (error(), e.to_string()).encode(env)),
+        }
+    });
+}

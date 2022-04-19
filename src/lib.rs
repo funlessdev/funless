@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
+mod atoms;
 mod nif;
 
 use std::fs::File;
