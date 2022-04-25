@@ -34,5 +34,8 @@ header:
     - '.gitkeep'
     - '.gitmodules'
     - '**/aliases'
+    - '**/*.exs'
+    - '**/*.ex'
+    - '**/*.lock'
 
   comment: on-failure
