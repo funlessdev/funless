@@ -15,41 +15,29 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# The directory Mix will write compiled artifacts to.
-/_build/
+name: funless-fn CI
 
-# If you run "mix test --cover", coverage assets end up here.
-/cover/
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-# The directory Mix downloads your dependencies sources to.
-/deps/
+env:
+  CARGO_TERM_COLOR: always
 
-# Where third-party dependencies like ExDoc output generated docs.
-/doc/
+jobs:
+  build:
 
-# Ignore .fetch files in case you like to edit your project deps locally.
-/.fetch
+    runs-on: ubuntu-latest
 
-# If the VM crashes, it generates a dump, let's ignore it too.
-erl_crash.dump
-
-# Also ignore archive artifacts (built via "mix archive.build").
-*.ez
-
-# Ignore package tarball (built via "mix hex.build").
-funless_worker-*.tar
-
-# Temporary files, for example, from tests.
-/tmp/
-
-
-.elixir_ls/
-*.beam
-/config/*.secret.exs
-/priv/native/*.so
-
-
-
-/native/**/Cargo.lock
-/target
-Cargo.lock
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check License Header
+      uses: apache/skywalking-eyes@main
+    - name: Build
+      run: cargo build --verbose
+      working-directory: native/fn
+    - name: Run tests
+      run: cargo test --verbose
+      working-directory: native/fn
