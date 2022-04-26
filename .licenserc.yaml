@@ -36,6 +36,7 @@ header:
     - '**/aliases'
     - '**/*.exs'
     - '**/*.ex'
+    - '**/*.eex'
     - '**/*.lock'
 
   comment: on-failure
