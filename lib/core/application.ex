@@ -15,35 +15,25 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Core.MixProject do
-  use Mix.Project
 
-  def project do
-    [
-      app: :core,
-      version: "0.1.0",
-      elixir: "~> 1.13",
-      start_permanent: Mix.env() == :prod,
-      deps: deps()
-    ]
-  end
+defmodule Core.Application do
+  # See https://hexdocs.pm/elixir/Application.html
+  # for more information on OTP Applications
+  @moduledoc false
 
-  # Run "mix help compile.app" to learn about applications.
-  def application do
-    [
-      extra_applications: [:logger],
-      mod: {Core.Application, []}
-    ]
-  end
+  use Application
 
-  # Run "mix help deps" to learn about dependencies.
-  defp deps do
-    [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-      {:rustler, "~> 0.24.0"},
-      {:plug, "~> 1.13"},
-      {:bandit, "~> 0.4.10"},
+  @impl true
+  def start(_type, _args) do
+    children = [
+      # Starts a worker by calling: Core.Worker.start_link(arg)
+      # {Core.Worker, arg}
+       {Bandit, plug: Core.Plug, scheme: :http, options: [port: 4000]}
     ]
+
+    # See https://hexdocs.pm/elixir/Supervisor.html
+    # for other strategies and supported options
+    opts = [strategy: :one_for_one, name: Core.Supervisor]
+    Supervisor.start_link(children, opts)
   end
 end
