@@ -20,7 +20,6 @@ defmodule CoreTest do
 
   describe "when receiving get request" do
     test "then send command message to worker actor" do
-
     end
   end
 end
