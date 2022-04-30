@@ -44,6 +44,7 @@ defmodule Core.MixProject do
       {:rustler, "~> 0.24.0"},
       {:plug, "~> 1.13"},
       {:bandit, "~> 0.4.10"},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
 end

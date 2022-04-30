@@ -28,7 +28,7 @@ defmodule Core.Application do
     children = [
       # Starts a worker by calling: Core.Worker.start_link(arg)
       # {Core.Worker, arg}
-       {Bandit, plug: Core.Plug, scheme: :http, options: [port: 4000]}
+      {Bandit, plug: Core.Plug, scheme: :http, options: [port: 4000]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

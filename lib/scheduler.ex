@@ -16,6 +16,8 @@
 # under the License.
 #
 defmodule Scheduler do
+  @moduledoc "The scheduler todo"
+
   use Rustler, otp_app: :core, crate: :scheduler
 
   def add(_a, _b) do
