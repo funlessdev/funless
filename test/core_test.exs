@@ -16,10 +16,39 @@
 # under the License.
 #
 defmodule CoreTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
+  use Plug.Test
 
-  describe "when receiving get request" do
-    test "then send command message to worker actor" do
+  @opts Core.Router.init([])
+
+  # TODO change it with proper response
+  test "returns 404 with wrong request" do
+    # Create a test connection
+    conn = conn(:get, "/badrequest")
+
+    # Invoke the plug
+    conn = Core.Router.call(conn, @opts)
+
+    # Assert the response and status
+    assert conn.state == :sent
+    assert conn.status == 404
+    assert conn.resp_body == "oops"
+  end
+
+  describe "when receiving invoke request" do
+    test "if _/fn/:name invoke :name on _ namespace" do
+      # Create a test connection
+      conn = conn(:get, "/_/fn/hello")
+
+      # Invoke the plug
+      conn = Core.Router.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 200
+      assert conn.resp_body == "hello invoked"
     end
+
+    # TODO test e.g. with 1 worker available -> invoke chooses that worker.
   end
 end

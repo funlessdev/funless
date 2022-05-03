@@ -16,16 +16,36 @@
 # under the License.
 #
 
-defmodule Core.Plug do
-  @moduledoc "Plug code doc todo"
+defmodule Core.Router do
+  use Plug.Router
 
-  import Plug.Conn
+  plug(Plug.Parsers,
+    parsers: [:urlencoded, {:json, json_decoder: Jason}]
+  )
 
-  def init([]), do: false
+  plug(:match)
+  plug(:dispatch)
 
-  def call(conn, _opts) do
-    conn
-    |> put_resp_content_type("text/plain")
-    |> send_resp(200, "Hello world")
+  # Invoke request on _ ns: GET on _/fn/{func_name}
+  get "/_/fn/:name" do
+    select_worker()
+    # :name invoker on _ ns
+    # |> select 1 worker for name with rust
+    # |> send invoke msg to chosen worker
+    # |> send response of successful invocation
+    send_resp(conn, 200, "#{name} invoked")
+  end
+
+  # Invoke request on custom ns: GET on {ns}/fn/{func_name}
+  get "/:ns/fn/:name" do
+    send_resp(conn, 200, "#{name} invoked from #{ns} namespace")
+  end
+
+  match _ do
+    send_resp(conn, 404, "oops")
+  end
+
+  defp select_worker() do
+    Scheduler.select()
   end
 end
