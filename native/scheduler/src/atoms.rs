@@ -15,23 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
+rustler::atoms! {
+    ok,
+    error
 }
-
-#[derive(NifStruct)]
-struct FnWorker {
-    id: u64,
-}
-
-#[rustler::nif]
-fn select() {}
-// fn evaluate() {}
-// fn allocate() {}
-
-rustler::init!("Elixir.Scheduler", [select]);
