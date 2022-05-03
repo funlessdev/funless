@@ -41,9 +41,10 @@ defmodule Core.MixProject do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-      {:rustler, "~> 0.24.0"},
+      {:rustler, "~> 0.25.0"},
       {:plug, "~> 1.13"},
       {:bandit, "~> 0.4.10"},
+      {:jason, "~> 1.3"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
