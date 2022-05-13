@@ -24,7 +24,7 @@ use crate::{
 use bollard::container::StartContainerOptions;
 use futures_util::TryFutureExt;
 use once_cell::sync::Lazy;
-use rustler::{Encoder, Env, OwnedEnv};
+use rustler::{Encoder, Env, NifStruct, OwnedEnv};
 use std::{env, path::Path, thread};
 use tokio::runtime::{Builder, Runtime};
 
@@ -35,25 +35,34 @@ static TOKIO: Lazy<Runtime> = Lazy::new(|| {
         .expect("Failed to start tokio runtime")
 });
 
-#[rustler::nif]
-fn prepare_container(
-    env: Env,
-    container_name: String,
-    image_name: String,
-    tar_path: String,
+#[derive(NifStruct)]
+#[module = "Worker.Function"]
+struct Function {
+    name: String,
+    image: String,
+    archive: String,
     main_file: String,
-) {
+}
+
+#[rustler::nif]
+fn prepare_container(env: Env, function: Function, container_name: String) {
     let pid = env.pid();
     let project_path = Path::new(env!("CARGO_MANIFEST_DIR"));
 
-    let tar_file = project_path.join(tar_path).display().to_string();
+    let tar_file = project_path.join(function.archive).display().to_string();
 
     thread::spawn(move || {
         let mut thread_env = OwnedEnv::new();
         let docker = connect_to_docker("/run/user/1001/docker.sock")
             .expect("Failed to connect to docker socket");
         let f = get_image(&docker, "node:lts-alpine").and_then(|_| {
-            setup_container(&docker, &container_name, &image_name, &main_file, &tar_file)
+            setup_container(
+                &docker,
+                &container_name,
+                &(function.image),
+                &(function.main_file),
+                &tar_file,
+            )
         });
 
         let result = TOKIO.block_on(f);

@@ -1,99 +1,94 @@
 defmodule Worker.Worker do
+  use GenServer, restart: :permanent
   alias Worker.Fn
 
-  def prepare_container(container_name, image_name, tar_path, main_file) do
-    Fn.prepare_container(container_name, image_name, tar_path, main_file)
+  # Auxiliary functions
+
+  def prepare_container(%{name: function_name, image: image_name, archive: archive_name, main_file: main_file}, from) do
+    container_name = function_name <> "-funless-container"
+    function = %Worker.Function{name: function_name, image: image_name, archive: archive_name, main_file: main_file}
+    Fn.prepare_container(function, container_name)
     receive do
       :ok ->
-        :ok
+        GenServer.call(:updater, {:insert, function_name, container_name})
+        GenServer.reply(from, {:ok, container_name})
+        {:ok, container_name}
       {:error, err} ->
-        IO.puts("Error while preparing container:\n#{err}")
-        :error
+        IO.puts("Error while preparing container for function #{function_name}:\n#{err}")
+        GenServer.reply(from, {:error, err})
+        {:error, err}
     end
   end
 
-  def run_function(container_name) do
+  def run_function(%{name: function_name}, from) do
+    containers = :ets.lookup(:functions_containers, function_name)
+    {:ok, {_, container_name}} = Enum.fetch(containers, 0) #TODO: might crash, handle this without timing out
     Fn.run_function(container_name)
     receive do
       {:ok, logs} ->
         IO.puts("Logs from container:\n#{logs}")
+        GenServer.reply(from, {:ok, logs})
+        {:ok, logs}
       {:error, err} ->
-        IO.puts("Error while running function: #{err}")
-        :error
+        IO.puts("Error while running function #{function_name}: #{err}")
+        GenServer.reply(from, {:error, err})
+        {:error, err}
     end
 
   end
 
-  def cleanup(container_name) do
+  def cleanup(%{name: function_name}, from) do
+    #TODO: differentiate cleanup all containers from cleanup single container
+    containers = :ets.lookup(:functions_containers, function_name)
+    {:ok, {_, container_name}} = Enum.fetch(containers, 0) #TODO: might crash, handle this without timing out
     Fn.cleanup(container_name)
     receive do
       :ok ->
+        GenServer.call(:updater, {:delete, function_name, container_name})
+        GenServer.reply(from, {:ok, container_name})
         :ok
       {:error, err} ->
-        IO.puts("Error while cleaning up container: #{err}")
-        :error
-    end
-  end
-
-  def pipeline(_args) do
-    prepare_container("funless-node-container", "node:lts-alpine", "js/hello.tar.gz", "/opt/index.js")
-    run_function("funless-node-container")
-    cleanup("funless-node-container")
-  end
-
-  def worker(fn_to_containers) do
-    #TODO: get result from spawned subprocesses and forward it to sender
-    #TODO: handle container replicas
-    #TODO: handle automatic removal of containers (scale-to-zero) for inactive functions
-    Process.flag(:trap_exit, true)
-    IO.inspect(fn_to_containers)
-    receive do
-      {:prepare, function_name, image_name, tar_path, main_file, _sender} ->
-        container_name = function_name <> "-funless-container"
-        _subproc_pid = spawn_link(__MODULE__, :prepare_container, [container_name, image_name, tar_path, main_file])
-        worker(Map.put(fn_to_containers, function_name, container_name))
-
-      {:run, function_name, _sender} ->
-        IO.puts("run")
-        container_name = fn_to_containers[function_name]
-        _subproc_pid = spawn_link(__MODULE__, :run_function, [container_name])
-        worker(fn_to_containers)
-
-      {:cleanup, function_name, _sender} ->
-        IO.puts("cleanup")
-        container_name = fn_to_containers[function_name]
-        _subproc_pid = spawn_link(__MODULE__, :cleanup, [container_name])
-        worker(Map.delete(fn_to_containers, function_name))
-
-      {:EXIT, pid, reason} ->
-        #TODO: handle when a prepare_container function exits and remove the related {function,container} tuple from map
-        IO.puts("Received an EXIT message")
-        IO.inspect({:EXIT, pid, reason})
-        worker(fn_to_containers)
-
-      other_messages ->
-        IO.inspect(other_messages)
-        worker(fn_to_containers)
-
+        IO.puts("Error while cleaning up container #{container_name}: #{err}")
+        GenServer.reply(from, {:error, err})
+        {:error, err}
     end
   end
 
 
+  # GenServer behaviour
 
-  def child_spec(args) do
-    %{
-      id: Worker,
-      start: {__MODULE__, :init, [args]},
-      restart: :permanent,
-      type: :worker
-    }
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: :worker)
   end
 
+  @impl true
   def init(_args) do
-    IO.puts("started")
-    pid = spawn_link(__MODULE__, :worker, [%{}])
-    Process.register(pid, :worker)
-    {:ok, pid}
+    # Process.flag(:trap_exit, true)
+    IO.puts("worker running")
+    {:ok, nil}
   end
 
+  @impl true
+  def handle_call({:prepare, function}, from, _state) do
+    spawn(__MODULE__, :prepare_container, [function, from])
+    {:noreply, nil}
+  end
+
+  @impl true
+  def handle_call({:run, function}, from, _state) do
+    spawn(__MODULE__, :run_function, [function, from])
+    {:noreply, nil}
+  end
+
+  @impl true
+  def handle_call({:cleanup, function}, from, _state) do
+    spawn(__MODULE__, :cleanup, [function, from])
+    {:noreply, nil}
+  end
+
+  # def pipeline(_args) do
+  #   prepare_container("funless-node-container", "node:lts-alpine", "js/hello.tar.gz", "/opt/index.js")
+  #   run_function("funless-node-container")
+  #   cleanup("funless-node-container")
+  # end
 end
