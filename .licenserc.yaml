@@ -34,9 +34,9 @@ header:
     - '.gitkeep'
     - '.gitmodules'
     - '**/aliases'
-    - '**/*.exs'
-    - '**/*.ex'
-    - '**/*.eex'
+    - '**/native/fn/.cargo/**'
+    - 'mix.lock'
+    - '.formatter.exs'
     - '**/*.lock'
 
   comment: on-failure
