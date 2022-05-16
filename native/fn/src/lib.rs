@@ -133,6 +133,6 @@ pub async fn cleanup_container(docker: &Docker, container_name: &str) -> Result<
 }
 
 rustler::init!(
-    "Elixir.Fn",
+    "Elixir.Worker.Fn",
     [nif::prepare_container, nif::run_function, nif::cleanup]
 );

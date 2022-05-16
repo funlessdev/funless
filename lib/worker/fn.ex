@@ -16,31 +16,18 @@
 # under the License.
 #
 
-defmodule FunlessWorker.MixProject do
-  use Mix.Project
+defmodule Worker.Fn do
+  use Rustler, otp_app: :worker, crate: :fn
 
-  def project do
-    [
-      app: :worker,
-      version: "0.1.0",
-      elixir: "~> 1.13",
-      start_permanent: Mix.env() == :prod,
-      deps: deps()
-    ]
+  def prepare_container(_function, _container_name) do
+    :erlang.nif_error(:nif_not_loaded)
   end
 
-  # Run "mix help compile.app" to learn about applications.
-  def application do
-    [
-      extra_applications: [:logger],
-      mod: {WorkerApp, []}
-    ]
+  def run_function(_container_name) do
+    :erlang.nif_error(:nif_not_loaded)
   end
 
-  # Run "mix help deps" to learn about dependencies.
-  defp deps do
-    [
-      {:rustler, "~> 0.24.0"}
-    ]
+  def cleanup(_container_name) do
+    :erlang.nif_error(:nif_not_loaded)
   end
 end
