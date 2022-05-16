@@ -38,5 +38,6 @@ header:
     - 'mix.lock'
     - '.formatter.exs'
     - '**/*.lock'
+    - '**/*.eex'
 
   comment: on-failure
