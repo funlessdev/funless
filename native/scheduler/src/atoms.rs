@@ -17,5 +17,5 @@
 //
 rustler::atoms! {
     ok,
-    error
+    error,
 }

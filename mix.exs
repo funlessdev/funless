@@ -45,6 +45,7 @@ defmodule Core.MixProject do
       {:plug, "~> 1.13"},
       {:bandit, "~> 0.4.10"},
       {:jason, "~> 1.3"},
+      # dev deps
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end

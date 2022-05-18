@@ -15,23 +15,42 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
-}
 
-#[derive(NifStruct)]
+mod atoms;
+use rustler::NifStruct;
+
+#[derive(Debug, PartialEq, NifStruct)]
+#[module = "FnWorker"]
 struct FnWorker {
-    id: u64,
+    id: i32,
 }
 
 #[rustler::nif]
-fn select() {}
-// fn evaluate() {}
-// fn allocate() {}
+fn select(workers: Vec<FnWorker>) -> Option<FnWorker> {
+    select_worker(&workers)
+}
 
 rustler::init!("Elixir.Scheduler", [select]);
+
+fn select_worker(workers: &Vec<FnWorker>) -> Option<FnWorker> {
+    (!workers.is_empty()).then(|| FnWorker { id: workers[0].id })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn select_none_when_workers_empty() {
+        let result = select_worker(&vec![]);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn select_first_worker() {
+        let expected = FnWorker { id: 1 };
+        let workers = vec![FnWorker { id: 1 }, FnWorker { id: 2 }];
+        let result = select_worker(&workers);
+        assert_eq!(result, Some(expected));
+    }
+}
