@@ -58,9 +58,8 @@ jobs:
 
     - name: Build Scheduler
       run: cargo build --verbose
-
       working-directory: native/scheduler
-    - name: Run Scheduler tests
 
+    - name: Run Scheduler tests
       run: cargo test --verbose
       working-directory: native/scheduler
