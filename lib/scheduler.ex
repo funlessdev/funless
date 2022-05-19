@@ -16,10 +16,13 @@
 # under the License.
 #
 defmodule Scheduler do
-  @moduledoc "The scheduler todo"
+  @moduledoc "Interface of the rust scheduler module."
 
   use Rustler, otp_app: :core, crate: :scheduler
 
+  @doc """
+  Receives a list of workers (FnWorker struct) and chooses one which can be used for invocation.
+  """
   def select(_arg1) do
     :erlang.nif_error(:nif_not_loaded)
   end

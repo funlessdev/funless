@@ -17,12 +17,34 @@
 #
 
 defmodule FnWorker do
+  @moduledoc """
+  Worker struct to pass to Scheduler. The id field refers to the index in the node list.
+  """
   @enforce_keys [:id]
   defstruct [:id]
 end
 
 defmodule FnApi do
-  def invoke(nodes, ns, name, send_fun) do
+  @moduledoc """
+  Provides functions to deal with requests to and from workers.
+  """
+
+  @doc """
+  Sends an invocation request
+  for the `name` function in the `ns` namespace.
+
+  The request is sent with the given `send_fun` argument
+  to a worker chosen from the given `nodes`, if any.
+
+  ## Parameters
+    - nodes: List of nodes to evaluate to find a suitable worker for the function.
+    - ns: Namespace of the function.
+    - name: Name of the function to invoke.
+    - send_fun: Send function to use to send invocation request to the worker chosen
+      (it should take the worker and the function name as arguments). By default it uses GenServer.call.
+  """
+  @spec invoke(List.t(), String.t(), String.t(), Function.t(Atom.t(), String.t())) :: term()
+  def invoke(nodes, ns, name, send_fun \\ &genserver_call/2) do
     nodes |> select_worker |> send_invocation(send_fun, ns <> name)
   end
 
@@ -48,6 +70,20 @@ defmodule FnApi do
   defp filter_worker(t) do
     if String.contains?(elem(t, 0), "worker"), do: [%FnWorker{id: elem(t, 1)}], else: []
   end
+
+  defp genserver_call(worker, fn_name) do
+    GenServer.call(
+      {:worker, worker},
+      {:prepare,
+       %{
+         # hellojs
+         name: fn_name,
+         image: "node:lts-alpine",
+         main_file: "/opt/index.js",
+         archive: "js/hello.tar.gz"
+       }}
+    )
+  end
 end
 
 defmodule Core.Router do
@@ -62,7 +98,7 @@ defmodule Core.Router do
 
   # Invoke request on _ ns: GET on _/fn/{func_name}
   get "/_/fn/:name" do
-    w = FnApi.invoke(Node.list(), "", "#{name}", &genserver_call/2)
+    w = FnApi.invoke(Node.list(), "", "#{name}")
     reply_to_client(w, conn, name)
   end
 
@@ -79,19 +115,5 @@ defmodule Core.Router do
 
   match _ do
     send_resp(conn, 404, "oops")
-  end
-
-  defp genserver_call(worker, fn_name) do
-    GenServer.call(
-      {:worker, worker},
-      {:prepare,
-       %{
-         # hellojs
-         name: fn_name,
-         image: "node:lts-alpine",
-         main_file: "/opt/index.js",
-         archive: "js/hello.tar.gz"
-       }}
-    )
   end
 end
