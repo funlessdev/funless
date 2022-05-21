@@ -21,11 +21,20 @@ defmodule Worker.Worker do
   alias Worker.Fn
 
   # Auxiliary functions
+  defp get_docker_host() do
+    default = "unix:///var/run/docker.sock"
+    docker_socket = System.get_env("DOCKER_HOST", default)
+    case Regex.run(~r/^((unix|tcp):\/\/)(.*)$/, docker_socket) do
+      nil -> default
+      [host|_] -> host
+    end
+  end
 
   def prepare_container(%{name: function_name, image: image_name, archive: archive_name, main_file: main_file}, from) do
+    docker_host = get_docker_host()
     container_name = function_name <> "-funless-container"
     function = %Worker.Function{name: function_name, image: image_name, archive: archive_name, main_file: main_file}
-    Fn.prepare_container(function, container_name)
+    Fn.prepare_container(function, container_name, docker_host)
     receive do
       :ok ->
         GenServer.call(:updater, {:insert, function_name, container_name})
@@ -38,10 +47,12 @@ defmodule Worker.Worker do
     end
   end
 
+  #TODO: add invoke_function (run + prepare if not present)
   def run_function(%{name: function_name}, from) do
+    docker_host = get_docker_host()
     containers = :ets.lookup(:functions_containers, function_name)
     {:ok, {_, container_name}} = Enum.fetch(containers, 0) #TODO: might crash, handle this without timing out
-    Fn.run_function(container_name)
+    Fn.run_function(container_name, docker_host)
     receive do
       {:ok, logs} ->
         IO.puts("Logs from container:\n#{logs}")
@@ -57,9 +68,10 @@ defmodule Worker.Worker do
 
   def cleanup(%{name: function_name}, from) do
     #TODO: differentiate cleanup all containers from cleanup single container
+    docker_host = get_docker_host()
     containers = :ets.lookup(:functions_containers, function_name)
     {:ok, {_, container_name}} = Enum.fetch(containers, 0) #TODO: might crash, handle this without timing out
-    Fn.cleanup(container_name)
+    Fn.cleanup(container_name, docker_host)
     receive do
       :ok ->
         GenServer.call(:updater, {:delete, function_name, container_name})
