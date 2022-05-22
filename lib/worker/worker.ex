@@ -30,7 +30,7 @@ defmodule Worker.Worker do
     end
   end
 
-  def prepare_container(%{name: function_name, image: image_name, archive: archive_name, main_file: main_file}, from) do
+  def prepare_container(%{name: function_name, image: image_name, archive: archive_name, main_file: main_file}, from, noreply \\ false) do
     docker_host = get_docker_host()
     container_name = function_name <> "-funless-container"
     function = %Worker.Function{name: function_name, image: image_name, archive: archive_name, main_file: main_file}
@@ -38,7 +38,12 @@ defmodule Worker.Worker do
     receive do
       :ok ->
         GenServer.call(:updater, {:insert, function_name, container_name})
-        GenServer.reply(from, {:ok, container_name})
+
+        #prepare_container can also be called as part of the invocation; in this case, we don't need to send a reply after creation (run_function will send it afterwards)
+        if !noreply do
+          GenServer.reply(from, {:ok, container_name})
+        end
+
         {:ok, container_name}
       {:error, err} ->
         IO.puts("Error while preparing container for function #{function_name}:\n#{err}")
@@ -47,38 +52,64 @@ defmodule Worker.Worker do
     end
   end
 
-  #TODO: add invoke_function (run + prepare if not present)
   def run_function(%{name: function_name}, from) do
     docker_host = get_docker_host()
     containers = :ets.lookup(:functions_containers, function_name)
-    {:ok, {_, container_name}} = Enum.fetch(containers, 0) #TODO: might crash, handle this without timing out
-    Fn.run_function(container_name, docker_host)
-    receive do
-      {:ok, logs} ->
-        IO.puts("Logs from container:\n#{logs}")
-        GenServer.reply(from, {:ok, logs})
-        {:ok, logs}
-      {:error, err} ->
-        IO.puts("Error while running function #{function_name}: #{err}")
+    case Enum.fetch(containers, 0) do
+      {:ok, {_, container_name}} ->
+        Fn.run_function(container_name, docker_host)
+        receive do
+          {:ok, logs} ->
+            IO.puts("Logs from container:\n#{logs}")
+            GenServer.reply(from, {:ok, logs})
+            {:ok, logs}
+          {:error, err} ->
+            IO.puts("Error while running function #{function_name}: #{err}")
+            GenServer.reply(from, {:error, err})
+            {:error, err}
+        end
+      :error ->
+        err = "No container found for function #{function_name}"
         GenServer.reply(from, {:error, err})
         {:error, err}
     end
+  end
 
+  def invoke_function(%{name: function_name, image: image_name, archive: archive_name, main_file: main_file}, from) do
+    containers = :ets.lookup(:functions_containers, function_name)
+    function = %Worker.Function{name: function_name, image: image_name, archive: archive_name, main_file: main_file}
+    #TODO: this check is repeated in run_function, might need refactoring
+    case Enum.fetch(containers, 0) do
+      {:ok, {_, _}} ->
+        run_function(function, from)
+      :error ->
+        response = prepare_container(function, from, true)
+        case response do
+          {:ok, _} -> run_function(function, from)
+          {:error, err} -> {:error, err}
+        end
+    end
   end
 
   def cleanup(%{name: function_name}, from) do
     #TODO: differentiate cleanup all containers from cleanup single container
     docker_host = get_docker_host()
     containers = :ets.lookup(:functions_containers, function_name)
-    {:ok, {_, container_name}} = Enum.fetch(containers, 0) #TODO: might crash, handle this without timing out
-    Fn.cleanup(container_name, docker_host)
-    receive do
-      :ok ->
-        GenServer.call(:updater, {:delete, function_name, container_name})
-        GenServer.reply(from, {:ok, container_name})
-        :ok
-      {:error, err} ->
-        IO.puts("Error while cleaning up container #{container_name}: #{err}")
+    case Enum.fetch(containers, 0) do
+      {:ok, {_, container_name}} ->
+        Fn.cleanup(container_name, docker_host)
+        receive do
+          :ok ->
+            GenServer.call(:updater, {:delete, function_name, container_name})
+            GenServer.reply(from, {:ok, container_name})
+            :ok
+          {:error, err} ->
+            IO.puts("Error while cleaning up container #{container_name}: #{err}")
+            GenServer.reply(from, {:error, err})
+            {:error, err}
+        end
+      :error ->
+        err = "No container found for function #{function_name}"
         GenServer.reply(from, {:error, err})
         {:error, err}
     end
@@ -107,6 +138,12 @@ defmodule Worker.Worker do
   @impl true
   def handle_call({:run, function}, from, _state) do
     spawn(__MODULE__, :run_function, [function, from])
+    {:noreply, nil}
+  end
+
+  @impl true
+  def handle_call({:invoke, function}, from, _state) do
+    spawn(__MODULE__, :invoke_function, [function, from])
     {:noreply, nil}
   end
 
