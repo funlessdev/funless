@@ -40,7 +40,8 @@ defmodule FunlessWorker.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rustler, "~> 0.24.0"}
+      {:rustler, "~> 0.24.0"},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
 end
