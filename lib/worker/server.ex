@@ -56,5 +56,4 @@ defmodule Worker.Server do
     spawn(Worker.Worker, :cleanup, [function, from])
     {:noreply, nil}
   end
-
 end

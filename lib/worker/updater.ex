@@ -17,6 +17,9 @@
 #
 
 defmodule Worker.Updater do
+  @moduledoc """
+
+  """
   use GenServer, restart: :permanent
 
   def start_link(args) do
@@ -42,5 +45,4 @@ defmodule Worker.Updater do
     :ets.delete_object(table, {function_name, container_name})
     {:reply, :ok, table}
   end
-
 end
