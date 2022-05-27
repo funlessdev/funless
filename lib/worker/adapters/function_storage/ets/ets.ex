@@ -16,33 +16,36 @@
 # under the License.
 #
 
-defmodule Worker.Updater do
+defmodule Worker.Adapters.FunctionStorage.ETS do
   @moduledoc """
-
+  ETS adapter for storage of {function, container} tuples.
   """
-  use GenServer, restart: :permanent
+  @behaviour Worker.Domain.Ports.FunctionStorage
 
-  def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: :updater)
+  @impl true
+  def get_function_containers(function_name) do
+    containers = :ets.lookup(:functions_containers, function_name)
+
+    case containers do
+      [] ->
+        {:error, "no container found for #{function_name}"}
+
+      tuples when is_list(tuples) ->
+        t =
+          tuples
+          |> Enum.map(fn {_f, c} -> c end)
+
+        {:ok, {function_name, t}}
+    end
   end
 
   @impl true
-  def init(_args) do
-    # TODO: table needs to be repopulated after a crash => how do we check underlying docker for function->container associations?
-    table = :ets.new(:functions_containers, [:named_table, :protected])
-    IO.puts("updater running")
-    {:ok, table}
+  def insert_function_container(function_name, container_name) do
+    GenServer.call(:write_server, {:insert, function_name, container_name})
   end
 
   @impl true
-  def handle_call({:insert, function_name, container_name}, _from, table) do
-    :ets.insert(table, {function_name, container_name})
-    {:reply, {:ok, container_name}, table}
-  end
-
-  @impl true
-  def handle_call({:delete, function_name, container_name}, _from, table) do
-    :ets.delete_object(table, {function_name, container_name})
-    {:reply, :ok, table}
+  def delete_function_container(function_name, container_name) do
+    GenServer.call(:write_server, {:delete, function_name, container_name})
   end
 end

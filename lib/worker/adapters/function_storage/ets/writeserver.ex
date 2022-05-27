@@ -16,44 +16,33 @@
 # under the License.
 #
 
-defmodule Worker.Server do
+defmodule Worker.Adapters.FunctionStorage.ETS.WriteServer do
   @moduledoc """
-    Implements GenServer behaviour; the actor exposes Worker.Worker functions to other processes and nodes. No auxiliary functions are defined in this module.
+
   """
   use GenServer, restart: :permanent
 
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: :worker)
+    GenServer.start_link(__MODULE__, args, name: :write_server)
   end
 
   @impl true
   def init(_args) do
-    # Process.flag(:trap_exit, true)
-    IO.puts("worker running")
-    {:ok, nil}
+    # TODO: table needs to be repopulated after a crash => how do we check underlying docker for function->container associations?
+    table = :ets.new(:functions_containers, [:named_table, :protected])
+    IO.puts("FunctionStorage server running")
+    {:ok, table}
   end
 
   @impl true
-  def handle_call({:prepare, function}, from, _state) do
-    spawn(Worker.Worker, :prepare_container, [function, from])
-    {:noreply, nil}
+  def handle_call({:insert, function_name, container_name}, _from, table) do
+    :ets.insert(table, {function_name, container_name})
+    {:reply, {:ok, {function_name, container_name}}, table}
   end
 
   @impl true
-  def handle_call({:run, function}, from, _state) do
-    spawn(Worker.Worker, :run_function, [function, from])
-    {:noreply, nil}
-  end
-
-  @impl true
-  def handle_call({:invoke, function}, from, _state) do
-    spawn(Worker.Worker, :invoke_function, [function, from])
-    {:noreply, nil}
-  end
-
-  @impl true
-  def handle_call({:cleanup, function}, from, _state) do
-    spawn(Worker.Worker, :cleanup, [function, from])
-    {:noreply, nil}
+  def handle_call({:delete, function_name, container_name}, _from, table) do
+    :ets.delete_object(table, {function_name, container_name})
+    {:reply, {:ok, {function_name, container_name}}, table}
   end
 end

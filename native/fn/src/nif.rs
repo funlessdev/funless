@@ -36,7 +36,7 @@ static TOKIO: Lazy<Runtime> = Lazy::new(|| {
 });
 
 #[derive(NifStruct)]
-#[module = "Worker.Function"]
+#[module = "Worker.Domain.Function"]
 struct Function {
     name: String,
     image: String,

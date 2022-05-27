@@ -16,7 +16,7 @@
 # under the License.
 #
 
-defmodule Worker.Fn do
+defmodule Worker.Nif.Fn do
   @moduledoc "Interface of the Rust Worker functions"
   use Rustler, otp_app: :worker, crate: :fn
 
@@ -27,13 +27,6 @@ defmodule Worker.Fn do
       - _function: Worker.Function struct, containing function information
       - _container_name: name of the container that will be created
       - _docker_host: path of the docker socket in the current system
-
-
-    ## Example
-
-    Fn.prepare_container(%Worker.Function{name: "hellojs", image: "node:lts-alpine", archive: "js/hello.tar.gz", main_file: "/opt/index.js"},
-          "hello-container",
-          "/var/run/docker.sock")
   """
   def prepare_container(_function, _container_name, _docker_host) do
     :erlang.nif_error(:nif_not_loaded)

@@ -16,32 +16,20 @@
 # under the License.
 #
 
-defmodule FunlessWorker.MixProject do
-  use Mix.Project
+defmodule Worker.Application do
+  @moduledoc false
+  alias Worker.Adapters
+  use Application
 
-  def project do
-    [
-      app: :worker,
-      version: "0.1.0",
-      elixir: "~> 1.13",
-      start_permanent: Mix.env() == :prod,
-      deps: deps()
-    ]
-  end
+  # TODO: test GenServer.call({:worker, :"worker@127.0.0.1"}, {:invoke,
+  # %{name: "hellojs", image: "node:lts-alpine", main_file: "/opt/index.js", archive: "js/hello.tar.gz"}})
 
-  # Run "mix help compile.app" to learn about applications.
-  def application do
-    [
-      extra_applications: [:logger],
-      mod: {Worker.Application, []}
+  def start(_type, _args) do
+    children = [
+      {Adapters.FunctionStorage.ETS.WriteServer, []},
+      {Adapters.Requests.Cluster.Server, []}
     ]
-  end
 
-  # Run "mix help deps" to learn about dependencies.
-  defp deps do
-    [
-      {:rustler, "~> 0.24.0"},
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
-    ]
+    Supervisor.start_link(children, strategy: :rest_for_one)
   end
 end

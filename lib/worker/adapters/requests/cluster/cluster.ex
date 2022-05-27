@@ -15,14 +15,33 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Worker.Adapters.Requests.Cluster do
+  @moduledoc """
 
-defmodule WorkerApp do
-  @moduledoc false
+  """
+  alias Worker.Domain.Api
 
-  use Application
+  def prepare(function, from) do
+    result = Api.prepare_container(function)
+    GenServer.reply(from, result)
+  end
 
-  def start(_type, _args) do
-    children = [{Worker.Updater, []}, {Worker.Server, []}]
-    Supervisor.start_link(children, strategy: :rest_for_one)
+  def invoke(function, from) do
+    result =
+      if Api.function_has_container?(function) do
+        Api.run_function(function)
+      else
+        case Api.prepare_container(function) do
+          {:ok, _} -> Api.run_function(function)
+          {:error, err} -> {:error, err}
+        end
+      end
+
+    GenServer.reply(from, result)
+  end
+
+  def cleanup(function, from) do
+    result = Api.cleanup(function)
+    GenServer.reply(from, result)
   end
 end
