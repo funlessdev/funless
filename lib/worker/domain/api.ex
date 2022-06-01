@@ -115,16 +115,21 @@ defmodule Worker.Domain.Api do
 
     containers = FunctionStorage.get_function_containers(function_name)
 
-    result = case containers do
-      {:ok, {_, [container_name | _]}} ->
-        Containers.cleanup(function, container_name)
-      {:error, err} ->
-        {:error, err}
-    end
+    result =
+      case containers do
+        {:ok, {_, [container_name | _]}} ->
+          Containers.cleanup(function, container_name)
+
+        {:error, err} ->
+          {:error, err}
+      end
 
     case result do
-      {:ok, container_name} -> FunctionStorage.delete_function_container(function_name, container_name)
-      _ -> nil
+      {:ok, container_name} ->
+        FunctionStorage.delete_function_container(function_name, container_name)
+
+      _ ->
+        nil
     end
 
     result
