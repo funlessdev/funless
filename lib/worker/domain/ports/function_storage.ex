@@ -30,8 +30,8 @@ defmodule Worker.Domain.Ports.FunctionStorage do
   @callback delete_function_container(function_name, container_name) ::
               {:ok, {function_name, container_name}} | {:error, any}
 
-  # TODO: add dynamic adapter based on env
-  @adapter Worker.Adapters.FunctionStorage.ETS
+  @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
+
   defdelegate get_function_containers(function_name), to: @adapter
   defdelegate insert_function_container(function_name, container_name), to: @adapter
   defdelegate delete_function_container(function_name, container_name), to: @adapter

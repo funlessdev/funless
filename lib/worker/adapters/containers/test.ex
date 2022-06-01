@@ -16,23 +16,24 @@
 # under the License.
 #
 
-defmodule Worker.Domain.Ports.Containers do
+defmodule Worker.Adapters.Containers.Test do
   @moduledoc """
-  Port for container manipulation.
+
   """
-  @type worker_function :: Worker.Domain.Function.t()
-  @type container_name :: String.t()
+  @behaviour Worker.Domain.Ports.Containers
 
-  @callback prepare_container(worker_function, container_name) ::
-              {:ok, container_name} | {:error, any}
-  @callback run_function(worker_function, container_name) ::
-              {:ok, any} | {:error, any}
-  @callback cleanup(worker_function, container_name) ::
-              {:ok, container_name} | {:error, any}
+  @impl true
+  def prepare_container(_worker_function, _container_name) do
+    {:ok, "hello-container"}
+  end
 
-  @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
+  @impl true
+  def run_function(_worker_function, _container_name) do
+    {:ok, "output"}
+  end
 
-  defdelegate prepare_container(worker_function, container_name), to: @adapter
-  defdelegate run_function(worker_function, container_name), to: @adapter
-  defdelegate cleanup(worker_function, container_name), to: @adapter
+  @impl true
+  def cleanup(_worker_function, container_name) do
+    {:ok, container_name}
+  end
 end

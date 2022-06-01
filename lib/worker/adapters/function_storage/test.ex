@@ -16,11 +16,24 @@
 # under the License.
 #
 
-defmodule FunlessWorkerTest do
-  use ExUnit.Case
-  doctest FunlessWorker
+defmodule Worker.Adapters.FunctionStorage.Test do
+  @moduledoc """
+  ETS adapter for storage of {function, container} tuples.
+  """
+  @behaviour Worker.Domain.Ports.FunctionStorage
 
-  test "greets the world" do
-    assert FunlessWorker.hello() == :world
+  @impl true
+  def get_function_containers(function_name) do
+    {:ok, {function_name, ["container1", "container2"]}}
+  end
+
+  @impl true
+  def insert_function_container(function_name, container_name) do
+    {:ok, {function_name, container_name}}
+  end
+
+  @impl true
+  def delete_function_container(function_name, container_name) do
+    {:ok, {function_name, container_name}}
   end
 end
