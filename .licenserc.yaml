@@ -39,5 +39,6 @@ header:
     - '.formatter.exs'
     - '**/*.lock'
     - '**/*.eex'
+    - 'docs/**'
 
   comment: on-failure
