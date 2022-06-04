@@ -1,3 +1,4 @@
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,49 +16,33 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Core CI
+name: Container
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  build:
-
-    name: Check and Test
+  docker:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Check License Header 
-      uses: apache/skywalking-eyes@main
-
-    - name: Setup elixir
-      uses: erlef/setup-beam@v1
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
       with:
-        elixir-version: 1.13
-        otp-version: 24.0
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Install Dependencies
-      run: mix deps.get
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-    - name: Check formatting
-      run: mix format --check-formatted
-
-    - name: Run Mix Credo
-      run: mix credo --strict
-
-    - name: Run Elixir Tests
-      run: mix test
-
-    - name: Build Scheduler
-      run: cargo build --verbose
-      working-directory: native/scheduler
-
-    - name: Run Scheduler tests
-      run: cargo test --verbose
-      working-directory: native/scheduler
+    - name: Build and push Docker images
+      uses: docker/build-push-action@v3.0.0
+      with:
+        context: .
+        push: true
+        tags: ghcr.io/funlessdev/fl-core:latest
