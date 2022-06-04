@@ -56,10 +56,10 @@ jobs:
     - name: Run Elixir Tests
       run: mix test
 
-    - name: Build Scheduler
+    - name: Build Worker
       run: cargo build --verbose
       working-directory: native/fn
 
-    - name: Run Scheduler tests
+    - name: Run Worker tests
       run: cargo test --verbose
       working-directory: native/fn
