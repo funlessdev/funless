@@ -31,8 +31,6 @@ defmodule Worker.Adapters.FunctionStorage.ETS.WriteServer do
 
   @impl true
   def init(_args) do
-    # TODO: table needs to be repopulated after a crash =>
-    # how do we check underlying docker for {function, container} associations?
     table = :ets.new(:functions_containers, [:named_table, :protected])
     IO.puts("FunctionStorage server running")
     {:ok, table}

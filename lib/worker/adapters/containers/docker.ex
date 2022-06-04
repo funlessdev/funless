@@ -23,7 +23,6 @@ defmodule Worker.Adapters.Containers.Docker do
   @behaviour Worker.Domain.Ports.Containers
   alias Worker.Nif.Fn
 
-  # TODO: check at compile/deployment time, checking at runtime is slow
   @doc """
     Checks the DOCKER_HOST environment variable for the docker socket path. If an incorrect path is found, the default is used instead.
 

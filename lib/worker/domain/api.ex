@@ -125,7 +125,6 @@ defmodule Worker.Domain.Api do
     end
   end
 
-  # TODO: differentiate cleanup all containers from cleanup single container
   @doc """
     Removes the first container associated with the given function.
 
