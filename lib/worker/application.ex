@@ -21,9 +21,6 @@ defmodule Worker.Application do
   alias Worker.Adapters
   use Application
 
-  # TODO: test GenServer.call({:worker, :"worker@127.0.0.1"}, {:invoke,
-  # %{name: "hellojs", image: "node:lts-alpine", main_file: "/opt/index.js", archive: "js/hello.tar.gz"}})
-
   def start(_type, _args) do
     children = [
       {Adapters.FunctionStorage.ETS.WriteServer, []},

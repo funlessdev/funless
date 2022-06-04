@@ -17,9 +17,7 @@
 #
 
 defmodule Worker.Adapters.Containers.Test do
-  @moduledoc """
-
-  """
+  @moduledoc false
   @behaviour Worker.Domain.Ports.Containers
 
   @impl true

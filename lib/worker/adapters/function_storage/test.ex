@@ -17,9 +17,7 @@
 #
 
 defmodule Worker.Adapters.FunctionStorage.Test do
-  @moduledoc """
-  ETS adapter for storage of {function, container} tuples.
-  """
+  @moduledoc false
   @behaviour Worker.Domain.Ports.FunctionStorage
 
   @impl true

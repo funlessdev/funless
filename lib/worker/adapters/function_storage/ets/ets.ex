@@ -22,6 +22,15 @@ defmodule Worker.Adapters.FunctionStorage.ETS do
   """
   @behaviour Worker.Domain.Ports.FunctionStorage
 
+  @doc """
+    Returns a list of containers associated with the given `function_name`.
+
+    Returns {:ok, {function_name, [list of containers]}} if at least a container is found;
+    returns {:error, err} if no value is associated to the `function_name` key in the ETS table.
+
+    ## Parameters
+      - function_name: name of the function, used as key in the ETS table entries
+  """
   @impl true
   def get_function_containers(function_name) do
     containers = :ets.lookup(:functions_containers, function_name)
@@ -39,11 +48,31 @@ defmodule Worker.Adapters.FunctionStorage.ETS do
     end
   end
 
+  @doc """
+    Inserts the  {`function_name`, `container_name`} couple in the ETS table.
+    Calls the :write_server process to alter the table, does not modify it directly.
+
+    Returns {:ok, {function_name, container_name}}.
+
+    ## Parameters
+      - function_name: name of the function, used as key in the ETS table entries
+      - container_name: name of the associated container
+  """
   @impl true
   def insert_function_container(function_name, container_name) do
     GenServer.call(:write_server, {:insert, function_name, container_name})
   end
 
+  @doc """
+    Removes the  {`function_name`, `container_name`} couple from the ETS table.
+    Calls the :write_server process to alter the table, does not modify it directly.
+
+    Returns {:ok, {function_name, container_name}}.
+
+    ## Parameters
+      - function_name: name of the function, used as key in the ETS table entries
+      - container_name: name of the associated container
+  """
   @impl true
   def delete_function_container(function_name, container_name) do
     GenServer.call(:write_server, {:delete, function_name, container_name})

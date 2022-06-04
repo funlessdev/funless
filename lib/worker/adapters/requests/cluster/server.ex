@@ -19,6 +19,7 @@
 defmodule Worker.Adapters.Requests.Cluster.Server do
   @moduledoc """
     Implements GenServer behaviour; the actor exposes Requests.Cluster functions to other processes and nodes. No auxiliary functions are defined in this module.
+    All calls return immediately without replying, delegating the required work to Requests.Cluster functions.
   """
   use GenServer, restart: :permanent
   alias Worker.Adapters.Requests.Cluster

@@ -23,10 +23,10 @@ defmodule Worker.Domain.Function do
     ## Fields
       - name: function name
       - image: base Docker image for the function's container
-      - archive: tarball containing the function's code, will be copied into container
+      - archive: path of the tarball containing the function's code, will be copied into container
       - main_file: path of the function's main file inside the container
   """
-  @enforce_keys [:name, :image, :archive]
+  @enforce_keys [:name, :image, :archive, :main_file]
   defstruct [:name, :image, :archive, :main_file]
 end
 
@@ -37,6 +37,14 @@ defmodule Worker.Domain.Api do
   alias Worker.Domain.Ports.Containers
   alias Worker.Domain.Ports.FunctionStorage
 
+  @doc """
+    Checks if the function with the given `function_name` has an associated container in the underlying function storage.
+
+    Returns true if containers are found, false otherwise.
+
+    ## Parameters
+      - %{name: function_name}: generic struct with a `name` field, containing the function name
+  """
   @spec function_has_container?(Struct.t()) :: Boolean.t()
   def function_has_container?(%{
         name: function_name
@@ -47,6 +55,14 @@ defmodule Worker.Domain.Api do
     end
   end
 
+  @doc """
+    Creates a container for the given function; in case of successful creation, the {function, container} couple is inserted in the function storage.
+
+    Returns {:ok, container_name} if the container is created, otherwise forwards {:error, err} from the Containers implementation.
+
+    ## Parameters
+      - %{...}: generic struct with all the fields required by Worker.Domain.Function
+  """
   @spec prepare_container(Struct.t()) :: {:ok, String.t()} | {:error, any}
   def prepare_container(%{
         name: function_name,
@@ -73,6 +89,17 @@ defmodule Worker.Domain.Api do
     result
   end
 
+  @doc """
+    Runs the given function if an associated container exists, using the FunctionStorage and Containers callbacks.
+
+    Returns {:ok, result} if a container exists and the function runs successfully;
+    returns {:error, {:nocontainer, err}} if no container is found;
+    returns {:error, err} if a container is found, but an error is encountered when running the function.
+
+
+    ## Parameters
+      - %{...}: generic struct with all the fields required by Worker.Domain.Function
+  """
   @spec run_function(Struct.t()) :: {:ok, any} | {:error, any}
   def run_function(%{
         name: function_name,
@@ -99,6 +126,15 @@ defmodule Worker.Domain.Api do
   end
 
   # TODO: differentiate cleanup all containers from cleanup single container
+  @doc """
+    Removes the first container associated with the given function.
+
+    Returns {:ok, container_name} if the cleanup is successful;
+    returns {:error, err} if any error is encountered (both while removing the container and when searching for it).
+
+    ## Parameters
+      - %{...}: generic struct with all the fields required by Worker.Domain.Function
+  """
   @spec cleanup(Struct.t()) :: {:ok, String.t()} | {:error, any}
   def cleanup(%{
         name: function_name,

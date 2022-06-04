@@ -17,15 +17,31 @@
 #
 defmodule Worker.Adapters.Requests.Cluster do
   @moduledoc """
-
+  Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
   alias Worker.Domain.Api
 
+  @doc """
+    Creates a container for the given `function`, using the underlying Api.prepare_container(). The result is forwarded to the original sender.
+
+    ## Parameters
+      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.Function
+      - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
+  """
   def prepare(function, from) do
     result = Api.prepare_container(function)
     GenServer.reply(from, result)
   end
 
+  @doc """
+    Runs the given `function` using the underlying Api.run_function(), if an associated container exists;
+    if no container is found, creates the required container and runs the function.
+    Any error encountered by the API calls is forwarded to the sender.
+
+    ## Parameters
+      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.Function
+      - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
+  """
   def invoke(function, from) do
     result =
       if Api.function_has_container?(function) do
@@ -40,6 +56,13 @@ defmodule Worker.Adapters.Requests.Cluster do
     GenServer.reply(from, result)
   end
 
+  @doc """
+    Deletes the first container wrapping `function`, calling the underlying Api.cleanup(). The result is forwarded to the original sender.
+
+    ## Parameters
+      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.Function
+      - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
+  """
   def cleanup(function, from) do
     result = Api.cleanup(function)
     GenServer.reply(from, result)

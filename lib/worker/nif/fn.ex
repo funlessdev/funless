@@ -24,7 +24,7 @@ defmodule Worker.Nif.Fn do
     Creates the `_container_name` container, with information taken from `_function`.
 
     ## Parameters
-      - _function: Worker.Function struct, containing function information
+      - _function: Worker.Domain.Function struct, containing function information
       - _container_name: name of the container that will be created
       - _docker_host: path of the docker socket in the current system
   """
