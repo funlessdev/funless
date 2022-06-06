@@ -16,11 +16,22 @@
 # under the License.
 #
 
-defmodule WorkerApp do
-  use Application
+defmodule Worker.Adapters.FunctionStorage.Test do
+  @moduledoc false
+  @behaviour Worker.Domain.Ports.FunctionStorage
 
-  def start(_type, _args) do
-    children = [{Worker.Updater, []}, {Worker.Worker, []}]
-    Supervisor.start_link(children, strategy: :rest_for_one)
+  @impl true
+  def get_function_containers(function_name) do
+    {:ok, {function_name, ["container1", "container2"]}}
+  end
+
+  @impl true
+  def insert_function_container(function_name, container_name) do
+    {:ok, {function_name, container_name}}
+  end
+
+  @impl true
+  def delete_function_container(function_name, container_name) do
+    {:ok, {function_name, container_name}}
   end
 end

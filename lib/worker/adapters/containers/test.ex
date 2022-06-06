@@ -15,30 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-header:
-  license:
-    spdx-id: Apache-2.0
-    copyright-owner: Apache Software Foundation
 
-  paths-ignore:
-    - '**/LICENSE'
-    - '**/.*-version'
-    - '**/.task/**'
-    - '**/build/**'
-    - '**/target/**'
-    - '**/*.md'
-    - '**/pres/**'
-    - '**/task/**'
-    - 'workspace.code-workspace'
-    - 'CODEOWNERS'
-    - '.gitkeep'
-    - '.gitmodules'
-    - '**/aliases'
-    - '**/native/fn/.cargo/**'
-    - 'mix.lock'
-    - '.formatter.exs'
-    - '**/*.lock'
-    - '**/*.eex'
-    - 'docs/**'
+defmodule Worker.Adapters.Containers.Test do
+  @moduledoc false
+  @behaviour Worker.Domain.Ports.Containers
 
-  comment: on-failure
+  @impl true
+  def prepare_container(_worker_function, _container_name) do
+    {:ok, "hello-container"}
+  end
+
+  @impl true
+  def run_function(_worker_function, _container_name) do
+    {:ok, "output"}
+  end
+
+  @impl true
+  def cleanup(_worker_function, container_name) do
+    {:ok, container_name}
+  end
+end

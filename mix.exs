@@ -24,6 +24,7 @@ defmodule FunlessWorker.MixProject do
       app: :worker,
       version: "0.1.0",
       elixir: "~> 1.13",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -33,14 +34,19 @@ defmodule FunlessWorker.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {WorkerApp, []}
+      mod: {Worker.Application, []}
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rustler, "~> 0.24.0"}
+      {:rustler, "~> 0.24.0"},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
+
+  defp elixirc_paths(:test), do: ["test/support", "lib"]
+  defp elixirc_paths(_), do: ["lib"]
 end

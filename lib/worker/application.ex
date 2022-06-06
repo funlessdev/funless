@@ -16,7 +16,17 @@
 # under the License.
 #
 
-defmodule Worker.Function do
-  @enforce_keys [:name, :image, :archive]
-  defstruct [:name, :image, :archive, :main_file]
+defmodule Worker.Application do
+  @moduledoc false
+  alias Worker.Adapters
+  use Application
+
+  def start(_type, _args) do
+    children = [
+      {Adapters.FunctionStorage.ETS.WriteServer, []},
+      {Adapters.Requests.Cluster.Server, []}
+    ]
+
+    Supervisor.start_link(children, strategy: :rest_for_one)
+  end
 end

@@ -25,7 +25,7 @@ use bollard::container::StartContainerOptions;
 use futures_util::TryFutureExt;
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, NifStruct, OwnedEnv};
-use std::{env, path::Path, thread};
+use std::{path::Path, thread};
 use tokio::runtime::{Builder, Runtime};
 
 static TOKIO: Lazy<Runtime> = Lazy::new(|| {
@@ -36,7 +36,7 @@ static TOKIO: Lazy<Runtime> = Lazy::new(|| {
 });
 
 #[derive(NifStruct)]
-#[module = "Worker.Function"]
+#[module = "Worker.Domain.Function"]
 struct Function {
     name: String,
     image: String,
@@ -44,8 +44,14 @@ struct Function {
     main_file: String,
 }
 
+/*
+    TODO: currently only works with docker; docker_host should either be:
+        1. A struct, identifying the underlying container runtime => passed by Elixir
+        2. A string; in this case, the corresponding struct/runtime is built by Rust instead of Elixir => in this case, the string might be obtained by Rust directly
+*/
+
 #[rustler::nif]
-fn prepare_container(env: Env, function: Function, container_name: String) {
+fn prepare_container(env: Env, function: Function, container_name: String, docker_host: String) {
     let pid = env.pid();
     let project_path = Path::new(env!("CARGO_MANIFEST_DIR"));
 
@@ -53,8 +59,8 @@ fn prepare_container(env: Env, function: Function, container_name: String) {
 
     thread::spawn(move || {
         let mut thread_env = OwnedEnv::new();
-        let docker = connect_to_docker("/run/user/1001/docker.sock")
-            .expect("Failed to connect to docker socket");
+
+        let docker = connect_to_docker(&docker_host).expect("Failed to connect to docker socket");
         let f = get_image(&docker, "node:lts-alpine").and_then(|_| {
             setup_container(
                 &docker,
@@ -75,14 +81,13 @@ fn prepare_container(env: Env, function: Function, container_name: String) {
 }
 
 #[rustler::nif]
-fn run_function(env: Env, container_name: String) {
+fn run_function(env: Env, container_name: String, docker_host: String) {
     let pid = env.pid();
     // let container_name = "funless-node-container";
 
     thread::spawn(move || {
         let mut thread_env = OwnedEnv::new();
-        let docker = connect_to_docker("/run/user/1001/docker.sock")
-            .expect("Failed to connect to docker socket");
+        let docker = connect_to_docker(&docker_host).expect("Failed to connect to docker socket");
 
         let f = docker
             .start_container(&container_name, None::<StartContainerOptions<String>>)
@@ -102,14 +107,12 @@ fn run_function(env: Env, container_name: String) {
 }
 
 #[rustler::nif]
-fn cleanup(env: Env, container_name: String) {
+fn cleanup(env: Env, container_name: String, docker_host: String) {
     let pid = env.pid();
-    // let container_name = "funless-node-container";
 
     thread::spawn(move || {
         let mut thread_env = OwnedEnv::new();
-        let docker = connect_to_docker("/run/user/1001/docker.sock")
-            .expect("Failed to connect to docker socket");
+        let docker = connect_to_docker(&docker_host).expect("Failed to connect to docker socket");
 
         let result = TOKIO.block_on(cleanup_container(&docker, &container_name));
 

@@ -16,31 +16,35 @@
 # under the License.
 #
 
-defmodule Worker.Updater do
+defmodule Worker.Adapters.FunctionStorage.ETS.WriteServer do
+  @moduledoc """
+    Implements GenServer behaviour; represents a process having exclusive writing rights on an underlying ETS table.
+
+    The {function_name, container_name} couples are inserted or deleted by using GenServer.call() on this process; the table name is currently hardcoded to
+    :functions_containers.
+  """
   use GenServer, restart: :permanent
 
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: :updater)
+    GenServer.start_link(__MODULE__, args, name: :write_server)
   end
 
   @impl true
   def init(_args) do
-    # TODO: table needs to be repopulated after a crash => how do we check underlying docker for function->container associations?
     table = :ets.new(:functions_containers, [:named_table, :protected])
-    IO.puts("updater running")
+    IO.puts("FunctionStorage server running")
     {:ok, table}
   end
 
   @impl true
   def handle_call({:insert, function_name, container_name}, _from, table) do
     :ets.insert(table, {function_name, container_name})
-    {:reply, {:ok, container_name}, table}
+    {:reply, {:ok, {function_name, container_name}}, table}
   end
 
   @impl true
   def handle_call({:delete, function_name, container_name}, _from, table) do
     :ets.delete_object(table, {function_name, container_name})
-    {:reply, :ok, table}
+    {:reply, {:ok, {function_name, container_name}}, table}
   end
-
 end

@@ -15,30 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-header:
-  license:
-    spdx-id: Apache-2.0
-    copyright-owner: Apache Software Foundation
 
-  paths-ignore:
-    - '**/LICENSE'
-    - '**/.*-version'
-    - '**/.task/**'
-    - '**/build/**'
-    - '**/target/**'
-    - '**/*.md'
-    - '**/pres/**'
-    - '**/task/**'
-    - 'workspace.code-workspace'
-    - 'CODEOWNERS'
-    - '.gitkeep'
-    - '.gitmodules'
-    - '**/aliases'
-    - '**/native/fn/.cargo/**'
-    - 'mix.lock'
-    - '.formatter.exs'
-    - '**/*.lock'
-    - '**/*.eex'
-    - 'docs/**'
+import Config
+config :worker, Worker.Domain.Ports.Containers, adapter: Worker.Adapters.Containers.Docker
 
-  comment: on-failure
+config :worker, Worker.Domain.Ports.FunctionStorage, adapter: Worker.Adapters.FunctionStorage.ETS
+
+import_config "#{Mix.env()}.exs"

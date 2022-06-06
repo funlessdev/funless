@@ -16,18 +16,7 @@
 # under the License.
 #
 
-defmodule Worker.Fn do
-  use Rustler, otp_app: :worker, crate: :fn
+import Config
+config :worker, Worker.Domain.Ports.Containers, adapter: Worker.Containers.Mock
 
-  def prepare_container(_function, _container_name) do
-    :erlang.nif_error(:nif_not_loaded)
-  end
-
-  def run_function(_container_name) do
-    :erlang.nif_error(:nif_not_loaded)
-  end
-
-  def cleanup(_container_name) do
-    :erlang.nif_error(:nif_not_loaded)
-  end
-end
+config :worker, Worker.Domain.Ports.FunctionStorage, adapter: Worker.FunctionStorage.Mock

@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: funless-fn CI
+name: Funless CI
 
 on:
   push:
@@ -23,21 +23,43 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   build:
 
+    name: Check and Test
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Check License Header
+    - name: Checkout
+      uses: actions/checkout@v3
+      with: 
+        submodules: recursive
+
+    - name: Check License Header 
       uses: apache/skywalking-eyes@main
-    - name: Build
+
+    - name: Setup elixir
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: 1.13
+        otp-version: 24.0
+
+    - name: Install Dependencies
+      run: mix deps.get
+
+    - name: Check formatting
+      run: mix format --check-formatted
+
+    - name: Run Mix Credo
+      run: mix credo --strict
+
+    - name: Run Elixir Tests
+      run: mix test
+
+    - name: Build Worker
       run: cargo build --verbose
       working-directory: native/fn
-    - name: Run tests
+
+    - name: Run Worker tests
       run: cargo test --verbose
       working-directory: native/fn

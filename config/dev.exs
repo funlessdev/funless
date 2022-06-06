@@ -15,30 +15,3 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-header:
-  license:
-    spdx-id: Apache-2.0
-    copyright-owner: Apache Software Foundation
-
-  paths-ignore:
-    - '**/LICENSE'
-    - '**/.*-version'
-    - '**/.task/**'
-    - '**/build/**'
-    - '**/target/**'
-    - '**/*.md'
-    - '**/pres/**'
-    - '**/task/**'
-    - 'workspace.code-workspace'
-    - 'CODEOWNERS'
-    - '.gitkeep'
-    - '.gitmodules'
-    - '**/aliases'
-    - '**/native/fn/.cargo/**'
-    - 'mix.lock'
-    - '.formatter.exs'
-    - '**/*.lock'
-    - '**/*.eex'
-    - 'docs/**'
-
-  comment: on-failure

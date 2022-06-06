@@ -16,11 +16,5 @@
 # under the License.
 #
 
-defmodule FunlessWorkerTest do
-  use ExUnit.Case
-  doctest FunlessWorker
-
-  test "greets the world" do
-    assert FunlessWorker.hello() == :world
-  end
-end
+Mox.defmock(Worker.Containers.Mock, for: Worker.Domain.Ports.Containers)
+Mox.defmock(Worker.FunctionStorage.Mock, for: Worker.Domain.Ports.FunctionStorage)
