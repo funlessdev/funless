@@ -15,16 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[package]
-name = "scheduler"
-version = "0.1.0"
-authors = []
-edition = "2021"
+defmodule Core.Nif.Scheduler do
+  @moduledoc "Interface of the rust scheduler module."
 
-[lib]
-name = "scheduler"
-path = "src/lib.rs"
-crate-type = ["cdylib"]
+  use Rustler, otp_app: :core, crate: :scheduler
 
-[dependencies]
-rustler = "0.25.0"
+  @doc """
+  Receives a list of workers (FnWorker struct) and chooses one which can be used for invocation.
+  """
+  def select(_arg1) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+end

@@ -15,16 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[package]
-name = "scheduler"
-version = "0.1.0"
-authors = []
-edition = "2021"
+defmodule Core.Domain.Ports.Commands do
+  @moduledoc """
+  Port for sending commands to workers.
+  """
+  @type ivk_params :: %{name: String.t()}
 
-[lib]
-name = "scheduler"
-path = "src/lib.rs"
-crate-type = ["cdylib"]
+  @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-[dependencies]
-rustler = "0.25.0"
+  @callback invoke(ivk_params) :: :ok
+
+  defdelegate invoke(ivk_params), to: @adapter
+end
