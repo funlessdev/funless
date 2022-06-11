@@ -15,15 +15,33 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Scheduler do
-  @moduledoc "Interface of the rust scheduler module."
 
-  use Rustler, otp_app: :core, crate: :scheduler
+defmodule Core.Adapters.Requests.Http.Router do
+  alias Core.Domain.Api
 
-  @doc """
-  Receives a list of workers (FnWorker struct) and chooses one which can be used for invocation.
-  """
-  def select(_arg1) do
-    :erlang.nif_error(:nif_not_loaded)
+  use Plug.Router
+
+  plug(Plug.Parsers,
+    parsers: [:urlencoded, {:json, json_decoder: Jason}]
+  )
+
+  plug(:match)
+  plug(:dispatch)
+
+  # Invoke request on _ ns: POST on _/fn/{func_name}
+  post "/_/fn/:name" do
+    # reply_to_client(w, conn, name)
+    Api.invoke(conn.params)
+    send_resp(conn, 404, "received on fn name")
   end
+
+  match _ do
+    send_resp(conn, 404, "oops")
+  end
+
+  defp reply_to_client(:no_workers, conn, _),
+    do: send_resp(conn, 503, "No workers available at the moment")
+
+  defp reply_to_client(chosen, conn, name),
+    do: send_resp(conn, 200, "Sent invocation for #{name} to worker: #{chosen}")
 end

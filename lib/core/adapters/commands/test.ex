@@ -15,16 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[package]
-name = "scheduler"
-version = "0.1.0"
-authors = []
-edition = "2021"
+defmodule Core.Adapters.Commands.Test do
+  @moduledoc false
+  @behaviour Core.Domain.Ports.Commands
 
-[lib]
-name = "scheduler"
-path = "src/lib.rs"
-crate-type = ["cdylib"]
-
-[dependencies]
-rustler = "0.25.0"
+  @impl true
+  def invoke(ivk_params) do
+    :ok
+  end
+end

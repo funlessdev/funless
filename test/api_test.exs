@@ -15,16 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[package]
-name = "scheduler"
-version = "0.1.0"
-authors = []
-edition = "2021"
 
-[lib]
-name = "scheduler"
-path = "src/lib.rs"
-crate-type = ["cdylib"]
+defmodule ApiTest do
+  use ExUnit.Case, async: true
+  alias Core.Domain.Api
+  import Mox, only: [verify_on_exit!: 1]
 
-[dependencies]
-rustler = "0.25.0"
+  setup :verify_on_exit!
+
+  describe "main Core.Api functions" do
+    setup do
+      Core.Commands.Mock
+      |> Mox.stub_with(Core.Adapters.Commands.Test)
+
+      :ok
+    end
+
+    test "invoke should return :ok when no error is present" do
+      assert :ok = Api.invoke(%{name: "test"})
+    end
+  end
+end

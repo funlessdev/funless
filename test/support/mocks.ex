@@ -15,16 +15,5 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[package]
-name = "scheduler"
-version = "0.1.0"
-authors = []
-edition = "2021"
 
-[lib]
-name = "scheduler"
-path = "src/lib.rs"
-crate-type = ["cdylib"]
-
-[dependencies]
-rustler = "0.25.0"
+Mox.defmock(Core.Commands.Mock, for: Core.Domain.Ports.Commands)
