@@ -21,7 +21,7 @@ defmodule Core.Adapters.Commands.Worker do
   @behaviour Core.Domain.Ports.Commands
 
   @impl true
-  def invoke(ivk_params) do
-    :ok
+  def send_invocation_command(worker, ivk_params) do
+    {:ok, ivk_params[:name]}
   end
 end
