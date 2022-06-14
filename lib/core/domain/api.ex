@@ -46,9 +46,9 @@ defmodule Core.Domain.Api do
       (it should take the worker and the function name as arguments). By default it uses GenServer.call.
   """
 
-  @type ivk_params :: %{":name": String.t()}
+  @type ivk_params :: %{:name => String.t()}
 
-  @spec invoke(Struct.t()) :: {:ok, String.t()} | {:error, any}
+  @spec invoke(Struct.t()) :: {:ok, name: String.t()} | {:error, message: String.t()}
   def invoke(ivk_params) do
     Core.Domain.Internal.Invoker.invoke(Nodes.worker_nodes(), ivk_params)
   end

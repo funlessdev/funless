@@ -16,7 +16,7 @@
 # under the License.
 #
 
-defmodule Core.Adapters.Requests.Http.Router do
+defmodule Core.Adapters.Requests.Http.Server do
   alias Core.Domain.Api
 
   use Plug.Router
@@ -29,19 +29,21 @@ defmodule Core.Adapters.Requests.Http.Router do
   plug(:dispatch)
 
   # Invoke request on _ ns: POST on _/fn/{func_name}
-  post "/_/fn/:name" do
-    # reply_to_client(w, conn, name)
+  get "/_/fn/:name" do
     Api.invoke(conn.params)
-    send_resp(conn, 404, "received on fn name")
+    |> reply_to_client(conn)
   end
 
   match _ do
     send_resp(conn, 404, "oops")
   end
 
-  defp reply_to_client(:no_workers, conn, _),
-    do: send_resp(conn, 503, "No workers available at the moment")
+  defp reply_to_client({:ok, name: name}, conn),
+    do: send_resp(conn, 200, "Invocation of #{name} sent!")
 
-  defp reply_to_client(chosen, conn, name),
-    do: send_resp(conn, 200, "Sent invocation for #{name} to worker: #{chosen}")
+  defp reply_to_client({:error, message: error}, conn),
+    do: send_resp(conn, 503, "Error during invocation: #{error}")
+
+  defp reply_to_client(_, conn),
+    do: send_resp(conn, 500, "Something went wrong...")
 end

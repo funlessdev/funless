@@ -21,8 +21,7 @@ defmodule ApiTest do
   import Mox, only: [verify_on_exit!: 1]
   use Plug.Test
 
-  # TODO: opts seems to be unused and the tests launch the real server in application.ex
-  @opts Core.Adapters.Requests.Http.Router.init([])
+  alias Core.Domain.Api
 
   setup :verify_on_exit!
 
@@ -31,24 +30,29 @@ defmodule ApiTest do
       Core.Commands.Mock
       |> Mox.stub_with(Core.Adapters.Commands.Test)
 
-      # Core.Cluster.Mock
-      # |> Mox.stub_with(Core.Adapters.Cluster.Test)
+      Core.Cluster.Mock
+      |> Mox.stub_with(Core.Adapters.Cluster.Test)
 
       :ok
     end
 
-    # test "invoke should return {:ok, name} when no error is present" do
-    #   assert Api.invoke(%{name: "test"}) == {:ok, "test"}
-    # end
+    test "invoke should return {:ok, name} when no error is present" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+      assert Api.invoke(%{"name" => "test"}) == {:ok, name: "test"}
+    end
 
-    #   test "invoke should return {:error, err} when the underlying functions encounter errors" do
-    #     Core.Commands.Mock
-    #     |> Mox.stub(:send_invocation_command, fn _, _ -> {:error, message: "generic error"} end)
+    test "invoke should return {:error, err} when the underlying functions encounter errors" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
-    #     assert Api.invoke(%{}) == {:error, message: "generic error"}
-    #   end
+      Core.Commands.Mock
+      |> Mox.expect(:send_invocation_command, fn _, _ -> {:error, message: "generic error"} end)
 
-    #   # TODO test error no_worker from outside
+      assert Api.invoke(%{}) == {:error, message: "generic error"}
+    end
+
+    test "invoke should return {:error, no workers} when no workers are found" do
+      assert Api.invoke(%{name: "test"}) == {:error, message: "No workers available"}
+    end
   end
 
   describe "Internal Invoker" do
@@ -61,17 +65,31 @@ defmodule ApiTest do
 
     test "select_worker should return :no_workers when empty list" do
       expected = :no_workers
-      nodes = []
-      workers = Core.Domain.Internal.Invoker.select_worker(nodes)
+      w_nodes = []
+      workers = Core.Domain.Internal.Invoker.select_worker(w_nodes)
 
       assert workers == expected
     end
 
-    test "invoke should return :no_workers when no workers are found" do
-      nodes = []
-      res = Core.Domain.Internal.Invoker.invoke(nodes, "hello_no_workers")
+    test "selec_worker should return a worker when workers are present" do
+      w_nodes = [:"worker@127.0.0.1"]
+      workers = Core.Domain.Internal.Invoker.select_worker(w_nodes)
 
-      assert res == {:error, [message: "No workers available"]}
+      assert workers == :"worker@127.0.0.1"
+    end
+
+    test "invoke should return error no workers when no workers are found" do
+      w_nodes = []
+      res = Core.Domain.Internal.Invoker.invoke(w_nodes, "hello_no_workers")
+
+      assert res == {:error, message: "No workers available"}
+    end
+
+    test "invoke should return {:ok, name} when successful" do
+      w_nodes = [:"worker@127.0.0.1"]
+      res = Core.Domain.Internal.Invoker.invoke(w_nodes, %{"name" => "hello"})
+
+      assert res == {:ok, name: "hello"}
     end
   end
 end

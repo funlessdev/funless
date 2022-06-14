@@ -22,12 +22,12 @@ defmodule Core.Domain.Internal.Invoker do
   require Logger
   alias Core.Domain.Ports.Commands
 
-  @spec invoke(List.t(), Struct.t()) :: {:ok, String.t()} | {:error, any}
-  def invoke(nodes, ivk_params) do
+  @spec invoke(List.t(), Struct.t()) :: {:ok, name: String.t()} | {:error, message: String.t()}
+  def invoke(worker_nodes, ivk_params) do
     Elixir.Logger.info("Internal Invoker.invoke called")
 
     Elixir.Logger.info("Internal Invoker.invoke choosing worker...")
-    chosen = nodes |> select_worker
+    chosen = worker_nodes |> select_worker
 
     case chosen do
       :no_workers ->
