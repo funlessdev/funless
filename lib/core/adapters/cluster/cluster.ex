@@ -16,8 +16,12 @@
 # under the License.
 #
 
-import Config
-config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
-config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
+defmodule Core.Adapters.Cluster do
+  @moduledoc """
+  TODO
+  """
+  @behaviour Core.Domain.Ports.Cluster
 
-import_config "#{Mix.env()}.exs"
+  @impl true
+  def all_nodes(), do: Node.list()
+end

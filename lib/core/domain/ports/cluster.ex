@@ -15,9 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Core.Domain.Ports.Cluster do
+  @moduledoc """
+  Port for retrieving data about the deployed funless platform.
+  """
 
-import Config
-config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
-config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
+  @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-import_config "#{Mix.env()}.exs"
+  @callback all_nodes() :: List.t()
+
+  defdelegate all_nodes, to: @adapter
+end

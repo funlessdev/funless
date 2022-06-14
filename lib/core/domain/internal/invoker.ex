@@ -29,30 +29,29 @@ defmodule Core.Domain.Internal.Invoker do
     Elixir.Logger.info("Internal Invoker.invoke choosing worker...")
     chosen = nodes |> select_worker
 
-    result =
-      case chosen do
-        :no_workers ->
-          Elixir.Logger.info("Internal Invoker.invoke no workers found")
-          {:error, message: "No workers availble"}
+    case chosen do
+      :no_workers ->
+        Elixir.Logger.info("Internal Invoker.invoke no workers found")
+        {:error, message: "No workers available"}
 
-        _ ->
-          Elixir.Logger.info("Internal Invoker.invoke got a worker")
-          Commands.send_invocation_command(chosen, ivk_params)
-      end
-
-    result
+      _ ->
+        Elixir.Logger.info("Internal Invoker.invoke got a worker")
+        Commands.send_invocation_command(chosen, ivk_params)
+    end
   end
 
-  def select_worker(nodes) do
-    Enum.map(nodes, &Atom.to_string(&1))
-    |> Enum.zip(0..length(nodes))
-    |> Enum.flat_map(&filter_worker(&1))
-    |> Core.Nif.Scheduler.select()
-    |> extract_worker(nodes)
-  end
+  def select_worker([]), do: :no_workers
 
-  defp filter_worker(t) do
-    if String.contains?(elem(t, 0), "worker"), do: [%FnWorker{id: elem(t, 1)}], else: []
+  def select_worker(worker_nodes) do
+    Elixir.Logger.info("Internal Invoker.select_worker mapping nodes to FnWorkers")
+    fn_workers = Enum.map(0..length(worker_nodes), fn i -> %FnWorker{id: i} end)
+
+    Elixir.Logger.info("Internal Invoker.select_worker calling NIF Scheduler")
+
+    chosen = Core.Nif.Scheduler.select(fn_workers)
+
+    Elixir.Logger.info("Internal Invoker.select_worker chosen worker found!")
+    extract_worker(chosen, worker_nodes)
   end
 
   # **WARNING**: unidiomatic to use enum.at
