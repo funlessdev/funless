@@ -26,7 +26,7 @@ defmodule Core.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      {Bandit, plug: Core.Adapters.Requests.Http.Server, scheme: :http, options: [port: 4000]}
+      {Bandit, plug: Core.Adapters.Requests.Http.Server, scheme: :http, options: [port: 4001]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
