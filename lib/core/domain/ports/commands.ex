@@ -24,7 +24,8 @@ defmodule Core.Domain.Ports.Commands do
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback send_invocation_command(worker, ivk_params) :: {:ok, String.t()} | {:error, any}
+  @callback send_invocation_command(worker, ivk_params) ::
+              {:ok, name: String.t()} | {:error, message: String.t()}
 
   defdelegate send_invocation_command(worker, ivk_params), to: @adapter
 end

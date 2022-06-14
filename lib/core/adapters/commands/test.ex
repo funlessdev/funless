@@ -15,12 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
 defmodule Core.Adapters.Commands.Test do
   @moduledoc false
   @behaviour Core.Domain.Ports.Commands
 
   @impl true
   def send_invocation_command(_worker, ivk_params) do
-    {:ok, ivk_params[:name]}
+    {:ok, name: ivk_params["name"]}
   end
 end
