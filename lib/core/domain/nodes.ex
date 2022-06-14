@@ -15,9 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Core.Domain.Nodes do
+  @moduledoc """
+  TODO
+  """
 
-import Config
-config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
-config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
+  alias Core.Domain.Ports.Cluster
 
-import_config "#{Mix.env()}.exs"
+  def worker_nodes() do
+    Cluster.all_nodes()
+    |> Enum.map(&Atom.to_string(&1))
+    |> Enum.filter(fn node_name -> String.contains?(node_name, "worker") end)
+    |> Enum.map(fn node_name -> String.to_atom(node_name) end)
+  end
+end

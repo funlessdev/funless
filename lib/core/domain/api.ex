@@ -29,6 +29,8 @@ defmodule Core.Domain.Api do
   Provides functions to deal with requests to workers.
   """
 
+  alias Core.Domain.Nodes
+
   @doc """
   Sends an invocation request
   for the `name` function in the `ns` namespace.
@@ -48,7 +50,7 @@ defmodule Core.Domain.Api do
 
   @spec invoke(Struct.t()) :: {:ok, String.t()} | {:error, any}
   def invoke(ivk_params) do
-    Core.Domain.Internal.Invoker.invoke(Node.list(), ivk_params)
+    Core.Domain.Internal.Invoker.invoke(Nodes.worker_nodes(), ivk_params)
   end
 
   # defp send_invocation(c = :no_workers, _, _), do: c

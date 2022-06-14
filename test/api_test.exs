@@ -18,7 +18,6 @@
 
 defmodule ApiTest do
   use ExUnit.Case, async: true
-  alias Core.Domain.Api
   import Mox, only: [verify_on_exit!: 1]
   use Plug.Test
 
@@ -27,29 +26,32 @@ defmodule ApiTest do
 
   setup :verify_on_exit!
 
-  # describe "main Core.Api functions" do
-  #   setup do
-  #     Core.Commands.Mock
-  #     |> Mox.stub_with(Core.Adapters.Commands.Test)
+  describe "main Core.Api functions" do
+    setup do
+      Core.Commands.Mock
+      |> Mox.stub_with(Core.Adapters.Commands.Test)
 
-  #     :ok
-  #   end
+      # Core.Cluster.Mock
+      # |> Mox.stub_with(Core.Adapters.Cluster.Test)
 
-  #   test "invoke should return {:ok, name} when no error is present" do
-  #     assert Api.invoke(%{name: "test"}) == {:ok, "test"}
-  #   end
+      :ok
+    end
 
-  #   test "invoke should return {:error, err} when the underlying functions encounter errors" do
-  #     Core.Commands.Mock
-  #     |> Mox.stub(:send_invocation_command, fn _, _ -> {:error, message: "generic error"} end)
+    # test "invoke should return {:ok, name} when no error is present" do
+    #   assert Api.invoke(%{name: "test"}) == {:ok, "test"}
+    # end
 
-  #     assert Api.invoke(%{}) == {:error, message: "generic error"}
-  #   end
+    #   test "invoke should return {:error, err} when the underlying functions encounter errors" do
+    #     Core.Commands.Mock
+    #     |> Mox.stub(:send_invocation_command, fn _, _ -> {:error, message: "generic error"} end)
 
-  #   # TODO test error no_worker from outside
-  # end
+    #     assert Api.invoke(%{}) == {:error, message: "generic error"}
+    #   end
 
-  describe "internal invoker Api" do
+    #   # TODO test error no_worker from outside
+  end
+
+  describe "Internal Invoker" do
     setup do
       Core.Commands.Mock
       |> Mox.stub_with(Core.Adapters.Commands.Test)
@@ -57,22 +59,7 @@ defmodule ApiTest do
       :ok
     end
 
-    test "select_worker should return first worker when workers are present" do
-      expected = :"worker@127.0.0.1"
-      nodes = [:"worker@127.0.0.1", :"core@example.com", :"worker@ciao.it", :"extra@127.1.0.2"]
-      worker = Core.Domain.Internal.Invoker.select_worker(nodes)
-      assert worker == expected
-    end
-
-    test "select_worker should return :no_worker when no worker connected" do
-      expected = :no_workers
-      nodes = [:"core@example.com", :"extra@127.1.0.2"]
-      workers = Core.Domain.Internal.Invoker.select_worker(nodes)
-
-      assert workers == expected
-    end
-
-    test "select_worker should return :no_worker when empty list" do
+    test "select_worker should return :no_workers when empty list" do
       expected = :no_workers
       nodes = []
       workers = Core.Domain.Internal.Invoker.select_worker(nodes)
@@ -84,7 +71,7 @@ defmodule ApiTest do
       nodes = []
       res = Core.Domain.Internal.Invoker.invoke(nodes, "hello_no_workers")
 
-      assert res == {:error, [message: "No workers availble"]}
+      assert res == {:error, [message: "No workers available"]}
     end
   end
 end
