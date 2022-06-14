@@ -21,7 +21,21 @@ defmodule Core.Adapters.Commands.Worker do
   @behaviour Core.Domain.Ports.Commands
 
   @impl true
-  def send_invocation_command(_worker, ivk_params) do
+  def send_invocation_command(worker, ivk_params) do
+    reply =
+      GenServer.call(
+        {:worker, worker},
+        {:prepare,
+         %{
+           name: ivk_params[:name],
+           image: "node:lts-alpine",
+           main_file: "/opt/index.js",
+           archive: "js/hello.tar.gz"
+         }}
+      )
+
+    IO.inspect(reply)
+
     {:ok, name: ivk_params[:name]}
   end
 end

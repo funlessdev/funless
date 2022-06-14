@@ -52,25 +52,4 @@ defmodule Core.Domain.Api do
   def invoke(ivk_params) do
     Core.Domain.Internal.Invoker.invoke(Nodes.worker_nodes(), ivk_params)
   end
-
-  # defp send_invocation(c = :no_workers, _, _), do: c
-
-  # defp send_invocation(chosen, send_fn, name) do
-  #   send_fn.(chosen, name)
-  #   chosen
-  # end
-
-  # defp genserver_call(worker, fn_name) do
-  #   GenServer.call(
-  #     {:worker, worker},
-  #     {:prepare,
-  #      %{
-  #        # hellojs
-  #        name: fn_name,
-  #        image: "node:lts-alpine",
-  #        main_file: "/opt/index.js",
-  #        archive: "js/hello.tar.gz"
-  #      }}
-  #   )
-  # end
 end
