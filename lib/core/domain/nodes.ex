@@ -26,7 +26,7 @@ defmodule Core.Domain.Nodes do
   @doc """
   Obtains all nodes in the cluster and filters the ones with 'worker' as their sname.
   """
-  def worker_nodes() do
+  def worker_nodes do
     Cluster.all_nodes()
     |> Enum.map(&Atom.to_string(&1))
     |> Enum.filter(fn node_name -> String.contains?(node_name, "worker") end)

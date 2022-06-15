@@ -23,5 +23,5 @@ defmodule Core.Adapters.Cluster do
   @behaviour Core.Domain.Ports.Cluster
 
   @impl true
-  def all_nodes(), do: Node.list()
+  def all_nodes, do: Node.list()
 end

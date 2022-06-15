@@ -28,6 +28,7 @@ defmodule Core.Domain.Api do
   @moduledoc """
   Provides functions to deal with requests to workers.
   """
+  alias Core.Domain.Internal.Invoker
   alias Core.Domain.Nodes
 
   @type ivk_params :: %{:name => String.t()}
@@ -43,6 +44,6 @@ defmodule Core.Domain.Api do
     - ivk_params: a map with the function name.
   """
   def invoke(ivk_params) do
-    Core.Domain.Internal.Invoker.invoke(Nodes.worker_nodes(), ivk_params)
+    Invoker.invoke(Nodes.worker_nodes(), ivk_params)
   end
 end

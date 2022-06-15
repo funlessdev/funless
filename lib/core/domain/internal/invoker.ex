@@ -18,6 +18,7 @@
 
 defmodule Core.Domain.Internal.Invoker do
   @moduledoc false
+  alias Core.Nif.Scheduler
 
   require Logger
   alias Core.Domain.Ports.Commands
@@ -48,7 +49,7 @@ defmodule Core.Domain.Internal.Invoker do
 
     Elixir.Logger.info("Internal Invoker.select_worker calling NIF Scheduler")
 
-    chosen = Core.Nif.Scheduler.select(fn_workers)
+    chosen = Scheduler.select(fn_workers)
 
     Elixir.Logger.info("Internal Invoker.select_worker chosen worker found!")
     extract_worker(chosen, worker_nodes)
