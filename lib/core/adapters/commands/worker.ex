@@ -17,25 +17,33 @@
 #
 
 defmodule Core.Adapters.Commands.Worker do
-  @moduledoc "APNS adapter for push notifications"
+  @moduledoc """
+  Adapter to send commands to a worker actor.
+  Currently implemented commands: invocation.
+  """
+  require Elixir.Logger
+
   @behaviour Core.Domain.Ports.Commands
 
   @impl true
   def send_invocation_command(worker, ivk_params) do
+    f_name = ivk_params["name"]
+    Elixir.Logger.info("Sending invocation request to worker #{worker} for function #{f_name}")
+
     reply =
       GenServer.call(
         {:worker, worker},
         {:prepare,
          %{
-           name: ivk_params[:name],
+           name: f_name,
            image: "node:lts-alpine",
            main_file: "/opt/index.js",
            archive: "js/hello.tar.gz"
          }}
       )
 
-    IO.inspect(reply)
+    Elixir.Logger.debug(reply)
 
-    {:ok, name: ivk_params[:name]}
+    {:ok, name: ivk_params["name"]}
   end
 end

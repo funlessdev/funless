@@ -63,7 +63,7 @@ defmodule HttpServerTest do
       assert conn.resp_body == "Invocation of hello_all_good sent!"
     end
 
-    # TODO change it with proper response
+    # change it with proper response
     test "returns 404 with wrong request" do
       # Create a test connection
       conn = conn(:get, "/badrequest")

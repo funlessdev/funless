@@ -28,27 +28,20 @@ defmodule Core.Domain.Api do
   @moduledoc """
   Provides functions to deal with requests to workers.
   """
-
   alias Core.Domain.Nodes
-
-  @doc """
-  Sends an invocation request
-  for the `name` function in the `ns` namespace.
-
-  The request is sent with the given `send_fun` argument
-  to a worker chosen from the given `nodes`, if any.
-
-  ## Parameters
-    - nodes: List of nodes to evaluate to find a suitable worker for the function.
-    - ns: Namespace of the function.
-    - name: Name of the function to invoke.
-    - send_fun: Send function to use to send invocation request to the worker chosen
-      (it should take the worker and the function name as arguments). By default it uses GenServer.call.
-  """
 
   @type ivk_params :: %{:name => String.t()}
 
   @spec invoke(Struct.t()) :: {:ok, name: String.t()} | {:error, message: String.t()}
+  @doc """
+  Sends an invocation request for the `name` function in the `ns` namespace,
+  specified in the invocation parameters.
+
+  The request is sent with the worker adapter to a worker chosen from the `worker_nodes`, if any.
+
+  ## Parameters
+    - ivk_params: a map with the function name.
+  """
   def invoke(ivk_params) do
     Core.Domain.Internal.Invoker.invoke(Nodes.worker_nodes(), ivk_params)
   end
