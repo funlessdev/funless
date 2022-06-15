@@ -18,5 +18,6 @@
 [tool]
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "1.0.0"
-tag_format = "$version"
+version = "0.0.1"
+tag_format = "v$version"
+annotated_tag = true
