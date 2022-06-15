@@ -33,7 +33,7 @@ defmodule Core.Adapters.Commands.Worker do
     reply =
       GenServer.call(
         {:worker, worker},
-        {:prepare,
+        {:invoke,
          %{
            name: f_name,
            image: "node:lts-alpine",
