@@ -24,5 +24,9 @@ defmodule Core.Domain.Ports.Cluster do
 
   @callback all_nodes() :: List.t()
 
+  @doc """
+  Function to obtain a list with all active nodes in the cluster,
+  which can be processed to retrieve all worker nodes.
+  """
   defdelegate all_nodes, to: @adapter
 end

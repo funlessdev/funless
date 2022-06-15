@@ -17,11 +17,15 @@
 #
 defmodule Core.Domain.Nodes do
   @moduledoc """
-  TODO
+  Contains utility functions to get processed info about the cluster,
+  using the Cluster port.
   """
 
   alias Core.Domain.Ports.Cluster
 
+  @doc """
+  Obtains all nodes in the cluster and filters the ones with 'worker' as their sname.
+  """
   def worker_nodes() do
     Cluster.all_nodes()
     |> Enum.map(&Atom.to_string(&1))

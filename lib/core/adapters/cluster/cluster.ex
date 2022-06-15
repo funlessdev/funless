@@ -18,7 +18,7 @@
 
 defmodule Core.Adapters.Cluster do
   @moduledoc """
-  TODO
+  Adapter to retrieve data from the cluster funless is deployed on.
   """
   @behaviour Core.Domain.Ports.Cluster
 
