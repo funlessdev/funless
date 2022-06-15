@@ -15,23 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Core.Domain.Ports.Commands do
+  @moduledoc """
+  Port for sending commands to workers.
+  """
+  @type ivk_params :: %{:name => String.t()}
+  @type worker :: Atom.t()
 
-defmodule Core.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
+  @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  use Application
+  @callback send_invocation_command(worker, ivk_params) ::
+              {:ok, name: String.t()} | {:error, message: String.t()}
 
-  @impl true
-  def start(_type, _args) do
-    children = [
-      {Bandit, plug: Core.Adapters.Requests.Http.Server, scheme: :http, options: [port: 4001]}
-    ]
-
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Core.Supervisor]
-    Supervisor.start_link(children, opts)
-  end
+  @doc """
+  Sends an invocation command to a worker.
+  It requires a worker (a fully qualified name of another node with the :worker actor on),
+  and invocation parameteres (a map with a "name" key for the function name to invoke).
+  """
+  defdelegate send_invocation_command(worker, ivk_params), to: @adapter
 end

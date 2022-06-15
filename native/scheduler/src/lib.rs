@@ -30,7 +30,7 @@ fn select(workers: Vec<FnWorker>) -> Option<FnWorker> {
     select_worker(&workers)
 }
 
-rustler::init!("Elixir.Scheduler", [select]);
+rustler::init!("Elixir.Core.Nif.Scheduler", [select]);
 
 fn select_worker(workers: &Vec<FnWorker>) -> Option<FnWorker> {
     (!workers.is_empty()).then(|| FnWorker { id: workers[0].id })

@@ -15,23 +15,18 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Core.Domain.Ports.Cluster do
+  @moduledoc """
+  Port for retrieving data about the deployed funless platform.
+  """
 
-defmodule Core.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
+  @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  use Application
+  @callback all_nodes() :: List.t()
 
-  @impl true
-  def start(_type, _args) do
-    children = [
-      {Bandit, plug: Core.Adapters.Requests.Http.Server, scheme: :http, options: [port: 4001]}
-    ]
-
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Core.Supervisor]
-    Supervisor.start_link(children, opts)
-  end
+  @doc """
+  Function to obtain a list with all active nodes in the cluster,
+  which can be processed to retrieve all worker nodes.
+  """
+  defdelegate all_nodes, to: @adapter
 end

@@ -15,23 +15,21 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Core.Domain.Nodes do
+  @moduledoc """
+  Contains utility functions to get processed info about the cluster,
+  using the Cluster port.
+  """
 
-defmodule Core.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
+  alias Core.Domain.Ports.Cluster
 
-  use Application
-
-  @impl true
-  def start(_type, _args) do
-    children = [
-      {Bandit, plug: Core.Adapters.Requests.Http.Server, scheme: :http, options: [port: 4001]}
-    ]
-
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Core.Supervisor]
-    Supervisor.start_link(children, opts)
+  @doc """
+  Obtains all nodes in the cluster and filters the ones with 'worker' as their sname.
+  """
+  def worker_nodes do
+    Cluster.all_nodes()
+    |> Enum.map(&Atom.to_string(&1))
+    |> Enum.filter(fn node_name -> String.contains?(node_name, "worker") end)
+    |> Enum.map(fn node_name -> String.to_atom(node_name) end)
   end
 end

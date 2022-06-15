@@ -15,15 +15,35 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Scheduler do
-  @moduledoc "Interface of the rust scheduler module."
 
-  use Rustler, otp_app: :core, crate: :scheduler
-
-  @doc """
-  Receives a list of workers (FnWorker struct) and chooses one which can be used for invocation.
+defmodule Core.Adapters.Commands.Worker do
+  @moduledoc """
+  Adapter to send commands to a worker actor.
+  Currently implemented commands: invocation.
   """
-  def select(_arg1) do
-    :erlang.nif_error(:nif_not_loaded)
+  require Elixir.Logger
+
+  @behaviour Core.Domain.Ports.Commands
+
+  @impl true
+  def send_invocation_command(worker, ivk_params) do
+    f_name = ivk_params["name"]
+    Elixir.Logger.info("Sending invocation request to worker #{worker} for function #{f_name}")
+
+    reply =
+      GenServer.call(
+        {:worker, worker},
+        {:invoke,
+         %{
+           name: f_name,
+           image: "node:lts-alpine",
+           main_file: "/opt/index.js",
+           archive: "js/hello.tar.gz"
+         }}
+      )
+
+    Elixir.Logger.debug(reply)
+
+    {:ok, name: ivk_params["name"]}
   end
 end

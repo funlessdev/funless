@@ -15,23 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Core.Nif.Scheduler do
+  @moduledoc "Interface of the rust scheduler module."
 
-defmodule Core.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
+  use Rustler, otp_app: :core, crate: :scheduler
 
-  use Application
-
-  @impl true
-  def start(_type, _args) do
-    children = [
-      {Bandit, plug: Core.Adapters.Requests.Http.Server, scheme: :http, options: [port: 4001]}
-    ]
-
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Core.Supervisor]
-    Supervisor.start_link(children, opts)
+  @doc """
+  Receives a list of workers (FnWorker struct) and chooses one which can be used for invocation.
+  """
+  def select(_arg1) do
+    :erlang.nif_error(:nif_not_loaded)
   end
 end
