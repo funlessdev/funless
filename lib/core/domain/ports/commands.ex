@@ -19,7 +19,7 @@ defmodule Core.Domain.Ports.Commands do
   @moduledoc """
   Port for sending commands to workers.
   """
-  @type ivk_params :: %{":name": String.t()}
+  @type ivk_params :: %{:name => String.t()}
   @type worker :: Atom.t()
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
@@ -27,5 +27,10 @@ defmodule Core.Domain.Ports.Commands do
   @callback send_invocation_command(worker, ivk_params) ::
               {:ok, name: String.t()} | {:error, message: String.t()}
 
+  @doc """
+  Sends an invocation command to a worker.
+  It requires a worker (a fully qualified name of another node with the :worker actor on),
+  and invocation parameteres (a map with a "name" key for the function name to invoke).
+  """
   defdelegate send_invocation_command(worker, ivk_params), to: @adapter
 end

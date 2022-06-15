@@ -17,6 +17,11 @@
 #
 
 defmodule Core.Adapters.Requests.Http.Server do
+  @moduledoc """
+  Http Server adapter to receive HTTP requests to interact with Funless Core.
+  It is implemented via Bandit and handles invocation requests, which are forwarded to
+  the Core API in the Domain.
+  """
   alias Core.Domain.Api
 
   use Plug.Router
