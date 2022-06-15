@@ -17,11 +17,12 @@
 #
 
 defmodule ApiTest do
+  alias Core.Domain.Api
+  alias Core.Domain.Internal.Invoker
+
   use ExUnit.Case, async: true
   import Mox, only: [verify_on_exit!: 1]
   use Plug.Test
-
-  alias Core.Domain.Api
 
   setup :verify_on_exit!
 
@@ -66,28 +67,28 @@ defmodule ApiTest do
     test "select_worker should return :no_workers when empty list" do
       expected = :no_workers
       w_nodes = []
-      workers = Core.Domain.Internal.Invoker.select_worker(w_nodes)
+      workers = Invoker.select_worker(w_nodes)
 
       assert workers == expected
     end
 
     test "selec_worker should return a worker when workers are present" do
       w_nodes = [:"worker@127.0.0.1"]
-      workers = Core.Domain.Internal.Invoker.select_worker(w_nodes)
+      workers = Invoker.select_worker(w_nodes)
 
       assert workers == :"worker@127.0.0.1"
     end
 
     test "invoke should return error no workers when no workers are found" do
       w_nodes = []
-      res = Core.Domain.Internal.Invoker.invoke(w_nodes, "hello_no_workers")
+      res = Invoker.invoke(w_nodes, "hello_no_workers")
 
       assert res == {:error, message: "No workers available"}
     end
 
     test "invoke should return {:ok, name} when successful" do
       w_nodes = [:"worker@127.0.0.1"]
-      res = Core.Domain.Internal.Invoker.invoke(w_nodes, %{"name" => "hello"})
+      res = Invoker.invoke(w_nodes, %{"name" => "hello"})
 
       assert res == {:ok, name: "hello"}
     end
