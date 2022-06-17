@@ -16,8 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Container
-
+name: Image
 
 on:
   push:
@@ -49,4 +48,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/funlessdev/fl-core:latest
+        build-args:
+          - APP_NAME: core
+          - APP_VSN: ${{github.ref_name}}
+        tags: ghcr.io/funlessdev/fl-core:latest,ghcr.io/funlessdev/fl-core:${{github.ref_name}}
