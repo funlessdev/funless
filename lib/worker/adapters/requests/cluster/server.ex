@@ -43,7 +43,13 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
 
   @impl true
   def handle_call({:invoke, function}, from, _state) do
-    spawn(Cluster, :invoke, [function, from])
+    spawn(Cluster, :invoke, [function, %{}, from])
+    {:noreply, nil}
+  end
+
+  @impl true
+  def handle_call({:invoke, function, args}, from, _state) do
+    spawn(Cluster, :invoke, [function, args, from])
     {:noreply, nil}
   end
 

@@ -40,15 +40,16 @@ defmodule Worker.Adapters.Requests.Cluster do
 
     ## Parameters
       - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.Function
+      - args: arguments passed to the function
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
-  def invoke(function, from) do
+  def invoke(function, args, from) do
     result =
       if Api.function_has_container?(function) do
-        Api.run_function(function)
+        Api.run_function(function, args)
       else
         case Api.prepare_container(function) do
-          {:ok, _} -> Api.run_function(function)
+          {:ok, _} -> Api.run_function(function, args)
           {:error, err} -> {:error, err}
         end
       end
