@@ -32,7 +32,7 @@ defmodule Worker.Adapters.Containers.Docker do
     default = "unix:///var/run/docker.sock"
     docker_env = System.get_env("DOCKER_HOST", default)
 
-    case Regex.run(~r/^((unix|tcp):\/\/)(.*)$/, docker_env) do
+    case Regex.run(~r/^((unix|tcp|http):\/\/)(.*)$/, docker_env) do
       nil ->
         default
 
@@ -44,7 +44,7 @@ defmodule Worker.Adapters.Containers.Docker do
   @doc """
     Creates a container for the given `worker_function` and names it `container_name`.
 
-    Returns {:ok, container_name} if no errors are raised;
+    Returns {:ok, container} if no errors are raised;
     returns {:error, err} if any error is raised, forwarding the error message.
 
     ## Parameters
@@ -52,12 +52,34 @@ defmodule Worker.Adapters.Containers.Docker do
       - container_name: name of the container being created
   """
   @impl true
-  def prepare_container(worker_function, container_name) do
-    Fn.prepare_container(worker_function, container_name, docker_socket())
+  def prepare_container(
+        worker_function = %Worker.Domain.Function{archive: archive},
+        container_name
+      ) do
+    socket = docker_socket()
+
+    Fn.prepare_container(
+      worker_function,
+      container_name,
+      socket,
+      socket != "unix:///var/run/docker.sock"
+    )
 
     receive do
-      :ok ->
-        {:ok, container_name}
+      {:ok, _container = {container_name, host, port}} ->
+        # TODO: wait for OW container to be ready
+        :timer.sleep(1000)
+        code = File.read!(archive)
+
+        body =
+          Jason.encode!(%{
+            "value" => %{"code" => code, "main" => "main", "env" => %{}, "binary" => false}
+          })
+
+        request = {"http://#{host}:#{port}/init", [], ["application/json"], body}
+        _response = :httpc.request(:post, request, [], [])
+
+        {:ok, %Worker.Domain.Container{name: container_name, host: host, port: port}}
 
       {:error, err} ->
         {:error, err}
@@ -65,45 +87,41 @@ defmodule Worker.Adapters.Containers.Docker do
   end
 
   @doc """
-    Runs the function wrapped by the `container_name` container.
+    Runs the function wrapped by the `container` container.
 
     Returns {:ok, results} if the function has been run successfully;
     returns {:error, err} if any error is raised, forwarding the error message.
 
     ## Parameters
       - _worker_function: Worker.Domain.Function struct; ignored in this function
-      - container_name: name of the container wrapping the function being run
+      - container: struct identifying the container
   """
   @impl true
-  def run_function(_worker_function, container_name) do
-    Fn.run_function(container_name, docker_socket())
+  def run_function(_worker_function, args, %Worker.Domain.Container{host: host, port: port}) do
+    body = Jason.encode!(%{"value" => args})
 
-    receive do
-      {:ok, logs} ->
-        {:ok, logs}
-
-      {:error, err} ->
-        {:error, err}
-    end
+    request = {"http://#{host}:#{port}/run", [], ["application/json"], body}
+    response = :httpc.request(:post, request, [], [])
+    response
   end
 
   @doc """
-    Removes the `container_name` container.
+    Removes the `container` container.
 
-    Returns {:ok, container_name} if the container is removed successfully;
+    Returns {:ok, container} if the container is removed successfully;
     returns {:error, err} if any error is raised, forwarding the error message.
 
     ## Parameters
       - _worker_function: Worker.Domain.Function struct; ignored in this function
-      - container_name: name of the container being removed
+      - container: struct identifying the container being removed
   """
   @impl true
-  def cleanup(_worker_function, container_name) do
+  def cleanup(_worker_function, container = %Worker.Domain.Container{name: container_name}) do
     Fn.cleanup(container_name, docker_socket())
 
     receive do
       :ok ->
-        {:ok, container_name}
+        {:ok, container}
 
       {:error, err} ->
         {:error, err}

@@ -16,9 +16,29 @@
 # under the License.
 #
 
-defmodule Worker.Domain.Function do
+defmodule Worker.Domain.Container do
   @moduledoc """
-    Function struct, passed to Fn.
+    Container struct, passed to adapters.
+
+    ## Fields
+      - name: container name
+      - host: container IP address
+      - port: container port
+  """
+  @type t :: %__MODULE__{
+          name: String.t(),
+          host: String.t(),
+          port: String.t()
+        }
+  @enforce_keys [:name]
+  defstruct [:name, :host, :port]
+end
+
+defmodule Worker.Domain.Function do
+  # TODO: might need different fields (distinguish between single code file and archive; main_file should be main_function)
+
+  @moduledoc """
+    Function struct, passed to adapters.
 
     ## Fields
       - name: function name
@@ -26,6 +46,12 @@ defmodule Worker.Domain.Function do
       - archive: path of the tarball containing the function's code, will be copied into container
       - main_file: path of the function's main file inside the container
   """
+  @type t :: %__MODULE__{
+          name: String.t(),
+          image: String.t(),
+          archive: String.t(),
+          main_file: String.t()
+        }
   @enforce_keys [:name, :image, :archive, :main_file]
   defstruct [:name, :image, :archive, :main_file]
 end
@@ -58,7 +84,7 @@ defmodule Worker.Domain.Api do
   @doc """
     Creates a container for the given function; in case of successful creation, the {function, container} couple is inserted in the function storage.
 
-    Returns {:ok, container_name} if the container is created, otherwise forwards {:error, err} from the Containers implementation.
+    Returns {:ok, container} if the container is created, otherwise forwards {:error, err} from the Containers implementation.
 
     ## Parameters
       - %{...}: generic struct with all the fields required by Worker.Domain.Function
@@ -82,11 +108,13 @@ defmodule Worker.Domain.Api do
     result = Containers.prepare_container(function, container_name)
 
     case result do
-      {:ok, _} -> FunctionStorage.insert_function_container(function_name, container_name)
-      _ -> nil
-    end
+      {:ok, container = %Worker.Domain.Container{name: container_name}} ->
+        FunctionStorage.insert_function_container(function_name, container)
+        {:ok, container_name}
 
-    result
+      _ ->
+        result
+    end
   end
 
   @doc """
@@ -99,14 +127,18 @@ defmodule Worker.Domain.Api do
 
     ## Parameters
       - %{...}: generic struct with all the fields required by Worker.Domain.Function
+      - args: arguments passed to the function
   """
   @spec run_function(Struct.t()) :: {:ok, any} | {:error, any}
-  def run_function(%{
-        name: function_name,
-        image: image_name,
-        archive: archive_name,
-        main_file: main_file
-      }) do
+  def run_function(
+        %{
+          name: function_name,
+          image: image_name,
+          archive: archive_name,
+          main_file: main_file
+        },
+        args \\ %{}
+      ) do
     function = %Worker.Domain.Function{
       name: function_name,
       image: image_name,
@@ -117,8 +149,8 @@ defmodule Worker.Domain.Api do
     containers = FunctionStorage.get_function_containers(function_name)
 
     case containers do
-      {:ok, {_, [container_name | _]}} ->
-        Containers.run_function(function, container_name)
+      {:ok, {_, [container | _]}} ->
+        Containers.run_function(function, args, container)
 
       {:error, err} ->
         {:error, {:nocontainer, err}}
@@ -128,7 +160,7 @@ defmodule Worker.Domain.Api do
   @doc """
     Removes the first container associated with the given function.
 
-    Returns {:ok, container_name} if the cleanup is successful;
+    Returns {:ok, container} if the cleanup is successful;
     returns {:error, err} if any error is encountered (both while removing the container and when searching for it).
 
     ## Parameters
@@ -152,21 +184,20 @@ defmodule Worker.Domain.Api do
 
     result =
       case containers do
-        {:ok, {_, [container_name | _]}} ->
-          Containers.cleanup(function, container_name)
+        {:ok, {_, [container | _]}} ->
+          Containers.cleanup(function, container)
 
         {:error, err} ->
           {:error, err}
       end
 
     case result do
-      {:ok, container_name} ->
-        FunctionStorage.delete_function_container(function_name, container_name)
+      {:ok, container = %Worker.Domain.Container{name: container_name}} ->
+        FunctionStorage.delete_function_container(function_name, container)
+        {:ok, container_name}
 
       _ ->
-        nil
+        result
     end
-
-    result
   end
 end

@@ -37,14 +37,14 @@ defmodule Worker.Adapters.FunctionStorage.ETS.WriteServer do
   end
 
   @impl true
-  def handle_call({:insert, function_name, container_name}, _from, table) do
-    :ets.insert(table, {function_name, container_name})
-    {:reply, {:ok, {function_name, container_name}}, table}
+  def handle_call({:insert, function_name, container}, _from, table) do
+    :ets.insert(table, {function_name, container})
+    {:reply, {:ok, {function_name, container}}, table}
   end
 
   @impl true
-  def handle_call({:delete, function_name, container_name}, _from, table) do
-    :ets.delete_object(table, {function_name, container_name})
-    {:reply, {:ok, {function_name, container_name}}, table}
+  def handle_call({:delete, function_name, container}, _from, table) do
+    :ets.delete_object(table, {function_name, container})
+    {:reply, {:ok, {function_name, container}}, table}
   end
 end

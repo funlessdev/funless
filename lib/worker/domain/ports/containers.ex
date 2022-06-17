@@ -20,19 +20,25 @@ defmodule Worker.Domain.Ports.Containers do
   @moduledoc """
   Port for container manipulation.
   """
+  # TODO: `container` should be a struct instead of a triple (easier to keep track of types)
   @type worker_function :: Worker.Domain.Function.t()
+
+  @type args :: any()
+
   @type container_name :: String.t()
 
+  @type container :: Worker.Domain.Container.t()
+
   @callback prepare_container(worker_function, container_name) ::
-              {:ok, container_name} | {:error, any}
-  @callback run_function(worker_function, container_name) ::
+              {:ok, container} | {:error, any}
+  @callback run_function(worker_function, args, container) ::
               {:ok, any} | {:error, any}
-  @callback cleanup(worker_function, container_name) ::
-              {:ok, container_name} | {:error, any}
+  @callback cleanup(worker_function, container) ::
+              {:ok, container} | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   defdelegate prepare_container(worker_function, container_name), to: @adapter
-  defdelegate run_function(worker_function, container_name), to: @adapter
-  defdelegate cleanup(worker_function, container_name), to: @adapter
+  defdelegate run_function(worker_function, args, container), to: @adapter
+  defdelegate cleanup(worker_function, container), to: @adapter
 end

@@ -49,32 +49,32 @@ defmodule Worker.Adapters.FunctionStorage.ETS do
   end
 
   @doc """
-    Inserts the  {`function_name`, `container_name`} couple in the ETS table.
+    Inserts the  {`function_name`, `container`} couple in the ETS table.
     Calls the :write_server process to alter the table, does not modify it directly.
 
-    Returns {:ok, {function_name, container_name}}.
+    Returns {:ok, {function_name, container}}.
 
     ## Parameters
       - function_name: name of the function, used as key in the ETS table entries
-      - container_name: name of the associated container
+      - container: struct identifying the container
   """
   @impl true
-  def insert_function_container(function_name, container_name) do
-    GenServer.call(:write_server, {:insert, function_name, container_name})
+  def insert_function_container(function_name, container) do
+    GenServer.call(:write_server, {:insert, function_name, container})
   end
 
   @doc """
-    Removes the  {`function_name`, `container_name`} couple from the ETS table.
+    Removes the  {`function_name`, `container`} couple from the ETS table.
     Calls the :write_server process to alter the table, does not modify it directly.
 
-    Returns {:ok, {function_name, container_name}}.
+    Returns {:ok, {function_name, container}}.
 
     ## Parameters
       - function_name: name of the function, used as key in the ETS table entries
-      - container_name: name of the associated container
+      - container: struct identifying the container
   """
   @impl true
-  def delete_function_container(function_name, container_name) do
-    GenServer.call(:write_server, {:delete, function_name, container_name})
+  def delete_function_container(function_name, container) do
+    GenServer.call(:write_server, {:delete, function_name, container})
   end
 end

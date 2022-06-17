@@ -27,19 +27,20 @@ defmodule Worker.Nif.Fn do
       - _function: Worker.Domain.Function struct, containing function information
       - _container_name: name of the container that will be created
       - _docker_host: path of the docker socket in the current system
+      - _rootless: whether the system is in rootless mode; if it is, the container will be attached to a reverse proxy
   """
-  def prepare_container(_function, _container_name, _docker_host) do
+  def prepare_container(_function, _container_name, _docker_host, _rootless) do
     :erlang.nif_error(:nif_not_loaded)
   end
 
   @doc """
-    Runs the function wrapped by the `_container_name` container.
+    Gets the logs of the `_container_name` container.
 
     ## Parameters
-      - _container_name: name of the container that will be used to run the function
+      - _container_name: name of the container
       - _docker_host: path of the docker socket in the current system
   """
-  def run_function(_container_name, _docker_host) do
+  def container_logs(_container_name, _docker_host) do
     :erlang.nif_error(:nif_not_loaded)
   end
 

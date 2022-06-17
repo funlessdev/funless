@@ -15,24 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-mod atoms;
-mod nif;
-
-use std::fs::File;
-use std::io::Read;
-
 use bollard::errors::Error;
 use bollard::image::CreateImageOptions;
+use bollard::models::NetworkSettings;
 use futures_util::stream::StreamExt;
 
-use bollard::container::{
-    Config, CreateContainerOptions, LogOutput, LogsOptions, RemoveContainerOptions,
-    UploadToContainerOptions, WaitContainerOptions,
-};
+use bollard::container::{LogOutput, LogsOptions};
 use bollard::{Docker, API_DEFAULT_VERSION};
 
 pub fn connect_to_docker(docker_path: &str) -> Result<Docker, Error> {
-    Docker::connect_with_socket(docker_path, 10, API_DEFAULT_VERSION)
+    if docker_path.starts_with("tcp://") || docker_path.starts_with("http://") {
+        Docker::connect_with_http(docker_path, 10, API_DEFAULT_VERSION)
+    } else {
+        Docker::connect_with_socket(docker_path, 10, API_DEFAULT_VERSION)
+    }
+}
+
+pub fn select_image(image_name: &str) -> Result<&str, &str> {
+    match image_name {
+        "nodejs" => Ok("openwhisk/action-nodejs-v16"),
+        _ => Err("No image found for the given name"),
+    }
 }
 
 pub async fn get_image(docker: &Docker, image_name: &str) -> Result<(), Error> {
@@ -56,56 +59,6 @@ pub async fn get_image(docker: &Docker, image_name: &str) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn setup_container(
-    docker: &Docker,
-    container_name: &str,
-    image_name: &str,
-    main_file: &str,
-    tar_file: &str,
-) -> Result<(), Error> {
-    let options = Some(CreateContainerOptions {
-        name: container_name,
-    });
-    let command = format!("require('{main_file}').main()");
-
-    let config = Config {
-        image: Some(image_name),
-        cmd: Some(vec!["node", "-e", command.as_str()]),
-        ..Default::default()
-    };
-
-    let _container_response = docker.create_container(options, config).await?;
-
-    let upload_options = Some(UploadToContainerOptions {
-        path: "/opt",
-        ..Default::default()
-    });
-
-    println!("Opening file {:?}", tar_file);
-    let mut file = File::open(tar_file)?;
-    println!("File opened");
-
-    let mut tar_body = Vec::new();
-    file.read_to_end(&mut tar_body)?;
-
-    docker
-        .upload_to_container(container_name, upload_options, tar_body.into())
-        .await?;
-
-    Ok(())
-}
-
-pub async fn wait_container(docker: &Docker, container_name: &str) -> Result<(), Error> {
-    let wait_options = Some(WaitContainerOptions {
-        condition: "not-running",
-    });
-    let _wait_response = docker
-        .wait_container(container_name, wait_options)
-        .into_future()
-        .await;
-    Ok(())
-}
-
 pub async fn container_logs(
     docker: &Docker,
     container_name: &str,
@@ -125,14 +78,20 @@ pub async fn container_logs(
     logs
 }
 
-pub async fn cleanup_container(docker: &Docker, container_name: &str) -> Result<(), Error> {
-    docker
-        .remove_container(container_name, None::<RemoveContainerOptions>)
-        .await?;
-    Ok(())
+pub fn extract_host_port(ns: Option<NetworkSettings>, rootless: bool) -> Option<(String, String)> {
+    let network_settings = ns.to_owned()?;
+    let bridge_network = network_settings.networks?.get("bridge")?.to_owned();
+    let host = if rootless {
+        "localhost".to_string()
+    } else {
+        bridge_network.ip_address?
+    };
+    let ports = network_settings.ports?.get("8080/tcp")?.to_owned();
+    /* TODO: should be the port associated with the 0.0.0.0 address */
+    let port = if rootless {
+        ports?[0].to_owned().host_port?
+    } else {
+        "8080".to_string()
+    };
+    Some((host, port))
 }
-
-rustler::init!(
-    "Elixir.Worker.Nif.Fn",
-    [nif::prepare_container, nif::run_function, nif::cleanup]
-);

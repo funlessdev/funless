@@ -15,17 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-
 use crate::{
     atoms::{error, ok},
-    cleanup_container, connect_to_docker, container_logs, get_image, setup_container,
-    wait_container,
+    utils,
 };
-use bollard::container::StartContainerOptions;
+use bollard::{
+    container::{
+        Config, CreateContainerOptions, KillContainerOptions, RemoveContainerOptions,
+        StartContainerOptions,
+    },
+    models::HostConfig,
+};
 use futures_util::TryFutureExt;
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, NifStruct, OwnedEnv};
-use std::{path::Path, thread};
+use std::thread;
 use tokio::runtime::{Builder, Runtime};
 
 static TOKIO: Lazy<Runtime> = Lazy::new(|| {
@@ -44,55 +48,92 @@ struct Function {
     main_file: String,
 }
 
+#[derive(NifStruct)]
+#[module = "Worker.Domain.Container"]
+struct Container {
+    name: String,
+    host: String,
+    port: String,
+}
+
 /*
     TODO: currently only works with docker; docker_host should either be:
         1. A struct, identifying the underlying container runtime => passed by Elixir
         2. A string; in this case, the corresponding struct/runtime is built by Rust instead of Elixir => in this case, the string might be obtained by Rust directly
 */
 
+/*
+    TODO: if the command is launched in rootless mode => container = {name, "localhost", inspected port}
+          if the command is launched in rootful mode  => container = {name, inspected ip, "8080"}
+*/
 #[rustler::nif]
-fn prepare_container(env: Env, function: Function, container_name: String, docker_host: String) {
+fn prepare_container(
+    env: Env,
+    function: Function,
+    container_name: String,
+    docker_host: String,
+    rootless: bool,
+) {
     let pid = env.pid();
-    let project_path = Path::new(env!("CARGO_MANIFEST_DIR"));
-
-    let tar_file = project_path.join(function.archive).display().to_string();
 
     thread::spawn(move || {
         let mut thread_env = OwnedEnv::new();
 
-        let docker = connect_to_docker(&docker_host).expect("Failed to connect to docker socket");
-        let f = get_image(&docker, "node:lts-alpine").and_then(|_| {
-            setup_container(
-                &docker,
-                &container_name,
-                &(function.image),
-                &(function.main_file),
-                &tar_file,
-            )
+        let docker =
+            utils::connect_to_docker(&docker_host).expect("Failed to connect to docker socket");
+        let docker_image = utils::select_image(&(function.image)).expect("");
+
+        let options = Some(CreateContainerOptions {
+            name: &container_name,
         });
+
+        let host_config = HostConfig {
+            publish_all_ports: Some(true),
+            ..Default::default()
+        };
+
+        let config = Config {
+            image: Some(docker_image),
+            host_config: Some(host_config),
+            ..Default::default()
+        };
+
+        let f = utils::get_image(&docker, docker_image)
+            .and_then(|_| docker.create_container(options, config))
+            .and_then(|_| {
+                docker.start_container(&container_name, None::<StartContainerOptions<String>>)
+            })
+            .and_then(|_| docker.inspect_container(&container_name, None));
 
         let result = TOKIO.block_on(f);
 
         match result {
-            Ok(()) => thread_env.send_and_clear(&pid, |env| ok().encode(env)),
+            Ok(r) => {
+                let h = utils::extract_host_port(r.network_settings, rootless);
+                match h {
+                    Some((host, port)) => thread_env.send_and_clear(&pid, |env| {
+                        (ok(), (container_name, host, port)).encode(env)
+                    }),
+                    None => thread_env.send_and_clear(&pid, |env| {
+                        (error(), "Error fetching container network configuration").encode(env)
+                    }),
+                }
+            }
             Err(e) => thread_env.send_and_clear(&pid, |env| (error(), e.to_string()).encode(env)),
         }
     });
 }
 
 #[rustler::nif]
-fn run_function(env: Env, container_name: String, docker_host: String) {
+fn container_logs(env: Env, container_name: String, docker_host: String) {
     let pid = env.pid();
-    // let container_name = "funless-node-container";
 
     thread::spawn(move || {
         let mut thread_env = OwnedEnv::new();
-        let docker = connect_to_docker(&docker_host).expect("Failed to connect to docker socket");
+        let docker =
+            utils::connect_to_docker(&docker_host).expect("Failed to connect to docker socket");
 
-        let f = docker
-            .start_container(&container_name, None::<StartContainerOptions<String>>)
-            .and_then(|_| wait_container(&docker, &container_name))
-            .and_then(|_| container_logs(&docker, &container_name));
+        let f = utils::container_logs(&docker, &container_name);
 
         let result = TOKIO.block_on(f);
 
@@ -112,9 +153,14 @@ fn cleanup(env: Env, container_name: String, docker_host: String) {
 
     thread::spawn(move || {
         let mut thread_env = OwnedEnv::new();
-        let docker = connect_to_docker(&docker_host).expect("Failed to connect to docker socket");
+        let docker =
+            utils::connect_to_docker(&docker_host).expect("Failed to connect to docker socket");
 
-        let result = TOKIO.block_on(cleanup_container(&docker, &container_name));
+        let f = docker
+            .kill_container(&container_name, None::<KillContainerOptions<String>>)
+            .and_then(|_| docker.remove_container(&container_name, None::<RemoveContainerOptions>));
+
+        let result = TOKIO.block_on(f);
 
         match result {
             Ok(()) => thread_env.send_and_clear(&pid, |env| ok().encode(env)),

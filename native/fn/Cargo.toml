@@ -22,7 +22,7 @@ edition = "2021"
 
 [lib]
 name = "fn"
-path = "src/lib.rs"
+path = "src/init.rs"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
