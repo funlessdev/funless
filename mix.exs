@@ -21,7 +21,7 @@ defmodule Core.MixProject do
   def project do
     [
       app: :core,
-      version: "0.1.0",
+      version: "1.0.1",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -46,6 +46,7 @@ defmodule Core.MixProject do
       {:plug, "~> 1.13"},
       {:bandit, "~> 0.4.10"},
       {:jason, "~> 1.3"},
+      {:distillery, "~> 2.0"},
       # dev deps
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:mox, "~> 1.0", only: :test}

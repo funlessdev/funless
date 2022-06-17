@@ -15,12 +15,26 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[tool]
-[tool.commitizen]
-name = "cz_conventional_commits"
-version = "1.0.1"
-tag_format = "v$version"
-annotated_tag = true
-version_files = [
-    "mix.exs"
-]
+version: '3'
+
+vars:
+  APP_NAME: 
+    sh: grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'
+  APP_VSN: 
+    sh: grep 'version:' mix.exs | cut -d '"' -f2
+  BUILD: 
+    sh: git rev-parse --short HEAD
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}}"
+      - task --list-all
+    silent: true
+  build: 
+    cmds: 
+      - docker build --build-arg APP_NAME={{.APP_NAME}} --build-arg APP_VSN={{.APP_VSN}} -t {{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}} -t {{.APP_NAME}}:latest .
+
+  run: 
+    cmds:
+      - docker run --expose 4001 -p 4001:4001 --rm -it {{.APP_NAME}}:latest

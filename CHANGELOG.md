@@ -1,3 +1,9 @@
+## v1.0.1 (2022-06-17)
+
+### Fix
+
+- **config.exs**: change :prod cookie to sample atom
+
 ## v1.0.0 (2022-06-15)
 
 ### Fix
