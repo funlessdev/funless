@@ -50,5 +50,5 @@ jobs:
         push: true
         build-args: |
           APP_NAME=core
-          APP_VSN=${{github.ref_name}}
-        tags: ghcr.io/funlessdev/fl-core:latest,ghcr.io/funlessdev/fl-core:${{github.ref_name}}
+          APP_VSN=${{github.ref_name:1}}
+        tags: ghcr.io/funlessdev/fl-core:latest,ghcr.io/funlessdev/fl-core:${{github.ref_name:1}}
