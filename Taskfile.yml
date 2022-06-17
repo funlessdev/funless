@@ -1,0 +1,40 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+version: '3'
+
+vars:
+  APP_NAME: 
+    sh: grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'
+  APP_VSN: 
+    sh: grep 'version:' mix.exs | cut -d '"' -f2
+  BUILD: 
+    sh: git rev-parse --short HEAD
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}}"
+      - task --list-all
+    silent: true
+  build: 
+    cmds: 
+      - docker build --build-arg APP_NAME={{.APP_NAME}} --build-arg APP_VSN={{.APP_VSN}} -t {{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}} -t {{.APP_NAME}}:latest .
+
+  run: 
+    cmds:
+      - docker run --expose 4001 -p 4001:4001 --rm -it {{.APP_NAME}}:latest
