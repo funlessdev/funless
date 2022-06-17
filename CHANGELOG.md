@@ -1,3 +1,9 @@
+## v1.0.2 (2022-06-17)
+
+### Fix
+
+- **Image-Action**: fix build-args List syntax
+
 ## v1.0.1 (2022-06-17)
 
 ### Fix
