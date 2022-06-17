@@ -21,3 +21,4 @@ name = "cz_conventional_commits"
 version = "1.0.0"
 tag_format = "v$version"
 annotated_tag = true
+version_files = ["mix.exs"]
