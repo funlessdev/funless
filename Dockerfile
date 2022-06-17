@@ -15,54 +15,60 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-FROM elixir:1.13.4 as build
+# The version of Alpine to use for the final image
+# This should match the version of Alpine that the `elixir:1.13.4-alpine` image uses
+ARG ALPINE_VERSION=3.16
 
-# install build dependencies
-RUN apt-get update && apt-get install -y build-essential curl
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+FROM elixir:1.13.4-alpine AS builder
 
-ENV PATH="/root/.cargo/bin:${PATH}"
+# The following are build arguments used to change variable parts of the image.
+# The name of your application/release (required)
+ARG APP_NAME
+# The version of the application we are building (required)
+ARG APP_VSN
+# The environment to build with
+ARG MIX_ENV=prod
 
-RUN mkdir /app
-WORKDIR /app
+ENV APP_NAME=${APP_NAME} APP_VSN=${APP_VSN} MIX_ENV=${MIX_ENV} \
+    RUSTUP_HOME=/opt/rust CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
 
-# install Hex + Rebar
-RUN mix do local.hex --force, local.rebar --force
+# By convention, /opt is typically used for applications
+WORKDIR /opt/app
 
-# set build ENV
-ENV MIX_ENV=prod
+# This step installs all the build tools we'll need
+RUN apk update && \
+    apk upgrade --no-cache && \
+    apk add --no-cache git build-base rust cargo && \
+    mix local.rebar --force && \
+    mix local.hex --force
 
+
+# This copies our app source code into the build container
 COPY . .
 
-# COPY config config
-RUN mix deps.get --only $MIX_ENV
-RUN mix deps.compile
+RUN mix do deps.get, deps.compile, compile
 
-RUN mix compile
+RUN mkdir -p /opt/built && mix distillery.release --verbose && \
+    cp _build/${MIX_ENV}/rel/${APP_NAME}/releases/${APP_VSN}/${APP_NAME}.tar.gz /opt/built && \
+    cd /opt/built && \
+    tar -xzf ${APP_NAME}.tar.gz && \
+    rm ${APP_NAME}.tar.gz
 
-# build release
-# at this point we should copy the rel directory but
-# we are not using it so we can omit it
-# COPY rel rel
-RUN mix release
+# From this line onwards, we're in a new image, which will be the image used in production
+FROM alpine:${ALPINE_VERSION}
 
-# prepare release image
-# FROM elixir:1.13.4-alpine AS app
+# The name of your application/release (required)
+ARG APP_NAME
 
-# # install runtime dependencies
-# RUN apk add --update bash openssl-dev
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache bash openssl-dev libgcc libstdc++
 
-# EXPOSE 4000
-# ENV MIX_ENV=prod
+ENV REPLACE_OS_VARS=true \
+    APP_NAME=${APP_NAME}
 
-# # prepare app directory
-# RUN mkdir /app
-# WORKDIR /app
+WORKDIR /opt/app
 
-# # copy release to app container
-# COPY --from=build /app/_build/prod/rel/core .
-# RUN chown -R nobody: /app
-# USER nobody
+COPY --from=builder /opt/built .
 
-ENV HOME=/app
-CMD ["bash", "_build/prod/rel/core/bin/core", "start"]
+CMD trap 'exit' INT; /opt/app/bin/${APP_NAME} foreground
