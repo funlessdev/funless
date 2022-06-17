@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
 # The directory Mix will write compiled artifacts to.
 _build/
 
@@ -39,6 +40,7 @@ erl_crash.dump
 # Developer tools
 .git
 .tool-versions
+.gitignore
 
 # Umbrella
 apps/**/config/*.secret.exs
@@ -59,3 +61,7 @@ tmp
 erl_crash.dump
 *.ez
 
+Taskfile.yml
+README*
+test/
+priv/static/
