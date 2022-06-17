@@ -22,11 +22,11 @@ defmodule Worker.Adapters.Containers.Test do
 
   @impl true
   def prepare_container(_worker_function, _container_name) do
-    {:ok, "hello-container"}
+    {:ok, %Worker.Domain.Container{name: "hello-container", host: "localhost", port: "8080"}}
   end
 
   @impl true
-  def run_function(_worker_function, _container_name) do
+  def run_function(_worker_function, _args, _container_name) do
     {:ok, "output"}
   end
 

@@ -45,7 +45,7 @@ defmodule ApiTest do
       :ok
     end
 
-    test "prepare_container should return {:ok, container_name} when no error is present", %{
+    test "prepare_container should return {:ok, container} when no error is present", %{
       function: function
     } do
       assert {:ok, _} = Api.prepare_container(function)
@@ -54,7 +54,7 @@ defmodule ApiTest do
     test "prepare_container should return {:error, err} when the underlying functions encounter errors",
          %{function: function} do
       Worker.Containers.Mock
-      |> Mox.stub(:prepare_container, fn _function, _container_name ->
+      |> Mox.stub(:prepare_container, fn _function, _container ->
         {:error, "generic error"}
       end)
 
@@ -64,7 +64,7 @@ defmodule ApiTest do
     test "prepare_container should not call the function storage when the container is not created successfully",
          %{function: function} do
       Worker.Containers.Mock
-      |> Mox.stub(:prepare_container, fn _function, _container_name ->
+      |> Mox.stub(:prepare_container, fn _function, _container ->
         {:error, "generic error"}
       end)
 
@@ -98,18 +98,18 @@ defmodule ApiTest do
            function: function
          } do
       Worker.Containers.Mock
-      |> Mox.stub(:run_function, fn _function, _container_name ->
+      |> Mox.stub(:run_function, fn _function, _args, _container ->
         {:error, "generic error"}
       end)
 
       assert {:error, "generic error"} == Api.run_function(function)
     end
 
-    test "cleanup should return {:ok, container_name} when a container is found and deleted for the given function, with container_name being the first container's name",
+    test "cleanup should return {:ok, container_name} when a container is found and deleted for the given function",
          %{function: function} do
       %{name: function_name} = function
 
-      {:ok, {_, [container_name | _]}} =
+      {:ok, {_, [_container = %Worker.Domain.Container{name: container_name} | _]}} =
         Worker.FunctionStorage.Mock.get_function_containers(function_name)
 
       assert Api.cleanup(function) == {:ok, container_name}
