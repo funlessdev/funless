@@ -95,3 +95,45 @@ pub fn extract_host_port(ns: Option<NetworkSettings>, rootless: bool) -> Option<
     };
     Some((host, port))
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use bollard::models::{EndpointSettings, PortBinding};
+
+    use super::*;
+
+    #[test]
+    fn test_extract_host_port() {
+        let port_number = "36719";
+        let ip_address = "172.17.0.2";
+        let ns = Some(NetworkSettings {
+            networks: Some(HashMap::from([(
+                String::from("bridge"),
+                EndpointSettings {
+                    ip_address: Some(String::from(ip_address)),
+                    ..Default::default()
+                },
+            )])),
+            ports: Some(HashMap::from([(
+                String::from("8080/tcp"),
+                Some(vec![PortBinding {
+                    host_ip: Some(String::from("0.0.0.0")),
+                    host_port: Some(String::from(port_number)),
+                }]),
+            )])),
+            ..Default::default()
+        });
+        assert_eq!(
+            Some((String::from(ip_address), String::from("8080"))),
+            extract_host_port(ns.to_owned(), false),
+            "extract rootful host and port"
+        );
+        assert_eq!(
+            Some((String::from("localhost"), String::from(port_number))),
+            extract_host_port(ns, true),
+            "extract rootless host and port"
+        );
+    }
+}
