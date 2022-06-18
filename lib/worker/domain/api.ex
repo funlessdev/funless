@@ -58,7 +58,7 @@ end
 
 defmodule Worker.Domain.Api do
   @moduledoc """
-  Contains functions used to create, run and remove function containers. Side effects (e.g. docker interaction) are delegated to the functions passed as arguments.
+  Contains functions used to create, run and remove function containers. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
   alias Worker.Domain.Ports.Containers
   alias Worker.Domain.Ports.FunctionStorage

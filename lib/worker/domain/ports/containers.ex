@@ -20,7 +20,6 @@ defmodule Worker.Domain.Ports.Containers do
   @moduledoc """
   Port for container manipulation.
   """
-  # TODO: `container` should be a struct instead of a triple (easier to keep track of types)
   @type worker_function :: Worker.Domain.Function.t()
 
   @type args :: any()
