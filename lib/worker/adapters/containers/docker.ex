@@ -67,7 +67,6 @@ defmodule Worker.Adapters.Containers.Docker do
 
     receive do
       {:ok, container = %Worker.Domain.Container{host: host, port: port}} ->
-        # TODO: wait for OW container to be ready
         :timer.sleep(1000)
         code = File.read!(archive)
 

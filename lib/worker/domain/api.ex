@@ -35,8 +35,6 @@ defmodule Worker.Domain.Container do
 end
 
 defmodule Worker.Domain.Function do
-  # TODO: might need different fields (distinguish between single code file and archive; main_file should be main_function)
-
   @moduledoc """
     Function struct, passed to adapters.
 
