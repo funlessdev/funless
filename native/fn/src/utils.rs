@@ -51,8 +51,8 @@ pub async fn get_image(docker: &Docker, image_name: &str) -> Result<(), Error> {
     while let Some(Ok(l)) = image.next().await {
         println!(
             "{:?} {:?}",
-            l.status.unwrap_or("".to_string()),
-            l.progress.unwrap_or("".to_string())
+            l.status.unwrap_or_default(),
+            l.progress.unwrap_or_default()
         );
     }
 
@@ -79,7 +79,7 @@ pub async fn container_logs(
 }
 
 pub fn extract_host_port(ns: Option<NetworkSettings>, rootless: bool) -> Option<(String, String)> {
-    let network_settings = ns.to_owned()?;
+    let network_settings = ns?;
     let bridge_network = network_settings.networks?.get("bridge")?.to_owned();
     let host = if rootless {
         "localhost".to_string()

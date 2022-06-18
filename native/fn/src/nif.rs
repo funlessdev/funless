@@ -114,8 +114,8 @@ fn prepare_container(
                     Some((host, port)) => thread_env.send_and_clear(&pid, |env| {
                         let container = Container {
                             name: container_name,
-                            host: host,
-                            port: port,
+                            host,
+                            port,
                         };
                         (ok(), container).encode(env)
                     }),
