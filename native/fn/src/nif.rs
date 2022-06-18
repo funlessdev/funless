@@ -32,6 +32,7 @@ use rustler::{Encoder, Env, NifStruct, OwnedEnv};
 use std::thread;
 use tokio::runtime::{Builder, Runtime};
 
+// https://github.com/rusterlium/rustler/issues/409
 static TOKIO: Lazy<Runtime> = Lazy::new(|| {
     Builder::new_current_thread()
         .enable_all()
@@ -39,6 +40,10 @@ static TOKIO: Lazy<Runtime> = Lazy::new(|| {
         .expect("Failed to start tokio runtime")
 });
 
+/// A struct representing functions.
+///
+/// It's the Rust equivalent of the `Worker.Domain.Function` Elixir struct.
+///
 #[derive(NifStruct)]
 #[module = "Worker.Domain.Function"]
 struct Function {
@@ -48,6 +53,10 @@ struct Function {
     main_file: String,
 }
 
+/// A struct representing containers.
+///
+/// It's the Rust equivalent of the `Worker.Domain.Container` Elixir struct.
+///
 #[derive(NifStruct)]
 #[module = "Worker.Domain.Container"]
 struct Container {
@@ -62,10 +71,20 @@ struct Container {
         2. A string; in this case, the corresponding struct/runtime is built by Rust instead of Elixir => in this case, the string might be obtained by Rust directly
 */
 
-/*
-    TODO: if the command is launched in rootless mode => container = {name, "localhost", inspected port}
-          if the command is launched in rootful mode  => container = {name, inspected ip, "8080"}
-*/
+/// Creates a container for the given function.
+///
+/// Sends the `{:ok, container}` or `{:error, err}` response to the calling Elixir worker.
+///
+/// The computation is moved to a different thread to avoid conflicts with the BEAM schedulers.
+///
+/// # Arguments
+///
+/// * `env` - NIF parameter, represents the calling worker
+/// * `function` - A `Function` struct holding the necessary function information
+/// * `container_name` - A string holding the name of the container being created
+/// * `docker_host` - A string holding the path to the docker socket or remote host
+/// * `rootless` - A boolean flag specifying whether the system is using a rootless installation of Docker
+///
 #[rustler::nif]
 fn prepare_container(
     env: Env,
@@ -152,6 +171,18 @@ fn container_logs(env: Env, container_name: String, docker_host: String) {
     });
 }
 
+/// Removes the container with the given name.
+///
+/// Sends the `:ok` or `{:error, err}` response to the calling Elixir worker.
+///
+/// The computation is moved to a different thread to avoid conflicts with the BEAM schedulers.
+///
+/// # Arguments
+///
+/// * `env` - NIF parameter, represents the calling worker
+/// * `container_name` - A string holding the name of the container being removed
+/// * `docker_host` - A string holding the path to the docker socket or remote host
+///
 #[rustler::nif]
 fn cleanup(env: Env, container_name: String, docker_host: String) {
     let pid = env.pid();

@@ -23,6 +23,14 @@ use futures_util::stream::StreamExt;
 use bollard::container::{LogOutput, LogsOptions};
 use bollard::{Docker, API_DEFAULT_VERSION};
 
+/// Returns a Docker connection struct to the specified socket path.
+///
+/// Returns `None` if the path is invalid or the connection fails.
+///
+/// # Arguments
+///
+/// * `docker_path` - A string slice holding the Docker host or socket path
+///
 pub fn connect_to_docker(docker_path: &str) -> Result<Docker, Error> {
     if docker_path.starts_with("tcp://") || docker_path.starts_with("http://") {
         Docker::connect_with_http(docker_path, 10, API_DEFAULT_VERSION)
@@ -31,13 +39,29 @@ pub fn connect_to_docker(docker_path: &str) -> Result<Docker, Error> {
     }
 }
 
-pub fn select_image(image_name: &str) -> Result<&str, &str> {
+/// Returns the Docker image associated with the given string.
+///
+/// Returns `None` if the given string has no corresponding image.
+///
+/// # Arguments
+///
+/// * `image_name` -  A string slice holding the short name for the Docker image
+pub fn select_image(image_name: &str) -> Option<&str> {
     match image_name {
-        "nodejs" => Ok("openwhisk/action-nodejs-v16"),
-        _ => Err("No image found for the given name"),
+        "nodejs" => Some("openwhisk/action-nodejs-v16"),
+        _ => None,
     }
 }
 
+/// Wrapper for the bollard create_image function.
+///
+/// Returns an `Error` if something goes while checking or downloading the image.
+///
+/// # Arguments
+///
+/// * `docker` - A reference to a Docker connection, used by the create_image function
+/// * `image_name` - A string slice holding the Docker image's name
+///
 pub async fn get_image(docker: &Docker, image_name: &str) -> Result<(), Error> {
     let image = &mut docker.create_image(
         Some(CreateImageOptions {
@@ -48,11 +72,12 @@ pub async fn get_image(docker: &Docker, image_name: &str) -> Result<(), Error> {
         None,
     );
 
-    while let Some(Ok(l)) = image.next().await {
+    while let Some(l) = image.next().await {
+        let info = l?;
         println!(
             "{:?} {:?}",
-            l.status.unwrap_or_default(),
-            l.progress.unwrap_or_default()
+            &info.status.unwrap_or_default(),
+            &info.progress.unwrap_or_default()
         );
     }
 
@@ -78,17 +103,28 @@ pub async fn container_logs(
     logs
 }
 
+/// Extract host and port from a `NetworkSettings` struct.
+///
+/// Returns `None` if some of the necessary fields are `None`.
+/// Returns `("localhost", port)` if `rootless` is `true`.
+/// Returns `(host, "8080")` if `rootless` is `false`.
+///
+/// # Arguments
+///
+/// * `ns` - A `NetworkSettings` struct wrapped by an `Option`, holds a Docker container's network information
+/// * `rootless` - A boolean flag specifying whether the system is using a rootless installation of Docker
+///
 pub fn extract_host_port(ns: Option<NetworkSettings>, rootless: bool) -> Option<(String, String)> {
     let network_settings = ns?;
-    let bridge_network = network_settings.networks?.get("bridge")?.to_owned();
     let host = if rootless {
         "localhost".to_string()
     } else {
+        let bridge_network = network_settings.networks?.get("bridge")?.to_owned();
         bridge_network.ip_address?
     };
-    let ports = network_settings.ports?.get("8080/tcp")?.to_owned();
     /* TODO: should be the port associated with the 0.0.0.0 address */
     let port = if rootless {
+        let ports = network_settings.ports?.get("8080/tcp")?.to_owned();
         ports?[0].to_owned().host_port?
     } else {
         "8080".to_string()
