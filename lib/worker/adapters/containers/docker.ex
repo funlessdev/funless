@@ -66,7 +66,7 @@ defmodule Worker.Adapters.Containers.Docker do
     )
 
     receive do
-      {:ok, _container = {container_name, host, port}} ->
+      {:ok, container = %Worker.Domain.Container{host: host, port: port}} ->
         # TODO: wait for OW container to be ready
         :timer.sleep(1000)
         code = File.read!(archive)
@@ -79,7 +79,7 @@ defmodule Worker.Adapters.Containers.Docker do
         request = {"http://#{host}:#{port}/init", [], ["application/json"], body}
         _response = :httpc.request(:post, request, [], [])
 
-        {:ok, %Worker.Domain.Container{name: container_name, host: host, port: port}}
+        {:ok, container}
 
       {:error, err} ->
         {:error, err}

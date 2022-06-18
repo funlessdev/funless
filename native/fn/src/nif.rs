@@ -112,7 +112,12 @@ fn prepare_container(
                 let h = utils::extract_host_port(r.network_settings, rootless);
                 match h {
                     Some((host, port)) => thread_env.send_and_clear(&pid, |env| {
-                        (ok(), (container_name, host, port)).encode(env)
+                        let container = Container {
+                            name: container_name,
+                            host: host,
+                            port: port,
+                        };
+                        (ok(), container).encode(env)
                     }),
                     None => thread_env.send_and_clear(&pid, |env| {
                         (error(), "Error fetching container network configuration").encode(env)
