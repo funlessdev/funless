@@ -31,7 +31,7 @@ mix release
 
 And on a different terminal session, start the interactive session like this:
 ```
-iex -S mix --name n1@127.0.0.1 --cookie default_secret
+iex --name n1@127.0.0.1 --cookie default_secret -S mix
 ```
 
 And run:

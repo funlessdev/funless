@@ -55,7 +55,9 @@ pub fn select_image(image_name: &str) -> Option<&str> {
 
 /// Wrapper for the bollard create_image function.
 ///
-/// Returns an `Error` if something goes while checking or downloading the image.
+/// Returns an `Error` if something goes wrong while checking or downloading the image (e.g. an invalid image name is given).
+///
+/// Returns `Ok(())` if the image is downloaded correctly, or was already available.
 ///
 /// # Arguments
 ///
