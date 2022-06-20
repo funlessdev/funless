@@ -27,9 +27,8 @@ defmodule Worker.Nif.Fn do
       - _function: Worker.Domain.Function struct, containing function information
       - _container_name: name of the container that will be created
       - _docker_host: path of the docker socket in the current system
-      - _rootless: whether the system is in rootless mode; changes the host:port combination in result
   """
-  def prepare_container(_function, _container_name, _docker_host, _rootless) do
+  def prepare_container(_function, _container_name, _docker_host) do
     :erlang.nif_error(:nif_not_loaded)
   end
 

@@ -108,29 +108,40 @@ pub async fn container_logs(
 /// Extract host and port from a `NetworkSettings` struct.
 ///
 /// Returns `None` if some of the necessary fields are `None`.
-/// Returns `("localhost", port)` if `rootless` is `true`.
-/// Returns `(host, "8080")` if `rootless` is `false`.
+/// Returns `(host, "8080")`, with `host` being the container internal ip address.
+///
+/// Should be used only in rootful mode, as the `bridge0` network interface is not created by rootless Docker, which is necessary for
+/// host->guest communication using internal container IP addresses.
 ///
 /// # Arguments
 ///
 /// * `ns` - A `NetworkSettings` struct wrapped by an `Option`, holds a Docker container's network information
-/// * `rootless` - A boolean flag specifying whether the system is using a rootless installation of Docker
 ///
-pub fn extract_host_port(ns: Option<NetworkSettings>, rootless: bool) -> Option<(String, String)> {
+pub fn extract_host_port(ns: Option<NetworkSettings>) -> Option<(String, String)> {
     let network_settings = ns?;
-    let host = if rootless {
-        "localhost".to_string()
-    } else {
-        let bridge_network = network_settings.networks?.get("bridge")?.to_owned();
-        bridge_network.ip_address?
-    };
+    let networks = network_settings.networks?;
+    let bridge_network = networks.get("bridge")?;
+    let host = bridge_network.ip_address.clone()?;
+    let port = String::from("8080");
+    Some((host, port))
+}
+
+/// Extract host and port from a `NetworkSettings` struct for a rootless Docker system.
+///
+/// Returns `None` if some of the necessary fields are `None`.
+/// Returns `("localhost", port)`, with `port` being the host port forwarded to the `8080/tcp` container port.
+///
+/// # Arguments
+///
+/// * `ns` - A `NetworkSettings` struct wrapped by an `Option`, holds a Docker container's network information
+///
+pub fn extract_rootless_host_port(ns: Option<NetworkSettings>) -> Option<(String, String)> {
+    let network_settings = ns?;
+    let host = String::from("localhost");
+    let ports = network_settings.ports?;
+    let bindings = ports.get("8080/tcp")?.as_ref()?;
     /* TODO: should be the port associated with the 0.0.0.0 address */
-    let port = if rootless {
-        let ports = network_settings.ports?.get("8080/tcp")?.to_owned();
-        ports?[0].to_owned().host_port?
-    } else {
-        "8080".to_string()
-    };
+    let port = bindings[0].host_port.clone()?;
     Some((host, port))
 }
 
@@ -165,12 +176,12 @@ mod tests {
         });
         assert_eq!(
             Some((String::from(ip_address), String::from("8080"))),
-            extract_host_port(ns.to_owned(), false),
+            extract_host_port(ns.to_owned()),
             "extract rootful host and port"
         );
         assert_eq!(
             Some((String::from("localhost"), String::from(port_number))),
-            extract_host_port(ns, true),
+            extract_rootless_host_port(ns),
             "extract rootless host and port"
         );
     }

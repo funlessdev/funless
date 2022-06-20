@@ -83,16 +83,9 @@ struct Container {
 /// * `function` - A `Function` struct holding the necessary function information
 /// * `container_name` - A string holding the name of the container being created
 /// * `docker_host` - A string holding the path to the docker socket or remote host
-/// * `rootless` - A boolean flag specifying whether the system is using a rootless installation of Docker
 ///
 #[rustler::nif]
-fn prepare_container(
-    env: Env,
-    function: Function,
-    container_name: String,
-    docker_host: String,
-    rootless: bool,
-) {
+fn prepare_container(env: Env, function: Function, container_name: String, docker_host: String) {
     let pid = env.pid();
 
     thread::spawn(move || {
@@ -101,6 +94,7 @@ fn prepare_container(
         let docker =
             utils::connect_to_docker(&docker_host).expect("Failed to connect to docker socket");
         let docker_image = utils::select_image(&(function.image)).expect("");
+        let rootless = docker_host != "unix:///var/run/docker.sock";
 
         let options = Some(CreateContainerOptions {
             name: &container_name,
@@ -128,7 +122,11 @@ fn prepare_container(
 
         match result {
             Ok(r) => {
-                let h = utils::extract_host_port(r.network_settings, rootless);
+                let h = if rootless {
+                    utils::extract_rootless_host_port(r.network_settings)
+                } else {
+                    utils::extract_host_port(r.network_settings)
+                };
                 match h {
                     Some((host, port)) => thread_env.send_and_clear(&pid, |env| {
                         let container = Container {

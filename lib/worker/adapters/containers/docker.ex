@@ -61,8 +61,7 @@ defmodule Worker.Adapters.Containers.Docker do
     Fn.prepare_container(
       worker_function,
       container_name,
-      socket,
-      socket != "unix:///var/run/docker.sock"
+      socket
     )
 
     receive do
