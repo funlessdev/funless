@@ -25,13 +25,13 @@ ___
 
 The project can also be compiled as a release, and run like this:
 ```
-mix release
-./_build/dev/rel/worker/bin/worker start
+MIX_ENV=prod mix distillery.release --env=dev
+./_build/dev/rel/worker/bin/worker foreground (or start and then stop)
 ```
 
 And on a different terminal session, start the interactive session like this:
 ```
-iex --name n1@127.0.0.1 --cookie default_secret -S mix
+iex --name n1@127.0.0.1 --cookie test -S mix
 ```
 
 And run:
