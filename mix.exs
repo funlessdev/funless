@@ -42,9 +42,10 @@ defmodule FunlessWorker.MixProject do
   defp deps do
     [
       {:rustler, "~> 0.24.0"},
+      {:jason, "~> 1.3"},
+      {:distillery, "~> 2.0"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:mox, "~> 1.0", only: :test},
-      {:jason, "~> 1.3"}
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 
