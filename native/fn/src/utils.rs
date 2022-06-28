@@ -48,7 +48,7 @@ pub fn connect_to_docker(docker_path: &str) -> Result<Docker, Error> {
 /// * `image_name` -  A string slice holding the short name for the Docker image
 pub fn select_image(image_name: &str) -> Option<&str> {
     match image_name {
-        "nodejs" => Some("openwhisk/action-nodejs-v16"),
+        "nodejs" => Some("openwhisk/action-nodejs-v16:latest"),
         _ => None,
     }
 }
