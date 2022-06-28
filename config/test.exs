@@ -17,6 +17,9 @@
 #
 
 import Config
-config :worker, Worker.Domain.Ports.Containers, adapter: Worker.Containers.Mock
 
+config :worker, Worker.Domain.Ports.Containers, adapter: Worker.Containers.Mock
 config :worker, Worker.Domain.Ports.FunctionStorage, adapter: Worker.FunctionStorage.Mock
+
+# Print only warnings and errors during test
+config :logger, level: :warn

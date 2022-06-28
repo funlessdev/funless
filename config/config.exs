@@ -17,8 +17,10 @@
 #
 
 import Config
-config :worker, Worker.Domain.Ports.Containers, adapter: Worker.Adapters.Containers.Docker
 
+config :worker, Worker.Domain.Ports.Containers, adapter: Worker.Adapters.Containers.Docker
 config :worker, Worker.Domain.Ports.FunctionStorage, adapter: Worker.Adapters.FunctionStorage.ETS
+
+config :logger, :console, format: "\n##### $time $metadata[$level] $levelpad$message\n"
 
 import_config "#{Mix.env()}.exs"

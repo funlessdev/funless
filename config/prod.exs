@@ -17,6 +17,9 @@
 #
 
 import Config
-config :worker, Worker.Domain.Ports.Containers, adapter: Worker.Adapters.Containers.Docker
 
-config :worker, Worker.Domain.Ports.FunctionStorage, adapter: Worker.Adapters.FunctionStorage.ETS
+config :logger,
+  backends: [:console],
+  compile_time_purge_matching: [
+    [level_lower_than: :info]
+  ]
