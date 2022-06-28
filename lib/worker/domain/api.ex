@@ -66,7 +66,7 @@ defmodule Worker.Domain.Api do
   @doc """
     Checks if the function with the given `function_name` has an associated container in the underlying function storage.
 
-    Returns true, [containers] if containers are found, false, [] otherwise.
+    Returns true if containers are found, false otherwise.
 
     ## Parameters
       - %{name: function_name}: generic struct with a `name` field, containing the function name
