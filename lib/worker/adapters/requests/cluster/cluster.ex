@@ -20,6 +20,7 @@ defmodule Worker.Adapters.Requests.Cluster do
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
   alias Worker.Domain.Api
+  require Logger
 
   @doc """
     Creates a container for the given `function`, using the underlying Api.prepare_container(). The result is forwarded to the original sender.
@@ -44,17 +45,24 @@ defmodule Worker.Adapters.Requests.Cluster do
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def invoke(function, args, from) do
-    result =
-      if Api.function_has_container?(function) do
-        Api.run_function(function, args)
-      else
-        case Api.prepare_container(function) do
-          {:ok, _} -> Api.run_function(function, args)
-          {:error, err} -> {:error, err}
-        end
-      end
-
+    result = Api.function_has_containers?(function) |> run_with_container(function, args)
     GenServer.reply(from, result)
+  end
+
+  defp run_with_container(true, function, args) do
+    Api.run_function(function, args)
+  end
+
+  defp run_with_container(false, function, args) do
+    Logger.warn("Cluster: no container found for function #{function.name}")
+
+    case Api.prepare_container(function) do
+      {:ok, _} ->
+        Api.run_function(function, args)
+
+      {:error, err} ->
+        {:error, err}
+    end
   end
 
   @doc """

@@ -24,6 +24,7 @@ defmodule Worker.Adapters.FunctionStorage.ETS.WriteServer do
     :functions_containers.
   """
   use GenServer, restart: :permanent
+  require Logger
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: :write_server)
@@ -32,19 +33,21 @@ defmodule Worker.Adapters.FunctionStorage.ETS.WriteServer do
   @impl true
   def init(_args) do
     table = :ets.new(:functions_containers, [:named_table, :protected])
-    IO.puts("FunctionStorage server running")
+    Logger.info("Function Storage Server: started")
     {:ok, table}
   end
 
   @impl true
   def handle_call({:insert, function_name, container}, _from, table) do
     :ets.insert(table, {function_name, container})
+    Logger.info("Function Storage Server: inserted #{function_name} => #{container}")
     {:reply, {:ok, {function_name, container}}, table}
   end
 
   @impl true
   def handle_call({:delete, function_name, container}, _from, table) do
     :ets.delete_object(table, {function_name, container})
+    Logger.info("Function Storage Server: deleted #{function_name} => #{container}")
     {:reply, {:ok, {function_name, container}}, table}
   end
 end

@@ -83,14 +83,12 @@ defmodule ApiTest do
       assert {:ok, "output"} == Api.run_function(function)
     end
 
-    test "run_function should return {:error, {:nocontainer, err}} when no container is found for the given function",
+    test "run_function should return {:error, err} when no container is found for the given function",
          %{function: function} do
       Worker.FunctionStorage.Mock
-      |> Mox.stub(:get_function_containers, fn _function_name ->
-        {:error, "generic error"}
-      end)
+      |> Mox.stub(:get_function_containers, fn _function_name -> {:error, "nocontainer error"} end)
 
-      assert {:error, {:nocontainer, "generic error"}} == Api.run_function(function)
+      assert {:error, "nocontainer error"} == Api.run_function(function)
     end
 
     test "run_function should return {:error, err} when running the given function raises an error",

@@ -24,6 +24,8 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
   use GenServer, restart: :permanent
   alias Worker.Adapters.Requests.Cluster
 
+  require Logger
+
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: :worker)
   end
@@ -31,7 +33,7 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
   @impl true
   def init(_args) do
     # Process.flag(:trap_exit, true)
-    IO.puts("Worker Server running")
+    Logger.info("Worker Server: started")
     {:ok, nil}
   end
 
