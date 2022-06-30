@@ -167,7 +167,7 @@ defmodule Worker.Domain.Api do
   @doc """
     Removes the first container associated with the given function.
 
-    Returns {:ok, container} if the cleanup is successful;
+    Returns {:ok, container_name} if the cleanup is successful;
     returns {:error, err} if any error is encountered (both while removing the container and when searching for it).
 
     ## Parameters
