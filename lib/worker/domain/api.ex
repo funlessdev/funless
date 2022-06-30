@@ -82,7 +82,7 @@ defmodule Worker.Domain.Api do
   @doc """
     Creates a container for the given function; in case of successful creation, the {function, container} couple is inserted in the function storage.
 
-    Returns {:ok, container} if the container is created, otherwise forwards {:error, err} from the Containers implementation.
+    Returns {:ok, container.name} if the container is created, otherwise forwards {:error, err} from the Containers implementation.
 
     ## Parameters
       - %{...}: generic struct with all the fields required by Worker.Domain.Function
