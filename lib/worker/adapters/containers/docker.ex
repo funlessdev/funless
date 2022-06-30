@@ -103,8 +103,6 @@ defmodule Worker.Adapters.Containers.Docker do
     body = Jason.encode!(%{"value" => args})
 
     request = {"http://#{host}:#{port}/run", [], ["application/json"], body}
-
-    Logger.info("Containers: Running function on container #{host}:#{port}")
     response = :httpc.request(:post, request, [], [])
     response
   end

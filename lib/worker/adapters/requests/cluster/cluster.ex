@@ -49,12 +49,13 @@ defmodule Worker.Adapters.Requests.Cluster do
     GenServer.reply(from, result)
   end
 
+  @doc false
   defp run_with_container(true, function, args) do
     Api.run_function(function, args)
   end
 
   defp run_with_container(false, function, args) do
-    Logger.warn("Cluster: no container found for function #{function.name}")
+    Logger.warn("Worker: no container found for function #{function.name}")
 
     case Api.prepare_container(function) do
       {:ok, _} ->

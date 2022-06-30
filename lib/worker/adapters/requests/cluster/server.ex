@@ -45,6 +45,7 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
 
   @impl true
   def handle_call({:invoke, function}, from, _state) do
+    Logger.info("Worker: received invocation for #{function.name}.")
     spawn(Cluster, :invoke, [function, %{}, from])
     {:noreply, nil}
   end
