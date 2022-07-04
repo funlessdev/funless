@@ -30,7 +30,7 @@ defmodule Core.Domain.Scheduler do
     :no_workers
   end
 
-  def select(workers = [first_w, _]) do
+  def select(workers = [first_w | _]) do
     Logger.info("Scheduler called with workers #{workers}")
     first_w
   end
