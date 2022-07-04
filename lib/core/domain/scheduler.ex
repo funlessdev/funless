@@ -15,16 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[package]
-name = "scheduler"
-version = "0.1.0"
-authors = []
-edition = "2021"
+defmodule Core.Domain.Scheduler do
+  @moduledoc """
+  Scheduler for the funless platform. It is used to choose a worker to run a function.
+  """
 
-[lib]
-name = "scheduler"
-path = "src/lib.rs"
-crate-type = ["cdylib"]
+  require Logger
 
-[dependencies]
-rustler = "0.25.0"
+  @doc """
+  Receives a list of workers and chooses one which can be used for invocation.
+  """
+  def select([]) do
+    Logger.info("Scheduler called with no workers")
+    :no_workers
+  end
+
+  def select(workers = [first_w, _]) do
+    Logger.info("Scheduler called with workers #{workers}")
+    first_w
+  end
+end
