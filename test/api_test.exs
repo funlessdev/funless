@@ -26,7 +26,7 @@ defmodule ApiTest do
 
   setup :verify_on_exit!
 
-  describe "main Core.Api functions" do
+  describe "API invoke" do
     setup do
       Core.Commands.Mock
       |> Mox.stub_with(Core.Adapters.Commands.Test)
@@ -57,6 +57,21 @@ defmodule ApiTest do
 
     test "invoke should return {:error, no workers} when no workers are found" do
       assert Api.invoke(%{name: "test"}) == {:error, message: "No workers available"}
+    end
+
+    test "invoke on node list with more than workers should only use workers" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere, :worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invocation_command, fn _, params -> {:ok, name: params["name"]} end)
+
+      assert Api.invoke(%{"name" => "test"}) == {:ok, name: "test"}
+    end
+
+    test "invoke on node list without workers should return {:error, no workers}" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere] end)
+
+      assert Api.invoke(%{"name" => "test"}) == {:error, message: "No workers available"}
     end
   end
 end
