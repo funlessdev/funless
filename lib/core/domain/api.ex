@@ -31,9 +31,9 @@ defmodule Core.Domain.Api do
   alias Core.Domain.Internal.Invoker
   alias Core.Domain.Nodes
 
-  @type ivk_params :: %{:name => String.t()}
+  @type ivk_params :: Map.t()
 
-  @spec invoke(Struct.t()) :: {:ok, name: String.t()} | {:error, message: String.t()}
+  @spec invoke(Map.t()) :: {:ok, any} | {:error, any}
   @doc """
   Sends an invocation request for the `name` function in the `ns` namespace,
   specified in the invocation parameters.
