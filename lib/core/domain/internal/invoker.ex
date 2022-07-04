@@ -25,18 +25,18 @@ defmodule Core.Domain.Internal.Invoker do
 
   @spec invoke(List.t(), Struct.t()) :: {:ok, name: String.t()} | {:error, message: String.t()}
   def invoke(worker_nodes, ivk_params) do
-    Elixir.Logger.info("Internal Invoker.invoke called")
+    Logger.info("Internal Invoker.invoke called")
 
-    Elixir.Logger.info("Internal Invoker.invoke choosing worker...")
+    Logger.info("Internal Invoker.invoke choosing worker...")
     chosen = worker_nodes |> select_worker
 
     case chosen do
       :no_workers ->
-        Elixir.Logger.info("Internal Invoker.invoke no workers found")
+        Logger.info("Internal Invoker.invoke no workers found")
         {:error, message: "No workers available"}
 
       _ ->
-        Elixir.Logger.info("Internal Invoker.invoke got a worker")
+        Logger.info("Internal Invoker.invoke got a worker")
         Commands.send_invocation_command(chosen, ivk_params)
     end
   end
@@ -44,14 +44,14 @@ defmodule Core.Domain.Internal.Invoker do
   def select_worker([]), do: :no_workers
 
   def select_worker(worker_nodes) do
-    Elixir.Logger.info("Internal Invoker.select_worker mapping nodes to FnWorkers")
+    Logger.info("Internal Invoker.select_worker mapping nodes to FnWorkers")
     fn_workers = Enum.map(0..length(worker_nodes), fn i -> %FnWorker{id: i} end)
 
-    Elixir.Logger.info("Internal Invoker.select_worker calling NIF Scheduler")
+    Logger.info("Internal Invoker.select_worker calling NIF Scheduler")
 
     chosen = Scheduler.select(fn_workers)
 
-    Elixir.Logger.info("Internal Invoker.select_worker chosen worker found!")
+    Logger.info("Internal Invoker.select_worker chosen worker found!")
     extract_worker(chosen, worker_nodes)
   end
 

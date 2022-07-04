@@ -25,6 +25,7 @@ defmodule Core.Adapters.Requests.Http.Server do
   alias Core.Domain.Api
 
   use Plug.Router
+  require Logger
 
   plug(Plug.Parsers,
     parsers: [:urlencoded, {:json, json_decoder: Jason}]
@@ -33,7 +34,7 @@ defmodule Core.Adapters.Requests.Http.Server do
   plug(:match)
   plug(:dispatch)
 
-  # Invoke request on _ ns: POST on _/fn/{func_name}
+  # Invoke request on _ ns: GET on _/fn/{func_name}
   get "/_/fn/:name" do
     Api.invoke(conn.params)
     |> reply_to_client(conn)
@@ -43,11 +44,14 @@ defmodule Core.Adapters.Requests.Http.Server do
     send_resp(conn, 404, "oops")
   end
 
-  defp reply_to_client({:ok, name: name}, conn),
-    do: send_resp(conn, 200, "Invocation of #{name} sent!")
+  defp reply_to_client({:ok, {_, _, response}}, conn) do
+    %{"payload" => result} = Jason.decode!(response)
 
-  defp reply_to_client({:error, message: error}, conn),
-    do: send_resp(conn, 503, "Error during invocation: #{error}")
+    send_resp(conn, 200, result)
+  end
+
+  # defp reply_to_client({:error, {:failed_connect, _}}, conn),
+  #   do: send_resp(conn, 503, "Error during invocation: failed to connect to worker")
 
   defp reply_to_client(_, conn),
     do: send_resp(conn, 500, "Something went wrong...")
