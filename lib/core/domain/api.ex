@@ -30,8 +30,8 @@ defmodule Core.Domain.Api do
   """
   require Logger
   alias Core.Domain.Nodes
-  alias Core.Domain.Scheduler
   alias Core.Domain.Ports.Commands
+  alias Core.Domain.Scheduler
 
   @type ivk_params :: Map.t()
 
