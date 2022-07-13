@@ -28,12 +28,14 @@ defmodule Core.Domain.Api do
   @moduledoc """
   Provides functions to deal with requests to workers.
   """
-  alias Core.Domain.Internal.Invoker
+  require Logger
   alias Core.Domain.Nodes
+  alias Core.Domain.Ports.Commands
+  alias Core.Domain.Scheduler
 
-  @type ivk_params :: %{:name => String.t()}
+  @type ivk_params :: Map.t()
 
-  @spec invoke(Struct.t()) :: {:ok, name: String.t()} | {:error, message: String.t()}
+  @spec invoke(Map.t()) :: {:ok, any} | {:error, any}
   @doc """
   Sends an invocation request for the `name` function in the `ns` namespace,
   specified in the invocation parameters.
@@ -44,6 +46,19 @@ defmodule Core.Domain.Api do
     - ivk_params: a map with the function name.
   """
   def invoke(ivk_params) do
-    Invoker.invoke(Nodes.worker_nodes(), ivk_params)
+    Logger.info("API: received invocation for function '#{ivk_params["function"]}'")
+
+    Scheduler.select(Nodes.worker_nodes())
+    |> invoke_on_chosen(ivk_params)
+  end
+
+  defp invoke_on_chosen(:no_workers, _) do
+    Logger.warn("API: no workers found")
+    {:error, :no_workers}
+  end
+
+  defp invoke_on_chosen(worker, ivk_params) do
+    Logger.info("API: found worker #{worker} for invocation")
+    Commands.send_invocation_command(worker, ivk_params)
   end
 end

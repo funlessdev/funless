@@ -21,29 +21,17 @@ defmodule Core.Adapters.Commands.Worker do
   Adapter to send commands to a worker actor.
   Currently implemented commands: invocation.
   """
-  require Elixir.Logger
+  require Logger
 
   @behaviour Core.Domain.Ports.Commands
 
   @impl true
   def send_invocation_command(worker, ivk_params) do
     f_name = ivk_params["name"]
-    Elixir.Logger.info("Sending invocation request to worker #{worker} for function #{f_name}")
+    function = %{name: "hellojs", image: "nodejs", main_file: "index.js", archive: "js/hello.js"}
 
-    reply =
-      GenServer.call(
-        {:worker, worker},
-        {:invoke,
-         %{
-           name: f_name,
-           image: "node:lts-alpine",
-           main_file: "/opt/index.js",
-           archive: "js/hello.tar.gz"
-         }}
-      )
+    Logger.info("Worker Adapter: invocation of function #{f_name} sent to #{worker}")
 
-    Elixir.Logger.debug(reply)
-
-    {:ok, name: ivk_params["name"]}
+    {:ok, GenServer.call({:worker, worker}, {:invoke, function}, 300_000)}
   end
 end

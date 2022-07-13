@@ -18,7 +18,6 @@
 
 defmodule ApiTest do
   alias Core.Domain.Api
-  alias Core.Domain.Internal.Invoker
 
   use ExUnit.Case, async: true
   import Mox, only: [verify_on_exit!: 1]
@@ -26,7 +25,7 @@ defmodule ApiTest do
 
   setup :verify_on_exit!
 
-  describe "main Core.Api functions" do
+  describe "API invoke" do
     setup do
       Core.Commands.Mock
       |> Mox.stub_with(Core.Adapters.Commands.Test)
@@ -39,6 +38,10 @@ defmodule ApiTest do
 
     test "invoke should return {:ok, name} when no error is present" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invocation_command, fn _, params -> {:ok, name: params["name"]} end)
+
       assert Api.invoke(%{"name" => "test"}) == {:ok, name: "test"}
     end
 
@@ -52,45 +55,22 @@ defmodule ApiTest do
     end
 
     test "invoke should return {:error, no workers} when no workers are found" do
-      assert Api.invoke(%{name: "test"}) == {:error, message: "No workers available"}
+      assert Api.invoke(%{name: "test"}) == {:error, :no_workers}
     end
-  end
 
-  describe "Internal Invoker" do
-    setup do
+    test "invoke on node list with more than workers should only use workers" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere, :worker@localhost] end)
+
       Core.Commands.Mock
-      |> Mox.stub_with(Core.Adapters.Commands.Test)
+      |> Mox.expect(:send_invocation_command, fn _, params -> {:ok, name: params["name"]} end)
 
-      :ok
+      assert Api.invoke(%{"name" => "test"}) == {:ok, name: "test"}
     end
 
-    test "select_worker should return :no_workers when empty list" do
-      expected = :no_workers
-      w_nodes = []
-      workers = Invoker.select_worker(w_nodes)
+    test "invoke on node list without workers should return {:error, no workers}" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere] end)
 
-      assert workers == expected
-    end
-
-    test "selec_worker should return a worker when workers are present" do
-      w_nodes = [:"worker@127.0.0.1"]
-      workers = Invoker.select_worker(w_nodes)
-
-      assert workers == :"worker@127.0.0.1"
-    end
-
-    test "invoke should return error no workers when no workers are found" do
-      w_nodes = []
-      res = Invoker.invoke(w_nodes, "hello_no_workers")
-
-      assert res == {:error, message: "No workers available"}
-    end
-
-    test "invoke should return {:ok, name} when successful" do
-      w_nodes = [:"worker@127.0.0.1"]
-      res = Invoker.invoke(w_nodes, %{"name" => "hello"})
-
-      assert res == {:ok, name: "hello"}
+      assert Api.invoke(%{"name" => "test"}) == {:error, :no_workers}
     end
   end
 end

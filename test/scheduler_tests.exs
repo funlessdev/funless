@@ -15,16 +15,27 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[package]
-name = "scheduler"
-version = "0.1.0"
-authors = []
-edition = "2021"
+defmodule ApiTest do
+  alias Core.Domain.Api
+  alias Core.Domain.Internal.Invoker
 
-[lib]
-name = "scheduler"
-path = "src/lib.rs"
-crate-type = ["cdylib"]
+  use ExUnit.Case, async: true
 
-[dependencies]
-rustler = "0.25.0"
+  describe "Scheduler" do
+    test "select should return a worker" do
+      expected = :worker
+      w_nodes = [:worker]
+      workers = Scheduler.select(w_nodes)
+
+      assert workers == expected
+    end
+
+    test "select should return :no_workers when empty list" do
+      expected = :no_workers
+      w_nodes = []
+      workers = Scheduler.select(w_nodes)
+
+      assert workers == expected
+    end
+  end
+end
