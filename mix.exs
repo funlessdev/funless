@@ -41,9 +41,9 @@ defmodule FunlessWorker.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rustler, "~> 0.24.0"},
+      {:rustler, "~> 0.25.0"},
       {:jason, "~> 1.3"},
-      {:distillery, "~> 2.0"},
+      {:distillery, "~> 2.1"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:mox, "~> 1.0", only: :test}
     ]
