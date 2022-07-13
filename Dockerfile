@@ -29,8 +29,8 @@ ARG APP_VSN
 # The environment to build with
 ARG MIX_ENV=prod
 
-ENV APP_NAME=${APP_NAME} APP_VSN=${APP_VSN} MIX_ENV=${MIX_ENV} \
-    RUSTUP_HOME=/opt/rust CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
+ENV APP_NAME=${APP_NAME} APP_VSN=${APP_VSN} MIX_ENV=${MIX_ENV} 
+# RUSTUP_HOME=/opt/rust CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
 
 # By convention, /opt is typically used for applications
 WORKDIR /opt/app
@@ -38,7 +38,7 @@ WORKDIR /opt/app
 # This step installs all the build tools we'll need
 RUN apk update && \
     apk upgrade --no-cache && \
-    apk add --no-cache git build-base rust cargo && \
+    apk add --no-cache git build-base && \
     mix local.rebar --force && \
     mix local.hex --force
 
@@ -62,7 +62,7 @@ ARG APP_NAME
 
 RUN apk update && \
     apk upgrade && \
-    apk add --no-cache bash openssl-dev libgcc libstdc++
+    apk add --no-cache bash openssl-dev
 
 ENV REPLACE_OS_VARS=true \
     APP_NAME=${APP_NAME}
