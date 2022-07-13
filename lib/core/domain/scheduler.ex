@@ -26,12 +26,12 @@ defmodule Core.Domain.Scheduler do
   Receives a list of workers and chooses one which can be used for invocation.
   """
   def select([]) do
-    Logger.info("Scheduler called with no workers")
+    Logger.warn("Scheduler: tried selection with NO workers")
     :no_workers
   end
 
   def select(workers = [first_w | _]) do
-    Logger.info("Scheduler called with workers #{workers}")
+    Logger.info("Scheduler: selecting between workers #{inspect(workers)}")
     first_w
   end
 end

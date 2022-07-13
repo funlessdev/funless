@@ -18,7 +18,6 @@
 
 defmodule ApiTest do
   alias Core.Domain.Api
-  alias Core.Domain.Internal.Invoker
 
   use ExUnit.Case, async: true
   import Mox, only: [verify_on_exit!: 1]
@@ -56,7 +55,7 @@ defmodule ApiTest do
     end
 
     test "invoke should return {:error, no workers} when no workers are found" do
-      assert Api.invoke(%{name: "test"}) == {:error, message: "No workers available"}
+      assert Api.invoke(%{name: "test"}) == {:error, :no_workers}
     end
 
     test "invoke on node list with more than workers should only use workers" do
@@ -71,7 +70,7 @@ defmodule ApiTest do
     test "invoke on node list without workers should return {:error, no workers}" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere] end)
 
-      assert Api.invoke(%{"name" => "test"}) == {:error, message: "No workers available"}
+      assert Api.invoke(%{"name" => "test"}) == {:error, :no_workers}
     end
   end
 end
