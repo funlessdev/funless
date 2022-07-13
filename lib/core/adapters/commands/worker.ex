@@ -32,6 +32,6 @@ defmodule Core.Adapters.Commands.Worker do
 
     Logger.info("Worker Adapter: invocation of function #{f_name} sent to #{worker}")
 
-    GenServer.call({:worker, worker}, {:invoke, function}, 300_000)
+    {:ok, GenServer.call({:worker, worker}, {:invoke, function}, 300_000)}
   end
 end
