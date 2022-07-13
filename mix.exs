@@ -44,7 +44,7 @@ defmodule Core.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
       # {:rustler, "~> 0.25.0"},
       {:plug, "~> 1.13"},
-      {:bandit, "~> 0.4.10"},
+      {:bandit, "~> 0.5.0"},
       {:jason, "~> 1.3"},
       {:distillery, "~> 2.0"},
       # dev deps
