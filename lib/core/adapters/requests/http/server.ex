@@ -27,6 +27,8 @@ defmodule Core.Adapters.Requests.Http.Server do
   use Plug.Router
   require Logger
 
+  plug(Plug.Logger, log: :debug)
+
   plug(Plug.Parsers,
     parsers: [:urlencoded, {:json, json_decoder: Jason}]
   )
@@ -34,25 +36,31 @@ defmodule Core.Adapters.Requests.Http.Server do
   plug(:match)
   plug(:dispatch)
 
-  # Invoke request on _ ns: GET on _/fn/{func_name}
-  get "/_/fn/:name" do
-    Api.invoke(conn.params)
-    |> reply_to_client(conn)
+  # Invoke request handler
+  post "/invoke" do
+    res = Api.invoke(conn.body_params)
+    conn = put_resp_content_type(conn, "application/json", nil)
+    reply_to_client(res, conn)
   end
 
   match _ do
-    send_resp(conn, 404, "oops")
+    body = Jason.encode!(%{"error" => "Oops, this endpoint is not implemented yet"})
+    conn = put_resp_content_type(conn, "application/json", nil)
+    send_resp(conn, 404, body)
   end
 
-  defp reply_to_client({:ok, {_, _, response}}, conn) do
-    %{"payload" => result} = Jason.decode!(response)
-
-    send_resp(conn, 200, result)
+  defp reply_to_client({:ok, result}, conn) do
+    body = Jason.encode!(result)
+    send_resp(conn, 200, body)
   end
 
-  # defp reply_to_client({:error, {:failed_connect, _}}, conn),
-  #   do: send_resp(conn, 503, "Error during invocation: failed to connect to worker")
+  defp reply_to_client({:error, :no_workers}, conn) do
+    body = Jason.encode!(%{"error" => "Failed to invoke function: no worker available"})
+    send_resp(conn, 503, body)
+  end
 
-  defp reply_to_client(_, conn),
-    do: send_resp(conn, 500, "Something went wrong...")
+  defp reply_to_client(_, conn) do
+    body = Jason.encode!(%{"error" => "Something went wrong..."})
+    send_resp(conn, 500, body)
+  end
 end
