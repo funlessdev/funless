@@ -1,3 +1,29 @@
+## v1.1.0 (2022-07-13)
+
+### Fix
+
+- **worker**: wrap worker reply in a :ok tuple
+
+### Refactor
+
+- add licenses and fix alias ordering
+- **commands**: update docs and type for send_invocation_command
+- **logs**: make some logs clearer and up log level for tests
+- **Invoker**: remove internal invoker
+- **Scheduler**: move scheduler from rust module to built-in elixir module
+- simplify logs and invoke call
+
+### Feat
+
+- **httpserver**: implement post endpoint following openapi spec
+
+## v1.0.3 (2022-06-17)
+
+### Fix
+
+- **Dockerfile**: fix version passed to docker build
+- **Dockerfile**: remove 'v' char from version
+
 ## v1.0.2 (2022-06-17)
 
 ### Fix
