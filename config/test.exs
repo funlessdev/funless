@@ -21,5 +21,5 @@ import Config
 config :core, Core.Domain.Ports.Commands, adapter: Core.Commands.Mock
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Cluster.Mock
 
-# Print only warnings and errors during test
-config :logger, level: :warn
+# Print only errors during test
+config :logger, level: :error

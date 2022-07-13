@@ -46,7 +46,7 @@ defmodule Core.Domain.Api do
     - ivk_params: a map with the function name.
   """
   def invoke(ivk_params) do
-    Logger.info("API: received invocation request: #{ivk_params}")
+    Logger.info("API: received invocation for function '#{ivk_params["function"]}'")
 
     Scheduler.select(Nodes.worker_nodes())
     |> invoke_on_chosen(ivk_params)
@@ -54,7 +54,7 @@ defmodule Core.Domain.Api do
 
   defp invoke_on_chosen(:no_workers, _) do
     Logger.warn("API: no workers found")
-    {:error, message: "No workers available"}
+    {:error, :no_workers}
   end
 
   defp invoke_on_chosen(worker, ivk_params) do
