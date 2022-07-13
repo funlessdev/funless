@@ -38,7 +38,7 @@ defmodule HttpServerTest do
     end
 
     test "invocation with no workers available fails" do
-      conn = conn(:get, "/_/fn/hello")
+      conn = conn(:post, "/invoke", %{"namespace" => "_", "function" => "test", "args" => []})
 
       # Invoke the plug
       conn = Server.call(conn, @opts)
@@ -46,13 +46,21 @@ defmodule HttpServerTest do
       # Assert the response and status
       assert conn.state == :sent
       assert conn.status == 503
-      assert conn.resp_body == "Error during invocation: No workers available"
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+      assert body == %{"error" => "Failed to invoke function: no worker available"}
     end
 
     test "returns 200 with good request" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invocation_command, fn _, params ->
+        {:ok, %{"result" => "Hello, World!"}}
+      end)
+
       # Create a test connection
-      conn = conn(:get, "/_/fn/hello_all_good")
+      conn = conn(:post, "/invoke", %{"namespace" => "_", "function" => "hello", "args" => %{}})
 
       # Invoke the plug
       conn = Server.call(conn, @opts)
@@ -60,7 +68,9 @@ defmodule HttpServerTest do
       # Assert the response and status
       assert conn.state == :sent
       assert conn.status == 200
-      assert conn.resp_body == "Invocation of hello_all_good sent!"
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+      assert body == %{"result" => "Hello, World!"}
     end
 
     # change it with proper response
@@ -74,7 +84,9 @@ defmodule HttpServerTest do
       # Assert the response and status
       assert conn.state == :sent
       assert conn.status == 404
-      assert conn.resp_body == "oops"
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+      assert body == %{"error" => "Oops, this endpoint is not implemented yet"}
     end
   end
 end
