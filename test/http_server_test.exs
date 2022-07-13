@@ -55,9 +55,7 @@ defmodule HttpServerTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn _, params ->
-        {:ok, %{"result" => "Hello, World!"}}
-      end)
+      |> Mox.expect(:send_invocation_command, fn _, _ -> {:ok, %{"result" => "Hello, World!"}} end)
 
       # Create a test connection
       conn = conn(:post, "/invoke", %{"namespace" => "_", "function" => "hello", "args" => %{}})
