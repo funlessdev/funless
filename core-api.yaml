@@ -1,0 +1,76 @@
+openapi: 3.0.2
+info:
+  title: Funless Platfom API
+  description: The API for the Funless Platform
+  version: "1.0"
+components:
+  schemas:
+    invocation:
+      type: object
+      properties:
+        namespace:
+          type: string
+        function:
+          type: string
+        args:
+          type: object
+paths:
+  /invoke:
+    post:
+      summary: Invoke a function
+      description: >-
+        Invokes the specified function from the given namespace with optional
+        parameters from the POST body
+      requestBody:
+        required: true
+        description: >-
+          Object containing the function to invoke, the namespace and optional
+          parameters
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/invocation"
+      responses:
+        "200":
+          description: The function invocation was successfully sent to a worker
+          content:
+            application/json:
+              schema:
+                description: The function invocation result
+                type: object
+                properties:
+                  result:
+                    type: object
+              examples:
+                Invocation of hello world:
+                  value: '{"result": "Hello, World!"}'
+        "500":
+          description: The function invocation failed for some unspecified internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message
+              examples:
+                Invocation with internal error:
+                  value: '{"error": "Something went wrong..."}'
+        "503":
+          description: The function invocation failed because no worker was available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message
+              examples:
+                Invocation with no workers:
+                  value: '{"error": "Failed to invoke function: no worker available"}'
+servers:
+  - url: localhost:4001
+    variables: {}
+    description: The dev server for the funless core launched locally
