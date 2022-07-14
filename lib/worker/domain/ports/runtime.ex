@@ -16,7 +16,7 @@
 # under the License.
 #
 
-defmodule Worker.Domain.Ports.Containers do
+defmodule Worker.Domain.Ports.Runtime do
   @moduledoc """
   Port for container manipulation.
   """

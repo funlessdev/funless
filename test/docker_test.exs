@@ -18,19 +18,19 @@
 
 defmodule DockerTest do
   use ExUnit.Case
-  alias Worker.Adapters.Containers.Docker
+  alias Worker.Adapters.Runtime.OpenWhisk
 
   describe "docker_socket" do
     test "should return socket path when a valid one is present" do
       System.put_env("DOCKER_HOST", "unix:///run/user/1001/docker.sock")
-      assert Docker.docker_socket() == "unix:///run/user/1001/docker.sock"
+      assert OpenWhisk.docker_socket() == "unix:///run/user/1001/docker.sock"
       System.put_env("DOCKER_HOST", "tcp://127.0.0.1:2375")
-      assert Docker.docker_socket() == "tcp://127.0.0.1:2375"
+      assert OpenWhisk.docker_socket() == "tcp://127.0.0.1:2375"
     end
 
     test "should return default value if an incorrect socket path is found" do
       System.put_env("DOCKER_HOST", "test")
-      assert Docker.docker_socket() == "unix:///var/run/docker.sock"
+      assert OpenWhisk.docker_socket() == "unix:///var/run/docker.sock"
     end
   end
 end

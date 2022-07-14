@@ -16,9 +16,9 @@
 # under the License.
 #
 
-defmodule Worker.Adapters.Containers.Test do
+defmodule Worker.Adapters.Runtime.Test do
   @moduledoc false
-  @behaviour Worker.Domain.Ports.Containers
+  @behaviour Worker.Domain.Ports.Runtime
 
   @impl true
   def prepare_container(_worker_function, _container_name) do

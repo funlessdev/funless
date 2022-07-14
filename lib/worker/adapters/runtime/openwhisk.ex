@@ -16,11 +16,11 @@
 # under the License.
 #
 
-defmodule Worker.Adapters.Containers.Docker do
+defmodule Worker.Adapters.Runtime.OpenWhisk do
   @moduledoc """
     Docker adapter for container manipulation. The actual docker interaction is done by the Fn NIFs.
   """
-  @behaviour Worker.Domain.Ports.Containers
+  @behaviour Worker.Domain.Ports.Runtime
   alias Worker.Nif.Fn
 
   require Logger
@@ -60,7 +60,7 @@ defmodule Worker.Adapters.Containers.Docker do
       ) do
     socket = docker_socket()
 
-    Logger.info("Containers: Creating container for function '#{worker_function.name}'")
+    Logger.info("OpenWhisk Runtime: Creating container for function '#{worker_function.name}'")
 
     Fn.prepare_container(
       worker_function,

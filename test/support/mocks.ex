@@ -16,5 +16,5 @@
 # under the License.
 #
 
-Mox.defmock(Worker.Containers.Mock, for: Worker.Domain.Ports.Containers)
+Mox.defmock(Worker.Runtime.Mock, for: Worker.Domain.Ports.Runtime)
 Mox.defmock(Worker.FunctionStorage.Mock, for: Worker.Domain.Ports.FunctionStorage)

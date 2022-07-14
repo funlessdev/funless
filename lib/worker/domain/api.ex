@@ -58,7 +58,7 @@ defmodule Worker.Domain.Api do
   @moduledoc """
   Contains functions used to create, run and remove function containers. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
-  alias Worker.Domain.Ports.Containers
+  alias Worker.Domain.Ports.Runtime
   alias Worker.Domain.Ports.FunctionStorage
 
   require Elixir.Logger
@@ -103,7 +103,7 @@ defmodule Worker.Domain.Api do
 
     container_name = function_name <> "-funless-container"
 
-    Containers.prepare_container(function, container_name)
+    Runtime.prepare_container(function, container_name)
     |> store_prepared_container(function_name)
   end
 
@@ -156,7 +156,7 @@ defmodule Worker.Domain.Api do
 
   defp run_function_with_container({:ok, {_, [container | _]}}, function, args) do
     Logger.info("API: Running function #{function.name} with container: #{container.name}")
-    Containers.run_function(function, args, container)
+    Runtime.run_function(function, args, container)
   end
 
   defp run_function_with_container({:error, err}, _, _) do
@@ -192,7 +192,7 @@ defmodule Worker.Domain.Api do
     result =
       case containers do
         {:ok, {_, [container | _]}} ->
-          Containers.cleanup(function, container)
+          Runtime.cleanup(function, container)
 
         {:error, err} ->
           {:error, err}

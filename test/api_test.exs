@@ -36,8 +36,8 @@ defmodule ApiTest do
 
   describe "main Worker.Api functions" do
     setup do
-      Worker.Containers.Mock
-      |> Mox.stub_with(Worker.Adapters.Containers.Test)
+      Worker.Runtime.Mock
+      |> Mox.stub_with(Worker.Adapters.Runtime.Test)
 
       Worker.FunctionStorage.Mock
       |> Mox.stub_with(Worker.Adapters.FunctionStorage.Test)
@@ -53,7 +53,7 @@ defmodule ApiTest do
 
     test "prepare_container should return {:error, err} when the underlying functions encounter errors",
          %{function: function} do
-      Worker.Containers.Mock
+      Worker.Runtime.Mock
       |> Mox.stub(:prepare_container, fn _function, _container ->
         {:error, "generic error"}
       end)
@@ -63,7 +63,7 @@ defmodule ApiTest do
 
     test "prepare_container should not call the function storage when the container is not created successfully",
          %{function: function} do
-      Worker.Containers.Mock
+      Worker.Runtime.Mock
       |> Mox.stub(:prepare_container, fn _function, _container ->
         {:error, "generic error"}
       end)
@@ -95,7 +95,7 @@ defmodule ApiTest do
          %{
            function: function
          } do
-      Worker.Containers.Mock
+      Worker.Runtime.Mock
       |> Mox.stub(:run_function, fn _function, _args, _container ->
         {:error, "generic error"}
       end)
@@ -107,7 +107,7 @@ defmodule ApiTest do
          %{function: function} do
       %{name: function_name} = function
 
-      {:ok, {_, [_container = %Worker.Domain.Container{name: container_name} | _]}} =
+      {:ok, {_, [%Worker.Domain.Container{name: container_name} | _]}} =
         Worker.FunctionStorage.Mock.get_function_containers(function_name)
 
       assert Api.cleanup(function) == {:ok, container_name}
@@ -116,9 +116,7 @@ defmodule ApiTest do
     test "cleanup should return {:error, err} when no container is found for the given function",
          %{function: function} do
       Worker.FunctionStorage.Mock
-      |> Mox.stub(:get_function_containers, fn _function_name ->
-        {:error, "generic error"}
-      end)
+      |> Mox.stub(:get_function_containers, fn _ -> {:error, "generic error"} end)
 
       assert {:error, "generic error"} == Api.cleanup(function)
     end
