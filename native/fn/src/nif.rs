@@ -85,7 +85,7 @@ struct Container {
 /// * `docker_host` - A string holding the path to the docker socket or remote host
 ///
 #[rustler::nif]
-fn prepare_container(env: Env, function: Function, container_name: String, docker_host: String) {
+fn prepare_runtime(env: Env, function: Function, container_name: String, docker_host: String) {
     let pid = env.pid();
 
     thread::spawn(move || {
@@ -147,7 +147,7 @@ fn prepare_container(env: Env, function: Function, container_name: String, docke
 }
 
 #[rustler::nif]
-fn container_logs(env: Env, container_name: String, docker_host: String) {
+fn runtime_logs(env: Env, container_name: String, docker_host: String) {
     let pid = env.pid();
 
     thread::spawn(move || {

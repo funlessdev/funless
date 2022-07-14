@@ -21,36 +21,36 @@ defmodule Worker.Nif.Fn do
   use Rustler, otp_app: :worker, crate: :fn
 
   @doc """
-    Creates the `_container_name` container, with information taken from `_function`.
+    Creates the `_runtime_name` container, with information taken from `_function`.
 
     ## Parameters
       - _function: Worker.Domain.Function struct, containing function information
-      - _container_name: name of the container that will be created
+      - _runtime_name: name of the container that will be created
       - _docker_host: path of the docker socket in the current system
   """
-  def prepare_container(_function, _container_name, _docker_host) do
+  def prepare_runtime(_function, _runtime_name, _docker_host) do
     :erlang.nif_error(:nif_not_loaded)
   end
 
   @doc """
-    Gets the logs of the `_container_name` container.
+    Gets the logs of the `_runtime_name` container.
 
     ## Parameters
-      - _container_name: name of the container
+      - _runtime_name: name of the container
       - _docker_host: path of the docker socket in the current system
   """
-  def container_logs(_container_name, _docker_host) do
+  def runtime_logs(_runtime_name, _docker_host) do
     :erlang.nif_error(:nif_not_loaded)
   end
 
   @doc """
-    Removes the `_container_name` container.
+    Removes the `_runtime_name` container.
 
     ## Parameters
-      - _container_name: name of the container that will be removed
+      - _runtime_name: name of the container that will be removed
       - _docker_host: path of the docker socket in the current system
   """
-  def cleanup(_container_name, _docker_host) do
+  def cleanup(_runtime_name, _docker_host) do
     :erlang.nif_error(:nif_not_loaded)
   end
 end

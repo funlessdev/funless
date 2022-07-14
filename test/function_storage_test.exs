@@ -23,35 +23,35 @@ defmodule FunctionStorageTest do
 
   setup :verify_on_exit!
 
-  test "get_function_containers returns an error when no containers stored" do
-    result = ETS.get_function_containers("test-no-container")
-    assert result == {:error, "no container found for test-no-container"}
+  test "get_function_runtimes returns an error when no runtimes stored" do
+    result = ETS.get_function_runtimes("test-no-runtime")
+    assert result == {:error, "no runtime found for test-no-runtime"}
   end
 
-  test "insert_function_container adds {function_name, container} couple to the storage" do
-    container = %Worker.Domain.Container{
+  test "insert_function_runtime adds {function_name, runtime} couple to the storage" do
+    runtime = %Worker.Domain.Runtime{
       host: "127.0.0.1",
       port: "8080",
-      name: "test-container"
+      name: "test-runtime"
     }
 
-    ETS.insert_function_container("test", container)
+    ETS.insert_function_runtime("test", runtime)
 
-    assert ETS.get_function_containers("test") == {:ok, {"test", [container]}}
+    assert ETS.get_function_runtimes("test") == {:ok, {"test", [runtime]}}
   end
 
-  test "delete_function_container removes a {function_name, container} couple from the storage" do
-    container = %Worker.Domain.Container{
+  test "delete_function_runtime removes a {function_name, runtime} couple from the storage" do
+    runtime = %Worker.Domain.Runtime{
       host: "127.0.0.1",
       port: "8080",
-      name: "test-container"
+      name: "test-runtime"
     }
 
-    ETS.insert_function_container("test-delete", container)
+    ETS.insert_function_runtime("test-delete", runtime)
 
-    ETS.delete_function_container("test-delete", container)
+    ETS.delete_function_runtime("test-delete", runtime)
 
-    assert ETS.get_function_containers("test-delete") ==
-             {:error, "no container found for test-delete"}
+    assert ETS.get_function_runtimes("test-delete") ==
+             {:error, "no runtime found for test-delete"}
   end
 end

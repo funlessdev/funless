@@ -18,22 +18,22 @@
 
 defmodule Worker.Domain.Ports.FunctionStorage do
   @moduledoc """
-  Port for keeping track of {function, container} tuples in storage.
+  Port for keeping track of {function, runtime} tuples in storage.
   """
   @type function_name :: String.t()
 
-  @type container :: Worker.Domain.Container.t()
+  @type runtime :: Worker.Domain.Runtime.t()
 
-  @callback get_function_containers(function_name) ::
-              {:ok, {function_name, [container]}} | {:error, any}
-  @callback insert_function_container(function_name, container) ::
-              {:ok, {function_name, container}} | {:error, any}
-  @callback delete_function_container(function_name, container) ::
-              {:ok, {function_name, container}} | {:error, any}
+  @callback get_function_runtimes(function_name) ::
+              {:ok, {function_name, [runtime]}} | {:error, any}
+  @callback insert_function_runtime(function_name, runtime) ::
+              {:ok, {function_name, runtime}} | {:error, any}
+  @callback delete_function_runtime(function_name, runtime) ::
+              {:ok, {function_name, runtime}} | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  defdelegate get_function_containers(function_name), to: @adapter
-  defdelegate insert_function_container(function_name, container), to: @adapter
-  defdelegate delete_function_container(function_name, container), to: @adapter
+  defdelegate get_function_runtimes(function_name), to: @adapter
+  defdelegate insert_function_runtime(function_name, runtime), to: @adapter
+  defdelegate delete_function_runtime(function_name, runtime), to: @adapter
 end

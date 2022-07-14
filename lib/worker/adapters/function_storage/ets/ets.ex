@@ -18,26 +18,26 @@
 
 defmodule Worker.Adapters.FunctionStorage.ETS do
   @moduledoc """
-  ETS adapter for storage of {function, container} tuples.
+  ETS adapter for storage of {function, runtime} tuples.
   """
   @behaviour Worker.Domain.Ports.FunctionStorage
 
   @doc """
-    Returns a list of containers associated with the given `function_name`.
+    Returns a list of runtimes associated with the given `function_name`.
 
-    Returns {:ok, {function_name, [list of containers]}} if at least a container is found;
+    Returns {:ok, {function_name, [list of runtimes]}} if at least a runtime is found;
     returns {:error, err} if no value is associated to the `function_name` key in the ETS table.
 
     ## Parameters
       - function_name: name of the function, used as key in the ETS table entries
   """
   @impl true
-  def get_function_containers(function_name) do
-    containers = :ets.lookup(:functions_containers, function_name)
+  def get_function_runtimes(function_name) do
+    runtimes = :ets.lookup(:functions_runtimes, function_name)
 
-    case containers do
+    case runtimes do
       [] ->
-        {:error, "no container found for #{function_name}"}
+        {:error, "no runtime found for #{function_name}"}
 
       tuples when is_list(tuples) ->
         t =
@@ -49,32 +49,32 @@ defmodule Worker.Adapters.FunctionStorage.ETS do
   end
 
   @doc """
-    Inserts the  {`function_name`, `container`} couple in the ETS table.
+    Inserts the  {`function_name`, `runtime`} couple in the ETS table.
     Calls the :write_server process to alter the table, does not modify it directly.
 
-    Returns {:ok, {function_name, container}}.
+    Returns {:ok, {function_name, runtime}}.
 
     ## Parameters
       - function_name: name of the function, used as key in the ETS table entries
-      - container: struct identifying the container
+      - runtime: struct identifying the runtime
   """
   @impl true
-  def insert_function_container(function_name, container) do
-    GenServer.call(:write_server, {:insert, function_name, container})
+  def insert_function_runtime(function_name, runtime) do
+    GenServer.call(:write_server, {:insert, function_name, runtime})
   end
 
   @doc """
-    Removes the  {`function_name`, `container`} couple from the ETS table.
+    Removes the  {`function_name`, `runtime`} couple from the ETS table.
     Calls the :write_server process to alter the table, does not modify it directly.
 
-    Returns {:ok, {function_name, container}}.
+    Returns {:ok, {function_name, runtime}}.
 
     ## Parameters
       - function_name: name of the function, used as key in the ETS table entries
-      - container: struct identifying the container
+      - runtime: struct identifying the runtime
   """
   @impl true
-  def delete_function_container(function_name, container) do
-    GenServer.call(:write_server, {:delete, function_name, container})
+  def delete_function_runtime(function_name, runtime) do
+    GenServer.call(:write_server, {:delete, function_name, runtime})
   end
 end

@@ -21,17 +21,17 @@ defmodule Worker.Adapters.Runtime.Test do
   @behaviour Worker.Domain.Ports.Runtime
 
   @impl true
-  def prepare_container(_worker_function, _container_name) do
-    {:ok, %Worker.Domain.Container{name: "hello-container", host: "localhost", port: "8080"}}
+  def prepare(_, _) do
+    {:ok, %Worker.Domain.Runtime{name: "hello-runtime", host: "localhost", port: "8080"}}
   end
 
   @impl true
-  def run_function(_worker_function, _args, _container_name) do
+  def run_function(_worker_function, _args, _runtime_name) do
     {:ok, "output"}
   end
 
   @impl true
-  def cleanup(_worker_function, container_name) do
-    {:ok, container_name}
+  def cleanup(_worker_function, runtime_name) do
+    {:ok, runtime_name}
   end
 end

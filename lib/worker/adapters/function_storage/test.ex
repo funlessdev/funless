@@ -21,22 +21,22 @@ defmodule Worker.Adapters.FunctionStorage.Test do
   @behaviour Worker.Domain.Ports.FunctionStorage
 
   @impl true
-  def get_function_containers(function_name) do
+  def get_function_runtimes(function_name) do
     {:ok,
      {function_name,
       [
-        %Worker.Domain.Container{name: "container1", host: "localhost", port: "8080"},
-        %Worker.Domain.Container{name: "container2", host: "localhost", port: "8081"}
+        %Worker.Domain.Runtime{name: "runtime1", host: "localhost", port: "8080"},
+        %Worker.Domain.Runtime{name: "runtime2", host: "localhost", port: "8081"}
       ]}}
   end
 
   @impl true
-  def insert_function_container(function_name, container) do
-    {:ok, {function_name, container}}
+  def insert_function_runtime(function_name, runtime) do
+    {:ok, {function_name, runtime}}
   end
 
   @impl true
-  def delete_function_container(function_name, container) do
-    {:ok, {function_name, container}}
+  def delete_function_runtime(function_name, runtime) do
+    {:ok, {function_name, runtime}}
   end
 end

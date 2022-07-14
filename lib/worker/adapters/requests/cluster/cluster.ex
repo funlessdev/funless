@@ -23,20 +23,20 @@ defmodule Worker.Adapters.Requests.Cluster do
   require Logger
 
   @doc """
-    Creates a container for the given `function`, using the underlying Api.prepare_container(). The result is forwarded to the original sender.
+    Creates a runtime for the given `function`, using the underlying Api.prepare(). The result is forwarded to the original sender.
 
     ## Parameters
       - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.Function
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def prepare(function, from) do
-    result = Api.prepare_container(function)
+    result = Api.prepare_runtime(function)
     GenServer.reply(from, result)
   end
 
   @doc """
-    Runs the given `function` using the underlying Api.run_function(), if an associated container exists;
-    if no container is found, creates the required container and runs the function.
+    Runs the given `function` using the underlying Api.run_function(), if an associated runtime exists;
+    if no runtime is found, creates the required runtime and runs the function.
     Any error encountered by the API calls is forwarded to the sender.
 
     ## Parameters
@@ -45,19 +45,19 @@ defmodule Worker.Adapters.Requests.Cluster do
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def invoke(function, args, from) do
-    result = Api.function_has_containers?(function) |> run_with_container(function, args)
+    result = Api.function_has_runtimes?(function) |> run_with_runtime(function, args)
     GenServer.reply(from, result)
   end
 
   @doc false
-  defp run_with_container(true, function, args) do
+  defp run_with_runtime(true, function, args) do
     Api.run_function(function, args)
   end
 
-  defp run_with_container(false, function, args) do
-    Logger.warn("Worker: no container found for function #{function.name}")
+  defp run_with_runtime(false, function, args) do
+    Logger.warn("Worker: no runtime ready found for function #{function.name}")
 
-    case Api.prepare_container(function) do
+    case Api.prepare_runtime(function) do
       {:ok, _} ->
         Api.run_function(function, args)
 
@@ -67,7 +67,7 @@ defmodule Worker.Adapters.Requests.Cluster do
   end
 
   @doc """
-    Deletes the first container wrapping `function`, calling the underlying Api.cleanup(). The result is forwarded to the original sender.
+    Deletes the first runtime wrapping `function`, calling the underlying Api.cleanup(). The result is forwarded to the original sender.
 
     ## Parameters
       - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.Function

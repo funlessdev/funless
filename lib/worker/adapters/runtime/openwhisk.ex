@@ -18,7 +18,7 @@
 
 defmodule Worker.Adapters.Runtime.OpenWhisk do
   @moduledoc """
-    Docker adapter for container manipulation. The actual docker interaction is done by the Fn NIFs.
+    Docker adapter for runtime manipulation. The actual docker interaction is done by the Fn NIFs.
   """
   @behaviour Worker.Domain.Ports.Runtime
   alias Worker.Nif.Fn
@@ -44,32 +44,29 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   end
 
   @doc """
-    Creates a container for the given `worker_function` and names it `container_name`.
+    Creates a runtime for the given `worker_function` and names it `runtime_name`.
 
-    Returns {:ok, container} if no errors are raised;
+    Returns {:ok, runtime} if no errors are raised;
     returns {:error, err} if any error is raised, forwarding the error message.
 
     ## Parameters
-      - worker_function: Worker.Domain.Function struct, containing the necessary information for the creation of the container
-      - container_name: name of the container being created
+      - worker_function: Worker.Domain.Function struct, containing the necessary information for the creation of the runtime
+      - runtime_name: name of the runtime being created
   """
   @impl true
-  def prepare_container(
+  def prepare(
         worker_function = %Worker.Domain.Function{archive: archive},
-        container_name
+        runtime_name
       ) do
     socket = docker_socket()
 
-    Logger.info("OpenWhisk Runtime: Creating container for function '#{worker_function.name}'")
+    Logger.info("OpenWhisk Runtime: Creating runtime for function '#{worker_function.name}'")
 
-    Fn.prepare_container(
-      worker_function,
-      container_name,
-      socket
-    )
+    # TODO
+    Fn.prepare_runtime(worker_function, runtime_name, socket)
 
     receive do
-      {:ok, container = %Worker.Domain.Container{host: host, port: port}} ->
+      {:ok, runtime = %Worker.Domain.Runtime{host: host, port: port}} ->
         :timer.sleep(1000)
         code = File.read!(archive)
 
@@ -81,7 +78,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
         request = {"http://#{host}:#{port}/init", [], ["application/json"], body}
         _response = :httpc.request(:post, request, [], [])
 
-        {:ok, container}
+        {:ok, runtime}
 
       {:error, err} ->
         {:error, err}
@@ -89,17 +86,17 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   end
 
   @doc """
-    Runs the function wrapped by the `container` container.
+    Runs the function wrapped by the `runtime` runtime.
 
     Returns {:ok, results} if the function has been run successfully;
     returns {:error, err} if any error is raised, forwarding the error message.
 
     ## Parameters
       - _worker_function: Worker.Domain.Function struct; ignored in this function
-      - container: struct identifying the container
+      - runtime: struct identifying the runtime
   """
   @impl true
-  def run_function(_worker_function, args, %Worker.Domain.Container{host: host, port: port}) do
+  def run_function(_worker_function, args, %Worker.Domain.Runtime{host: host, port: port}) do
     body = Jason.encode!(%{"value" => args})
 
     request = {"http://#{host}:#{port}/run", [], ["application/json"], body}
@@ -108,22 +105,22 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   end
 
   @doc """
-    Removes the `container` container.
+    Removes the `runtime` runtime.
 
-    Returns {:ok, container} if the container is removed successfully;
+    Returns {:ok, runtime} if the runtime is removed successfully;
     returns {:error, err} if any error is raised, forwarding the error message.
 
     ## Parameters
       - _worker_function: Worker.Domain.Function struct; ignored in this function
-      - container: struct identifying the container being removed
+      - runtime: struct identifying the runtime being removed
   """
   @impl true
-  def cleanup(_worker_function, container = %Worker.Domain.Container{name: container_name}) do
-    Fn.cleanup(container_name, docker_socket())
+  def cleanup(_worker_function, runtime = %Worker.Domain.Runtime{name: runtime_name}) do
+    Fn.cleanup(runtime_name, docker_socket())
 
     receive do
       :ok ->
-        {:ok, container}
+        {:ok, runtime}
 
       {:error, err} ->
         {:error, err}

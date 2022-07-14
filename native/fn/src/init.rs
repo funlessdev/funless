@@ -22,5 +22,5 @@ pub mod utils;
 
 rustler::init!(
     "Elixir.Worker.Nif.Fn",
-    [nif::prepare_container, nif::container_logs, nif::cleanup,]
+    [nif::prepare_runtime, nif::runtime_logs, nif::cleanup,]
 );

@@ -20,8 +20,8 @@ defmodule Worker.Adapters.FunctionStorage.ETS.WriteServer do
   @moduledoc """
     Implements GenServer behaviour; represents a process having exclusive writing rights on an underlying ETS table.
 
-    The {function_name, container} couples are inserted or deleted by using GenServer.call() on this process; the table name is currently hardcoded to
-    :functions_containers.
+    The {function_name, runtime} couples are inserted or deleted by using GenServer.call() on this process; the table name is currently hardcoded to
+    :functions_runtimes.
   """
   use GenServer, restart: :permanent
   require Logger
@@ -32,22 +32,22 @@ defmodule Worker.Adapters.FunctionStorage.ETS.WriteServer do
 
   @impl true
   def init(_args) do
-    table = :ets.new(:functions_containers, [:named_table, :protected])
+    table = :ets.new(:functions_runtimes, [:named_table, :protected])
     Logger.info("Function Storage Server: started")
     {:ok, table}
   end
 
   @impl true
-  def handle_call({:insert, function_name, container}, _from, table) do
-    :ets.insert(table, {function_name, container})
-    Logger.info("Function Storage Server: added #{function_name} => #{container.name}")
-    {:reply, {:ok, {function_name, container}}, table}
+  def handle_call({:insert, function_name, runtime}, _from, table) do
+    :ets.insert(table, {function_name, runtime})
+    Logger.info("Function Storage Server: added #{function_name} => #{runtime.name}")
+    {:reply, {:ok, {function_name, runtime}}, table}
   end
 
   @impl true
-  def handle_call({:delete, function_name, container}, _from, table) do
-    :ets.delete_object(table, {function_name, container})
-    Logger.info("Function Storage Server: deleted #{function_name} => #{container.name}")
-    {:reply, {:ok, {function_name, container}}, table}
+  def handle_call({:delete, function_name, runtime}, _from, table) do
+    :ets.delete_object(table, {function_name, runtime})
+    Logger.info("Function Storage Server: deleted #{function_name} => #{runtime.name}")
+    {:reply, {:ok, {function_name, runtime}}, table}
   end
 end

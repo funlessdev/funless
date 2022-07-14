@@ -24,20 +24,17 @@ defmodule Worker.Domain.Ports.Runtime do
 
   @type args :: any()
 
-  @type container_name :: String.t()
+  @type runtime_name :: String.t()
 
-  @type container :: Worker.Domain.Container.t()
+  @type runtime :: Worker.Domain.Runtime.t()
 
-  @callback prepare_container(worker_function, container_name) ::
-              {:ok, container} | {:error, any}
-  @callback run_function(worker_function, args, container) ::
-              {:ok, any} | {:error, any}
-  @callback cleanup(worker_function, container) ::
-              {:ok, container} | {:error, any}
+  @callback prepare(worker_function, runtime_name) :: {:ok, runtime} | {:error, any}
+  @callback run_function(worker_function, args, runtime) :: {:ok, any} | {:error, any}
+  @callback cleanup(worker_function, runtime) :: {:ok, runtime} | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  defdelegate prepare_container(worker_function, container_name), to: @adapter
+  defdelegate prepare(worker_function, runtime_name), to: @adapter
   defdelegate run_function(worker_function, args, container), to: @adapter
   defdelegate cleanup(worker_function, container), to: @adapter
 end

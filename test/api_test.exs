@@ -45,37 +45,37 @@ defmodule ApiTest do
       :ok
     end
 
-    test "prepare_container should return {:ok, container} when no error is present", %{
+    test "prepare_runtime should return {:ok, runtime} when no error is present", %{
       function: function
     } do
-      assert {:ok, _} = Api.prepare_container(function)
+      assert {:ok, _} = Api.prepare_runtime(function)
     end
 
-    test "prepare_container should return {:error, err} when the underlying functions encounter errors",
+    test "prepare_runtime should return {:error, err} when the underlying functions encounter errors",
          %{function: function} do
       Worker.Runtime.Mock
-      |> Mox.stub(:prepare_container, fn _function, _container ->
+      |> Mox.stub(:prepare, fn _function, _runtime ->
         {:error, "generic error"}
       end)
 
-      assert Api.prepare_container(function) == {:error, "generic error"}
+      assert Api.prepare_runtime(function) == {:error, "generic error"}
     end
 
-    test "prepare_container should not call the function storage when the container is not created successfully",
+    test "prepare_runtime should not call the function storage when the runtime is not created successfully",
          %{function: function} do
       Worker.Runtime.Mock
-      |> Mox.stub(:prepare_container, fn _function, _container ->
+      |> Mox.stub(:prepare, fn _function, _runtime ->
         {:error, "generic error"}
       end)
 
       Worker.FunctionStorage.Mock
       |> Mox.expect(
-        :insert_function_container,
+        :insert_function_runtime,
         0,
-        &Worker.Adapters.FunctionStorage.Test.insert_function_container/2
+        &Worker.Adapters.FunctionStorage.Test.insert_function_runtime/2
       )
 
-      assert Api.prepare_container(function) == {:error, "generic error"}
+      assert Api.prepare_runtime(function) == {:error, "generic error"}
     end
 
     test "run_function should forward {:ok, results} from the called function when no error is present",
@@ -83,12 +83,12 @@ defmodule ApiTest do
       assert {:ok, "output"} == Api.run_function(function)
     end
 
-    test "run_function should return {:error, err} when no container is found for the given function",
+    test "run_function should return {:error, err} when no runtime is found for the given function",
          %{function: function} do
       Worker.FunctionStorage.Mock
-      |> Mox.stub(:get_function_containers, fn _function_name -> {:error, "nocontainer error"} end)
+      |> Mox.stub(:get_function_runtimes, fn _function_name -> {:error, "noruntime error"} end)
 
-      assert {:error, "nocontainer error"} == Api.run_function(function)
+      assert {:error, "noruntime error"} == Api.run_function(function)
     end
 
     test "run_function should return {:error, err} when running the given function raises an error",
@@ -96,27 +96,27 @@ defmodule ApiTest do
            function: function
          } do
       Worker.Runtime.Mock
-      |> Mox.stub(:run_function, fn _function, _args, _container ->
+      |> Mox.stub(:run_function, fn _function, _args, _runtime ->
         {:error, "generic error"}
       end)
 
       assert {:error, "generic error"} == Api.run_function(function)
     end
 
-    test "cleanup should return {:ok, container_name} when a container is found and deleted for the given function",
+    test "cleanup should return {:ok, runtime_name} when a runtime is found and deleted for the given function",
          %{function: function} do
       %{name: function_name} = function
 
-      {:ok, {_, [%Worker.Domain.Container{name: container_name} | _]}} =
-        Worker.FunctionStorage.Mock.get_function_containers(function_name)
+      {:ok, {_, [%Worker.Domain.Runtime{name: runtime_name} | _]}} =
+        Worker.FunctionStorage.Mock.get_function_runtimes(function_name)
 
-      assert Api.cleanup(function) == {:ok, container_name}
+      assert Api.cleanup(function) == {:ok, runtime_name}
     end
 
-    test "cleanup should return {:error, err} when no container is found for the given function",
+    test "cleanup should return {:error, err} when no runtime is found for the given function",
          %{function: function} do
       Worker.FunctionStorage.Mock
-      |> Mox.stub(:get_function_containers, fn _ -> {:error, "generic error"} end)
+      |> Mox.stub(:get_function_runtimes, fn _ -> {:error, "generic error"} end)
 
       assert {:error, "generic error"} == Api.cleanup(function)
     end
