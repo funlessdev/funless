@@ -1,8 +1,13 @@
-## v1.1.0 (2022-07-13)
+## v0.2.0 (2022-07-14)
 
 ### Fix
 
 - **worker**: wrap worker reply in a :ok tuple
+- **Dockerfile**: fix version passed to docker build
+- **Dockerfile**: remove 'v' char from version
+- **Image-Action**: fix build-args List syntax
+- **config.exs**: change :prod cookie to sample atom
+- **worker.ex**: change old :prepare to :invoke in GenServer.Call
 
 ### Refactor
 
@@ -12,38 +17,14 @@
 - **Invoker**: remove internal invoker
 - **Scheduler**: move scheduler from rust module to built-in elixir module
 - simplify logs and invoke call
+- add cluster port to be used to get info from the cluster
+- change architecture to hexagonal (ports and adapters)
+- **scheduler**: Integrate scheduler to repo
+- **license**: add license header
 
 ### Feat
 
 - **httpserver**: implement post endpoint following openapi spec
-
-## v1.0.3 (2022-06-17)
-
-### Fix
-
-- **Dockerfile**: fix version passed to docker build
-- **Dockerfile**: remove 'v' char from version
-
-## v1.0.2 (2022-06-17)
-
-### Fix
-
-- **Image-Action**: fix build-args List syntax
-
-## v1.0.1 (2022-06-17)
-
-### Fix
-
-- **config.exs**: change :prod cookie to sample atom
-
-## v1.0.0 (2022-06-15)
-
-### Fix
-
-- **worker.ex**: change old :prepare to :invoke in GenServer.Call
-
-### Feat
-
 - **worker**: add genserver call to worker
 - rename router to server and wire it up with the invoke + tests
 - add internal invoker api used to send invoke commands
@@ -52,14 +33,3 @@
 - implement simple router
 - add bandit server with supervisor
 - **scheduler**: add funless-scheduler as a submodule
-
-### BREAKING CHANGE
-
-- core is ready for sample pipeline
-
-### Refactor
-
-- add cluster port to be used to get info from the cluster
-- change architecture to hexagonal (ports and adapters)
-- **scheduler**: Integrate scheduler to repo
-- **license**: add license header

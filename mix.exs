@@ -21,7 +21,7 @@ defmodule Core.MixProject do
   def project do
     [
       app: :core,
-      version: "1.1.0",
+      version: "0.2.0",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -41,7 +41,7 @@ defmodule Core.MixProject do
   defp deps do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "x.x.x"}
       # {:rustler, "~> 0.25.0"},
       {:plug, "~> 1.13"},
       {:bandit, "~> 0.5.0"},
