@@ -51,4 +51,4 @@ jobs:
         run: mix credo --strict
 
       - name: Run Elixir Tests
-        run: mix test --cover
+        run: mix test
