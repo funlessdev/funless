@@ -23,6 +23,12 @@ defmodule NodesTest do
 
   setup :verify_on_exit!
 
+  describe "Cluster" do
+    test "should return the list of nodes" do
+      assert Node.list() == Core.Adapters.Cluster.all_nodes()
+    end
+  end
+
   describe "Nodes" do
     setup do
       Core.Cluster.Mock
