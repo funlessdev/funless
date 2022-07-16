@@ -25,15 +25,14 @@ defmodule NodesTest do
 
   describe "Cluster" do
     test "should return the list of nodes" do
+      # credo:disable-for-next-line
       assert Node.list() == Core.Adapters.Cluster.all_nodes()
     end
   end
 
   describe "Nodes" do
     setup do
-      Core.Cluster.Mock
-      |> Mox.stub_with(Core.Adapters.Cluster.Test)
-
+      Core.Cluster.Mock |> Mox.stub_with(Core.Adapters.Cluster.Test)
       :ok
     end
 
