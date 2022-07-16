@@ -16,14 +16,6 @@
 # under the License.
 #
 
-defmodule FnWorker do
-  @moduledoc """
-  Worker struct to pass to Scheduler. The id field refers to the index in the node list.
-  """
-  @enforce_keys [:id]
-  defstruct [:id]
-end
-
 defmodule Core.Domain.Api do
   @moduledoc """
   Provides functions to deal with requests to workers.
