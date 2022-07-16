@@ -25,9 +25,13 @@ defmodule Core.Domain.Api do
   alias Core.Domain.Ports.Commands
   alias Core.Domain.Scheduler
 
-  @type ivk_params :: Map.t()
+  @type ivk_params :: %{
+          namespace: String.t(),
+          function: String.t(),
+          args: Map.t()
+        }
 
-  @spec invoke(Map.t()) :: {:ok, any} | {:error, any}
+  @spec invoke(ivk_params) :: {:ok, %{:result => String.t()}} | {:error, any}
   @doc """
   Sends an invocation request for the `name` function in the `ns` namespace,
   specified in the invocation parameters.
