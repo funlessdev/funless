@@ -20,4 +20,8 @@ import Config
 config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
 
+config :logger, :console,
+  format: "\n##### $time $metadata[$level] $levelpad$message\n",
+  metadata: [:error_code, :file, :line]
+
 import_config "#{Mix.env()}.exs"
