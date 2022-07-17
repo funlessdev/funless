@@ -55,11 +55,11 @@ struct Function {
 
 /// A struct representing containers.
 ///
-/// It's the Rust equivalent of the `Worker.Domain.Container` Elixir struct.
+/// It's the Rust equivalent of the `Worker.Domain.Runtime` Elixir struct.
 ///
 #[derive(NifStruct)]
-#[module = "Worker.Domain.Container"]
-struct Container {
+#[module = "Worker.Domain.Runtime"]
+struct RuntimeContainer {
     name: String,
     host: String,
     port: String,
@@ -129,7 +129,7 @@ fn prepare_runtime(env: Env, function: Function, container_name: String, docker_
                 };
                 match h {
                     Some((host, port)) => thread_env.send_and_clear(&pid, |env| {
-                        let container = Container {
+                        let container = RuntimeContainer {
                             name: container_name,
                             host,
                             port,
@@ -182,7 +182,7 @@ fn runtime_logs(env: Env, container_name: String, docker_host: String) {
 /// * `docker_host` - A string holding the path to the docker socket or remote host
 ///
 #[rustler::nif]
-fn cleanup(env: Env, container_name: String, docker_host: String) {
+fn cleanup_runtime(env: Env, container_name: String, docker_host: String) {
     let pid = env.pid();
 
     thread::spawn(move || {
