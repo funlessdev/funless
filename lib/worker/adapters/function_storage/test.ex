@@ -21,18 +21,17 @@ defmodule Worker.Adapters.FunctionStorage.Test do
   @behaviour Worker.Domain.Ports.FunctionStorage
 
   @impl true
-  def get_function_runtimes(function_name) do
-    {:ok,
-     {function_name, [%Worker.Domain.Runtime{name: "runtime1", host: "localhost", port: "8080"}]}}
+  def get_runtimes(_function_name) do
+    [%Worker.Domain.Runtime{name: "runtime1", host: "localhost", port: "8080"}]
   end
 
   @impl true
-  def insert_function_runtime(function_name, runtime) do
+  def insert_runtime(function_name, runtime) do
     {:ok, {function_name, runtime}}
   end
 
   @impl true
-  def delete_function_runtime(function_name, runtime) do
+  def delete_runtime(function_name, runtime) do
     {:ok, {function_name, runtime}}
   end
 end

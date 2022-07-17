@@ -21,5 +21,5 @@ import Config
 config :worker, Worker.Domain.Ports.Runtime, adapter: Worker.Runtime.Mock
 config :worker, Worker.Domain.Ports.FunctionStorage, adapter: Worker.FunctionStorage.Mock
 
-# Print only warnings and errors during test
-config :logger, level: :warn
+# Print only warnings and errors during test, logs turned off without backends (use :console to see them)
+config :logger, level: :warn, backends: []

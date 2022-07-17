@@ -24,16 +24,16 @@ defmodule Worker.Domain.Ports.FunctionStorage do
 
   @type runtime :: Worker.Domain.Runtime.t()
 
-  @callback get_function_runtimes(function_name) ::
-              {:ok, {function_name, [runtime]}} | {:error, any}
-  @callback insert_function_runtime(function_name, runtime) ::
+  @callback get_runtimes(function_name) :: [runtime]
+
+  @callback insert_runtime(function_name, runtime) ::
               {:ok, {function_name, runtime}} | {:error, any}
-  @callback delete_function_runtime(function_name, runtime) ::
+  @callback delete_runtime(function_name, runtime) ::
               {:ok, {function_name, runtime}} | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  defdelegate get_function_runtimes(function_name), to: @adapter
-  defdelegate insert_function_runtime(function_name, runtime), to: @adapter
-  defdelegate delete_function_runtime(function_name, runtime), to: @adapter
+  defdelegate get_runtimes(function_name), to: @adapter
+  defdelegate insert_runtime(function_name, runtime), to: @adapter
+  defdelegate delete_runtime(function_name, runtime), to: @adapter
 end
