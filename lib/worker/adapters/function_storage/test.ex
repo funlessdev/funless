@@ -23,11 +23,7 @@ defmodule Worker.Adapters.FunctionStorage.Test do
   @impl true
   def get_function_runtimes(function_name) do
     {:ok,
-     {function_name,
-      [
-        %Worker.Domain.Runtime{name: "runtime1", host: "localhost", port: "8080"},
-        %Worker.Domain.Runtime{name: "runtime2", host: "localhost", port: "8081"}
-      ]}}
+     {function_name, [%Worker.Domain.Runtime{name: "runtime1", host: "localhost", port: "8080"}]}}
   end
 
   @impl true

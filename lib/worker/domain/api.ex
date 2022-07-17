@@ -71,8 +71,8 @@ defmodule Worker.Domain.Api do
     ## Parameters
       - %{name: function_name}: generic struct with a `name` field, containing the function name
   """
-  @spec function_has_runtimes?(Struct.t()) :: boolean()
-  def function_has_runtimes?(%{name: function_name}) do
+  @spec function_has_runtimes?(String.t()) :: boolean()
+  def function_has_runtimes?(function_name) do
     case FunctionStorage.get_function_runtimes(function_name) do
       {:ok, _} -> true
       {:error, _} -> false
@@ -87,23 +87,10 @@ defmodule Worker.Domain.Api do
     ## Parameters
       - %{...}: generic struct with all the fields required by Worker.Domain.Function
   """
-  @spec prepare_runtime(Struct.t()) :: {:ok, String.t()} | {:error, any}
-  def prepare_runtime(%{
-        name: function_name,
-        image: image_name,
-        archive: archive_name,
-        main_file: main_file
-      }) do
-    function = %Worker.Domain.Function{
-      name: function_name,
-      image: image_name,
-      archive: archive_name,
-      main_file: main_file
-    }
-
-    runtime_name = function_name <> "-funless"
-
-    Runtime.prepare(function, runtime_name) |> store_prepared_runtime(function_name)
+  @spec prepare_runtime(Worker.Domain.Function.t()) :: {:ok, String.t()} | {:error, any}
+  def prepare_runtime(function) do
+    runtime_name = function.name <> "-funless"
+    Runtime.prepare(function, runtime_name) |> store_prepared_runtime(function.name)
   end
 
   defp store_prepared_runtime(
@@ -132,24 +119,9 @@ defmodule Worker.Domain.Api do
       - %{...}: generic struct with all the fields required by Worker.Domain.Function
       - args: arguments passed to the function
   """
-  @spec run_function(Struct.t()) :: {:ok, any} | {:error, any}
-  def run_function(
-        %{
-          name: function_name,
-          image: image_name,
-          archive: archive_name,
-          main_file: main_file
-        },
-        args \\ %{}
-      ) do
-    function = %Worker.Domain.Function{
-      name: function_name,
-      image: image_name,
-      archive: archive_name,
-      main_file: main_file
-    }
-
-    FunctionStorage.get_function_runtimes(function_name)
+  @spec run_function(Worker.Domain.Function.t(), Map.t()) :: {:ok, any} | {:error, any}
+  def run_function(function, args \\ %{}) do
+    FunctionStorage.get_function_runtimes(function.name)
     |> run_function_with_runtime(function, args)
   end
 
@@ -172,21 +144,9 @@ defmodule Worker.Domain.Api do
     ## Parameters
       - %{...}: generic struct with all the fields required by Worker.Domain.Function
   """
-  @spec cleanup(Struct.t()) :: {:ok, String.t()} | {:error, any}
-  def cleanup(%{
-        name: function_name,
-        image: image_name,
-        archive: archive_name,
-        main_file: main_file
-      }) do
-    function = %Worker.Domain.Function{
-      name: function_name,
-      image: image_name,
-      archive: archive_name,
-      main_file: main_file
-    }
-
-    runtimes = FunctionStorage.get_function_runtimes(function_name)
+  @spec cleanup(Worker.Domain.Function.t()) :: {:ok, String.t()} | {:error, any}
+  def cleanup(function) do
+    runtimes = FunctionStorage.get_function_runtimes(function.name)
 
     result =
       case runtimes do
@@ -199,7 +159,7 @@ defmodule Worker.Domain.Api do
 
     case result do
       {:ok, runtime = %Worker.Domain.Runtime{name: runtime_name}} ->
-        FunctionStorage.delete_function_runtime(function_name, runtime)
+        FunctionStorage.delete_function_runtime(function.name, runtime)
         {:ok, runtime_name}
 
       _ ->

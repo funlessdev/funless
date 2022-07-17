@@ -24,7 +24,7 @@ defmodule ApiTest do
   setup :verify_on_exit!
 
   setup_all do
-    function = %{
+    function = %Worker.Domain.Function{
       name: "hellojs",
       image: "node:lts-alpine",
       main_file: "/opt/index.js",
@@ -36,13 +36,20 @@ defmodule ApiTest do
 
   describe "main Worker.Api functions" do
     setup do
-      Worker.Runtime.Mock
-      |> Mox.stub_with(Worker.Adapters.Runtime.Test)
-
-      Worker.FunctionStorage.Mock
-      |> Mox.stub_with(Worker.Adapters.FunctionStorage.Test)
-
+      Worker.Runtime.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Test)
+      Worker.FunctionStorage.Mock |> Mox.stub_with(Worker.Adapters.FunctionStorage.Test)
       :ok
+    end
+
+    test "function_has_runtimes? should return true if function has runtimes" do
+      assert Worker.Domain.Api.function_has_runtimes?("test") == true
+    end
+
+    test "function_has_runtimes? should return false if function has no runtimes" do
+      Worker.FunctionStorage.Mock
+      |> Mox.stub(:get_function_runtimes, fn _function_name -> {:error, "no runtime found"} end)
+
+      assert Worker.Domain.Api.function_has_runtimes?("test") == false
     end
 
     test "prepare_runtime should return {:ok, runtime} when no error is present", %{
@@ -78,9 +85,9 @@ defmodule ApiTest do
       assert Api.prepare_runtime(function) == {:error, "generic error"}
     end
 
-    test "run_function should forward {:ok, results} from the called function when no error is present",
+    test "run_function should forward {:ok, result map} from the called function when no error is present",
          %{function: function} do
-      assert {:ok, "output"} == Api.run_function(function)
+      assert {:ok, %{"result" => "output"}} == Api.run_function(function)
     end
 
     test "run_function should return {:error, err} when no runtime is found for the given function",

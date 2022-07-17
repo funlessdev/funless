@@ -27,7 +27,7 @@ defmodule Worker.Adapters.Runtime.Test do
 
   @impl true
   def run_function(_worker_function, _args, _runtime_name) do
-    {:ok, "output"}
+    {:ok, %{"result" => "output"}}
   end
 
   @impl true
