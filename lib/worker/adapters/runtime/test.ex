@@ -31,7 +31,7 @@ defmodule Worker.Adapters.Runtime.Test do
   end
 
   @impl true
-  def cleanup(runtime_name) do
-    {:ok, runtime_name}
+  def cleanup(runtime) do
+    {:ok, runtime}
   end
 end

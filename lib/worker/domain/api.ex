@@ -154,7 +154,7 @@ defmodule Worker.Domain.Api do
 
   defp remove_runtime_from_store({:ok, runtime}, function_name) do
     FunctionStorage.delete_runtime(function_name, runtime)
-    {:ok, runtime.name}
+    {:ok, runtime}
   end
 
   defp remove_runtime_from_store(err, _), do: err

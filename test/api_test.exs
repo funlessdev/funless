@@ -88,11 +88,11 @@ defmodule ApiTest do
       assert {:error, "generic error"} == Api.invoke_function(function)
     end
 
-    test "cleanup should return {:ok, runtime_name} when a runtime is found and deleted for the given function",
+    test "cleanup should return {:ok, runtime} when a runtime is found and deleted for the given function",
          %{function: function} do
       [runtime | _] = Worker.FunctionStorage.Mock.get_runtimes(function.name)
 
-      assert Api.cleanup(function) == {:ok, runtime.name}
+      assert Api.cleanup(function) == {:ok, runtime}
     end
 
     test "cleanup should return {:error, err} when no runtime is found for the given function",
