@@ -21,9 +21,36 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     Docker adapter for runtime manipulation. The actual docker interaction is done by the Fn NIFs.
   """
   @behaviour Worker.Domain.Ports.Runtime
-  alias Worker.Nif.Fn
-
+  use Rustler, otp_app: :worker, crate: :fn
   require Logger
+
+  #   Creates the `_runtime_name` container, with information taken from `_function`.
+  #   ## Parameters
+  #     - _function: Worker.Domain.Function struct, containing function information
+  #     - _runtime_name: name of the container that will be created
+  #     - _docker_host: path of the docker socket in the current system
+  @doc false
+  def prepare_runtime(_function, _runtime_name, _docker_host) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  #   Gets the logs of the `_runtime_name` container.
+  #   ## Parameters
+  #     - _runtime_name: name of the container
+  #     - _docker_host: path of the docker socket in the current system
+  @doc false
+  def runtime_logs(_runtime_name, _docker_host) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  #   Removes the `_runtime_name` container.
+  #   ## Parameters
+  #     - _runtime_name: name of the container that will be removed
+  #     - _docker_host: path of the docker socket in the current system
+  @doc false
+  def cleanup_runtime(_runtime_name, _docker_host) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
 
   @doc """
     Checks the DOCKER_HOST environment variable for the docker socket path. If an incorrect path is found, the default is used instead.
@@ -62,8 +89,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
 
     Logger.info("OpenWhisk Runtime: Creating runtime for function '#{worker_function.name}'")
 
-    # TODO
-    Fn.prepare_runtime(worker_function, runtime_name, socket)
+    prepare_runtime(worker_function, runtime_name, socket)
 
     receive do
       {:ok, runtime = %Worker.Domain.Runtime{host: host, port: port}} ->
@@ -82,6 +108,9 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
 
       {:error, err} ->
         {:error, err}
+
+      something ->
+        {:error, "OpenWhisk Runtime: Unexpected response from runtime: #{inspect(something)}"}
     end
   end
 
@@ -116,7 +145,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   """
   @impl true
   def cleanup(_worker_function, runtime = %Worker.Domain.Runtime{name: runtime_name}) do
-    Fn.cleanup(runtime_name, docker_socket())
+    cleanup_runtime(runtime_name, docker_socket())
 
     receive do
       :ok ->
