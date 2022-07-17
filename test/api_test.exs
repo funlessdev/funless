@@ -71,12 +71,12 @@ defmodule ApiTest do
       assert Api.prepare_runtime(function) == {:error, "generic error"}
     end
 
-    test "run_function should return {:ok, result map} from the called function when no error is present",
+    test "invoke_function should return {:ok, result map} from the called function when no error is present",
          %{function: function} do
       assert {:ok, %{"result" => "output"}} == Api.invoke_function(function)
     end
 
-    test "run_function should return {:error, err} when running the given function raises an error",
+    test "invoke_function should return {:error, err} when running the given function raises an error",
          %{
            function: function
          } do
@@ -86,6 +86,18 @@ defmodule ApiTest do
       end)
 
       assert {:error, "generic error"} == Api.invoke_function(function)
+    end
+
+    test "invoke_function should return {:error, err} when no runtime available and its creation fails",
+         %{
+           function: function
+         } do
+      Worker.FunctionStorage.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
+
+      Worker.Runtime.Mock
+      |> Mox.expect(:prepare, fn _, _ -> {:error, "creation error"} end)
+
+      assert {:error, "creation error"} == Api.invoke_function(function)
     end
 
     test "cleanup should return {:ok, runtime} when a runtime is found and deleted for the given function",

@@ -107,6 +107,15 @@ defmodule RequestTest do
       assert %{"error" => "runtime error during invocation"} == reply
     end
 
+    test "invoke with args should return {:ok, %{result => ..}} when no errors occur", %{
+      pid: pid,
+      function: function
+    } do
+      expected = {:ok, %{"result" => "output"}}
+      reply = GenServer.call(pid, {:invoke, function, %{"arg1" => "value1"}})
+      assert expected == reply
+    end
+
     test "cleanup call should return {:ok, runtime} when no error occurs", %{
       pid: pid,
       function: function
