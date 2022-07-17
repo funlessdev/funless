@@ -94,5 +94,40 @@ defmodule RequestTest do
 
       assert {:ok, %{"result" => "output"}} == reply
     end
+
+    test "invoke call should return back an error as map when it occurs during invocation", %{
+      pid: pid,
+      function: function
+    } do
+      Worker.Runtime.Mock
+      |> Mox.expect(:run_function, fn _, _, _ -> {:error, "runtime error during invocation"} end)
+
+      reply = GenServer.call(pid, {:invoke, function})
+
+      assert %{"error" => "runtime error during invocation"} == reply
+    end
+
+    test "cleanup call should return {:ok, runtime} when no error occurs", %{
+      pid: pid,
+      function: function
+    } do
+      expected = {:ok, %Worker.Domain.Runtime{name: "runtime1", host: "localhost", port: "8080"}}
+
+      reply = GenServer.call(pid, {:cleanup, function})
+      assert expected == reply
+    end
+
+    test "cleanup call should return back an error when it occurs during cleanup", %{
+      pid: pid,
+      function: function
+    } do
+      expected = %{"error" => "cleanup error"}
+
+      Worker.Runtime.Mock
+      |> Mox.expect(:cleanup, fn _ -> {:error, "cleanup error"} end)
+
+      reply = GenServer.call(pid, {:cleanup, function})
+      assert expected == reply
+    end
   end
 end
