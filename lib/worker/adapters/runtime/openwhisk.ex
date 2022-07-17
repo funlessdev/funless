@@ -62,11 +62,8 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     docker_env = System.get_env("DOCKER_HOST", default)
 
     case Regex.run(~r/^((unix|tcp|http):\/\/)(.*)$/, docker_env) do
-      nil ->
-        default
-
-      [socket | _] ->
-        socket
+      nil -> default
+      [socket | _] -> socket
     end
   end
 
@@ -140,19 +137,15 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     returns {:error, err} if any error is raised, forwarding the error message.
 
     ## Parameters
-      - _worker_function: Worker.Domain.Function struct; ignored in this function
       - runtime: struct identifying the runtime being removed
   """
   @impl true
-  def cleanup(_worker_function, runtime = %Worker.Domain.Runtime{name: runtime_name}) do
-    cleanup_runtime(runtime_name, docker_socket())
+  def cleanup(runtime) do
+    cleanup_runtime(runtime.name, docker_socket())
 
     receive do
-      :ok ->
-        {:ok, runtime}
-
-      {:error, err} ->
-        {:error, err}
+      :ok -> {:ok, runtime}
+      {:error, err} -> {:error, err}
     end
   end
 end
