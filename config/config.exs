@@ -22,7 +22,7 @@ config :worker, Worker.Domain.Ports.Runtime, adapter: Worker.Adapters.Runtime.Op
 config :worker, Worker.Domain.Ports.FunctionStorage, adapter: Worker.Adapters.FunctionStorage.ETS
 
 config :logger, :console,
-  format: "\n#####[$level] $time $metadata $levelpad$message\n",
-  metadata: [:error_code, :file, :line]
+  format: "\n#####[$level] $time $metadata $message\n",
+  metadata: [:file, :line]
 
 import_config "#{Mix.env()}.exs"
