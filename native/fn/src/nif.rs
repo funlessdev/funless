@@ -45,7 +45,7 @@ static TOKIO: Lazy<Runtime> = Lazy::new(|| {
 /// It's the Rust equivalent of the `Worker.Domain.Function` Elixir struct.
 ///
 #[derive(NifStruct)]
-#[module = "Elixir.Worker.Domain.FunctionStruct"]
+#[module = "Worker.Domain.FunctionStruct"]
 struct Function {
     name: String,
     image: String,
@@ -58,7 +58,7 @@ struct Function {
 /// It's the Rust equivalent of the `Worker.Domain.Runtime` Elixir struct.
 ///
 #[derive(NifStruct)]
-#[module = "Elixir.Worker.Domain.RuntimeStruct"]
+#[module = "Worker.Domain.RuntimeStruct"]
 struct RuntimeContainer {
     name: String,
     host: String,

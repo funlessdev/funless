@@ -38,13 +38,8 @@ defmodule Worker.Domain.Api do
   """
   @spec prepare_runtime(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
   def prepare_runtime(%{name: fname, image: image, archive: archive, main_file: main}) do
-    ## Needed to pass it to the rustler prepare_runtime function
-    function = %FunctionStruct{
-      name: fname,
-      image: image,
-      archive: archive,
-      main_file: main
-    }
+    ## Conversion needed to pass it to the rustler prepare_runtime function, perhaps move the conversion in cluster.ex?
+    function = %FunctionStruct{name: fname, image: image, archive: archive, main_file: main}
 
     runtime_name = fname <> "-funless"
     Runtime.prepare(function, runtime_name) |> store_prepared_runtime(fname)

@@ -120,12 +120,19 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
       - runtime: struct identifying the runtime
   """
   @impl true
-  def run_function(_worker_function, args, %RuntimeStruct{host: host, port: port}) do
+  def run_function(_worker_function, args, runtime) do
+    Logger.info("OpenWhisk Runtime: Running function on runtime '#{runtime.name}'")
     body = Jason.encode!(%{"value" => args})
 
-    request = {"http://#{host}:#{port}/run", [], ["application/json"], body}
+    request = {"http://#{runtime.host}:#{runtime.port}/run", [], ["application/json"], body}
     response = :httpc.request(:post, request, [], [])
-    response
+
+    IO.inspect(response)
+
+    case response do
+      {:ok, result} -> {:ok, result}
+      {:error, err} -> {:error, err}
+    end
   end
 
   @doc """
@@ -139,6 +146,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   """
   @impl true
   def cleanup(runtime) do
+    Logger.info("OpenWhisk Runtime: Removing runtime '#{runtime.name}'")
     cleanup_runtime(runtime.name, docker_socket())
 
     receive do
