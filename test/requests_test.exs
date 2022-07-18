@@ -19,13 +19,15 @@
 defmodule RequestTest do
   use ExUnit.Case
   alias Worker.Adapters.Requests.Cluster
+  alias Worker.Domain.FunctionStruct
+  alias Worker.Domain.RuntimeStruct
   import Mox, only: [verify_on_exit!: 1, set_mox_global: 1]
 
   setup :set_mox_global
   setup :verify_on_exit!
 
   setup_all do
-    function = %Worker.Domain.Function{
+    function = %FunctionStruct{
       name: "hellojs",
       image: "node:lts-alpine",
       main_file: "/opt/index.js",
@@ -49,8 +51,7 @@ defmodule RequestTest do
       pid: pid,
       function: function
     } do
-      expected =
-        {:ok, %Worker.Domain.Runtime{host: "localhost", name: "hello-runtime", port: "8080"}}
+      expected = {:ok, %RuntimeStruct{host: "localhost", name: "hello-runtime", port: "8080"}}
 
       reply = GenServer.call(pid, {:prepare, function})
       assert expected == reply
@@ -87,7 +88,7 @@ defmodule RequestTest do
 
       Worker.Runtime.Mock
       |> Mox.expect(:prepare, fn _, _ ->
-        {:ok, %Worker.Domain.Runtime{name: "hello-runtime", host: "localhost", port: "8080"}}
+        {:ok, %RuntimeStruct{name: "hello-runtime", host: "localhost", port: "8080"}}
       end)
 
       reply = GenServer.call(pid, {:invoke, function})
@@ -120,7 +121,7 @@ defmodule RequestTest do
       pid: pid,
       function: function
     } do
-      expected = {:ok, %Worker.Domain.Runtime{name: "runtime1", host: "localhost", port: "8080"}}
+      expected = {:ok, %RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"}}
 
       reply = GenServer.call(pid, {:cleanup, function})
       assert expected == reply

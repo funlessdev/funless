@@ -20,9 +20,11 @@ defmodule Worker.Domain.Ports.FunctionStorage do
   @moduledoc """
   Port for keeping track of {function, runtime} tuples in storage.
   """
+  alias Worker.Domain.RuntimeStruct
+
   @type function_name :: String.t()
 
-  @type runtime :: Worker.Domain.Runtime.t()
+  @type runtime :: RuntimeStruct.t()
 
   @callback get_runtimes(function_name) :: [runtime]
 

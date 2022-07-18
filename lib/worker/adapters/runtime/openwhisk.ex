@@ -23,6 +23,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   @behaviour Worker.Domain.Ports.Runtime
   use Rustler, otp_app: :worker, crate: :fn
   require Logger
+  alias Worker.Domain.RuntimeStruct
 
   #   Creates the `_runtime_name` container, with information taken from `_function`.
   #   ## Parameters
@@ -78,20 +79,17 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
       - runtime_name: name of the runtime being created
   """
   @impl true
-  def prepare(
-        worker_function = %Worker.Domain.Function{archive: archive},
-        runtime_name
-      ) do
+  def prepare(function, runtime_name) do
     socket = docker_socket()
 
-    Logger.info("OpenWhisk Runtime: Creating runtime for function '#{worker_function.name}'")
+    Logger.info("OpenWhisk Runtime: Creating runtime for function '#{function.name}'")
 
-    prepare_runtime(worker_function, runtime_name, socket)
+    prepare_runtime(function, runtime_name, socket)
 
     receive do
-      {:ok, runtime = %Worker.Domain.Runtime{host: host, port: port}} ->
+      {:ok, runtime = %RuntimeStruct{host: host, port: port}} ->
         :timer.sleep(1000)
-        code = File.read!(archive)
+        code = File.read!(function.archive)
 
         body =
           Jason.encode!(%{
@@ -122,7 +120,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
       - runtime: struct identifying the runtime
   """
   @impl true
-  def run_function(_worker_function, args, %Worker.Domain.Runtime{host: host, port: port}) do
+  def run_function(_worker_function, args, %RuntimeStruct{host: host, port: port}) do
     body = Jason.encode!(%{"value" => args})
 
     request = {"http://#{host}:#{port}/run", [], ["application/json"], body}

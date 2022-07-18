@@ -20,12 +20,13 @@ defmodule ApiTest do
   use ExUnit.Case, async: true
 
   alias Worker.Domain.Api
+  alias Worker.Domain.FunctionStruct
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!
 
   setup_all do
-    function = %Worker.Domain.Function{
+    function = %FunctionStruct{
       name: "hellojs",
       image: "node:lts-alpine",
       main_file: "/opt/index.js",

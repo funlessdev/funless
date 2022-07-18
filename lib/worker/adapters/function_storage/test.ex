@@ -19,10 +19,11 @@
 defmodule Worker.Adapters.FunctionStorage.Test do
   @moduledoc false
   @behaviour Worker.Domain.Ports.FunctionStorage
+  alias Worker.Domain.RuntimeStruct
 
   @impl true
   def get_runtimes(_function_name) do
-    [%Worker.Domain.Runtime{name: "runtime1", host: "localhost", port: "8080"}]
+    [%RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"}]
   end
 
   @impl true

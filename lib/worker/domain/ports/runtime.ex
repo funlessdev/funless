@@ -20,13 +20,16 @@ defmodule Worker.Domain.Ports.Runtime do
   @moduledoc """
   Port for runtime manipulation.
   """
-  @type worker_function :: Worker.Domain.Function.t()
+  alias Worker.Domain.FunctionStruct
+  alias Worker.Domain.RuntimeStruct
+
+  @type worker_function :: FunctionStruct.t()
 
   @type args :: any()
 
   @type runtime_name :: String.t()
 
-  @type runtime :: Worker.Domain.Runtime.t()
+  @type runtime :: RuntimeStruct.t()
 
   @callback prepare(worker_function, runtime_name) :: {:ok, runtime} | {:error, any}
   @callback run_function(worker_function, args, runtime) :: {:ok, any} | {:error, any}

@@ -19,6 +19,7 @@
 defmodule FunctionStorageTest do
   use ExUnit.Case, async: true
   alias Worker.Adapters.FunctionStorage.ETS
+  alias(Worker.Domain.RuntimeStruct)
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!
@@ -29,7 +30,7 @@ defmodule FunctionStorageTest do
   end
 
   test "insert_function_runtime adds {function_name, runtime} couple to the storage" do
-    runtime = %Worker.Domain.Runtime{
+    runtime = %RuntimeStruct{
       host: "127.0.0.1",
       port: "8080",
       name: "test-runtime"
@@ -41,7 +42,7 @@ defmodule FunctionStorageTest do
   end
 
   test "delete_function_runtime removes a {function_name, runtime} couple from the storage" do
-    runtime = %Worker.Domain.Runtime{
+    runtime = %RuntimeStruct{
       host: "127.0.0.1",
       port: "8080",
       name: "test-runtime"

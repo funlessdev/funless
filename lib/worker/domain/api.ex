@@ -16,50 +16,15 @@
 # under the License.
 #
 
-defmodule Worker.Domain.Runtime do
-  @moduledoc """
-    Runtime struct, passed to adapters.
-
-    ## Fields
-      - name: runtime name
-      - host: runtime IP address
-      - port: runtime port
-  """
-  @type t :: %__MODULE__{
-          name: String.t(),
-          host: String.t(),
-          port: String.t()
-        }
-  @enforce_keys [:name]
-  defstruct [:name, :host, :port]
-end
-
-defmodule Worker.Domain.Function do
-  @moduledoc """
-    Function struct, passed to adapters.
-
-    ## Fields
-      - name: function name
-      - image: base Docker image for the function's runtime
-      - archive: path of the tarball containing the function's code, will be copied into runtime
-      - main_file: path of the function's main file inside the runtime
-  """
-  @type t :: %__MODULE__{
-          name: String.t(),
-          image: String.t(),
-          archive: String.t(),
-          main_file: String.t()
-        }
-  @enforce_keys [:name, :image, :archive, :main_file]
-  defstruct [:name, :image, :archive, :main_file]
-end
-
 defmodule Worker.Domain.Api do
   @moduledoc """
   Contains functions used to create, run and remove function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
   alias Worker.Domain.Ports.FunctionStorage
   alias Worker.Domain.Ports.Runtime
+
+  alias Worker.Domain.FunctionStruct
+  alias Worker.Domain.RuntimeStruct
 
   require Elixir.Logger
 
@@ -71,11 +36,18 @@ defmodule Worker.Domain.Api do
     ## Parameters
       - %{...}: generic struct with all the fields required by Worker.Domain.Function
   """
-  @spec prepare_runtime(Worker.Domain.Function.t()) ::
-          {:ok, Worker.Domain.Runtime.t()} | {:error, any}
-  def prepare_runtime(function) do
-    runtime_name = function.name <> "-funless"
-    Runtime.prepare(function, runtime_name) |> store_prepared_runtime(function.name)
+  @spec prepare_runtime(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
+  def prepare_runtime(%{name: fname, image: image, archive: archive, main_file: main}) do
+    ## Needed to pass it to the rustler prepare_runtime function
+    function = %FunctionStruct{
+      name: fname,
+      image: image,
+      archive: archive,
+      main_file: main
+    }
+
+    runtime_name = fname <> "-funless"
+    Runtime.prepare(function, runtime_name) |> store_prepared_runtime(fname)
   end
 
   defp store_prepared_runtime({:ok, runtime}, function_name) do
@@ -102,13 +74,13 @@ defmodule Worker.Domain.Api do
       - %{...}: struct with all the fields required by Worker.Domain.Function
       - args: arguments passed to the function
   """
-  @spec invoke_function(Worker.Domain.Function.t(), map()) :: {:ok, any} | {:error, any}
+  @spec invoke_function(FunctionStruct.t(), map()) :: {:ok, any} | {:error, any}
   def invoke_function(function, args \\ %{}) do
     Logger.info("API: Invoking function #{function.name}")
     FunctionStorage.get_runtimes(function.name) |> run_function(function, args)
   end
 
-  @spec run_function([Worker.Domain.Runtime], Worker.Domain.Function.t(), map()) ::
+  @spec run_function([RuntimeStruct], FunctionStruct.t(), map()) ::
           {:ok, any} | {:error, any}
   defp run_function(runtimes, function, args)
 
@@ -135,7 +107,7 @@ defmodule Worker.Domain.Api do
     ## Parameters
       - %{...}: generic struct with all the fields required by Worker.Domain.Function
   """
-  @spec cleanup(Worker.Domain.Function.t()) :: {:ok, String.t()} | {:error, any}
+  @spec cleanup(FunctionStruct.t()) :: {:ok, String.t()} | {:error, any}
   def cleanup(function) do
     FunctionStorage.get_runtimes(function.name)
     |> runtime_cleanup

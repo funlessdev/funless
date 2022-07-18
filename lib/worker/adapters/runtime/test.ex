@@ -19,10 +19,11 @@
 defmodule Worker.Adapters.Runtime.Test do
   @moduledoc false
   @behaviour Worker.Domain.Ports.Runtime
+  alias Worker.Domain.RuntimeStruct
 
   @impl true
   def prepare(_, _) do
-    {:ok, %Worker.Domain.Runtime{name: "hello-runtime", host: "localhost", port: "8080"}}
+    {:ok, %RuntimeStruct{name: "hello-runtime", host: "localhost", port: "8080"}}
   end
 
   @impl true
