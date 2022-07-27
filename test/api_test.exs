@@ -36,7 +36,7 @@ defmodule ApiTest do
       :ok
     end
 
-    test "invoke should return {:ok, result} when no error is present" do
+    test "invoke should return {:ok, result} when there is at least a worker and no error occurs" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
       assert Api.invoke(%{"function" => "test"}) == {:ok, %{"result" => "test"}}
     end
@@ -54,7 +54,7 @@ defmodule ApiTest do
       assert Api.invoke(%{"function" => "test"}) == {:error, :no_workers}
     end
 
-    test "invoke on node list with more than workers should only use workers" do
+    test "invoke on node list with nodes other than workers should only use workers" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere, :worker@localhost] end)
 
       Core.Commands.Mock

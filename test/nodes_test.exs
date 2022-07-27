@@ -37,8 +37,6 @@ defmodule NodesTest do
     end
 
     test "worker_nodes should return empty list when no node is connected" do
-      nodes = []
-      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> nodes end)
       workers = Nodes.worker_nodes()
       assert workers == []
     end
