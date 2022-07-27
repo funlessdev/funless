@@ -30,7 +30,7 @@ defmodule Core.Adapters.Commands.Worker do
     worker_addr = worker_address(worker)
     cmd = invoke_command(ivk_params)
 
-    {:ok, call_worker(worker_addr, cmd)}
+    call_worker(worker_addr, cmd)
   end
 
   @doc false
@@ -50,7 +50,7 @@ defmodule Core.Adapters.Commands.Worker do
 
   defp call_worker(worker_addr, command = {cmd, payload}) do
     Logger.info(
-      "sending command #{cmd} to worker #{inspect(worker_addr)} with payload #{inspect(payload)}"
+      "sending command #{cmd} to #{inspect(worker_addr)} with payload #{inspect(payload)}"
     )
 
     GenServer.call(worker_addr, command, 300_000)
