@@ -43,12 +43,6 @@ defmodule ApiTest do
       :ok
     end
 
-    test "prepare_runtime should return {:ok, runtime} when no error is present", %{
-      function: function
-    } do
-      assert {:ok, _} = Api.prepare_runtime(function)
-    end
-
     test "prepare_runtime should return {:error, err} when the underlying functions encounter errors",
          %{function: function} do
       Worker.Runtime.Mock
