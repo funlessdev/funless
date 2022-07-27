@@ -32,7 +32,7 @@ defmodule Worker.Adapters.FunctionStorage.ETS.WriteServer do
 
   @impl true
   def init(_args) do
-    table = :ets.new(:functions_runtimes, [:named_table, :protected])
+    table = :ets.new(:functions_runtimes, [:bag, :named_table, :protected])
     Logger.info("Function Storage Server: started")
     {:ok, table}
   end

@@ -24,28 +24,14 @@ defmodule Worker.Adapters.FunctionStorage.ETS do
 
   @doc """
     Returns a list of runtimes associated with the given `function_name`.
-
-    Returns {:ok, {function_name, [list of runtimes]}} if at least a runtime is found;
-    returns {:error, err} if no value is associated to the `function_name` key in the ETS table.
+    The list is empty if no runtime is found.
 
     ## Parameters
       - function_name: name of the function, used as key in the ETS table entries
   """
   @impl true
-  def get_function_runtimes(function_name) do
-    runtimes = :ets.lookup(:functions_runtimes, function_name)
-
-    case runtimes do
-      [] ->
-        {:error, "no runtime found for #{function_name}"}
-
-      tuples when is_list(tuples) ->
-        t =
-          tuples
-          |> Enum.map(fn {_f, c} -> c end)
-
-        {:ok, {function_name, t}}
-    end
+  def get_runtimes(function_name) do
+    :ets.lookup(:functions_runtimes, function_name) |> Enum.map(fn {_f, c} -> c end)
   end
 
   @doc """
@@ -59,7 +45,7 @@ defmodule Worker.Adapters.FunctionStorage.ETS do
       - runtime: struct identifying the runtime
   """
   @impl true
-  def insert_function_runtime(function_name, runtime) do
+  def insert_runtime(function_name, runtime) do
     GenServer.call(:write_server, {:insert, function_name, runtime})
   end
 
@@ -74,7 +60,7 @@ defmodule Worker.Adapters.FunctionStorage.ETS do
       - runtime: struct identifying the runtime
   """
   @impl true
-  def delete_function_runtime(function_name, runtime) do
+  def delete_runtime(function_name, runtime) do
     GenServer.call(:write_server, {:delete, function_name, runtime})
   end
 end

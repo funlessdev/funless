@@ -18,23 +18,26 @@
 
 defmodule Worker.Domain.Ports.Runtime do
   @moduledoc """
-  Port for container manipulation.
+  Port for runtime manipulation.
   """
-  @type worker_function :: Worker.Domain.Function.t()
+  alias Worker.Domain.FunctionStruct
+  alias Worker.Domain.RuntimeStruct
+
+  @type worker_function :: FunctionStruct.t()
 
   @type args :: any()
 
   @type runtime_name :: String.t()
 
-  @type runtime :: Worker.Domain.Runtime.t()
+  @type runtime :: RuntimeStruct.t()
 
   @callback prepare(worker_function, runtime_name) :: {:ok, runtime} | {:error, any}
   @callback run_function(worker_function, args, runtime) :: {:ok, any} | {:error, any}
-  @callback cleanup(worker_function, runtime) :: {:ok, runtime} | {:error, any}
+  @callback cleanup(runtime) :: {:ok, runtime} | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   defdelegate prepare(worker_function, runtime_name), to: @adapter
-  defdelegate run_function(worker_function, args, container), to: @adapter
-  defdelegate cleanup(worker_function, container), to: @adapter
+  defdelegate run_function(worker_function, args, runtime), to: @adapter
+  defdelegate cleanup(runtime), to: @adapter
 end

@@ -21,9 +21,37 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     Docker adapter for runtime manipulation. The actual docker interaction is done by the Fn NIFs.
   """
   @behaviour Worker.Domain.Ports.Runtime
-  alias Worker.Nif.Fn
-
+  use Rustler, otp_app: :worker, crate: :fn
   require Logger
+  alias Worker.Domain.RuntimeStruct
+
+  #   Creates the `_runtime_name` container, with information taken from `_function`.
+  #   ## Parameters
+  #     - _function: Worker.Domain.Function struct, containing function information
+  #     - _runtime_name: name of the container that will be created
+  #     - _docker_host: path of the docker socket in the current system
+  @doc false
+  def prepare_runtime(_function, _runtime_name, _docker_host) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  #   Gets the logs of the `_runtime_name` container.
+  #   ## Parameters
+  #     - _runtime_name: name of the container
+  #     - _docker_host: path of the docker socket in the current system
+  @doc false
+  def runtime_logs(_runtime_name, _docker_host) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  #   Removes the `_runtime_name` container.
+  #   ## Parameters
+  #     - _runtime_name: name of the container that will be removed
+  #     - _docker_host: path of the docker socket in the current system
+  @doc false
+  def cleanup_runtime(_runtime_name, _docker_host) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
 
   @doc """
     Checks the DOCKER_HOST environment variable for the docker socket path. If an incorrect path is found, the default is used instead.
@@ -35,11 +63,8 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     docker_env = System.get_env("DOCKER_HOST", default)
 
     case Regex.run(~r/^((unix|tcp|http):\/\/)(.*)$/, docker_env) do
-      nil ->
-        default
-
-      [socket | _] ->
-        socket
+      nil -> default
+      [socket | _] -> socket
     end
   end
 
@@ -54,21 +79,17 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
       - runtime_name: name of the runtime being created
   """
   @impl true
-  def prepare(
-        worker_function = %Worker.Domain.Function{archive: archive},
-        runtime_name
-      ) do
+  def prepare(function, runtime_name) do
     socket = docker_socket()
 
-    Logger.info("OpenWhisk Runtime: Creating runtime for function '#{worker_function.name}'")
+    Logger.info("OpenWhisk Runtime: Creating runtime for function '#{function.name}'")
 
-    # TODO
-    Fn.prepare_runtime(worker_function, runtime_name, socket)
+    prepare_runtime(function, runtime_name, socket)
 
     receive do
-      {:ok, runtime = %Worker.Domain.Runtime{host: host, port: port}} ->
+      {:ok, runtime = %RuntimeStruct{host: host, port: port}} ->
         :timer.sleep(1000)
-        code = File.read!(archive)
+        code = File.read!(function.archive)
 
         body =
           Jason.encode!(%{
@@ -82,6 +103,9 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
 
       {:error, err} ->
         {:error, err}
+
+      something ->
+        {:error, "OpenWhisk Runtime: Unexpected response from runtime: #{inspect(something)}"}
     end
   end
 
@@ -96,12 +120,22 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
       - runtime: struct identifying the runtime
   """
   @impl true
-  def run_function(_worker_function, args, %Worker.Domain.Runtime{host: host, port: port}) do
+  def run_function(_worker_function, args, runtime) do
+    Logger.info("OpenWhisk Runtime: Running function on runtime '#{runtime.name}'")
     body = Jason.encode!(%{"value" => args})
 
-    request = {"http://#{host}:#{port}/run", [], ["application/json"], body}
+    request = {"http://#{runtime.host}:#{runtime.port}/run", [], ["application/json"], body}
     response = :httpc.request(:post, request, [], [])
-    response
+
+    case response do
+      {:ok, {_, _, payload}} ->
+        Logger.info("OpenWhisk Runtime: Function executed successfully")
+        {:ok, Jason.decode!(payload)}
+
+      {:error, err} ->
+        Logger.error("OpenWhisk Runtime: Error while running function: #{err}")
+        {:error, err}
+    end
   end
 
   @doc """
@@ -111,19 +145,16 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     returns {:error, err} if any error is raised, forwarding the error message.
 
     ## Parameters
-      - _worker_function: Worker.Domain.Function struct; ignored in this function
       - runtime: struct identifying the runtime being removed
   """
   @impl true
-  def cleanup(_worker_function, runtime = %Worker.Domain.Runtime{name: runtime_name}) do
-    Fn.cleanup(runtime_name, docker_socket())
+  def cleanup(runtime) do
+    Logger.info("OpenWhisk Runtime: Removing runtime '#{runtime.name}'")
+    cleanup_runtime(runtime.name, docker_socket())
 
     receive do
-      :ok ->
-        {:ok, runtime}
-
-      {:error, err} ->
-        {:error, err}
+      :ok -> {:ok, runtime}
+      {:error, err} -> {:error, err}
     end
   end
 end

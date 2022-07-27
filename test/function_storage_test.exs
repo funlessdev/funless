@@ -17,41 +17,64 @@
 #
 
 defmodule FunctionStorageTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   alias Worker.Adapters.FunctionStorage.ETS
+  alias(Worker.Domain.RuntimeStruct)
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!
 
   test "get_function_runtimes returns an error when no runtimes stored" do
-    result = ETS.get_function_runtimes("test-no-runtime")
-    assert result == {:error, "no runtime found for test-no-runtime"}
+    result = ETS.get_runtimes("test-no-runtime")
+    assert result == []
   end
 
-  test "insert_function_runtime adds {function_name, runtime} couple to the storage" do
-    runtime = %Worker.Domain.Runtime{
+  test "insert_runtime adds {function_name, runtime} couple to the storage" do
+    runtime = %RuntimeStruct{
       host: "127.0.0.1",
       port: "8080",
       name: "test-runtime"
     }
 
-    ETS.insert_function_runtime("test", runtime)
+    ETS.insert_runtime("test", runtime)
 
-    assert ETS.get_function_runtimes("test") == {:ok, {"test", [runtime]}}
+    assert ETS.get_runtimes("test") == [runtime]
+
+    ETS.delete_runtime("test", runtime)
   end
 
-  test "delete_function_runtime removes a {function_name, runtime} couple from the storage" do
-    runtime = %Worker.Domain.Runtime{
+  test "multiple insert_runtime with the same function name adds the runtime to the list" do
+    runtime1 = %RuntimeStruct{name: "test-runtime"}
+    runtime2 = %RuntimeStruct{name: "test-runtime-2"}
+
+    ETS.insert_runtime("test", runtime1)
+    ETS.insert_runtime("test", runtime2)
+
+    [rt, rt2] = ETS.get_runtimes("test")
+    assert rt.name == "test-runtime"
+    assert rt2.name == "test-runtime-2"
+
+    ETS.delete_runtime("test", rt)
+    ETS.delete_runtime("test", rt2)
+  end
+
+  test "delete_runtime removes a {function_name, runtime} couple from the storage" do
+    runtime = %RuntimeStruct{
       host: "127.0.0.1",
       port: "8080",
       name: "test-runtime"
     }
 
-    ETS.insert_function_runtime("test-delete", runtime)
+    ETS.insert_runtime("test-delete", runtime)
 
-    ETS.delete_function_runtime("test-delete", runtime)
+    ETS.delete_runtime("test-delete", runtime)
 
-    assert ETS.get_function_runtimes("test-delete") ==
-             {:error, "no runtime found for test-delete"}
+    assert ETS.get_runtimes("test-delete") == []
+  end
+
+  test "delete_runtime on empty storage works" do
+    rt = %RuntimeStruct{name: "name"}
+    result = ETS.delete_runtime("test", rt)
+    assert result == {:ok, {"test", rt}}
   end
 end

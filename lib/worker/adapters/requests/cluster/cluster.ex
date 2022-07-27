@@ -30,8 +30,7 @@ defmodule Worker.Adapters.Requests.Cluster do
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def prepare(function, from) do
-    result = Api.prepare_runtime(function)
-    GenServer.reply(from, result)
+    Api.prepare_runtime(function) |> reply_to_core(from)
   end
 
   @doc """
@@ -45,25 +44,7 @@ defmodule Worker.Adapters.Requests.Cluster do
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def invoke(function, args, from) do
-    result = Api.function_has_runtimes?(function) |> run_with_runtime(function, args)
-    GenServer.reply(from, result)
-  end
-
-  @doc false
-  defp run_with_runtime(true, function, args) do
-    Api.run_function(function, args)
-  end
-
-  defp run_with_runtime(false, function, args) do
-    Logger.warn("Worker: no runtime ready found for function #{function.name}")
-
-    case Api.prepare_runtime(function) do
-      {:ok, _} ->
-        Api.run_function(function, args)
-
-      {:error, err} ->
-        {:error, err}
-    end
+    Api.invoke_function(function, args) |> reply_to_core(from)
   end
 
   @doc """
@@ -74,7 +55,10 @@ defmodule Worker.Adapters.Requests.Cluster do
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def cleanup(function, from) do
-    result = Api.cleanup(function)
-    GenServer.reply(from, result)
+    Api.cleanup(function) |> reply_to_core(from)
   end
+
+  @doc false
+  defp reply_to_core({:error, msg}, from), do: GenServer.reply(from, {:error, %{"error" => msg}})
+  defp reply_to_core({:ok, result}, from), do: GenServer.reply(from, {:ok, result})
 end

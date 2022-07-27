@@ -18,9 +18,11 @@
 
 import Config
 
-config :worker, Worker.Domain.Ports.Runtime, adapter: Worker.Adapters.Runtime.Docker
+config :worker, Worker.Domain.Ports.Runtime, adapter: Worker.Adapters.Runtime.OpenWhisk
 config :worker, Worker.Domain.Ports.FunctionStorage, adapter: Worker.Adapters.FunctionStorage.ETS
 
-config :logger, :console, format: "\n##### $time $metadata[$level] $levelpad$message\n"
+config :logger, :console,
+  format: "\n#####[$level] $time $metadata $message\n",
+  metadata: [:file, :line]
 
 import_config "#{Mix.env()}.exs"
