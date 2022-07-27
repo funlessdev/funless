@@ -37,7 +37,26 @@ defmodule HttpServerTest do
       :ok
     end
 
-    test "invocation with no workers available fails" do
+    test "should return 500 when some internal error occurs" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invocation_command, fn _, _ -> {:error, "some internal error dude"} end)
+
+      conn = conn(:post, "/invoke", %{"namespace" => "_", "function" => "test", "args" => []})
+
+      # Invoke the plug
+      conn = Server.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 500
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+      assert body == %{"error" => "Something went wrong..."}
+    end
+
+    test "should return 503 when invocation with no workers available fails" do
       conn = conn(:post, "/invoke", %{"namespace" => "_", "function" => "test", "args" => []})
 
       # Invoke the plug
@@ -51,7 +70,7 @@ defmodule HttpServerTest do
       assert body == %{"error" => "Failed to invoke function: no worker available"}
     end
 
-    test "returns 200 with good request" do
+    test "should return 200 with good request" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
@@ -72,7 +91,7 @@ defmodule HttpServerTest do
     end
 
     # change it with proper response
-    test "returns 404 with wrong request" do
+    test "should return 404 with wrong request" do
       # Create a test connection
       conn = conn(:get, "/badrequest")
 

@@ -24,7 +24,8 @@ defmodule Core.Domain.Ports.Commands do
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback send_invocation_command(worker, ivk_params) :: {:ok, any} | {:error, atom}
+  @callback send_invocation_command(worker, ivk_params) ::
+              {:ok, %{:result => String.t()}} | {:error, atom}
 
   @doc """
   Sends an invocation command to a worker.

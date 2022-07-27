@@ -16,14 +16,6 @@
 # under the License.
 #
 
-defmodule FnWorker do
-  @moduledoc """
-  Worker struct to pass to Scheduler. The id field refers to the index in the node list.
-  """
-  @enforce_keys [:id]
-  defstruct [:id]
-end
-
 defmodule Core.Domain.Api do
   @moduledoc """
   Provides functions to deal with requests to workers.
@@ -33,9 +25,13 @@ defmodule Core.Domain.Api do
   alias Core.Domain.Ports.Commands
   alias Core.Domain.Scheduler
 
-  @type ivk_params :: Map.t()
+  @type ivk_params :: %{
+          :namespace => String.t(),
+          :function => String.t(),
+          :args => Map.t()
+        }
 
-  @spec invoke(Map.t()) :: {:ok, any} | {:error, any}
+  @spec invoke(ivk_params) :: {:ok, %{:result => String.t()}} | {:error, any}
   @doc """
   Sends an invocation request for the `name` function in the `ns` namespace,
   specified in the invocation parameters.
@@ -43,13 +39,11 @@ defmodule Core.Domain.Api do
   The request is sent with the worker adapter to a worker chosen from the `worker_nodes`, if any.
 
   ## Parameters
-    - ivk_params: a map with the function name.
+    - ivk_params: a map with namespace name, function name and a map of args.
   """
   def invoke(ivk_params) do
     Logger.info("API: received invocation for function '#{ivk_params["function"]}'")
-
-    Scheduler.select(Nodes.worker_nodes())
-    |> invoke_on_chosen(ivk_params)
+    Nodes.worker_nodes() |> Scheduler.select() |> invoke_on_chosen(ivk_params)
   end
 
   defp invoke_on_chosen(:no_workers, _) do

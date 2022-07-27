@@ -22,6 +22,6 @@ defmodule Core.Adapters.Commands.Test do
 
   @impl true
   def send_invocation_command(_worker, ivk_params) do
-    {:ok, name: ivk_params["name"]}
+    {:ok, %{"result" => ivk_params["function"]}}
   end
 end

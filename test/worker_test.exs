@@ -15,13 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule WorkerTest do
+  use ExUnit.Case, async: true
+  alias Core.Adapters.Commands.Worker
 
-import Config
-config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
-config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
+  test "should send to {:worker, worker atom}" do
+    assert Worker.worker_address(:worker@atom) == {:worker, :worker@atom}
+  end
 
-config :logger,
-  backends: [:console],
-  compile_time_purge_matching: [
-    [level_lower_than: :info]
-  ]
+  test "should prepare correct invocation command" do
+    assert Worker.invoke_command(%{"function" => "test"}) ==
+             {:invoke,
+              %{
+                name: "test",
+                image: "nodejs",
+                main_file: "index.js",
+                archive: "js/hello.js"
+              }}
+  end
+end

@@ -23,17 +23,20 @@ defmodule NodesTest do
 
   setup :verify_on_exit!
 
+  describe "Cluster" do
+    test "should return the list of nodes" do
+      # credo:disable-for-next-line
+      assert Node.list() == Core.Adapters.Cluster.all_nodes()
+    end
+  end
+
   describe "Nodes" do
     setup do
-      Core.Cluster.Mock
-      |> Mox.stub_with(Core.Adapters.Cluster.Test)
-
+      Core.Cluster.Mock |> Mox.stub_with(Core.Adapters.Cluster.Test)
       :ok
     end
 
     test "worker_nodes should return empty list when no node is connected" do
-      nodes = []
-      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> nodes end)
       workers = Nodes.worker_nodes()
       assert workers == []
     end

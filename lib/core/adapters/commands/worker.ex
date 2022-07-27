@@ -27,11 +27,32 @@ defmodule Core.Adapters.Commands.Worker do
 
   @impl true
   def send_invocation_command(worker, ivk_params) do
-    f_name = ivk_params["name"]
-    function = %{name: "hellojs", image: "nodejs", main_file: "index.js", archive: "js/hello.js"}
+    worker_addr = worker_address(worker)
+    cmd = invoke_command(ivk_params)
 
-    Logger.info("Worker Adapter: invocation of function #{f_name} sent to #{worker}")
+    {:ok, call_worker(worker_addr, cmd)}
+  end
 
-    {:ok, GenServer.call({:worker, worker}, {:invoke, function}, 300_000)}
+  @doc false
+  def worker_address(worker), do: {:worker, worker}
+
+  @doc false
+  def invoke_command(ivk_params) do
+    function = %{
+      name: ivk_params["function"],
+      image: "nodejs",
+      main_file: "index.js",
+      archive: "js/hello.js"
+    }
+
+    {:invoke, function}
+  end
+
+  defp call_worker(worker_addr, command = {cmd, payload}) do
+    Logger.info(
+      "sending command #{cmd} to worker #{inspect(worker_addr)} with payload #{inspect(payload)}"
+    )
+
+    GenServer.call(worker_addr, command, 300_000)
   end
 end
