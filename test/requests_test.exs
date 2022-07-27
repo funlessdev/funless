@@ -61,7 +61,7 @@ defmodule RequestTest do
       pid: pid,
       function: function
     } do
-      expected = %{"error" => "error"}
+      expected = {:error, %{"error" => "error"}}
 
       Worker.Runtime.Mock
       |> Mox.stub(:prepare, fn _, _ -> {:error, "error"} end)
@@ -105,7 +105,7 @@ defmodule RequestTest do
 
       reply = GenServer.call(pid, {:invoke, function})
 
-      assert %{"error" => "runtime error during invocation"} == reply
+      assert {:error, %{"error" => "runtime error during invocation"}} == reply
     end
 
     test "invoke with args should return {:ok, %{result => ..}} when no errors occur", %{
@@ -131,7 +131,7 @@ defmodule RequestTest do
       pid: pid,
       function: function
     } do
-      expected = %{"error" => "cleanup error"}
+      expected = {:error, %{"error" => "cleanup error"}}
 
       Worker.Runtime.Mock
       |> Mox.expect(:cleanup, fn _ -> {:error, "cleanup error"} end)

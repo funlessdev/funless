@@ -127,11 +127,14 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     request = {"http://#{runtime.host}:#{runtime.port}/run", [], ["application/json"], body}
     response = :httpc.request(:post, request, [], [])
 
-    IO.inspect(response)
-
     case response do
-      {:ok, result} -> {:ok, result}
-      {:error, err} -> {:error, err}
+      {:ok, {_, _, payload}} ->
+        Logger.info("OpenWhisk Runtime: Function executed successfully")
+        {:ok, Jason.decode!(payload)}
+
+      {:error, err} ->
+        Logger.error("OpenWhisk Runtime: Error while running function: #{err}")
+        {:error, err}
     end
   end
 
