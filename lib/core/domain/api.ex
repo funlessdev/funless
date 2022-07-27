@@ -26,9 +26,9 @@ defmodule Core.Domain.Api do
   alias Core.Domain.Scheduler
 
   @type ivk_params :: %{
-          namespace: String.t(),
-          function: String.t(),
-          args: Map.t()
+          :namespace => String.t(),
+          :function => String.t(),
+          :args => Map.t()
         }
 
   @spec invoke(ivk_params) :: {:ok, %{:result => String.t()}} | {:error, any}
@@ -39,7 +39,7 @@ defmodule Core.Domain.Api do
   The request is sent with the worker adapter to a worker chosen from the `worker_nodes`, if any.
 
   ## Parameters
-    - ivk_params: a map with the function name.
+    - ivk_params: a map with namespace name, function name and a map of args.
   """
   def invoke(ivk_params) do
     Logger.info("API: received invocation for function '#{ivk_params["function"]}'")
