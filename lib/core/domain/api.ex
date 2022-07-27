@@ -43,9 +43,7 @@ defmodule Core.Domain.Api do
   """
   def invoke(ivk_params) do
     Logger.info("API: received invocation for function '#{ivk_params["function"]}'")
-
-    Scheduler.select(Nodes.worker_nodes())
-    |> invoke_on_chosen(ivk_params)
+    Scheduler.select(Nodes.worker_nodes()) |> invoke_on_chosen(ivk_params)
   end
 
   defp invoke_on_chosen(:no_workers, _) do
