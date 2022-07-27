@@ -77,8 +77,6 @@ defmodule Worker.Domain.Api do
 
   @spec run_function([RuntimeStruct], FunctionStruct.t(), map()) ::
           {:ok, any} | {:error, any}
-  defp run_function(runtimes, function, args)
-
   defp run_function([runtime | _], function, args) do
     Logger.info("API: Found runtime: #{runtime.name} for function #{function.name}")
     Runtime.run_function(function, args, runtime)

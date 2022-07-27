@@ -59,11 +59,6 @@ defmodule Worker.Adapters.Requests.Cluster do
   end
 
   @doc false
-  defp reply_to_core({:error, msg}, from) do
-    GenServer.reply(from, %{"error" => msg})
-  end
-
-  defp reply_to_core(result, from) do
-    GenServer.reply(from, result)
-  end
+  defp reply_to_core({:error, msg}, from), do: GenServer.reply(from, {:error, %{"error" => msg}})
+  defp reply_to_core({:ok, result}, from), do: GenServer.reply(from, {:ok, result})
 end
