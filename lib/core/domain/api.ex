@@ -41,10 +41,22 @@ defmodule Core.Domain.Api do
   ## Parameters
     - ivk_params: a map with namespace name, function name and a map of args.
   """
-  def invoke(ivk_params) do
-    Logger.info("API: received invocation for function '#{ivk_params["function"]}'")
+  def invoke(%{"namespace" => ns, "function" => f, "args" => args} = ivk_params) do
+    Logger.info("API: received invocation for function #{f} in namespace #{ns} with args #{args}")
     Nodes.worker_nodes() |> Scheduler.select() |> invoke_on_chosen(ivk_params)
   end
+
+  def invoke(%{"namespace" => ns, "function" => f} = ivk_params) do
+    Logger.info("API: received invocation for function #{f} in namespace #{ns}")
+    Nodes.worker_nodes() |> Scheduler.select() |> invoke_on_chosen(ivk_params)
+  end
+
+  def invoke(%{"function" => f} = ivk_params) do
+    Logger.info("API: received invocation for function #{f}")
+    Nodes.worker_nodes() |> Scheduler.select() |> invoke_on_chosen(ivk_params)
+  end
+
+  def invoke(_), do: {:error, :bad_params}
 
   defp invoke_on_chosen(:no_workers, _) do
     Logger.warn("API: no workers found")

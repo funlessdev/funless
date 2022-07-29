@@ -59,6 +59,11 @@ defmodule Core.Adapters.Requests.Http.Server do
     send_resp(conn, 503, body)
   end
 
+  defp reply_to_client({:error, :bad_params}, conn) do
+    body = Jason.encode!(%{"error" => "Failed to invoke function: bad request"})
+    send_resp(conn, 400, body)
+  end
+
   defp reply_to_client(_, conn) do
     body = Jason.encode!(%{"error" => "Something went wrong..."})
     send_resp(conn, 500, body)

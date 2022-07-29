@@ -90,6 +90,37 @@ defmodule HttpServerTest do
       assert body == %{"result" => "Hello, World!"}
     end
 
+    test "should return 400 bad request when bad parameters" do
+      # Create a test connection
+      conn = conn(:post, "/invoke", %{"bad" => "arg"})
+
+      # Invoke the plug
+      conn = Server.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 400
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+      assert body == %{"error" => "Failed to invoke function: bad request"}
+    end
+
+    test "should return 400 bad request when empty invoke parameters" do
+      # Create a test connection
+      conn = conn(:post, "/invoke")
+
+      # Invoke the plug
+      conn = Server.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 400
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+      assert body == %{"error" => "Failed to invoke function: bad request"}
+
+    end
+
     # change it with proper response
     test "should return 404 with wrong request" do
       # Create a test connection
