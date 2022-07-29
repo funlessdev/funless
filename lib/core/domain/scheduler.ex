@@ -30,7 +30,7 @@ defmodule Core.Domain.Scheduler do
     :no_workers
   end
 
-  def select(workers = [first_w | _]) do
+  def select([first_w | _] = workers) do
     Logger.info("Scheduler: selecting between workers #{inspect(workers)}")
     first_w
   end

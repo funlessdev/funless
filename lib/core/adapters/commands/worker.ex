@@ -48,7 +48,7 @@ defmodule Core.Adapters.Commands.Worker do
     {:invoke, function}
   end
 
-  defp call_worker(worker_addr, command = {cmd, payload}) do
+  defp call_worker(worker_addr, {cmd, payload} = command) do
     Logger.info(
       "sending command #{cmd} to #{inspect(worker_addr)} with payload #{inspect(payload)}"
     )
