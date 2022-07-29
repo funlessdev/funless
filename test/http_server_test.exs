@@ -118,7 +118,6 @@ defmodule HttpServerTest do
       assert get_resp_header(conn, "content-type") == ["application/json"]
       body = Jason.decode!(conn.resp_body)
       assert body == %{"error" => "Failed to invoke function: bad request"}
-
     end
 
     # change it with proper response
