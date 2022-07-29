@@ -38,7 +38,9 @@ defmodule ApiTest do
 
     test "invoke should return {:ok, result} when there is at least a worker and no error occurs" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
-      assert Api.invoke(%{"namespace" => "_", "function" => "test"}) == {:ok, %{"result" => "test"}}
+
+      assert Api.invoke(%{"namespace" => "_", "function" => "test"}) ==
+               {:ok, %{"result" => "test"}}
     end
 
     test "invoke should return {:error, err} when the underlying functions encounter errors" do
@@ -47,7 +49,8 @@ defmodule ApiTest do
       Core.Commands.Mock
       |> Mox.expect(:send_invocation_command, fn _, _ -> {:error, message: "generic error"} end)
 
-      assert Api.invoke(%{"namespace" => "_", "function" => "f"}) == {:error, message: "generic error"}
+      assert Api.invoke(%{"namespace" => "_", "function" => "f"}) ==
+               {:error, message: "generic error"}
     end
 
     test "invoke should return {:error, no workers} when no workers are found" do
