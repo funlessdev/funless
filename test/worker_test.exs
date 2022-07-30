@@ -24,7 +24,7 @@ defmodule WorkerTest do
   end
 
   test "should prepare correct invocation command" do
-    assert Worker.invoke_command(%{"function" => "test"}) ==
+    assert Worker.invoke_command(%{function: "test"}) ==
              {:invoke,
               %{
                 name: "test",
