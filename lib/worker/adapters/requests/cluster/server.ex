@@ -60,14 +60,14 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
 
   @impl true
   def handle_call({:cleanup, function}, from, _state) do
-    Logger.info("Received cleanup request for #{function.name} with args.")
+    Logger.info("Received cleanup request for #{function.name}.")
     spawn(Cluster, :cleanup, [function, from])
     {:noreply, nil}
   end
 
   @impl true
   def handle_call({:cleanup_all, function}, from, _state) do
-    Logger.info("Received cleanup_all request for #{function.name} with args.")
+    Logger.info("Received cleanup_all request for #{function.name}.")
     spawn(Cluster, :cleanup_all, [function, from])
     {:noreply, nil}
   end
