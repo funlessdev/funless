@@ -305,7 +305,7 @@
                      <xhtml:div style="box-sizing: border-box; font-size: 0; text-align: center; ">
                         <xhtml:div
                            style="display: inline-block; font-size: 12px; font-family: Helvetica, &quot;VP Default&quot;; color: #000000; line-height: 1.2; pointer-events: all; white-space: nowrap; ">
-                           Domain.Ports.FunctionStorage</xhtml:div>
+                           Domain.Ports.RuntimeTracker</xhtml:div>
                      </xhtml:div>
                   </xhtml:div>
                </foreignObject>
@@ -316,7 +316,7 @@
                   <text fill="rgb(0, 0, 0)" font-size="12px" font-family="Helvetica, &quot;VP Default&quot;"
                      font-weight="400" id="text48">
                      <textPath xlink:href="#DrppCIGHYez.3wCn" startOffset="50%" text-anchor="middle" id="textPath46">
-                        <tspan xml:space="preserve" id="tspan44">Domain.Ports.FunctionStorage</tspan>
+                        <tspan xml:space="preserve" id="tspan44">Domain.Ports.RuntimeTracker</tspan>
                      </textPath>
                   </text>
                </svg>
@@ -404,7 +404,7 @@
                      <xhtml:div style="box-sizing: border-box; font-size: 0; text-align: center; ">
                         <xhtml:div
                            style="display: inline-block; font-size: 12px; font-family: Helvetica, &quot;VP Default&quot;; color: #000000; line-height: 1.2; pointer-events: all; white-space: nowrap; ">
-                           <xhtml:font style="font-size: 12px">Adapters.FunctionStorage.ETS</xhtml:font>
+                           <xhtml:font style="font-size: 12px">Adapters.RuntimeTracker.ETS</xhtml:font>
                         </xhtml:div>
                      </xhtml:div>
                   </xhtml:div>
@@ -416,7 +416,7 @@
                   <text fill="rgb(0, 0, 0)" font-size="12px" font-family="Helvetica, &quot;VP Default&quot;"
                      font-weight="400" id="text111">
                      <textPath xlink:href="#LrppCIGHYez.3wCq" startOffset="50%" text-anchor="middle" id="textPath109">
-                        <tspan xml:space="preserve" id="tspan107">Adapters.FunctionStorage.ETS</tspan>
+                        <tspan xml:space="preserve" id="tspan107">Adapters.RuntimeTracker.ETS</tspan>
                      </textPath>
                   </text>
                </svg>

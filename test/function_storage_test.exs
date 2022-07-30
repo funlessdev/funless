@@ -16,9 +16,9 @@
 # under the License.
 #
 
-defmodule FunctionStorageTest do
+defmodule RuntimeTrackerTest do
   use ExUnit.Case
-  alias Worker.Adapters.FunctionStorage.ETS
+  alias Worker.Adapters.RuntimeTracker.ETS
   alias(Worker.Domain.RuntimeStruct)
   import Mox, only: [verify_on_exit!: 1]
 

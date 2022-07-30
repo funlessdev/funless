@@ -20,8 +20,8 @@ defmodule Worker.Domain.Api do
   @moduledoc """
   Contains functions used to create, run and remove function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
-  alias Worker.Domain.Ports.FunctionStorage
   alias Worker.Domain.Ports.Runtime
+  alias Worker.Domain.Ports.RuntimeTracker
 
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
@@ -47,7 +47,7 @@ defmodule Worker.Domain.Api do
 
   defp store_prepared_runtime({:ok, runtime}, function_name) do
     Logger.info("API: Runtime prepared #{runtime.name}")
-    FunctionStorage.insert_runtime(function_name, runtime)
+    RuntimeTracker.insert_runtime(function_name, runtime)
     {:ok, runtime}
   end
 
@@ -57,7 +57,7 @@ defmodule Worker.Domain.Api do
   end
 
   @doc """
-    Invokes the given function if an associated runtime exists, using the FunctionStorage and Runtime callbacks.
+    Invokes the given function if an associated runtime exists, using the RuntimeTracker and Runtime callbacks.
 
     Returns {:ok, result} if a runtime exists and the function runs successfully;
     returns {:error, {:noruntime, err}} if no runtime is found;
@@ -72,7 +72,7 @@ defmodule Worker.Domain.Api do
   @spec invoke_function(FunctionStruct.t(), map()) :: {:ok, any} | {:error, any}
   def invoke_function(function, args \\ %{}) do
     Logger.info("API: Invoking function #{function.name}")
-    FunctionStorage.get_runtimes(function.name) |> run_function(function, args)
+    RuntimeTracker.get_runtimes(function.name) |> run_function(function, args)
   end
 
   @spec run_function([RuntimeStruct], FunctionStruct.t(), map()) ::
@@ -102,7 +102,7 @@ defmodule Worker.Domain.Api do
   """
   @spec cleanup(FunctionStruct.t()) :: {:ok, String.t()} | {:error, any}
   def cleanup(function) do
-    FunctionStorage.get_runtimes(function.name)
+    RuntimeTracker.get_runtimes(function.name)
     |> runtime_cleanup
     |> remove_runtime_from_store(function.name)
   end
@@ -118,7 +118,7 @@ defmodule Worker.Domain.Api do
   end
 
   defp remove_runtime_from_store({:ok, runtime}, function_name) do
-    FunctionStorage.delete_runtime(function_name, runtime)
+    RuntimeTracker.delete_runtime(function_name, runtime)
     {:ok, runtime}
   end
 

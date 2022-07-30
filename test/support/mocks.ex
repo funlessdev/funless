@@ -17,4 +17,4 @@
 #
 
 Mox.defmock(Worker.Runtime.Mock, for: Worker.Domain.Ports.Runtime)
-Mox.defmock(Worker.FunctionStorage.Mock, for: Worker.Domain.Ports.FunctionStorage)
+Mox.defmock(Worker.RuntimeTracker.Mock, for: Worker.Domain.Ports.RuntimeTracker)

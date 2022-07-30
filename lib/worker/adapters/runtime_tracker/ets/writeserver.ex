@@ -16,7 +16,7 @@
 # under the License.
 #
 
-defmodule Worker.Adapters.FunctionStorage.ETS.WriteServer do
+defmodule Worker.Adapters.RuntimeTracker.ETS.WriteServer do
   @moduledoc """
     Implements GenServer behaviour; represents a process having exclusive writing rights on an underlying ETS table.
 

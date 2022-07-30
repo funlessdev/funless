@@ -16,7 +16,7 @@
 # under the License.
 #
 
-defmodule Worker.Domain.Ports.FunctionStorage do
+defmodule Worker.Domain.Ports.RuntimeTracker do
   @moduledoc """
   Port for keeping track of {function, runtime} tuples in storage.
   """

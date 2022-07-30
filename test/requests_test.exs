@@ -40,7 +40,7 @@ defmodule RequestTest do
   describe "Cluster" do
     setup do
       Worker.Runtime.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Test)
-      Worker.FunctionStorage.Mock |> Mox.stub_with(Worker.Adapters.FunctionStorage.Test)
+      Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.Test)
 
       Application.stop(Cluster.Server)
       {:ok, pid} = GenServer.start(Cluster.Server, [])
@@ -83,7 +83,7 @@ defmodule RequestTest do
       pid: pid,
       function: function
     } do
-      Worker.FunctionStorage.Mock
+      Worker.RuntimeTracker.Mock
       |> Mox.expect(:get_runtimes, fn _ -> [] end)
 
       Worker.Runtime.Mock
