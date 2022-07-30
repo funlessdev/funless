@@ -37,11 +37,11 @@ defmodule HttpServerTest do
       :ok
     end
 
-    test "should return 500 when some internal error occurs" do
+    test "should return 500 when some worker error occurs" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn _, _ -> {:error, "some internal error dude"} end)
+      |> Mox.expect(:send_invocation_command, fn _, _ -> {:error, %{"error" => "some worker error dude"} end)
 
       conn = conn(:post, "/invoke", %{"namespace" => "_", "function" => "test", "args" => []})
 
@@ -53,7 +53,7 @@ defmodule HttpServerTest do
       assert conn.status == 500
       assert get_resp_header(conn, "content-type") == ["application/json"]
       body = Jason.decode!(conn.resp_body)
-      assert body == %{"error" => "Something went wrong..."}
+      assert body == %{"error" => "Failed to invoke function: internal worker error"}
     end
 
     test "should return 503 when invocation with no workers available fails" do
