@@ -16,11 +16,11 @@
 # under the License.
 #
 
-defmodule Worker.Adapters.FunctionStorage.ETS do
+defmodule Worker.Adapters.RuntimeTracker.ETS do
   @moduledoc """
   ETS adapter for storage of {function, runtime} tuples.
   """
-  @behaviour Worker.Domain.Ports.FunctionStorage
+  @behaviour Worker.Domain.Ports.RuntimeTracker
 
   @doc """
     Returns a list of runtimes associated with the given `function_name`.

@@ -23,7 +23,7 @@ defmodule Worker.Application do
 
   def start(_type, _args) do
     children = [
-      {Adapters.FunctionStorage.ETS.WriteServer, []},
+      {Adapters.RuntimeTracker.ETS.WriteServer, []},
       {Adapters.Requests.Cluster.Server, []}
     ]
 

@@ -16,9 +16,9 @@
 # under the License.
 #
 
-defmodule Worker.Adapters.FunctionStorage.Test do
+defmodule Worker.Adapters.RuntimeTracker.Test do
   @moduledoc false
-  @behaviour Worker.Domain.Ports.FunctionStorage
+  @behaviour Worker.Domain.Ports.RuntimeTracker
   alias Worker.Domain.RuntimeStruct
 
   @impl true

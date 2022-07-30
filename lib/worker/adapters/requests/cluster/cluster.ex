@@ -58,6 +58,10 @@ defmodule Worker.Adapters.Requests.Cluster do
     Api.cleanup(function) |> reply_to_core(from)
   end
 
+  def cleanup_all(function, from) do
+    Api.cleanup_all(function) |> reply_to_core(from)
+  end
+
   @doc false
   defp reply_to_core({:error, msg}, from), do: GenServer.reply(from, {:error, %{"error" => msg}})
   defp reply_to_core({:ok, result}, from), do: GenServer.reply(from, {:ok, result})
