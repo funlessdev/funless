@@ -39,7 +39,7 @@ defmodule Core.Adapters.Commands.Worker do
   @doc false
   def invoke_command(ivk_params) do
     function = %{
-      name: ivk_params["function"],
+      name: ivk_params.function,
       image: "nodejs",
       main_file: "index.js",
       archive: "js/hello.js"
