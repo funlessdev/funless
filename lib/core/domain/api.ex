@@ -15,23 +15,35 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Core.Domain.InvokeParams do
+  @moduledoc """
+    Invocation parameters struct, used for parameter validation.
+
+    ## Fields
+      - namespace: function namespace
+      - function: function name
+      - args: function arguments
+  """
+  @type t :: %__MODULE__{
+          namespace: String.t(),
+          function: String.t(),
+          args: Map.t()
+        }
+  @enforce_keys [:function]
+  defstruct [:function, namespace: "_", args: %{}]
+end
 
 defmodule Core.Domain.Api do
   @moduledoc """
   Provides functions to deal with requests to workers.
   """
   require Logger
+  alias Core.Domain.InvokeParams
   alias Core.Domain.Nodes
   alias Core.Domain.Ports.Commands
   alias Core.Domain.Scheduler
 
-  @type ivk_params :: %{
-          :namespace => String.t(),
-          :function => String.t(),
-          :args => Map.t()
-        }
-
-  @spec invoke(ivk_params) :: {:ok, %{:result => String.t()}} | {:error, any}
+  @spec invoke(Map.t()) :: {:ok, %{:result => String.t()}} | {:error, any}
   @doc """
   Sends an invocation request for the `name` function in the `ns` namespace,
   specified in the invocation parameters.
@@ -41,10 +53,20 @@ defmodule Core.Domain.Api do
   ## Parameters
     - ivk_params: a map with namespace name, function name and a map of args.
   """
-  def invoke(ivk_params) do
-    Logger.info("API: received invocation for function '#{ivk_params["function"]}'")
+  def invoke(%{"function" => f} = raw_params) do
+    # not pretty, but we avoid calling Map.keys() on each invocation
+    keys = ["function", "namespace", "args"]
+
+    parsed_params =
+      raw_params |> Map.take(keys) |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
+
+    ivk_params = struct(InvokeParams, parsed_params)
+    Logger.info("API: received invocation for function #{f} with params #{inspect(ivk_params)}")
+
     Nodes.worker_nodes() |> Scheduler.select() |> invoke_on_chosen(ivk_params)
   end
+
+  def invoke(_), do: {:error, :bad_params}
 
   defp invoke_on_chosen(:no_workers, _) do
     Logger.warn("API: no workers found")

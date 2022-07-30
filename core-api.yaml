@@ -61,6 +61,16 @@ paths:
               examples:
                 Invocation of hello world:
                   value: '{"result": "Hello, World!"}'
+        "400":
+          description: The invocation request was invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message
         "500":
           description: The function invocation failed for some unspecified internal error
           content:

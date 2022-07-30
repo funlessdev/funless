@@ -39,7 +39,7 @@ defmodule Core.Adapters.Commands.Worker do
   @doc false
   def invoke_command(ivk_params) do
     function = %{
-      name: ivk_params["function"],
+      name: ivk_params.function,
       image: "nodejs",
       main_file: "index.js",
       archive: "js/hello.js"
@@ -48,7 +48,7 @@ defmodule Core.Adapters.Commands.Worker do
     {:invoke, function}
   end
 
-  defp call_worker(worker_addr, command = {cmd, payload}) do
+  defp call_worker(worker_addr, {cmd, payload} = command) do
     Logger.info(
       "sending command #{cmd} to #{inspect(worker_addr)} with payload #{inspect(payload)}"
     )

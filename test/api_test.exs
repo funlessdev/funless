@@ -38,7 +38,9 @@ defmodule ApiTest do
 
     test "invoke should return {:ok, result} when there is at least a worker and no error occurs" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
-      assert Api.invoke(%{"function" => "test"}) == {:ok, %{"result" => "test"}}
+
+      assert Api.invoke(%{"namespace" => "_", "function" => "test"}) ==
+               {:ok, %{"result" => "test"}}
     end
 
     test "invoke should return {:error, err} when the underlying functions encounter errors" do
@@ -47,11 +49,12 @@ defmodule ApiTest do
       Core.Commands.Mock
       |> Mox.expect(:send_invocation_command, fn _, _ -> {:error, message: "generic error"} end)
 
-      assert Api.invoke(%{}) == {:error, message: "generic error"}
+      assert Api.invoke(%{"namespace" => "_", "function" => "f"}) ==
+               {:error, message: "generic error"}
     end
 
     test "invoke should return {:error, no workers} when no workers are found" do
-      assert Api.invoke(%{"function" => "test"}) == {:error, :no_workers}
+      assert Api.invoke(%{"namespace" => "_", "function" => "test"}) == {:error, :no_workers}
     end
 
     test "invoke on node list with nodes other than workers should only use workers" do
@@ -60,13 +63,17 @@ defmodule ApiTest do
       Core.Commands.Mock
       |> Mox.expect(:send_invocation_command, fn worker, _ -> worker end)
 
-      assert Api.invoke(%{"function" => "test"}) == :worker@localhost
+      assert Api.invoke(%{"namespace" => "_", "function" => "test"}) == :worker@localhost
     end
 
     test "invoke on node list without workers should return {:error, no workers}" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere] end)
 
-      assert Api.invoke(%{"function" => "test"}) == {:error, :no_workers}
+      assert Api.invoke(%{"namespace" => "_", "function" => "test"}) == {:error, :no_workers}
+    end
+
+    test "invoke with bad parameters should return {:error, :bad_params}" do
+      assert Api.invoke(%{"bad" => "arg"}) == {:error, :bad_params}
     end
   end
 end
