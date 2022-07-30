@@ -117,6 +117,71 @@ defmodule Worker.Domain.Api do
     Runtime.cleanup(runtime)
   end
 
+  @doc """
+    Removes the all runtimes associated with the given function.
+
+    Returns {:ok, runtime_name} if the cleanup is successful;
+    returns {:error, err} if any error is encountered (both while removing the runtime and when searching for it).
+
+    ## Parameters
+      - %{...}: generic struct with all the fields required by Worker.Domain.Function
+  """
+  @spec cleanup_all(FunctionStruct.t()) ::
+          {:ok, List.t()} | {:error, String.t()} | {:error, [{String.t(), any}]}
+  def cleanup_all(function) do
+    r_list =
+      RuntimeTracker.get_runtimes(function.name)
+      |> runtime_cleanup_all
+      |> remove_all_runtime_from_store(function)
+
+    case r_list do
+      [] ->
+        {:ok, []}
+
+      [_ | _] ->
+        {:error, r_list |> Enum.map(fn {:error, runtime_name, err} -> {runtime_name, err} end)}
+
+      {:error, err} ->
+        {:error, err}
+    end
+  end
+
+  defp runtime_cleanup_all([]) do
+    Logger.error("API: Error cleaning up runtime: no runtime found to cleanup")
+    {:error, "no runtime found to cleanup"}
+  end
+
+  defp runtime_cleanup_all([_runtime | _] = runtimes) do
+    Logger.info("API: Cleaning up runtimes: #{runtimes}")
+
+    runtimes
+    |> Enum.map(fn runtime ->
+      res = Runtime.cleanup(runtime)
+
+      case res do
+        {:ok, runtime_name} -> {:ok, runtime_name}
+        {:error, err} -> {:error, runtime.name, err}
+      end
+    end)
+  end
+
+  defp remove_all_runtime_from_store({:error, err}, _) do
+    {:error, err}
+  end
+
+  defp remove_all_runtime_from_store([_h | _] = result_list, function) do
+    result_list
+    |> Enum.map(fn r ->
+      remove_runtime_from_store(r, function.name)
+    end)
+    |> Enum.filter(fn r ->
+      case r do
+        {:error, _, _} -> true
+        _ -> false
+      end
+    end)
+  end
+
   defp remove_runtime_from_store({:ok, runtime}, function_name) do
     RuntimeTracker.delete_runtime(function_name, runtime)
     {:ok, runtime}
