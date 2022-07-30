@@ -75,6 +75,18 @@ defmodule Core.Domain.Api do
 
   defp invoke_on_chosen(worker, ivk_params) do
     Logger.info("API: found worker #{worker} for invocation")
-    Commands.send_invocation_command(worker, ivk_params)
+    wrk_reply = Commands.send_invocation_command(worker, ivk_params)
+    parse_wrk_reply(wrk_reply)
+  end
+
+  defp parse_wrk_reply({:ok, _} = reply) do
+    Logger.info("API: received success reply from worker")
+    reply
+  end
+
+  defp parse_wrk_reply({:error, err}) do
+    err_msg = err["error"] || "Unknown error"
+    Logger.error("API: received error reply from worker #{err_msg}")
+    {:error, :worker_error}
   end
 end

@@ -83,7 +83,7 @@ paths:
                     description: The error message
               examples:
                 Invocation with internal error:
-                  value: '{"error": "Something went wrong..."}'
+                  value: '{"error": "Failed to invoke function: internal worker error"}'
         "503":
           description: The function invocation failed because no worker was available
           content:
