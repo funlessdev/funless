@@ -108,5 +108,54 @@ defmodule ApiTest do
 
       assert {:error, "no runtime found to cleanup"} == Api.cleanup(function)
     end
+
+    test "cleanup_all should return {:ok, []} when all runtimes are deleted without errors for the given function",
+         %{function: function} do
+      Worker.RuntimeTracker.Mock
+      |> Mox.expect(:get_runtimes, fn _ ->
+        [
+          %Worker.Domain.RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"},
+          %Worker.Domain.RuntimeStruct{name: "runtime2", host: "localhost", port: "8081"}
+        ]
+      end)
+
+      assert Api.cleanup_all(function) == {:ok, []}
+    end
+
+    test "cleanup_all should return {:error, err} when no runtime is found for the given function",
+         %{function: function} do
+      Worker.RuntimeTracker.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
+
+      assert {:error, "no runtime found to cleanup"} == Api.cleanup_all(function)
+    end
+
+    test "cleanup_all should return {:error, [{runtime, err}, ... ]} when errors are encountered while deleting the runtimes",
+         %{function: function} do
+      Worker.RuntimeTracker.Mock
+      |> Mox.expect(:get_runtimes, fn _ ->
+        [
+          %Worker.Domain.RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"},
+          %Worker.Domain.RuntimeStruct{name: "runtime2", host: "localhost", port: "8081"}
+        ]
+      end)
+
+      Worker.Runtime.Mock
+      |> Mox.expect(
+        :cleanup,
+        2,
+        fn r ->
+          case r do
+            %Worker.Domain.RuntimeStruct{name: "runtime1"} -> {:error, "error"}
+            _ -> {:ok, r}
+          end
+        end
+      )
+
+      assert {:error,
+              [
+                {"runtime1", "error"}
+              ]} ==
+               Api.cleanup_all(function)
+    end
   end
 end
