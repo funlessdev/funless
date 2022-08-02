@@ -15,12 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-[tool]
-[tool.commitizen]
-name = "cz_conventional_commits"
-version = "0.3.1"
-tag_format = "v$version"
-annotated_tag = true
-version_files = [
-    "mix.exs"
-]
+import Config
+
+config :iex, default_prompt: ">>>"
