@@ -17,6 +17,7 @@
 #
 
 import Config
+
 config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
 
