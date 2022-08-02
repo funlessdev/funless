@@ -56,7 +56,7 @@ ARG MIX_ENV=prod
 # # The name of your application/release (required)
 RUN apk update && \
     apk upgrade && \
-    apk add --no-cache libstdc++ libgcc 
+    apk add --no-cache libstdc++ libgcc ncurses-libs
 
 ENV REPLACE_OS_VARS=true \
     APP_NAME=${APP_NAME} \
