@@ -1,3 +1,9 @@
+## v0.3.2 (2022-08-02)
+
+### Fix
+
+- **Dockerfile**: add missing lib
+
 ## v0.3.1 (2022-08-02)
 
 ### Fix
