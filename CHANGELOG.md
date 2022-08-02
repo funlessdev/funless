@@ -1,3 +1,9 @@
+## v0.3.1 (2022-08-02)
+
+### Fix
+
+- license header and windows env
+
 ## v0.3.0 (2022-08-02)
 
 ### Fix
