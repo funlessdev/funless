@@ -24,12 +24,9 @@ FROM elixir:1.13.4-alpine AS builder
 # The following are build arguments used to change variable parts of the image.
 # The name of your application/release (required)
 ARG APP_NAME
-# The version of the application we are building (required)
-ARG APP_VSN
-# The environment to build with
 ARG MIX_ENV=prod
 
-ENV APP_NAME=${APP_NAME} APP_VSN=${APP_VSN} MIX_ENV=${MIX_ENV} 
+ENV APP_NAME=${APP_NAME} MIX_ENV=${MIX_ENV}
 # RUSTUP_HOME=/opt/rust CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
 
 # By convention, /opt is typically used for applications
@@ -48,27 +45,26 @@ COPY . .
 
 RUN mix do deps.get, deps.compile, compile
 
-RUN mkdir -p /opt/built && mix distillery.release --verbose && \
-    cp _build/${MIX_ENV}/rel/${APP_NAME}/releases/${APP_VSN}/${APP_NAME}.tar.gz /opt/built && \
-    cd /opt/built && \
-    tar -xzf ${APP_NAME}.tar.gz && \
-    rm ${APP_NAME}.tar.gz
+RUN mix release 
 
 # From this line onwards, we're in a new image, which will be the image used in production
 FROM alpine:${ALPINE_VERSION}
 
-# The name of your application/release (required)
 ARG APP_NAME
+ARG MIX_ENV=prod
 
+# # The name of your application/release (required)
 RUN apk update && \
     apk upgrade && \
-    apk add --no-cache bash openssl-dev
+    apk add --no-cache libstdc++ libgcc 
 
 ENV REPLACE_OS_VARS=true \
-    APP_NAME=${APP_NAME}
+    APP_NAME=${APP_NAME} \
+    MIX_ENV=${MIX_ENV}
 
 WORKDIR /opt/app
 
-COPY --from=builder /opt/built .
+COPY --from=builder /opt/app/_build/${MIX_ENV}/rel/${APP_NAME} .
 
-CMD trap 'exit' INT; /opt/app/bin/${APP_NAME} foreground
+EXPOSE 4001
+CMD trap 'exit' INT; /opt/app/bin/${APP_NAME} start
