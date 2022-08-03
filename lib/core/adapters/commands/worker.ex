@@ -22,13 +22,13 @@ defmodule Core.Adapters.Commands.Worker do
   Currently implemented commands: invocation.
   """
   require Logger
-
+  alias Core.Domain.FunctionStruct
   @behaviour Core.Domain.Ports.Commands
 
   @impl true
-  def send_invocation_command(worker, ivk_params) do
+  def send_invocation_command(worker, %FunctionStruct{} = function, args) do
     worker_addr = worker_address(worker)
-    cmd = invoke_command(ivk_params)
+    cmd = invoke_command(function, args)
 
     call_worker(worker_addr, cmd)
   end
@@ -36,19 +36,11 @@ defmodule Core.Adapters.Commands.Worker do
   @doc false
   def worker_address(worker), do: {:worker, worker}
 
-  @doc false
-  def invoke_command(ivk_params) do
-    function = %{
-      name: ivk_params.function,
-      image: "nodejs",
-      main_file: "index.js",
-      archive: "js/hello.js"
-    }
-
-    {:invoke, function}
+  def invoke_command(%FunctionStruct{} = function, args) do
+    {:invoke, function, args}
   end
 
-  defp call_worker(worker_addr, {cmd, payload} = command) do
+  defp call_worker(worker_addr, {cmd, payload, _args} = command) do
     Logger.info(
       "sending command #{cmd} to #{inspect(worker_addr)} with payload #{inspect(payload)}"
     )

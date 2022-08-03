@@ -59,8 +59,16 @@ defmodule Core.Domain.Api do
 
   defp invoke_on_chosen(worker, ivk_params) do
     Logger.info("API: found worker #{worker} for invocation")
-    wrk_reply = Commands.send_invocation_command(worker, ivk_params)
-    parse_wrk_reply(wrk_reply)
+    f = FunctionStorage.get_function(ivk_params.function, ivk_params.namespace)
+
+    case f do
+      {:ok, function} ->
+        wrk_reply = Commands.send_invocation_command(worker, function, ivk_params.args)
+        parse_wrk_reply(wrk_reply)
+
+      {:error, err} ->
+        {:error, err}
+    end
   end
 
   defp parse_wrk_reply({:ok, _} = reply) do
