@@ -26,7 +26,7 @@ defmodule Core.Domain.Ports.FunctionStorage do
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback init_database() :: :ok | {:error, any}
+  @callback init_database([Atom.t()]) :: :ok | {:error, any}
   @callback get_function(function_name, function_namespace) ::
               {:ok, FunctionStruct.t()} | {:error, any}
   @callback insert_function(FunctionStruct.t()) :: {:ok, function_name} | {:error, any}
@@ -37,9 +37,10 @@ defmodule Core.Domain.Ports.FunctionStorage do
   Creates the Function database.
   Returns either :ok or {:error, err}.
 
-  The function takes no parameters (the table name is currently just Function by default).
+  ## Parameters
+    - nodes: list of nodes where the database will be created
   """
-  defdelegate init_database(), to: @adapter
+  defdelegate init_database(nodes), to: @adapter
 
   @doc """
   Gets a function from the function storage.

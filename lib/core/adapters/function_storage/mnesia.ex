@@ -24,49 +24,49 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
   @behaviour Core.Domain.Ports.FunctionStorage
 
   @impl true
-  def init_database() do
-    create_schema()
-    |> create_table
+  def init_database(nodes) do
+    :mnesia.create_schema(nodes)
+    |> create_table(nodes)
   end
 
   @impl true
   def get_function(function_name, function_namespace) do
-    case :mnesia.dirty_index_read(Function, {function_name, function_namespace}, :namespaced_name) do
+    case :mnesia.dirty_read(Function, {function_name, function_namespace}) do
       [] -> {:error, :not_found}
-      [{Function, f, _} | _] -> {:ok, struct(FunctionStruct, f)}
+      [{Function, _, f} | _] -> {:ok, struct(FunctionStruct, f)}
     end
   end
 
   @impl true
   def insert_function(%FunctionStruct{name: name, namespace: namespace} = function) do
     data = fn ->
-      :mnesia.write({Function, Map.from_struct(function), {name, namespace}})
+      :mnesia.write({Function, {name, namespace}, Map.from_struct(function)})
     end
 
-    :mnesia.transaction(data)
+    case :mnesia.transaction(data) do
+      {:aborted, reason} -> {:error, {:aborted, reason}}
+      {_, :ok} -> {:ok, name}
+    end
   end
 
   @impl true
   def delete_function(function_name, function_namespace) do
     data = fn ->
-      :mnesia.delete(Function, :namespaced_name, {function_name, function_namespace})
+      :mnesia.delete({Function, {function_name, function_namespace}})
     end
 
-    :mnesia.transaction(data)
+    case :mnesia.transaction(data) do
+      {:aborted, reason} -> {:error, {:aborted, reason}}
+      {_, :ok} -> {:ok, function_name}
+    end
   end
 
-  defp create_schema() do
-    # TODO: should be all core nodes instead of just current node
-    :mnesia.create_schema([node()])
-  end
-
-  defp create_table(:ok) do
+  defp create_table(:ok, nodes) do
     t =
       :mnesia.create_table(Function,
-        attributes: [:function, :namespaced_name],
+        attributes: [:namespaced_name, :function],
         access_mode: :read_write,
-        index: [:namespaced_name],
-        ram_copies: [node()]
+        ram_copies: nodes
       )
 
     case t do
@@ -75,11 +75,11 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
     end
   end
 
-  defp create_table({:error, {_, {:already_exists, _}}}) do
-    create_table(:ok)
+  defp create_table({:error, {_, {:already_exists, _}}}, nodes) do
+    create_table(:ok, nodes)
   end
 
-  defp create_table({:error, err}) do
+  defp create_table({:error, err}, _) do
     {:error, err}
   end
 end
