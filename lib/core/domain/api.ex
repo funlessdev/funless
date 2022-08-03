@@ -15,24 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Core.Domain.InvokeParams do
-  @moduledoc """
-    Invocation parameters struct, used for parameter validation.
-
-    ## Fields
-      - namespace: function namespace
-      - function: function name
-      - args: function arguments
-  """
-  @type t :: %__MODULE__{
-          namespace: String.t(),
-          function: String.t(),
-          args: Map.t()
-        }
-  @enforce_keys [:function]
-  defstruct [:function, namespace: "_", args: %{}]
-end
-
 defmodule Core.Domain.Api do
   @moduledoc """
   Provides functions to deal with requests to workers.
