@@ -74,11 +74,11 @@ defmodule Core.Domain.Api do
     {:error, :worker_error}
   end
 
-  def new_function(%{"name" => name, "code" => code, "language" => language} = raw_params) do
+  def new_function(%{"name" => name, "code" => code, "image" => image} = raw_params) do
     function = %FunctionStruct{
       name: name,
       namespace: raw_params["namespace"] || "_",
-      language: language,
+      image: image,
       code: code
     }
 

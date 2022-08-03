@@ -29,10 +29,10 @@ defmodule Core.Domain.FunctionStruct do
           namespace: String.t(),
           name: String.t(),
           code: String.t(),
-          language: String.t()
+          image: String.t()
         }
-  @enforce_keys [:name, :namespace, :code, :language]
-  defstruct [:name, :namespace, :code, :language]
+  @enforce_keys [:name, :namespace, :code, :image]
+  defstruct [:name, :namespace, :code, :image]
 end
 
 defmodule Core.Domain.InvokeParams do
