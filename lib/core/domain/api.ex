@@ -20,9 +20,11 @@ defmodule Core.Domain.Api do
   Provides functions to deal with requests to workers.
   """
   require Logger
+  alias Core.Domain.FunctionStruct
   alias Core.Domain.InvokeParams
   alias Core.Domain.Nodes
   alias Core.Domain.Ports.Commands
+  alias Core.Domain.Ports.FunctionStorage
   alias Core.Domain.Scheduler
 
   @spec invoke(Map.t()) :: {:ok, %{:result => String.t()}} | {:error, any}
@@ -70,5 +72,25 @@ defmodule Core.Domain.Api do
     err_msg = err["error"] || "Unknown error"
     Logger.error("API: received error reply from worker #{err_msg}")
     {:error, :worker_error}
+  end
+
+  def new_function(%{"name" => name, "code" => code, "language" => language} = raw_params) do
+    function = %FunctionStruct{
+      name: name,
+      namespace: raw_params["namespace"] || "_",
+      language: language,
+      code: code
+    }
+
+    Logger.info(
+      "API: received creation request for function #{function.name} in namespace #{function.namespace}"
+    )
+
+    FunctionStorage.insert_function(function)
+  end
+
+  def delete_function(name, namespace) do
+    Logger.info("API: received deletion request for function #{name} in namespace #{namespace}")
+    FunctionStorage.delete_function(name, namespace)
   end
 end
