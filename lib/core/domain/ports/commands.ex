@@ -23,16 +23,13 @@ defmodule Core.Domain.Ports.Commands do
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback send_invocation_command(worker, Core.Domain.InvokeParams.t()) ::
+  @callback send_invocation_command(worker, Core.Domain.FunctionStruct.t(), Map.t()) ::
               {:ok, %{:result => String.t()}} | {:error, atom}
 
   @doc """
   Sends an invocation command to a worker.
-  It requires a worker (a fully qualified name of another node with the :worker actor on),
-  and invocation parameteres, a map with:
-  - "namespace" => the function's namespace ('_' for the default namespace).
-  - "function" => the function name.
-  - "args" => the invocation arguments.
+  It requires a worker (a fully qualified name of another node with the :worker actor on), a function struct and
+  (optionally empty) function arguments.
   """
-  defdelegate send_invocation_command(worker, ivk_params), to: @adapter
+  defdelegate send_invocation_command(worker, function, args), to: @adapter
 end
