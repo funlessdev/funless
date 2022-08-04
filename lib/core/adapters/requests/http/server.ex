@@ -99,7 +99,7 @@ defmodule Core.Adapters.Requests.Http.Server do
           "Failed to perform the required operation: transaction aborted with reason #{reason}"
       })
 
-    send_resp(conn, 404, body)
+    send_resp(conn, 500, body)
   end
 
   # currently unused, but could be used to handle errors in the future.
