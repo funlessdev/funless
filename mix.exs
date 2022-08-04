@@ -33,7 +33,10 @@ defmodule Core.MixProject do
   def application do
     [
       extra_applications: [:logger, :mnesia],
-      mod: {Core.Application, []}
+      mod: {Core.Application, []},
+      start_phases: [
+        init_db: []
+      ]
     ]
   end
 
