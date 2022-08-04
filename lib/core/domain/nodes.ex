@@ -32,4 +32,17 @@ defmodule Core.Domain.Nodes do
     |> Enum.filter(fn node_name -> String.contains?(node_name, "worker") end)
     |> Enum.map(fn node_name -> String.to_atom(node_name) end)
   end
+
+  @doc """
+  Obtains all nodes in the cluster and filters the ones with 'core' as their sname (including the current node).
+  """
+  def core_nodes do
+    [
+      node()
+      | Cluster.all_nodes()
+        |> Enum.map(&Atom.to_string(&1))
+        |> Enum.filter(fn node_name -> String.contains?(node_name, "core") end)
+        |> Enum.map(fn node_name -> String.to_atom(node_name) end)
+    ]
+  end
 end

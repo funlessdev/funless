@@ -15,15 +15,36 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Core.Adapters.FunctionStorage.Test do
+  @moduledoc false
 
-import Config
+  alias Core.Domain.FunctionStruct
+  @behaviour Core.Domain.Ports.FunctionStorage
 
-config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
-config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
-config :core, Core.Domain.Ports.FunctionStorage, adapter: Core.Adapters.FunctionStorage.Mnesia
+  @impl true
+  def init_database(_nodes) do
+    :ok
+  end
 
-config :logger, :console,
-  format: "\n##### $time $metadata[$level] $levelpad$message\n",
-  metadata: [:error_code, :file, :line]
+  @impl true
+  def get_function(function_name, function_namespace) do
+    f = %FunctionStruct{
+      name: function_name,
+      namespace: function_namespace,
+      code: "console.log(\"hello\")",
+      image: "nodejs"
+    }
 
-import_config "#{Mix.env()}.exs"
+    {:ok, f}
+  end
+
+  @impl true
+  def insert_function(%FunctionStruct{name: function_name}) do
+    {:ok, function_name}
+  end
+
+  @impl true
+  def delete_function(function_name, _function_namespace) do
+    {:ok, function_name}
+  end
+end

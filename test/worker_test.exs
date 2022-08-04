@@ -18,19 +18,16 @@
 defmodule WorkerTest do
   use ExUnit.Case, async: true
   alias Core.Adapters.Commands.Worker
+  alias Core.Domain.FunctionStruct
 
   test "should send to {:worker, worker atom}" do
     assert Worker.worker_address(:worker@atom) == {:worker, :worker@atom}
   end
 
   test "should prepare correct invocation command" do
-    assert Worker.invoke_command(%{function: "test"}) ==
-             {:invoke,
-              %{
-                name: "test",
-                image: "nodejs",
-                main_file: "index.js",
-                archive: "js/hello.js"
-              }}
+    function = %FunctionStruct{name: "test", image: "nodejs", code: "some code", namespace: "_"}
+
+    assert Worker.invoke_command(function, %{}) ==
+             {:invoke, function, %{}}
   end
 end

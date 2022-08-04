@@ -18,3 +18,4 @@
 
 Mox.defmock(Core.Commands.Mock, for: Core.Domain.Ports.Commands)
 Mox.defmock(Core.Cluster.Mock, for: Core.Domain.Ports.Cluster)
+Mox.defmock(Core.FunctionStorage.Mock, for: Core.Domain.Ports.FunctionStorage)

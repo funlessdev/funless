@@ -15,32 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Core.Domain.InvokeParams do
-  @moduledoc """
-    Invocation parameters struct, used for parameter validation.
-
-    ## Fields
-      - namespace: function namespace
-      - function: function name
-      - args: function arguments
-  """
-  @type t :: %__MODULE__{
-          namespace: String.t(),
-          function: String.t(),
-          args: Map.t()
-        }
-  @enforce_keys [:function]
-  defstruct [:function, namespace: "_", args: %{}]
-end
-
 defmodule Core.Domain.Api do
   @moduledoc """
   Provides functions to deal with requests to workers.
   """
   require Logger
+  alias Core.Domain.FunctionStruct
   alias Core.Domain.InvokeParams
   alias Core.Domain.Nodes
   alias Core.Domain.Ports.Commands
+  alias Core.Domain.Ports.FunctionStorage
   alias Core.Domain.Scheduler
 
   @spec invoke(Map.t()) :: {:ok, %{:result => String.t()}} | {:error, any}
@@ -75,8 +59,27 @@ defmodule Core.Domain.Api do
 
   defp invoke_on_chosen(worker, ivk_params) do
     Logger.info("API: found worker #{worker} for invocation")
-    wrk_reply = Commands.send_invocation_command(worker, ivk_params)
-    parse_wrk_reply(wrk_reply)
+    f = FunctionStorage.get_function(ivk_params.function, ivk_params.namespace)
+
+    case f do
+      {:ok, function} ->
+        wrk_reply = Commands.send_invocation_command(worker, function, ivk_params.args)
+        parse_wrk_reply(wrk_reply)
+
+      {:error, :not_found} ->
+        Logger.error(
+          "API: function #{ivk_params.function} in namespace #{ivk_params.namespace} not found"
+        )
+
+        {:error, :not_found}
+
+      {:error, err} ->
+        Logger.error(
+          "API: encountered error when getting function #{ivk_params.function}: #{inspect(err)}"
+        )
+
+        {:error, err}
+    end
   end
 
   defp parse_wrk_reply({:ok, _} = reply) do
@@ -88,5 +91,27 @@ defmodule Core.Domain.Api do
     err_msg = err["error"] || "Unknown error"
     Logger.error("API: received error reply from worker #{err_msg}")
     {:error, :worker_error}
+  end
+
+  def new_function(%{"name" => name, "code" => code, "image" => image} = raw_params) do
+    function = %FunctionStruct{
+      name: name,
+      namespace: raw_params["namespace"] || "_",
+      image: image,
+      code: code
+    }
+
+    Logger.info(
+      "API: received creation request for function #{function.name} in namespace #{function.namespace}"
+    )
+
+    FunctionStorage.insert_function(function)
+  end
+
+  def new_function(_), do: {:error, :bad_params}
+
+  def delete_function(name, namespace) do
+    Logger.info("API: received deletion request for function #{name} in namespace #{namespace}")
+    FunctionStorage.delete_function(name, namespace)
   end
 end

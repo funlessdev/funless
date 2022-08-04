@@ -20,6 +20,7 @@ import Config
 
 config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
+config :core, Core.Domain.Ports.FunctionStorage, adapter: Core.Adapters.FunctionStorage.Mnesia
 
 config :logger,
   backends: [:console],

@@ -46,3 +46,5 @@ core-*.tar
 /native/**/Cargo.lock
 /priv/native/*.so
 .elixir_ls/
+
+Mnesia.*/

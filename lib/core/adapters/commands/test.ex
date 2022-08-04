@@ -21,7 +21,7 @@ defmodule Core.Adapters.Commands.Test do
   @behaviour Core.Domain.Ports.Commands
 
   @impl true
-  def send_invocation_command(_worker, ivk_params) do
-    {:ok, %{"result" => ivk_params.function}}
+  def send_invocation_command(_worker, function, _args) do
+    {:ok, %{result: function.name}}
   end
 end
