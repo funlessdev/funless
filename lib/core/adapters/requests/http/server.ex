@@ -68,14 +68,14 @@ defmodule Core.Adapters.Requests.Http.Server do
     send_resp(conn, 200, body)
   end
 
+  defp reply_to_client({:error, :bad_params}, conn) do
+    body = Jason.encode!(%{"error" => "Failed to perform operation: bad request"})
+    send_resp(conn, 400, body)
+  end
+
   defp reply_to_client({:error, :no_workers}, conn) do
     body = Jason.encode!(%{"error" => "Failed to invoke function: no worker available"})
     send_resp(conn, 503, body)
-  end
-
-  defp reply_to_client({:error, :bad_params}, conn) do
-    body = Jason.encode!(%{"error" => "Failed to invoke function: bad request"})
-    send_resp(conn, 400, body)
   end
 
   defp reply_to_client({:error, :worker_error}, conn) do
