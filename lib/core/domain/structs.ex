@@ -23,7 +23,7 @@ defmodule Core.Domain.FunctionStruct do
       - name: function name
       - namespace: function namespace
       - code: function code as a string
-      - language: language in which the function is written
+      - image: runtime image corresponding to the language with which the function is written
   """
   @type t :: %__MODULE__{
           namespace: String.t(),
