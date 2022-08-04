@@ -21,6 +21,9 @@ defmodule Core.Application do
   # for more information on OTP Applications
   @moduledoc false
 
+  alias Core.Domain.Ports.FunctionStorage
+  alias Core.Domain.Nodes
+
   use Application
 
   @impl true
@@ -33,5 +36,18 @@ defmodule Core.Application do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Core.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  @impl true
+  def start_phase(:init_db, _phase_type, _args) do
+    res =
+      Nodes.core_nodes()
+      |> FunctionStorage.init_database()
+
+    case res do
+      :ok -> :ok
+      {:error, {:aborted, {:already_exists, _}}} -> :ok
+      err -> err
+    end
   end
 end
