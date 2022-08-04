@@ -156,7 +156,11 @@ defmodule ApiTest do
     end
 
     test "delete_function should return {:ok, function_name} when no error occurs" do
-      assert Api.delete_function("hello", "ns") == {:ok, "hello"}
+      assert Api.delete_function(%{"name" => "hello", "namespace" => "ns"}) == {:ok, "hello"}
+    end
+
+    test "delete_function should return {:error, :bad_params}  when the given parameter map lacks the necessary keys" do
+      assert Api.delete_function(%{"namespace" => "ns"}) == {:error, :bad_params}
     end
   end
 end
