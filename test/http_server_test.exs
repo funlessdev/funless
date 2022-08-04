@@ -127,6 +127,27 @@ defmodule HttpServerTest do
       assert body == %{"error" => "Failed to invoke function: bad request"}
     end
 
+    test "should return 404 when the required function is not found" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+      Core.FunctionStorage.Mock |> Mox.expect(:get_function, fn _, _ -> {:error, :not_found} end)
+
+      # Create a test connection
+      conn = conn(:post, "/invoke", %{"function" => "hello", "namespace" => "ns"})
+
+      # Invoke the plug
+      conn = Server.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 404
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+
+      assert body == %{
+               "error" => "Failed to invoke function: function not found in given namespace"
+             }
+    end
+
     # change it with proper response
     test "should return 404 with wrong request" do
       # Create a test connection
