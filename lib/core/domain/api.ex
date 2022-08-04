@@ -110,8 +110,10 @@ defmodule Core.Domain.Api do
 
   def new_function(_), do: {:error, :bad_params}
 
-  def delete_function(name, namespace) do
+  def delete_function(%{"name" => name, "namespace" => namespace}) do
     Logger.info("API: received deletion request for function #{name} in namespace #{namespace}")
     FunctionStorage.delete_function(name, namespace)
   end
+
+  def delete_function(_), do: {:error, :bad_params}
 end
