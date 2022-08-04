@@ -30,9 +30,11 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
   end
 
   defp create_table(:ok, nodes) do
+    # namespace_name acts as the primary key, and is the {function_name, function_namespace} tuple,
+    # which uniquely identifies each function
     t =
       :mnesia.create_table(Function,
-        attributes: [:namespaced_name, :function],
+        attributes: [:namespace_name, :function],
         access_mode: :read_write,
         ram_copies: nodes
       )
