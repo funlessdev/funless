@@ -109,7 +109,7 @@ defmodule HttpServerTest do
       assert conn.status == 400
       assert get_resp_header(conn, "content-type") == ["application/json"]
       body = Jason.decode!(conn.resp_body)
-      assert body == %{"error" => "Failed to invoke function: bad request"}
+      assert body == %{"error" => "Failed to perform operation: bad request"}
     end
 
     test "should return 400 bad request when empty invoke parameters" do
@@ -124,7 +124,7 @@ defmodule HttpServerTest do
       assert conn.status == 400
       assert get_resp_header(conn, "content-type") == ["application/json"]
       body = Jason.decode!(conn.resp_body)
-      assert body == %{"error" => "Failed to invoke function: bad request"}
+      assert body == %{"error" => "Failed to perform operation: bad request"}
     end
 
     test "should return 404 when the required function is not found" do
