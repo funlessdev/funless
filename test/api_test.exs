@@ -78,5 +78,32 @@ defmodule ApiTest do
     test "invoke with bad parameters should return {:error, :bad_params}" do
       assert Api.invoke(%{"bad" => "arg"}) == {:error, :bad_params}
     end
+
+    test "invoke on a non-existent function should return {:error, err}" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.FunctionStorage.Mock
+      |> Mox.expect(:get_function, fn "hello", "ns" -> {:error, :not_found} end)
+
+      assert Api.invoke(%{"function" => "hello", "namespace" => "ns"}) == {:error, :not_found}
+    end
+
+    test "invoke on an existent function should send the invocation command using said function" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invocation_command, fn _worker, function, _args ->
+        {:ok, %{result: Map.from_struct(function)}}
+      end)
+
+      f = %{
+        name: "hello",
+        namespace: "ns",
+        code: "console.log(\"hello\")",
+        image: "nodejs"
+      }
+
+      assert Api.invoke(%{"function" => "hello", "namespace" => "ns"}) == {:ok, %{result: f}}
+    end
   end
 end
