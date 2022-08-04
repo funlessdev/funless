@@ -18,6 +18,7 @@
 
 defmodule ApiTest do
   alias Core.Domain.Api
+  alias Core.Domain.FunctionStruct
 
   use ExUnit.Case, async: true
   import Mox, only: [verify_on_exit!: 1]
@@ -104,6 +105,58 @@ defmodule ApiTest do
       }
 
       assert Api.invoke(%{"function" => "hello", "namespace" => "ns"}) == {:ok, %{result: f}}
+    end
+  end
+
+  describe "API functions" do
+    setup do
+      Core.FunctionStorage.Mock
+      |> Mox.stub_with(Core.Adapters.FunctionStorage.Test)
+
+      :ok
+    end
+
+    test "new_function should return {:ok, function_name} when no error occurs" do
+      f = %{
+        "name" => "hello",
+        "namespace" => "ns",
+        "code" => "console.log(\"hello\")",
+        "image" => "nodejs"
+      }
+
+      assert Api.new_function(f) == {:ok, "hello"}
+    end
+
+    test "new_function should return {:error, :bad_params} when the given parameter map lacks the necessary keys" do
+      f = %{"name" => "hello", "code" => "some code"}
+      assert Api.new_function(f) == {:error, :bad_params}
+    end
+
+    test "new_function should return {:ok, function_name} and ignore unused parameters in the input map when unnecessary keys are given" do
+      f = %{
+        "name" => "hello",
+        "code" => "some code",
+        "image" => "nodejs",
+        "something_else" => "something else",
+        "namespace" => "ns"
+      }
+
+      Core.FunctionStorage.Mock
+      |> Mox.expect(:insert_function, 1, fn %FunctionStruct{
+                                              name: "hello",
+                                              code: "some code",
+                                              image: "nodejs",
+                                              namespace: "ns"
+                                            } ->
+        {:ok, "hello"}
+      end)
+      |> Mox.expect(:insert_function, 0, fn _ -> {:error, "some error"} end)
+
+      assert Api.new_function(f) == {:ok, "hello"}
+    end
+
+    test "delete_function should return {:ok, function_name} when no error occurs" do
+      assert Api.delete_function("hello", "ns") == {:ok, "hello"}
     end
   end
 end
