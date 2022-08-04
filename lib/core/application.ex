@@ -21,8 +21,8 @@ defmodule Core.Application do
   # for more information on OTP Applications
   @moduledoc false
 
-  alias Core.Domain.Ports.FunctionStorage
   alias Core.Domain.Nodes
+  alias Core.Domain.Ports.FunctionStorage
 
   use Application
 
@@ -39,7 +39,12 @@ defmodule Core.Application do
   end
 
   @impl true
-  def start_phase(:init_db, _phase_type, _args) do
+  def start_phase(:init_db, _phase_type, :test) do
+    :ok
+  end
+
+  @impl true
+  def start_phase(:init_db, _phase_type, _env) do
     res =
       Nodes.core_nodes()
       |> FunctionStorage.init_database()
