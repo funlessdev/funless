@@ -55,5 +55,25 @@ defmodule NodesTest do
       workers = Nodes.worker_nodes()
       assert workers == expected
     end
+
+    test "core_nodes should return a list with only the current node when no node is connected" do
+      cores = Nodes.core_nodes()
+      assert cores == [node()]
+    end
+
+    test "core_nodes should return a list with only the current node when there are only non-core nodes" do
+      nodes = [:"worker@example.com", :"extra@127.1.0.2"]
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> nodes end)
+      cores = Nodes.core_nodes()
+      assert cores == [node()]
+    end
+
+    test "core_nodes should return a filtered list of only core nodes when present" do
+      expected = [node(), :"core@ciao.it"]
+      nodes = [:"worker@example.com", :"core@ciao.it", :"extra@127.1.0.2"]
+      Core.Cluster.Mock |> Mox.stub(:all_nodes, fn -> nodes end)
+      cores = Nodes.core_nodes()
+      assert cores == expected
+    end
   end
 end
