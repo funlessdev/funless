@@ -164,4 +164,139 @@ defmodule HttpServerTest do
       assert body == %{"error" => "Oops, this endpoint is not implemented yet"}
     end
   end
+
+  describe "Http Server function creation/deletion" do
+    setup do
+      Core.FunctionStorage.Mock
+      |> Mox.stub_with(Core.Adapters.FunctionStorage.Test)
+
+      :ok
+    end
+
+    test "/create should return 200 when the creation is successful" do
+      conn =
+        conn(:post, "/create", %{
+          "name" => "hello",
+          "namespace" => "ns",
+          "code" => "some code",
+          "image" => "nodejs"
+        })
+
+      # Invoke the plug
+      conn = Server.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+      assert body == %{"result" => "hello"}
+    end
+
+    test "/create should return 400 when given bad parameters" do
+      conn =
+        conn(:post, "/create", %{
+          "name" => "hello",
+          "namespace" => "ns",
+          "image" => "nodejs"
+        })
+
+      # Invoke the plug
+      conn = Server.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 400
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+      assert body == %{"error" => "Failed to perform operation: bad request"}
+    end
+
+    test "/create should return 500 when the underlying storage transaction fails" do
+      Core.FunctionStorage.Mock
+      |> Mox.expect(:insert_function, fn _ -> {:error, {:aborted, "some reason"}} end)
+
+      conn =
+        conn(:post, "/create", %{
+          "name" => "hello",
+          "namespace" => "ns",
+          "image" => "nodejs",
+          "code" => "some code"
+        })
+
+      # Invoke the plug
+      conn = Server.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 500
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+
+      assert body == %{
+               "error" =>
+                 "Failed to perform the required operation: transaction aborted with reason #{"some reason"}"
+             }
+    end
+
+    test "/delete should return 200 when the deletion is successful" do
+      conn =
+        conn(:post, "/delete", %{
+          "name" => "hello",
+          "namespace" => "ns"
+        })
+
+      # Invoke the plug
+      conn = Server.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+      assert body == %{"result" => "hello"}
+    end
+
+    test "/delete should return 400 when given bad parameters" do
+      conn =
+        conn(:post, "/delete", %{
+          "namespace" => "ns"
+        })
+
+      # Invoke the plug
+      conn = Server.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 400
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+      assert body == %{"error" => "Failed to perform operation: bad request"}
+    end
+
+    test "/delete should return 500 when the underlying storage transaction fails" do
+      Core.FunctionStorage.Mock
+      |> Mox.expect(:delete_function, fn _, _ -> {:error, {:aborted, "some reason"}} end)
+
+      conn =
+        conn(:post, "/delete", %{
+          "namespace" => "ns",
+          "name" => "hello"
+        })
+
+      # Invoke the plug
+      conn = Server.call(conn, @opts)
+
+      # Assert the response and status
+      assert conn.state == :sent
+      assert conn.status == 500
+      assert get_resp_header(conn, "content-type") == ["application/json"]
+      body = Jason.decode!(conn.resp_body)
+
+      assert body == %{
+               "error" =>
+                 "Failed to perform the required operation: transaction aborted with reason #{"some reason"}"
+             }
+    end
+  end
 end
