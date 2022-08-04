@@ -105,14 +105,24 @@ defmodule Core.Domain.Api do
       "API: received creation request for function #{function.name} in namespace #{function.namespace}"
     )
 
-    FunctionStorage.insert_function(function)
+    res = FunctionStorage.insert_function(function)
+
+    case res do
+      {:ok, function_name} -> {:ok, %{result: function_name}}
+      err -> err
+    end
   end
 
   def new_function(_), do: {:error, :bad_params}
 
   def delete_function(%{"name" => name, "namespace" => namespace}) do
     Logger.info("API: received deletion request for function #{name} in namespace #{namespace}")
-    FunctionStorage.delete_function(name, namespace)
+    res = FunctionStorage.delete_function(name, namespace)
+
+    case res do
+      {:ok, function_name} -> {:ok, %{result: function_name}}
+      err -> err
+    end
   end
 
   def delete_function(_), do: {:error, :bad_params}
