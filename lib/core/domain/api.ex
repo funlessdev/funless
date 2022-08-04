@@ -66,7 +66,14 @@ defmodule Core.Domain.Api do
         wrk_reply = Commands.send_invocation_command(worker, function, ivk_params.args)
         parse_wrk_reply(wrk_reply)
 
+      {:error, :not_found} ->
+        {:error, :not_found}
+
       {:error, err} ->
+        Logger.error(
+          "API: encountered error when getting function #{ivk_params.function}: #{inspect(err)}"
+        )
+
         {:error, err}
     end
   end
