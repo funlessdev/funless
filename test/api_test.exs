@@ -33,6 +33,9 @@ defmodule ApiTest do
       Core.Cluster.Mock
       |> Mox.stub_with(Core.Adapters.Cluster.Test)
 
+      Core.FunctionStorage.Mock
+      |> Mox.stub_with(Core.Adapters.FunctionStorage.Test)
+
       :ok
     end
 
@@ -46,7 +49,7 @@ defmodule ApiTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn _, _ ->
+      |> Mox.expect(:send_invocation_command, fn _, _, _ ->
         {:error, %{}}
       end)
 
@@ -61,7 +64,7 @@ defmodule ApiTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere, :worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn worker, _ -> {:ok, worker} end)
+      |> Mox.expect(:send_invocation_command, fn worker, _, _ -> {:ok, worker} end)
 
       assert Api.invoke(%{"function" => "test"}) == {:ok, :worker@localhost}
     end

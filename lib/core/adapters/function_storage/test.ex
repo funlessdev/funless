@@ -15,19 +15,34 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule WorkerTest do
-  use ExUnit.Case, async: true
-  alias Core.Adapters.Commands.Worker
+defmodule Core.Adapters.FunctionStorage.Test do
   alias Core.Domain.FunctionStruct
+  @behaviour Core.Domain.Ports.FunctionStorage
 
-  test "should send to {:worker, worker atom}" do
-    assert Worker.worker_address(:worker@atom) == {:worker, :worker@atom}
+  @impl true
+  def init_database(_nodes) do
+    :ok
   end
 
-  test "should prepare correct invocation command" do
-    function = %FunctionStruct{name: "test", image: "nodejs", code: "some code", namespace: "_"}
+  @impl true
+  def get_function(function_name, function_namespace) do
+    f = %FunctionStruct{
+      name: function_name,
+      namespace: function_namespace,
+      code: "console.log(\"hello\")",
+      image: "nodejs"
+    }
 
-    assert Worker.invoke_command(function, %{}) ==
-             {:invoke, function, %{}}
+    {:ok, f}
+  end
+
+  @impl true
+  def insert_function(%FunctionStruct{name: function_name}) do
+    {:ok, function_name}
+  end
+
+  @impl true
+  def delete_function(function_name, _function_namespace) do
+    {:ok, function_name}
   end
 end
