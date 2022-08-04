@@ -43,6 +43,20 @@ defmodule Core.Adapters.Requests.Http.Server do
     reply_to_client(res, conn)
   end
 
+  # Function creation request handler
+  post "/create" do
+    res = Api.new_function(conn.body_params)
+    conn = put_resp_content_type(conn, "application/json", nil)
+    reply_to_client(res, conn)
+  end
+
+  # Function deletion request handler
+  post "/delete" do
+    res = Api.delete_function(conn.body_params)
+    conn = put_resp_content_type(conn, "application/json", nil)
+    reply_to_client(res, conn)
+  end
+
   match _ do
     body = Jason.encode!(%{"error" => "Oops, this endpoint is not implemented yet"})
     conn = put_resp_content_type(conn, "application/json", nil)
@@ -73,6 +87,16 @@ defmodule Core.Adapters.Requests.Http.Server do
     body =
       Jason.encode!(%{
         "error" => "Failed to invoke function: function not found in given namespace"
+      })
+
+    send_resp(conn, 404, body)
+  end
+
+  defp reply_to_client({:error, {:aborted, reason}}, conn) do
+    body =
+      Jason.encode!(%{
+        "error" =>
+          "Failed to perform the required operation: transaction aborted with reason #{reason}"
       })
 
     send_resp(conn, 404, body)
