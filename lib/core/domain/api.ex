@@ -67,6 +67,10 @@ defmodule Core.Domain.Api do
         parse_wrk_reply(wrk_reply)
 
       {:error, :not_found} ->
+        Logger.error(
+          "API: function #{ivk_params.function} in namespace #{ivk_params.namespace} not found"
+        )
+
         {:error, :not_found}
 
       {:error, err} ->
