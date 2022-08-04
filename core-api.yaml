@@ -31,6 +31,24 @@ components:
           type: string
         args:
           type: object
+    function_creation:
+      type: object
+      properties:
+        name:
+          type: string
+        namespace:
+          type: string
+        code:
+          type: string
+        image:
+          type: string
+    function_deletion:
+      type: object
+      properties:
+        name:
+          type: string
+        namespace:
+          type: string
 paths:
   /invoke:
     post:
@@ -71,6 +89,16 @@ paths:
                   error:
                     type: string
                     description: The error message
+        "404":
+          description: The required function was not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message
         "500":
           description: The function invocation failed for some unspecified internal error
           content:
@@ -97,7 +125,102 @@ paths:
               examples:
                 Invocation with no workers:
                   value: '{"error": "Failed to invoke function: no worker available"}'
+  /create:
+    post:
+      summary: Create a new function
+      description: >-
+        Creates the given function, extracting the parameters from the POST body
+      requestBody:
+        required: true
+        description: >-
+          Object containing the function to create, with name, optional namespace, code and runtime image identifier
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/function_creation"
+      responses:
+        "200":
+          description: The function was created successfully
+          content:
+            application/json:
+              schema:
+                description: The name of the function
+                type: object
+                properties:
+                  result:
+                    type: object
+              examples:
+                Creation of the "hellojs" function:
+                  value: '{"result": "hellojs"}'
+        "400":
+          description: The function creation request was invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message
+        "500":
+          description: The function creation request failed because the database transaction was aborted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message
+  /delete:
+    post:
+      summary: Delete a function
+      description: >-
+        Deletes the function with the given name and namespace, extracted from the POST body
+      requestBody:
+        required: true
+        description: >-
+          Object containing the name and namespace of the function to delete
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/function_deletion"
+      responses:
+        "200":
+          description: The function was deleted successfully
+          content:
+            application/json:
+              schema:
+                description: The name of the function
+                type: object
+                properties:
+                  result:
+                    type: object
+              examples:
+                Deletion of the "hellojs" function:
+                  value: '{"result": "hellojs"}'
+        "400":
+          description: The function deletion request was invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message
+        "500":
+          description: The function deletion request failed because the database transaction was aborted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message
+
 servers:
-  - url: localhost:4001
+  - url: http://localhost:4001
     variables: {}
     description: The dev server for the funless core launched locally
