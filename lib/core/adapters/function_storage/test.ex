@@ -16,6 +16,8 @@
 # under the License.
 #
 defmodule Core.Adapters.FunctionStorage.Test do
+  @moduledoc false
+
   alias Core.Domain.FunctionStruct
   @behaviour Core.Domain.Ports.FunctionStorage
 
