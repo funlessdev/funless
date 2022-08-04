@@ -34,6 +34,9 @@ defmodule HttpServerTest do
       Core.Cluster.Mock
       |> Mox.stub_with(Core.Adapters.Cluster.Test)
 
+      Core.FunctionStorage.Mock
+      |> Mox.stub_with(Core.Adapters.FunctionStorage.Test)
+
       :ok
     end
 
@@ -41,7 +44,7 @@ defmodule HttpServerTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn _, _ ->
+      |> Mox.expect(:send_invocation_command, fn _, _, _ ->
         {:error, %{"error" => "some worker error dude"}}
       end)
 
@@ -76,7 +79,9 @@ defmodule HttpServerTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn _, _ -> {:ok, %{"result" => "Hello, World!"}} end)
+      |> Mox.expect(:send_invocation_command, fn _, _, _ ->
+        {:ok, %{"result" => "Hello, World!"}}
+      end)
 
       # Create a test connection
       conn = conn(:post, "/invoke", %{"namespace" => "_", "function" => "hello", "args" => %{}})
