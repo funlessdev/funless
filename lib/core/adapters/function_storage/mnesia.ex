@@ -29,6 +29,28 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
     |> create_table(nodes)
   end
 
+  defp create_table(:ok, nodes) do
+    t =
+      :mnesia.create_table(Function,
+        attributes: [:namespaced_name, :function],
+        access_mode: :read_write,
+        ram_copies: nodes
+      )
+
+    case t do
+      {_, :ok} -> :ok
+      {:aborted, reason} -> {:error, {:aborted, reason}}
+    end
+  end
+
+  defp create_table({:error, {_, {:already_exists, _}}}, nodes) do
+    create_table(:ok, nodes)
+  end
+
+  defp create_table({:error, err}, _) do
+    {:error, err}
+  end
+
   @impl true
   def get_function(function_name, function_namespace) do
     case :mnesia.dirty_read(Function, {function_name, function_namespace}) do
@@ -59,27 +81,5 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
       {:aborted, reason} -> {:error, {:aborted, reason}}
       {_, :ok} -> {:ok, function_name}
     end
-  end
-
-  defp create_table(:ok, nodes) do
-    t =
-      :mnesia.create_table(Function,
-        attributes: [:namespaced_name, :function],
-        access_mode: :read_write,
-        ram_copies: nodes
-      )
-
-    case t do
-      {_, :ok} -> :ok
-      {:aborted, reason} -> {:error, {:aborted, reason}}
-    end
-  end
-
-  defp create_table({:error, {_, {:already_exists, _}}}, nodes) do
-    create_table(:ok, nodes)
-  end
-
-  defp create_table({:error, err}, _) do
-    {:error, err}
   end
 end
