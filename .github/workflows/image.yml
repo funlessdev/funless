@@ -1,4 +1,3 @@
-
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -21,39 +20,38 @@ name: Image
 on:
   push:
     tags:
-      - '*'
+      - "*"
     branches-ignore:
-      - '*'
+      - "*"
 
 jobs:
   docker:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v2
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-    - name: Set APP_VSN arg value
-      run: |
-        VERSION=${{github.ref_name}} 
-        echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+      - name: Set APP_VSN arg value
+        run: |
+          VERSION=${{github.ref_name}} 
+          echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
 
-    - name: Build and push Docker images
-      uses: docker/build-push-action@v3.0.0
-      with:
-        context: .
-        push: true
-        build-args: |
-          APP_NAME=worker
-          APP_VSN=${{ env.VERSION }}
-        tags: ghcr.io/funlessdev/fl-worker:latest,ghcr.io/funlessdev/fl-worker:${{ env.VERSION }}
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v3.0.0
+        with:
+          context: .
+          push: true
+          build-args: |
+            APP_NAME=worker
+          tags: ghcr.io/funlessdev/fl-worker:latest,ghcr.io/funlessdev/fl-worker:${{ env.VERSION }}
