@@ -47,9 +47,9 @@ defmodule Worker.Domain.FunctionStruct do
   @type t :: %__MODULE__{
           name: String.t(),
           image: String.t(),
-          archive: String.t(),
-          main_file: String.t()
+          code: String.t(),
+          namespace: String.t()
         }
-  @enforce_keys [:name, :image, :archive, :main_file]
-  defstruct [:name, :image, :archive, :main_file]
+  @enforce_keys [:name, :image, :code, :namespace]
+  defstruct [:name, :image, :code, :namespace]
 end

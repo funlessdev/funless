@@ -23,6 +23,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   @behaviour Worker.Domain.Ports.Runtime
   use Rustler, otp_app: :worker, crate: :fn
   require Logger
+  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 
   #   Creates the `_runtime_name` container, with information taken from `_function`.
@@ -79,7 +80,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
       - runtime_name: name of the runtime being created
   """
   @impl true
-  def prepare(function, runtime_name) do
+  def prepare(%FunctionStruct{} = function, runtime_name) do
     socket = docker_socket()
 
     Logger.info("OpenWhisk Runtime: Creating runtime for function '#{function.name}'")
@@ -89,7 +90,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     receive do
       {:ok, runtime = %RuntimeStruct{host: host, port: port}} ->
         :timer.sleep(1000)
-        code = File.read!(function.archive)
+        code = function.code
 
         body =
           Jason.encode!(%{
