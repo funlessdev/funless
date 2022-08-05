@@ -20,17 +20,16 @@ defmodule ApiTest do
   use ExUnit.Case, async: true
 
   alias Worker.Domain.Api
-  alias Worker.Domain.FunctionStruct
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!
 
   setup_all do
-    function = %FunctionStruct{
+    function = %{
       name: "hellojs",
-      image: "node:lts-alpine",
-      main_file: "/opt/index.js",
-      archive: "js/hello.tar.gz"
+      namespace: "_",
+      image: "nodejs",
+      code: "console.log(\"hello\")"
     }
 
     %{function: function}
@@ -50,7 +49,7 @@ defmodule ApiTest do
         {:error, "generic error"}
       end)
 
-      assert Api.prepare_runtime(function) == {:error, "generic error"}
+      assert Api.Prepare.prepare_runtime(function) == {:error, "generic error"}
     end
 
     test "prepare_runtime should not call the function storage when the runtime is not created successfully",
@@ -63,12 +62,12 @@ defmodule ApiTest do
       Worker.RuntimeTracker.Mock
       |> Mox.expect(:insert_runtime, 0, &Worker.Adapters.RuntimeTracker.Test.insert_runtime/2)
 
-      assert Api.prepare_runtime(function) == {:error, "generic error"}
+      assert Api.Prepare.prepare_runtime(function) == {:error, "generic error"}
     end
 
     test "invoke_function should return {:ok, result map} from the called function when no error is present",
          %{function: function} do
-      assert {:ok, %{"result" => "output"}} == Api.invoke_function(function)
+      assert {:ok, %{"result" => "output"}} == Api.Invoke.invoke_function(function)
     end
 
     test "invoke_function should return {:error, err} when running the given function raises an error",
@@ -80,7 +79,7 @@ defmodule ApiTest do
         {:error, "generic error"}
       end)
 
-      assert {:error, "generic error"} == Api.invoke_function(function)
+      assert {:error, "generic error"} == Api.Invoke.invoke_function(function)
     end
 
     test "invoke_function should return {:error, err} when no runtime available and its creation fails",
@@ -92,21 +91,21 @@ defmodule ApiTest do
       Worker.Runtime.Mock
       |> Mox.expect(:prepare, fn _, _ -> {:error, "creation error"} end)
 
-      assert {:error, "creation error"} == Api.invoke_function(function)
+      assert {:error, "creation error"} == Api.Invoke.invoke_function(function)
     end
 
     test "cleanup should return {:ok, runtime} when a runtime is found and deleted for the given function",
          %{function: function} do
       [runtime | _] = Worker.RuntimeTracker.Mock.get_runtimes(function.name)
 
-      assert Api.cleanup(function) == {:ok, runtime}
+      assert Api.Cleanup.cleanup(function) == {:ok, runtime}
     end
 
     test "cleanup should return {:error, err} when no runtime is found for the given function",
          %{function: function} do
       Worker.RuntimeTracker.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
 
-      assert {:error, "no runtime found to cleanup"} == Api.cleanup(function)
+      assert {:error, "no runtime found to cleanup"} == Api.Cleanup.cleanup(function)
     end
 
     test "cleanup_all should return {:ok, []} when all runtimes are deleted without errors for the given function",
@@ -119,14 +118,14 @@ defmodule ApiTest do
         ]
       end)
 
-      assert Api.cleanup_all(function) == {:ok, []}
+      assert Api.Cleanup.cleanup_all(function) == {:ok, []}
     end
 
     test "cleanup_all should return {:error, err} when no runtime is found for the given function",
          %{function: function} do
       Worker.RuntimeTracker.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
 
-      assert {:error, "no runtime found to cleanup"} == Api.cleanup_all(function)
+      assert {:error, "no runtime found to cleanup"} == Api.Cleanup.cleanup_all(function)
     end
 
     test "cleanup_all should return {:error, [{runtime, err}, ... ]} when errors are encountered while deleting the runtimes",
@@ -155,7 +154,7 @@ defmodule ApiTest do
               [
                 {"runtime1", "error"}
               ]} ==
-               Api.cleanup_all(function)
+               Api.Cleanup.cleanup_all(function)
     end
   end
 end
