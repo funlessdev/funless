@@ -29,7 +29,7 @@ ___
 The project can also be compiled as a release, and run like this:
 ```
 mix release
-./_build/dev/rel/worker/bin/worker foreground (or start and then stop)
+./_build/dev/rel/worker/bin/worker start (or daemon to run it in the background) and stop 
 ```
 
 And on a different terminal session, start the interactive session like this:
