@@ -40,16 +40,16 @@ defmodule Worker.Domain.FunctionStruct do
 
     ## Fields
       - name: function name
-      - image: base Docker image for the function's runtime
-      - archive: path of the tarball containing the function's code, will be copied into runtime
-      - main_file: path of the function's main file inside the runtime
+      - namespace: function namespace, identifies the function along with the name
+      - image: base image for the function's runtime
+      - code: function code, used to initialize the runtime
   """
   @type t :: %__MODULE__{
           name: String.t(),
           image: String.t(),
-          archive: String.t(),
-          main_file: String.t()
+          code: String.t(),
+          namespace: String.t()
         }
-  @enforce_keys [:name, :image, :archive, :main_file]
-  defstruct [:name, :image, :archive, :main_file]
+  @enforce_keys [:name, :image, :code, :namespace]
+  defstruct [:name, :image, :code, :namespace]
 end

@@ -26,11 +26,11 @@ defmodule Worker.Adapters.Requests.Cluster do
     Creates a runtime for the given `function`, using the underlying Api.prepare(). The result is forwarded to the original sender.
 
     ## Parameters
-      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.Function
+      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.FunctionStruct
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def prepare(function, from) do
-    Api.prepare_runtime(function) |> reply_to_core(from)
+    Api.Prepare.prepare_runtime(function) |> reply_to_core(from)
   end
 
   @doc """
@@ -39,27 +39,34 @@ defmodule Worker.Adapters.Requests.Cluster do
     Any error encountered by the API calls is forwarded to the sender.
 
     ## Parameters
-      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.Function
+      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.FunctionStruct
       - args: arguments passed to the function
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def invoke(function, args, from) do
-    Api.invoke_function(function, args) |> reply_to_core(from)
+    Api.Invoke.invoke_function(function, args) |> reply_to_core(from)
   end
 
   @doc """
     Deletes the first runtime wrapping `function`, calling the underlying Api.cleanup(). The result is forwarded to the original sender.
 
     ## Parameters
-      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.Function
+      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.FunctionStruct
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def cleanup(function, from) do
-    Api.cleanup(function) |> reply_to_core(from)
+    Api.Cleanup.cleanup(function) |> reply_to_core(from)
   end
 
+  @doc """
+    Deletes the all runtimes wrapping `function`, calling the underlying Api.cleanup_all(). The result is forwarded to the original sender.
+
+    ## Parameters
+      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.FunctionStruct
+      - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
+  """
   def cleanup_all(function, from) do
-    Api.cleanup_all(function) |> reply_to_core(from)
+    Api.Cleanup.cleanup_all(function) |> reply_to_core(from)
   end
 
   @doc false

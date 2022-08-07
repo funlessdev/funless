@@ -272,7 +272,7 @@
                      <xhtml:div style="box-sizing: border-box; font-size: 0; text-align: center; ">
                         <xhtml:div
                            style="display: inline-block; font-size: 12px; font-family: Helvetica, &quot;VP Default&quot;; color: #000000; line-height: 1.2; pointer-events: all; white-space: nowrap; ">
-                           Domain.Ports.Containers</xhtml:div>
+                           Domain.Ports.Runtime</xhtml:div>
                      </xhtml:div>
                   </xhtml:div>
                </foreignObject>
@@ -283,7 +283,7 @@
                   <text fill="rgb(0, 0, 0)" font-size="12px" font-family="Helvetica, &quot;VP Default&quot;"
                      font-weight="400" id="text27">
                      <textPath xlink:href="#trppCIGHYez.3wCm" startOffset="50%" text-anchor="middle" id="textPath25">
-                        <tspan xml:space="preserve" id="tspan23">Domain.Ports.Containers</tspan>
+                        <tspan xml:space="preserve" id="tspan23">Domain.Ports.Runtime</tspan>
                      </textPath>
                   </text>
                </svg>
@@ -338,7 +338,7 @@
                      <xhtml:div style="box-sizing: border-box; font-size: 0; text-align: center; ">
                         <xhtml:div
                            style="display: inline-block; font-size: 12px; font-family: Helvetica, &quot;VP Default&quot;; color: #000000; line-height: 1.2; pointer-events: all; white-space: nowrap; ">
-                           Adapters.Containers.Docker</xhtml:div>
+                           Adapters.Runtime.OpenWhisk</xhtml:div>
                      </xhtml:div>
                   </xhtml:div>
                </foreignObject>
@@ -349,7 +349,7 @@
                   <text fill="rgb(0, 0, 0)" font-size="12px" font-family="Helvetica, &quot;VP Default&quot;"
                      font-weight="400" id="text69">
                      <textPath xlink:href="#jrppCIGHYez.3wCo" startOffset="50%" text-anchor="middle" id="textPath67">
-                        <tspan xml:space="preserve" id="tspan65">Adapters.Containers.Docker</tspan>
+                        <tspan xml:space="preserve" id="tspan65">Adapters.Runtime.OpenWhisk</tspan>
                      </textPath>
                   </text>
                </svg>

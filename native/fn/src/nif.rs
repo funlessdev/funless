@@ -48,9 +48,9 @@ static TOKIO: Lazy<Runtime> = Lazy::new(|| {
 #[module = "Worker.Domain.FunctionStruct"]
 struct Function {
     name: String,
+    namespace: String,
     image: String,
-    archive: String,
-    main_file: String,
+    code: String,
 }
 
 /// A struct representing containers.

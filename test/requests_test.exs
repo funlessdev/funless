@@ -19,7 +19,6 @@
 defmodule RequestTest do
   use ExUnit.Case
   alias Worker.Adapters.Requests.Cluster
-  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
   import Mox, only: [verify_on_exit!: 1, set_mox_global: 1]
 
@@ -27,11 +26,11 @@ defmodule RequestTest do
   setup :verify_on_exit!
 
   setup_all do
-    function = %FunctionStruct{
+    function = %{
       name: "hellojs",
-      image: "node:lts-alpine",
-      main_file: "/opt/index.js",
-      archive: "js/hello.tar.gz"
+      namespace: "_",
+      image: "nodejs",
+      code: "console.log(\"hello\")"
     }
 
     %{function: function}

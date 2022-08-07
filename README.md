@@ -11,7 +11,10 @@ iex -S mix
 
 To test the main worker behaviour, run:
 ```
-function = %{name: "hellojs", image: "nodejs", main_file: "index.js", archive: "js/hello.js"}
+fcode = "function main(params) {\nlet name = params.name || \"World\"\nreturn { payload: `Hello ${name}!` }\n}"
+
+function = %{name: "hellojs", image: "nodejs", code: fcode, namespace: "_"}
+
 GenServer.call(:worker, {:prepare, function})
 GenServer.call(:worker, {:invoke, function})
 GenServer.call(:worker, {:cleanup, function})
@@ -25,18 +28,21 @@ ___
 
 The project can also be compiled as a release, and run like this:
 ```
-MIX_ENV=prod mix distillery.release --env=dev
-./_build/dev/rel/worker/bin/worker foreground (or start and then stop)
+mix release
+./_build/dev/rel/worker/bin/worker start (or daemon to run it in the background) and stop 
 ```
 
 And on a different terminal session, start the interactive session like this:
 ```
-iex --name n1@127.0.0.1 --cookie test -S mix
+iex --name n1@127.0.0.1 --cookie default_secret -S mix
 ```
 
 And run:
 ```
-function = %{name: "hellojs", image: "nodejs", main_file: "index.js", archive: "js/hello.js"}
+fcode = "function main(params) {\nlet name = params.name || \"World\"\nreturn { payload: `Hello ${name}!` }\n}"
+
+function = %{name: "hellojs", image: "nodejs", code: fcode, namespace: "_"}
+
 GenServer.call({:worker, :"worker@127.0.0.1"}, {:invoke, function})
 ```
 
