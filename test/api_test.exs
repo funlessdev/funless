@@ -43,7 +43,7 @@ defmodule ApiTest do
     test "invoke should return {:ok, result} when there is at least a worker and no error occurs" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
-      assert Api.invoke(%{"function" => "test"}) == {:ok, %{result: "test"}}
+      assert Api.Invoker.invoke(%{"function" => "test"}) == {:ok, %{result: "test"}}
     end
 
     test "invoke should return {:error, err} when the invocation on worker encounter errors" do
@@ -54,11 +54,12 @@ defmodule ApiTest do
         {:error, %{}}
       end)
 
-      assert Api.invoke(%{"function" => "f"}) == {:error, :worker_error}
+      assert Api.Invoker.invoke(%{"function" => "f"}) == {:error, :worker_error}
     end
 
     test "invoke should return {:error, no workers} when no workers are found" do
-      assert Api.invoke(%{"namespace" => "_", "function" => "test"}) == {:error, :no_workers}
+      assert Api.Invoker.invoke(%{"namespace" => "_", "function" => "test"}) ==
+               {:error, :no_workers}
     end
 
     test "invoke on node list with nodes other than workers should only use workers" do
@@ -67,17 +68,17 @@ defmodule ApiTest do
       Core.Commands.Mock
       |> Mox.expect(:send_invocation_command, fn worker, _, _ -> {:ok, worker} end)
 
-      assert Api.invoke(%{"function" => "test"}) == {:ok, :worker@localhost}
+      assert Api.Invoker.invoke(%{"function" => "test"}) == {:ok, :worker@localhost}
     end
 
     test "invoke on node list without workers should return {:error, no workers}" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere] end)
 
-      assert Api.invoke(%{"function" => "test"}) == {:error, :no_workers}
+      assert Api.Invoker.invoke(%{"function" => "test"}) == {:error, :no_workers}
     end
 
     test "invoke with bad parameters should return {:error, :bad_params}" do
-      assert Api.invoke(%{"bad" => "arg"}) == {:error, :bad_params}
+      assert Api.Invoker.invoke(%{"bad" => "arg"}) == {:error, :bad_params}
     end
 
     test "invoke on a non-existent function should return {:error, err}" do
@@ -86,7 +87,8 @@ defmodule ApiTest do
       Core.FunctionStorage.Mock
       |> Mox.expect(:get_function, fn "hello", "ns" -> {:error, :not_found} end)
 
-      assert Api.invoke(%{"function" => "hello", "namespace" => "ns"}) == {:error, :not_found}
+      assert Api.Invoker.invoke(%{"function" => "hello", "namespace" => "ns"}) ==
+               {:error, :not_found}
     end
 
     test "invoke on an existent function should send the invocation command using said function" do
@@ -104,7 +106,8 @@ defmodule ApiTest do
         image: "nodejs"
       }
 
-      assert Api.invoke(%{"function" => "hello", "namespace" => "ns"}) == {:ok, %{result: f}}
+      assert Api.Invoker.invoke(%{"function" => "hello", "namespace" => "ns"}) ==
+               {:ok, %{result: f}}
     end
   end
 
@@ -124,12 +127,12 @@ defmodule ApiTest do
         "image" => "nodejs"
       }
 
-      assert Api.new_function(f) == {:ok, %{result: "hello"}}
+      assert Api.Function.new(f) == {:ok, %{result: "hello"}}
     end
 
     test "new_function should return {:error, :bad_params} when the given parameter map lacks the necessary keys" do
       f = %{"name" => "hello", "code" => "some code"}
-      assert Api.new_function(f) == {:error, :bad_params}
+      assert Api.Function.new(f) == {:error, :bad_params}
     end
 
     test "new_function should return {:ok, %{result: function_name}} and ignore unused parameters in the input map when unnecessary keys are given" do
@@ -152,16 +155,16 @@ defmodule ApiTest do
       end)
       |> Mox.expect(:insert_function, 0, fn _ -> {:error, "some error"} end)
 
-      assert Api.new_function(f) == {:ok, %{result: "hello"}}
+      assert Api.Function.new(f) == {:ok, %{result: "hello"}}
     end
 
     test "delete_function should return {:ok, %{result: function_name}} when no error occurs" do
-      assert Api.delete_function(%{"name" => "hello", "namespace" => "ns"}) ==
+      assert Api.Function.delete(%{"name" => "hello", "namespace" => "ns"}) ==
                {:ok, %{result: "hello"}}
     end
 
     test "delete_function should return {:error, :bad_params}  when the given parameter map lacks the necessary keys" do
-      assert Api.delete_function(%{"namespace" => "ns"}) == {:error, :bad_params}
+      assert Api.Function.delete(%{"namespace" => "ns"}) == {:error, :bad_params}
     end
   end
 end

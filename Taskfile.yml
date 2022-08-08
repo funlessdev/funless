@@ -15,14 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-version: '3'
+version: "3"
 
 vars:
-  APP_NAME: 
+  APP_NAME:
     sh: grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'
-  APP_VSN: 
+  APP_VSN:
     sh: grep 'version:' mix.exs | cut -d '"' -f2
-  BUILD: 
+  BUILD:
     sh: git rev-parse --short HEAD
 
 tasks:
@@ -31,10 +31,10 @@ tasks:
       - echo "{{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}}"
       - task --list-all
     silent: true
-  build: 
-    cmds: 
-      - docker build --build-arg APP_NAME={{.APP_NAME}} --build-arg APP_VSN={{.APP_VSN}} -t {{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}} -t {{.APP_NAME}}:latest .
+  build:
+    cmds:
+      - docker build --build-arg APP_NAME={{.APP_NAME}} -t {{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}} -t {{.APP_NAME}}:latest .
 
-  run: 
+  run:
     cmds:
       - docker run --expose 4001 -p 4001:4001 --rm -it {{.APP_NAME}}:latest
