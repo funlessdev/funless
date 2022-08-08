@@ -32,7 +32,9 @@ defmodule Core.Domain.Api.Function do
       code: code
     }
 
-    Logger.info("API: new function request for #{function} in namespace #{function.namespace}")
+    Logger.info(
+      "API: received creation request for function #{function.name} in namespace #{function.namespace}"
+    )
 
     res = FunctionStorage.insert_function(function)
 
