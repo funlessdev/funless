@@ -24,6 +24,7 @@ defmodule Core.Adapters.Requests.Http.Server do
   """
   alias Core.Domain.Api
 
+  use Plug.ErrorHandler
   use Plug.Router
   require Logger
 
@@ -35,6 +36,44 @@ defmodule Core.Adapters.Requests.Http.Server do
 
   plug(:match)
   plug(:dispatch)
+
+  @impl Plug.ErrorHandler
+  def handle_errors(conn, %{
+        kind: _kind,
+        reason: %{
+          exception: %Jason.DecodeError{}
+        },
+        stack: _stack
+      }) do
+    resp =
+      Jason.encode!(%{
+        "error" => "The provided body was not a valid JSON string"
+      })
+
+    send_resp(
+      conn,
+      conn.status,
+      resp
+    )
+  end
+
+  @impl Plug.ErrorHandler
+  def handle_errors(conn, %{
+        kind: _kind,
+        reason: _reason,
+        stack: _stack
+      }) do
+    resp =
+      Jason.encode!(%{
+        "error" => "Something went wrong"
+      })
+
+    send_resp(
+      conn,
+      conn.status,
+      resp
+    )
+  end
 
   # Invoke request handler
   post "/invoke" do
