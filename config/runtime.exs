@@ -18,11 +18,6 @@
 
 import Config
 
-config :worker, Worker.Domain.Ports.Runtime, adapter: Worker.Adapters.Runtime.OpenWhisk
-config :worker, Worker.Domain.Ports.RuntimeTracker, adapter: Worker.Adapters.RuntimeTracker.ETS
-
-config :logger, :console,
-  format: "\n#####[$level] $time $metadata $message\n",
-  metadata: [:line]
-
-import_config "#{Mix.env()}.exs"
+if config_env() == :prod do
+  config :worker, core: System.fetch_env!("CORE")
+end

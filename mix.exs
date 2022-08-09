@@ -33,8 +33,11 @@ defmodule FunlessWorker.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
-      mod: {Worker.Application, []}
+      extra_applications: [:logger, :inets],
+      mod: {Worker.Application, []},
+      start_phases: [
+        core_connect: Mix.env()
+      ]
     ]
   end
 
