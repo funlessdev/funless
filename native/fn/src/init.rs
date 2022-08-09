@@ -21,7 +21,7 @@ mod nif;
 pub mod utils;
 
 rustler::init!(
-    "Elixir.Worker.Adapters.Runtime.OpenWhisk",
+    "Elixir.Worker.Adapters.Runtime.OpenWhisk.Nif",
     [
         nif::prepare_runtime,
         nif::runtime_logs,
