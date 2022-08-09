@@ -21,38 +21,11 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     Docker adapter for runtime manipulation. The actual docker interaction is done by the Fn NIFs.
   """
   @behaviour Worker.Domain.Ports.Runtime
-  use Rustler, otp_app: :worker, crate: :fn
   require Logger
+
+  alias Worker.Adapters.Runtime.OpenWhisk.Nif
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
-
-  #   Creates the `_runtime_name` container, with information taken from `_function`.
-  #   ## Parameters
-  #     - _function: Worker.Domain.Function struct, containing function information
-  #     - _runtime_name: name of the container that will be created
-  #     - _docker_host: path of the docker socket in the current system
-  @doc false
-  def prepare_runtime(_function, _runtime_name, _docker_host) do
-    :erlang.nif_error(:nif_not_loaded)
-  end
-
-  #   Gets the logs of the `_runtime_name` container.
-  #   ## Parameters
-  #     - _runtime_name: name of the container
-  #     - _docker_host: path of the docker socket in the current system
-  @doc false
-  def runtime_logs(_runtime_name, _docker_host) do
-    :erlang.nif_error(:nif_not_loaded)
-  end
-
-  #   Removes the `_runtime_name` container.
-  #   ## Parameters
-  #     - _runtime_name: name of the container that will be removed
-  #     - _docker_host: path of the docker socket in the current system
-  @doc false
-  def cleanup_runtime(_runtime_name, _docker_host) do
-    :erlang.nif_error(:nif_not_loaded)
-  end
 
   @doc """
     Checks the DOCKER_HOST environment variable for the docker socket path. If an incorrect path is found, the default is used instead.
@@ -81,11 +54,11 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   """
   @impl true
   def prepare(%FunctionStruct{} = function, runtime_name) do
-    socket = docker_socket()
+    {:ok, socket} = Application.fetch_env(:worker, :docker_host)
 
     Logger.info("OpenWhisk Runtime: Creating runtime for function '#{function.name}'")
 
-    prepare_runtime(function, runtime_name, socket)
+    Nif.prepare_runtime(function, runtime_name, socket)
 
     receive do
       {:ok, runtime = %RuntimeStruct{host: host, port: port}} ->
@@ -150,8 +123,10 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   """
   @impl true
   def cleanup(runtime) do
+    {:ok, socket} = Application.fetch_env(:worker, :docker_host)
+
     Logger.info("OpenWhisk Runtime: Removing runtime '#{runtime.name}'")
-    cleanup_runtime(runtime.name, docker_socket())
+    Nif.cleanup_runtime(runtime.name, socket)
 
     receive do
       :ok -> {:ok, runtime}

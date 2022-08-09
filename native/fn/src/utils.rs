@@ -18,7 +18,9 @@
 use bollard::errors::Error;
 use bollard::image::CreateImageOptions;
 use bollard::models::NetworkSettings;
+use bollard::service::CreateImageInfo;
 use futures_util::stream::StreamExt;
+use futures_util::TryStreamExt;
 
 use bollard::container::{LogOutput, LogsOptions};
 use bollard::{Docker, API_DEFAULT_VERSION};
@@ -64,7 +66,7 @@ pub fn select_image(image_name: &str) -> Option<&str> {
 /// * `docker` - A reference to a Docker connection, used by the create_image function
 /// * `image_name` - A string slice holding the Docker image's name
 ///
-pub async fn get_image(docker: &Docker, image_name: &str) -> Result<(), Error> {
+pub async fn get_image(docker: &Docker, image_name: &str) -> Result<Vec<CreateImageInfo>, Error> {
     let image = &mut docker.create_image(
         Some(CreateImageOptions {
             from_image: image_name,
@@ -74,16 +76,7 @@ pub async fn get_image(docker: &Docker, image_name: &str) -> Result<(), Error> {
         None,
     );
 
-    while let Some(l) = image.next().await {
-        let info = l?;
-        println!(
-            "{:?} {:?}",
-            &info.status.unwrap_or_default(),
-            &info.progress.unwrap_or_default()
-        );
-    }
-
-    Ok(())
+    image.try_collect().await
 }
 
 pub async fn container_logs(
