@@ -54,7 +54,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   """
   @impl true
   def prepare(%FunctionStruct{} = function, runtime_name) do
-    socket = docker_socket()
+    {:ok, socket} = Application.fetch_env(:worker, :docker_host)
 
     Logger.info("OpenWhisk Runtime: Creating runtime for function '#{function.name}'")
 
@@ -123,8 +123,10 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   """
   @impl true
   def cleanup(runtime) do
+    {:ok, socket} = Application.fetch_env(:worker, :docker_host)
+
     Logger.info("OpenWhisk Runtime: Removing runtime '#{runtime.name}'")
-    Nif.cleanup_runtime(runtime.name, docker_socket())
+    Nif.cleanup_runtime(runtime.name, socket)
 
     receive do
       :ok -> {:ok, runtime}
