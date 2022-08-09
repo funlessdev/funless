@@ -15,12 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Core.Domain.Api do
+defmodule Core.Domain.Api.Invoker do
   @moduledoc """
-  Provides functions to deal with requests to workers.
+  Provides functions to request function invocaiton.
   """
   require Logger
-  alias Core.Domain.FunctionStruct
   alias Core.Domain.InvokeParams
   alias Core.Domain.Nodes
   alias Core.Domain.Ports.Commands
@@ -92,38 +91,4 @@ defmodule Core.Domain.Api do
     Logger.error("API: received error reply from worker #{err_msg}")
     {:error, :worker_error}
   end
-
-  def new_function(%{"name" => name, "code" => code, "image" => image} = raw_params) do
-    function = %FunctionStruct{
-      name: name,
-      namespace: raw_params["namespace"] || "_",
-      image: image,
-      code: code
-    }
-
-    Logger.info(
-      "API: received creation request for function #{function.name} in namespace #{function.namespace}"
-    )
-
-    res = FunctionStorage.insert_function(function)
-
-    case res do
-      {:ok, function_name} -> {:ok, %{result: function_name}}
-      err -> err
-    end
-  end
-
-  def new_function(_), do: {:error, :bad_params}
-
-  def delete_function(%{"name" => name, "namespace" => namespace}) do
-    Logger.info("API: received deletion request for function #{name} in namespace #{namespace}")
-    res = FunctionStorage.delete_function(name, namespace)
-
-    case res do
-      {:ok, function_name} -> {:ok, %{result: function_name}}
-      err -> err
-    end
-  end
-
-  def delete_function(_), do: {:error, :bad_params}
 end

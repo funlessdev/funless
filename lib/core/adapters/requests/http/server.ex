@@ -38,21 +38,21 @@ defmodule Core.Adapters.Requests.Http.Server do
 
   # Invoke request handler
   post "/invoke" do
-    res = Api.invoke(conn.body_params)
+    res = Api.Invoker.invoke(conn.body_params)
     conn = put_resp_content_type(conn, "application/json", nil)
     reply_to_client(res, conn)
   end
 
   # Function creation request handler
   post "/create" do
-    res = Api.new_function(conn.body_params)
+    res = Api.Function.new(conn.body_params)
     conn = put_resp_content_type(conn, "application/json", nil)
     reply_to_client(res, conn)
   end
 
   # Function deletion request handler
   post "/delete" do
-    res = Api.delete_function(conn.body_params)
+    res = Api.Function.delete(conn.body_params)
     conn = put_resp_content_type(conn, "application/json", nil)
     reply_to_client(res, conn)
   end

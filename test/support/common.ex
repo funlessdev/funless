@@ -15,26 +15,26 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-version: "3"
+defmodule Common do
+  @moduledoc """
+  Some common functionality for the tests.
+  """
+  import ExUnit.Assertions
+  use Plug.Test
 
-vars:
-  APP_NAME:
-    sh: grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'
-  APP_VSN:
-    sh: grep 'version:' mix.exs | cut -d '"' -f2
-  BUILD:
-    sh: git rev-parse --short HEAD
+  @doc """
+  Several asserts on the response from the http server.
 
-tasks:
-  default:
-    cmds:
-      - echo "{{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}}"
-      - task --list-all
-    silent: true
-  build:
-    cmds:
-      - docker build --build-arg APP_NAME={{.APP_NAME}} -t {{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}} -t {{.APP_NAME}}:latest .
-
-  run:
-    cmds:
-      - docker run --expose 4001 -p 4001:4001 --rm -it {{.APP_NAME}}:latest
+  ## Parameters
+  - conn: The connection to the http server to use in the assertions.
+  - status: The expected status code.
+  - body: The expected body.
+  """
+  def assert_http_response(conn, status, body) do
+    assert conn.state == :sent
+    assert conn.status == status
+    assert get_resp_header(conn, "content-type") == ["application/json"]
+    rsp_body = Jason.decode!(conn.resp_body)
+    assert rsp_body == body
+  end
+end
