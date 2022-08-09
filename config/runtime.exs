@@ -18,4 +18,6 @@
 
 import Config
 
-config :worker, core: System.fetch_env!("CORE")
+if config_env() == :prod do
+  config :worker, core: System.fetch_env!("CORE")
+end
