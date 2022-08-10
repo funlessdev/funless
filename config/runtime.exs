@@ -18,8 +18,4 @@
 
 import Config
 
-if config_env() == :prod do
-  config :worker, core: System.fetch_env!("CORE")
-end
-
 config :worker, docker_host: Worker.Adapters.Runtime.OpenWhisk.docker_socket()

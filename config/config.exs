@@ -23,6 +23,14 @@ config :worker, Worker.Domain.Ports.RuntimeTracker, adapter: Worker.Adapters.Run
 
 config :logger, :console,
   format: "\n#####[$level] $time $metadata $message\n",
-  metadata: [:line]
+  metadata: [:file, :line]
+
+config :libcluster,
+  topologies: [
+    funless: [
+      # The selected clustering strategy. Required.
+      strategy: Cluster.Strategy.Gossip
+    ]
+  ]
 
 import_config "#{Mix.env()}.exs"
