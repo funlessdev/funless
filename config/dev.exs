@@ -18,11 +18,4 @@
 
 import Config
 
-config :libcluster,
-  debug: true,
-  topologies: [
-    example: [
-      # The selected clustering strategy. Required.
-      strategy: Cluster.Strategy.Gossip
-    ]
-  ]
+config :libcluster, debug: true
