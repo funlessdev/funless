@@ -16,7 +16,7 @@
 # under the License.
 #
 
-defmodule ApiTest do
+defmodule ApiTest.CleanupTest do
   use ExUnit.Case, async: true
 
   alias Worker.Domain.Api
@@ -35,63 +35,11 @@ defmodule ApiTest do
     %{function: function}
   end
 
-  describe "main Worker.Api functions" do
+  describe "Worker.Api cleanup" do
     setup do
       Worker.Runtime.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Test)
       Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.Test)
       :ok
-    end
-
-    test "prepare_runtime should return {:error, err} when the underlying functions encounter errors",
-         %{function: function} do
-      Worker.Runtime.Mock
-      |> Mox.stub(:prepare, fn _function, _runtime ->
-        {:error, "generic error"}
-      end)
-
-      assert Api.Prepare.prepare_runtime(function) == {:error, "generic error"}
-    end
-
-    test "prepare_runtime should not call the function storage when the runtime is not created successfully",
-         %{function: function} do
-      Worker.Runtime.Mock
-      |> Mox.stub(:prepare, fn _function, _runtime ->
-        {:error, "generic error"}
-      end)
-
-      Worker.RuntimeTracker.Mock
-      |> Mox.expect(:insert_runtime, 0, &Worker.Adapters.RuntimeTracker.Test.insert_runtime/2)
-
-      assert Api.Prepare.prepare_runtime(function) == {:error, "generic error"}
-    end
-
-    test "invoke_function should return {:ok, result map} from the called function when no error is present",
-         %{function: function} do
-      assert {:ok, %{"result" => "output"}} == Api.Invoke.invoke_function(function)
-    end
-
-    test "invoke_function should return {:error, err} when running the given function raises an error",
-         %{
-           function: function
-         } do
-      Worker.Runtime.Mock
-      |> Mox.stub(:run_function, fn _function, _args, _runtime ->
-        {:error, "generic error"}
-      end)
-
-      assert {:error, "generic error"} == Api.Invoke.invoke_function(function)
-    end
-
-    test "invoke_function should return {:error, err} when no runtime available and its creation fails",
-         %{
-           function: function
-         } do
-      Worker.RuntimeTracker.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
-
-      Worker.Runtime.Mock
-      |> Mox.expect(:prepare, fn _, _ -> {:error, "creation error"} end)
-
-      assert {:error, "creation error"} == Api.Invoke.invoke_function(function)
     end
 
     test "cleanup should return {:ok, runtime} when a runtime is found and deleted for the given function",
