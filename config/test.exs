@@ -24,11 +24,3 @@ config :core, Core.Domain.Ports.FunctionStorage, adapter: Core.FunctionStorage.M
 
 # Print only errors during test
 config :logger, level: :error
-
-config :libcluster,
-  topologies: [
-    test: [
-      # The selected clustering strategy. Required.
-      strategy: Cluster.Strategy.Epmd
-    ]
-  ]

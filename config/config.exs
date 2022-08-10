@@ -26,4 +26,12 @@ config :logger, :console,
   format: "\n##### $time $metadata[$level] $levelpad$message\n",
   metadata: [:error_code, :file, :line]
 
+config :libcluster,
+  topologies: [
+    funless: [
+      # The selected clustering strategy. Required.
+      strategy: Cluster.Strategy.Gossip
+    ]
+  ]
+
 import_config "#{Mix.env()}.exs"
