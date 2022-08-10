@@ -18,3 +18,5 @@
 import Config
 
 config :iex, default_prompt: ">>>"
+
+config :core, port: System.get_env("PORT") || "4001"
