@@ -62,11 +62,8 @@ ENV REPLACE_OS_VARS=true \
     APP_NAME=${APP_NAME} \
     MIX_ENV=${MIX_ENV} 
 
-ARG CORE
-
 WORKDIR /opt/app
 
 COPY --from=builder /opt/app/_build/${MIX_ENV}/rel/${APP_NAME} .
 
-EXPOSE 4001
-CMD trap 'exit' INT; CORE=${CORE} /opt/app/bin/${APP_NAME} start
+CMD /opt/app/bin/${APP_NAME} start

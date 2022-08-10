@@ -24,33 +24,14 @@ defmodule Worker.Application do
 
   @impl true
   def start(_type, _args) do
+    topologies = Application.get_env(:libcluster, :topologies)
+
     children = [
+      {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
       {Adapters.RuntimeTracker.ETS.WriteServer, []},
       {Adapters.Requests.Cluster.Server, []}
     ]
 
     Supervisor.start_link(children, strategy: :rest_for_one)
-  end
-
-  @impl true
-  def start_phase(:core_connect, _phase_type, :test), do: :ok
-
-  @impl true
-  def start_phase(:core_connect, _phase_type, _) do
-    case Application.fetch_env(:worker, :core) do
-      {:ok, value} -> connect_to_core(value)
-      :error -> Logger.warn("No Core node name given. Worker is not connected!")
-    end
-
-    :ok
-  end
-
-  defp connect_to_core(core_node) do
-    res = String.to_atom(core_node) |> Node.connect()
-
-    case res do
-      true -> Logger.info("Connected to Core node #{core_node}")
-      _ -> Logger.warn("Could not connect to Core node #{core_node}")
-    end
   end
 end
