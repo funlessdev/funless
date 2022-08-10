@@ -27,3 +27,11 @@ config :logger,
   compile_time_purge_matching: [
     [level_lower_than: :info]
   ]
+
+config :libcluster,
+  topologies: [
+    example: [
+      # The selected clustering strategy. Required.
+      strategy: Cluster.Strategy.Gossip
+    ]
+  ]

@@ -28,8 +28,13 @@ defmodule Core.Application do
 
   @impl true
   def start(_type, _args) do
+    topologies = Application.get_env(:libcluster, :topologies)
+
+    port = Application.get_env(:core, :port) |> String.to_integer()
+
     children = [
-      {Bandit, plug: Core.Adapters.Requests.Http.Server, scheme: :http, options: [port: 4001]}
+      {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
+      {Bandit, plug: Core.Adapters.Requests.Http.Server, scheme: :http, options: [port: port]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
