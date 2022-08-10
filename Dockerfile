@@ -52,6 +52,7 @@ FROM alpine:${ALPINE_VERSION}
 
 ARG APP_NAME
 ARG MIX_ENV=prod
+ARG PORT=4001
 
 # # The name of your application/release (required)
 RUN apk update && \
@@ -60,11 +61,11 @@ RUN apk update && \
 
 ENV REPLACE_OS_VARS=true \
     APP_NAME=${APP_NAME} \
-    MIX_ENV=${MIX_ENV}
+    MIX_ENV=${MIX_ENV} \ 
+    PORT=${PORT} 
 
 WORKDIR /opt/app
 
 COPY --from=builder /opt/app/_build/${MIX_ENV}/rel/${APP_NAME} .
 
-EXPOSE 4001
-CMD trap 'exit' INT; /opt/app/bin/${APP_NAME} start
+CMD PORT=${PORT} /opt/app/bin/${APP_NAME} start
