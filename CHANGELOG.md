@@ -1,3 +1,41 @@
+## v0.3.0 (2022-08-11)
+
+### Refactor
+
+- **api_tests**: separate api tests in different files
+- **nif**: remove rust logging in get_image
+- **openwhisk**: move openwhisk nifs to separate submodule
+- **js**: remove unused folder
+- **api**: split api module in prepare, invoke, cleanup submodules
+- move function_storage_test to runtime_tracker_test
+- rename FunctionStorage to RuntimeTracker
+- move function and runtime structs in structs.ex with Struct suffix to make them clearer and avoid conflicts
+- **Cluster**: simplify cluster by separating the genserver code to the api calls and move invocation logic into domain
+- **Cleanup**: remove function argument from cleanup
+- **FunctionStorage**: refactor function storage methods
+- some polishing for the type specs used and logs
+
+### Feat
+
+- swap node connection with libcluster gossip
+- add start phase to connect to a core node passed with env var
+- **structs**: update function struct to include code and namespace; remove archive and main_file from struct
+- **api**: add cleanup_all to delete all runtimes associated with a function
+- **Runtime**: integrate fn rust module into openwhisk runtime
+
+### Perf
+
+- **openwhisk**: compute docker_socket only once as application env variable
+
+### Fix
+
+- **runtime.exs**: core env var required only in production
+- **openwhisk**: return correct payload encoding for openwhisk runtimes
+- **function-storage**: fix table used to not override new insertions
+- convert struct to function struct for the rustler nif
+- **Cleanup**: all cleanup methods return the entire runtime struct instead of only the name
+- **Fn**: fix struct name definition compatible with Runtime struct in elixir
+
 ## v0.2.0 (2022-07-14)
 
 ### Refactor
