@@ -15,4 +15,5 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+ExUnit.configure(seed: 0)
 ExUnit.start()
