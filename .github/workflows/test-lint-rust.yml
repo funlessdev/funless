@@ -24,25 +24,22 @@ on:
     branches: [main]
 
 jobs:
-  linter:
-    name: Linter and formatting
+  test:
+    name: Rust tests and linter
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup elixir
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: 1.13
-          otp-version: 24.0
+      - name: Build FN rust module
+        run: cargo build --verbose
+        working-directory: native/fn
 
-      - name: Install Dependencies
-        run: mix deps.get
+      - name: Run cargo clippy on FN
+        run: cargo clippy --verbose
+        working-directory: native/fn
 
-      - name: Check formatting
-        run: mix format --check-formatted
-
-      - name: Run Mix Credo
-        run: mix credo --strict
+      - name: Run FN tests
+        run: cargo test --verbose
+        working-directory: native/fn
