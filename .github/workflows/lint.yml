@@ -24,16 +24,13 @@ on:
     branches: [main]
 
 jobs:
-  build:
-    name: Check and Test
+  linter:
+    name: Linter and formatting
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Check License Header
-        uses: apache/skywalking-eyes@main
 
       - name: Setup elixir
         uses: erlef/setup-beam@v1
@@ -49,6 +46,3 @@ jobs:
 
       - name: Run Mix Credo
         run: mix credo --strict
-
-      - name: Run Elixir Tests
-        run: mix test
