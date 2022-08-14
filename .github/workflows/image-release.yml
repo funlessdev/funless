@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Image
+name: Docker Image Release
 
 on:
   push:
