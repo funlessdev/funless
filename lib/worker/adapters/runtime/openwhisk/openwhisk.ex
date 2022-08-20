@@ -76,8 +76,8 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   # sends function to /init endpoint of the OpenWhisk runtime
   # if the runtime refuses the connection (i.e. not ready yet), waits 0.01 seconds and retries at most max_retries times
   defp init_runtime(
-         function = %FunctionStruct{code: code},
-         runtime = %RuntimeStruct{host: host, port: port},
+         %FunctionStruct{code: code} = function,
+         %RuntimeStruct{host: host, port: port} = runtime,
          max_retries,
          retry_count \\ 0
        ) do
