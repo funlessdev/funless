@@ -37,6 +37,8 @@ defmodule Core.Adapters.Requests.Http.Server do
   plug(:match)
   plug(:dispatch)
 
+  ### Error handling
+
   @impl Plug.ErrorHandler
   def handle_errors(conn, %{
         kind: _kind,
@@ -92,6 +94,8 @@ defmodule Core.Adapters.Requests.Http.Server do
       resp
     )
   end
+
+  ### Request handling
 
   # Invoke request handler
   post "/invoke" do
