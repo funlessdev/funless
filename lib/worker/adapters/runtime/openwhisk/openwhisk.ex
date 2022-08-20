@@ -55,31 +55,54 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   @impl true
   def prepare(%FunctionStruct{} = function, runtime_name) do
     {:ok, socket} = Application.fetch_env(:worker, :docker_host)
+    {:ok, max_retries} = Application.fetch_env(:worker, :max_runtime_init_retries)
 
     Logger.info("OpenWhisk Runtime: Creating runtime for function '#{function.name}'")
 
     Nif.prepare_runtime(function, runtime_name, socket)
 
     receive do
-      {:ok, runtime = %RuntimeStruct{host: host, port: port}} ->
-        :timer.sleep(1000)
-        code = function.code
-
-        body =
-          Jason.encode!(%{
-            "value" => %{"code" => code, "main" => "main", "env" => %{}, "binary" => false}
-          })
-
-        request = {"http://#{host}:#{port}/init", [], ["application/json"], body}
-        _response = :httpc.request(:post, request, [], [])
-
-        {:ok, runtime}
+      {:ok, runtime = %RuntimeStruct{}} ->
+        init_runtime(function, runtime, max_retries)
 
       {:error, err} ->
         {:error, err}
 
       something ->
         {:error, "OpenWhisk Runtime: Unexpected response from runtime: #{inspect(something)}"}
+    end
+  end
+
+  # sends function to /init endpoint of the OpenWhisk runtime
+  # if the runtime refuses the connection (i.e. not ready yet), waits 0.01 seconds and retries at most max_retries times
+  defp init_runtime(
+         function = %FunctionStruct{code: code},
+         runtime = %RuntimeStruct{host: host, port: port},
+         max_retries,
+         retry_count \\ 0
+       ) do
+    if retry_count >= max_retries do
+      {:error, :max_runtime_init_retries_reached}
+    else
+      body =
+        Jason.encode!(%{
+          "value" => %{"code" => code, "main" => "main", "env" => %{}, "binary" => false}
+        })
+
+      request = {"http://#{host}:#{port}/init", [], ["application/json"], body}
+      response = :httpc.request(:post, request, [], [])
+
+      case response do
+        {:ok, _} ->
+          {:ok, runtime}
+
+        {:error, :socket_closed_remotely} ->
+          :timer.sleep(10)
+          init_runtime(function, runtime, max_retries, retry_count + 1)
+
+        {:error, err} ->
+          {:error, err}
+      end
     end
   end
 
@@ -107,7 +130,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
         {:ok, Jason.decode!(payload)}
 
       {:error, err} ->
-        Logger.error("OpenWhisk Runtime: Error while running function: #{err}")
+        Logger.error("OpenWhisk Runtime: Error while running function: #{inspect(err)}")
         {:error, err}
     end
   end
