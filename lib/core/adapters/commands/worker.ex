@@ -45,6 +45,6 @@ defmodule Core.Adapters.Commands.Worker do
       "sending command #{cmd} to #{inspect(worker_addr)} with payload #{inspect(payload)}"
     )
 
-    GenServer.call(worker_addr, command, 300_000)
+    GenServer.call(worker_addr, command, 30_000)
   end
 end

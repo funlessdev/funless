@@ -37,6 +37,8 @@ defmodule Core.Adapters.Requests.Http.Server do
   plug(:match)
   plug(:dispatch)
 
+  ### Error handling
+
   @impl Plug.ErrorHandler
   def handle_errors(conn, %{
         kind: _kind,
@@ -48,6 +50,24 @@ defmodule Core.Adapters.Requests.Http.Server do
     resp =
       Jason.encode!(%{
         "error" => "The provided body was not a valid JSON string"
+      })
+
+    send_resp(
+      conn,
+      conn.status,
+      resp
+    )
+  end
+
+  @impl Plug.ErrorHandler
+  def handle_errors(conn, %{
+        kind: _kind,
+        reason: {:timeout, {GenServer, :call, [{:worker, _} | _]}},
+        stack: _stack
+      }) do
+    resp =
+      Jason.encode!(%{
+        "error" => "The invocation timed out"
       })
 
     send_resp(
@@ -74,6 +94,8 @@ defmodule Core.Adapters.Requests.Http.Server do
       resp
     )
   end
+
+  ### Request handling
 
   # Invoke request handler
   post "/invoke" do
