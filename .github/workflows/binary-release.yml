@@ -33,6 +33,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Setup elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: 1.13
+          otp-version: 24.0
+
       - name: Install dependencies
         run: |
           mix local.rebar --force
