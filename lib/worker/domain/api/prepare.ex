@@ -57,7 +57,7 @@ defmodule Worker.Domain.Api.Prepare do
   end
 
   defp store_prepared_runtime({:error, err}, _) do
-    Logger.error("API: Runtime preparation failed: #{err}")
+    Logger.error("API: Runtime preparation failed: #{inspect(err)}")
     {:error, err}
   end
 end
