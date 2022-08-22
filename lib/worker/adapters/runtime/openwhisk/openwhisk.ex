@@ -56,10 +56,11 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   def prepare(%FunctionStruct{} = function, runtime_name) do
     {:ok, socket} = Application.fetch_env(:worker, :docker_host)
     {:ok, max_retries} = Application.fetch_env(:worker, :max_runtime_init_retries)
+    {:ok, network_name} = Application.fetch_env(:worker, :runtime_network_name)
 
     Logger.info("OpenWhisk Runtime: Creating runtime for function '#{function.name}'")
 
-    Nif.prepare_runtime(function, runtime_name, socket)
+    Nif.prepare_runtime(function, runtime_name, network_name, socket)
 
     receive do
       {:ok, runtime = %RuntimeStruct{}} ->

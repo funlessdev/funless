@@ -59,7 +59,7 @@ pub fn select_image(image_name: &str) -> Option<&str> {
 ///
 /// Returns an `Error` if something goes wrong while checking or downloading the image (e.g. an invalid image name is given).
 ///
-/// Returns `Ok(())` if the image is downloaded correctly, or was already available.
+/// Returns `Ok(v)` if the image is downloaded correctly, or was already available, where `v` is the collected output stream as a Vec<CreateImageInfo>.
 ///
 /// # Arguments
 ///
@@ -110,10 +110,13 @@ pub async fn container_logs(
 ///
 /// * `ns` - A `NetworkSettings` struct wrapped by an `Option`, holds a Docker container's network information
 ///
-pub fn extract_host_port(ns: Option<NetworkSettings>) -> Option<(String, String)> {
+pub fn extract_host_port(
+    ns: Option<NetworkSettings>,
+    network_name: String,
+) -> Option<(String, String)> {
     let network_settings = ns?;
     let networks = network_settings.networks?;
-    let bridge_network = networks.get("bridge")?;
+    let bridge_network = networks.get(&network_name)?;
     let host = bridge_network.ip_address.clone()?;
     let port = String::from("8080");
     Some((host, port))
@@ -169,7 +172,7 @@ mod tests {
         });
         assert_eq!(
             Some((String::from(ip_address), String::from("8080"))),
-            extract_host_port(ns.to_owned()),
+            extract_host_port(ns.to_owned(), String::from("bridge")),
             "extract rootful host and port"
         );
         assert_eq!(

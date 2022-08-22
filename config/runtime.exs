@@ -20,3 +20,4 @@ import Config
 
 config :worker, docker_host: Worker.Adapters.Runtime.OpenWhisk.docker_socket()
 config :worker, max_runtime_init_retries: 20
+config :worker, runtime_network_name: "bridge"

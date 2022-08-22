@@ -17,11 +17,12 @@
 # under the License.
 #
 
-# The container should be run with -v /var/run/docker.sock:/var/run/docker-host.sock --network host
-# e.g. docker run --rm -v /var/run/docker.sock:/var/run/docker-host.sock --network host image-name
+# The container should be run with -v <DOCKER_HOST>:/var/run/docker-host.sock --network host
+# e.g. 
+# docker run --rm -v /run/user/1001/docker.sock:/var/run/docker-host.sock --network host image-name
+# docker run --rm -v /var/run/docker.sock:/var/run/docker-host.sock --network host image-name
 
-# To specify another docker socket, use the -e DOCKER_HOST=<path>
-DOCKER_SOCK="${DOCKER_HOST:-/var/run/docker.sock}"
+DOCKER_SOCK="/var/run/docker.sock"
 
 echo "Launching worker in daemon mode"
 /home/funless/worker/bin/worker daemon
