@@ -50,6 +50,45 @@ The `--cookie` and `--name` parameters can vary; the `--cookie` must be the same
 
 ___
 
+## Running with Docker
+
+To run with Docker, the image can be built from source:
+```
+docker build -t <IMAGE_NAME> .
+```
+
+Afterwards, a network should be created to allow containers to communicate with each other (and therefore, to allow the Worker to communicate with runtimes):
+```
+docker network create <NETWORK_NAME>
+```
+
+Then, the container can be created using:
+```
+docker create -v /var/run/docker.sock:/var/run/docker-host.sock --network=<NETWORK_NAME> <IMAGE_NAME>
+```
+
+Or, in a rootless installation:
+```
+docker create -v /run/user/1001/docker.sock:/var/run/docker-host.sock --network=<NETWORK_NAME> <IMAGE_NAME>
+```
+
+Where `/run/user/1001/docker.sock` must be set to the value of the `$DOCKER_HOST` environment variable, minus the protocol (e.g. `unix:///run/user/1001/docker.sock` -> `/run/user/1001/docker.sock`).
+
+Finally, the container can be attached to a second network (to which the `fl-core` container is also attached):
+```
+docker network connect <SECOND_NETWORK_NAME> <CONTAINER_NAME>
+```
+
+And then started:
+```
+docker container start <CONTAINER_NAME>
+```
+
+**As of right now, <SECOND_NETWORK_NAME> must be lexicographically smaller than <NETWORK_NAME> (e.g. `cl-net` vs `fl-net`)**.
+
+(containers have to be first connected to multiple networks, and then started, as stated here https://github.com/moby/moby/issues/17750).
+___
+
 ## Code structure
 
 The code has been structured following hexagonal architecture principles; the main components are shown in the picture, divided in ports (blue circles), adapters (green circles) and core domain (inner hexagon).
