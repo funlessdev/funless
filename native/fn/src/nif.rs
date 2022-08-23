@@ -27,7 +27,7 @@ use bollard::{
     models::HostConfig,
     network::ConnectNetworkOptions,
 };
-use futures_util::TryFutureExt;
+use futures_util::{FutureExt, TryFutureExt};
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, NifStruct, OwnedEnv};
 use std::thread;
@@ -125,13 +125,19 @@ fn prepare_runtime(
                 docker.start_container(&container_name, None::<StartContainerOptions<String>>)
             })
             .and_then(|_| {
-                docker.connect_network(
-                    &network_name,
-                    ConnectNetworkOptions {
-                        container: container_name.clone(),
-                        ..Default::default()
-                    },
-                )
+                if network_name == "bridge" {
+                    futures_util::future::ok(()).left_future()
+                } else {
+                    docker
+                        .connect_network(
+                            &network_name,
+                            ConnectNetworkOptions {
+                                container: container_name.clone(),
+                                ..Default::default()
+                            },
+                        )
+                        .right_future()
+                }
             })
             .and_then(|_| docker.inspect_container(&container_name, None));
 
