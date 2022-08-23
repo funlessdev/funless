@@ -25,8 +25,9 @@ use bollard::{
         StartContainerOptions,
     },
     models::HostConfig,
+    network::ConnectNetworkOptions,
 };
-use futures_util::TryFutureExt;
+use futures_util::{FutureExt, TryFutureExt};
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, NifStruct, OwnedEnv};
 use std::thread;
@@ -82,10 +83,17 @@ struct RuntimeContainer {
 /// * `env` - NIF parameter, represents the calling worker
 /// * `function` - A `Function` struct holding the necessary function information
 /// * `container_name` - A string holding the name of the container being created
+/// * `network_name` - A string holding the name of the network to which the container will be attached
 /// * `docker_host` - A string holding the path to the docker socket or remote host
 ///
 #[rustler::nif]
-fn prepare_runtime(env: Env, function: Function, container_name: String, docker_host: String) {
+fn prepare_runtime(
+    env: Env,
+    function: Function,
+    container_name: String,
+    network_name: String,
+    docker_host: String,
+) {
     let pid = env.pid();
 
     thread::spawn(move || {
@@ -101,7 +109,7 @@ fn prepare_runtime(env: Env, function: Function, container_name: String, docker_
         });
 
         let host_config = HostConfig {
-            publish_all_ports: Some(true),
+            publish_all_ports: Some(rootless),
             ..Default::default()
         };
 
@@ -116,6 +124,21 @@ fn prepare_runtime(env: Env, function: Function, container_name: String, docker_
             .and_then(|_| {
                 docker.start_container(&container_name, None::<StartContainerOptions<String>>)
             })
+            .and_then(|_| {
+                if network_name == "bridge" {
+                    futures_util::future::ok(()).left_future()
+                } else {
+                    docker
+                        .connect_network(
+                            &network_name,
+                            ConnectNetworkOptions {
+                                container: container_name.clone(),
+                                ..Default::default()
+                            },
+                        )
+                        .right_future()
+                }
+            })
             .and_then(|_| docker.inspect_container(&container_name, None));
 
         let result = TOKIO.block_on(f);
@@ -125,7 +148,7 @@ fn prepare_runtime(env: Env, function: Function, container_name: String, docker_
                 let h = if rootless {
                     utils::extract_rootless_host_port(r.network_settings)
                 } else {
-                    utils::extract_host_port(r.network_settings)
+                    utils::extract_host_port(r.network_settings, network_name)
                 };
                 match h {
                     Some((host, port)) => thread_env.send_and_clear(&pid, |env| {

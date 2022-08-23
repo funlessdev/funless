@@ -23,10 +23,9 @@ FROM elixir:1.13.4-alpine AS builder
 
 # The following are build arguments used to change variable parts of the image.
 # The name of your application/release (required)
-ARG APP_NAME
 ARG MIX_ENV=prod
 
-ENV APP_NAME=${APP_NAME} MIX_ENV=${MIX_ENV}
+ENV MIX_ENV=${MIX_ENV}
 # RUSTUP_HOME=/opt/rust CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
 
 # By convention, /opt is typically used for applications
@@ -50,20 +49,26 @@ RUN mix release
 # From this line onwards, we're in a new image, which will be the image used in production
 FROM alpine:${ALPINE_VERSION}
 
-ARG APP_NAME
 ARG MIX_ENV=prod
 
 # # The name of your application/release (required)
 RUN apk update && \
     apk upgrade && \
-    apk add --no-cache libstdc++ libgcc ncurses-libs
+    apk add --no-cache libstdc++ libgcc ncurses-libs socat sudo bash
 
 ENV REPLACE_OS_VARS=true \
-    APP_NAME=${APP_NAME} \
     MIX_ENV=${MIX_ENV} 
 
-WORKDIR /opt/app
+WORKDIR /home/funless
+RUN adduser --disabled-password --home "$(pwd)" funless &&\
+    echo "funless ALL=(ALL:ALL) NOPASSWD: ALL" >>/etc/sudoers
 
-COPY --from=builder /opt/app/_build/${MIX_ENV}/rel/${APP_NAME} .
+USER funless 
 
-CMD /opt/app/bin/${APP_NAME} start
+COPY --chown=funless --from=builder /opt/app/_build/${MIX_ENV}/rel/worker ./worker
+
+COPY --chown=funless init_container.sh .
+
+RUN chmod +x init_container.sh
+
+CMD ["bash", "init_container.sh"]

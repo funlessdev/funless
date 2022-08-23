@@ -25,9 +25,10 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Nif do
   #   ## Parameters
   #     - _function: Worker.Domain.Function struct, containing function information
   #     - _runtime_name: name of the container that will be created
+  #     - _network_name: name of the network to which the container will be attached
   #     - _docker_host: path of the docker socket in the current system
   @doc false
-  def prepare_runtime(_function, _runtime_name, _docker_host) do
+  def prepare_runtime(_function, _runtime_name, _network_name, _docker_host) do
     :erlang.nif_error(:nif_not_loaded)
   end
 

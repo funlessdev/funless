@@ -53,6 +53,4 @@ jobs:
         with:
           context: .
           push: true
-          build-args: |
-            APP_NAME=worker
           tags: ghcr.io/funlessdev/fl-worker:latest,ghcr.io/funlessdev/fl-worker:${{ env.VERSION }}

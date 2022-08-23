@@ -56,10 +56,11 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
   def prepare(%FunctionStruct{} = function, runtime_name) do
     {:ok, socket} = Application.fetch_env(:worker, :docker_host)
     {:ok, max_retries} = Application.fetch_env(:worker, :max_runtime_init_retries)
+    {:ok, network_name} = Application.fetch_env(:worker, :runtime_network_name)
 
     Logger.info("OpenWhisk Runtime: Creating runtime for function '#{function.name}'")
 
-    Nif.prepare_runtime(function, runtime_name, socket)
+    Nif.prepare_runtime(function, runtime_name, network_name, socket)
 
     receive do
       {:ok, runtime = %RuntimeStruct{}} ->
@@ -75,35 +76,46 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
 
   # sends function to /init endpoint of the OpenWhisk runtime
   # if the runtime refuses the connection (i.e. not ready yet), waits 0.01 seconds and retries at most max_retries times
-  defp init_runtime(
-         %FunctionStruct{code: code} = function,
-         %RuntimeStruct{host: host, port: port} = runtime,
-         max_retries,
-         retry_count \\ 0
-       ) do
-    if retry_count >= max_retries do
-      {:error, :max_runtime_init_retries_reached}
-    else
-      body =
-        Jason.encode!(%{
-          "value" => %{"code" => code, "main" => "main", "env" => %{}, "binary" => false}
-        })
+  defp init_runtime(_function, _runtime, 0 = _retries_left) do
+    Logger.error("OpenWhisk Runtime: runtime initialization failed.")
+    {:error, :max_runtime_init_retries_reached}
+  end
 
-      request = {"http://#{host}:#{port}/init", [], ["application/json"], body}
-      response = :httpc.request(:post, request, [], [])
+  defp init_runtime(function, runtime, retries_left) do
+    Logger.info("OpenWhisk Runtime: Initializing runtime for function '#{function.name}'")
 
-      case response do
-        {:ok, _} ->
-          {:ok, runtime}
+    response = send_init(runtime.host, runtime.port, function.code)
 
-        {:error, :socket_closed_remotely} ->
-          :timer.sleep(10)
-          init_runtime(function, runtime, max_retries, retry_count + 1)
-
-        {:error, err} ->
-          {:error, err}
-      end
+    case response do
+      {:ok, _} -> reply_from_init({:ok, runtime})
+      {:error, :socket_closed_remotely} -> retry_init(function, runtime, retries_left)
+      {:error, err} -> reply_from_init({:error, err})
     end
+  end
+
+  defp reply_from_init({:ok, runtime}) do
+    Logger.info("OpenWhisk Runtime: Runtime #{runtime.name} initialized")
+    {:ok, runtime}
+  end
+
+  defp reply_from_init({:error, err}) do
+    Logger.error("OpenWhisk Runtime: Runtime initialization failed: #{inspect(err)}")
+
+    {:error, err}
+  end
+
+  defp retry_init(function, runtime, retries_left) do
+    Logger.warn("OpenWhisk Runtime: failed to initialize runtime, retrying...")
+    :timer.sleep(10)
+    init_runtime(function, runtime, retries_left - 1)
+  end
+
+  defp send_init(host, port, code) do
+    Logger.info("OpenWhisk Runtime: sending init request to runtime at #{host}:#{port}")
+    value = %{"code" => code, "main" => "main", "env" => %{}, "binary" => false}
+    body = Jason.encode!(%{"value" => value})
+    request = {"http://#{host}:#{port}/init", [], ["application/json"], body}
+    :httpc.request(:post, request, [], [])
   end
 
   @doc """

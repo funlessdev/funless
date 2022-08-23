@@ -1,3 +1,4 @@
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,8 +17,17 @@
 # under the License.
 #
 
-import Config
+# The container should be run with -v <DOCKER_HOST>:/var/run/docker-host.sock --network host
+# e.g. 
+# docker run --rm -v /run/user/1001/docker.sock:/var/run/docker-host.sock --network host image-name
+# docker run --rm -v /var/run/docker.sock:/var/run/docker-host.sock --network host image-name
 
-config :worker, docker_host: Worker.Adapters.Runtime.OpenWhisk.docker_socket()
-config :worker, max_runtime_init_retries: 20
-config :worker, runtime_network_name: System.get_env("RUNTIME_NETWORK", "bridge")
+DOCKER_SOCK="/var/run/docker.sock"
+
+echo "Launching worker in daemon mode"
+/home/funless/worker/bin/worker daemon
+
+echo "proxy socket is listening on ${DOCKER_SOCK}"
+test -S ${DOCKER_SOCK} || exec sudo /usr/bin/socat \
+  UNIX-LISTEN:${DOCKER_SOCK},fork,mode=660,user=funless \
+  UNIX-CONNECT:/var/run/docker-host.sock
