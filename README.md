@@ -64,12 +64,12 @@ docker network create <NETWORK_NAME>
 
 Then, the container can be created using:
 ```
-docker create -v /var/run/docker.sock:/var/run/docker-host.sock --network=<NETWORK_NAME> <IMAGE_NAME>
+docker create -v /var/run/docker.sock:/var/run/docker-host.sock --network=<NETWORK_NAME> --env RUNTIME_NETWORK=<NETWORK_NAME> <IMAGE_NAME>
 ```
 
 Or, in a rootless installation:
 ```
-docker create -v /run/user/1001/docker.sock:/var/run/docker-host.sock --network=<NETWORK_NAME> <IMAGE_NAME>
+docker create -v /run/user/1001/docker.sock:/var/run/docker-host.sock --network=<NETWORK_NAME> --env RUNTIME_NETWORK=<NETWORK_NAME> <IMAGE_NAME>
 ```
 
 Where `/run/user/1001/docker.sock` must be set to the value of the `$DOCKER_HOST` environment variable, minus the protocol (e.g. `unix:///run/user/1001/docker.sock` -> `/run/user/1001/docker.sock`).
