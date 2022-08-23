@@ -1,4 +1,4 @@
-# FunlessWorker
+# Funless Worker
 
 ## Running in an interactive session
 
