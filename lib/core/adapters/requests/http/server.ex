@@ -52,6 +52,8 @@ defmodule Core.Adapters.Requests.Http.Server do
         "error" => "The provided body was not a valid JSON string"
       })
 
+    conn = put_resp_content_type(conn, "application/json", nil)
+
     send_resp(
       conn,
       conn.status,
@@ -70,6 +72,8 @@ defmodule Core.Adapters.Requests.Http.Server do
         "error" => "The invocation timed out"
       })
 
+    conn = put_resp_content_type(conn, "application/json", nil)
+
     send_resp(
       conn,
       conn.status,
@@ -87,6 +91,8 @@ defmodule Core.Adapters.Requests.Http.Server do
       Jason.encode!(%{
         "error" => "Something went wrong"
       })
+
+    conn = put_resp_content_type(conn, "application/json", nil)
 
     send_resp(
       conn,
