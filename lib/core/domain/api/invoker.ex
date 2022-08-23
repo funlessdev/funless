@@ -88,7 +88,7 @@ defmodule Core.Domain.Api.Invoker do
 
   defp parse_wrk_reply({:error, err}) do
     err_msg = err["error"] || "Unknown error"
-    Logger.error("API: received error reply from worker #{err_msg}")
+    Logger.error("API: received error reply from worker #{inspect(err_msg)}")
     {:error, :worker_error}
   end
 end
