@@ -86,7 +86,7 @@ defmodule HttpServerTest.InvokeTest do
 
       # Assert the response and status
       Common.assert_http_response(conn, 200, %{
-        "result" => "Hello, World!"
+        "result" => %{"result" => "Hello, World!"}
       })
     end
 

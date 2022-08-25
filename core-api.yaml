@@ -22,7 +22,7 @@ info:
   version: "1.0"
 components:
   schemas:
-    invocation:
+    function_invocation:
       type: object
       properties:
         namespace:
@@ -31,6 +31,19 @@ components:
           type: string
         args:
           type: object
+    function_invocation_success:
+      type: object
+      properties:
+        result:
+          type: object
+          description: The function invocation result
+    function_invocation_error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: The error message
+
     function_creation:
       type: object
       properties:
@@ -42,6 +55,19 @@ components:
           type: string
         image:
           type: string
+    function_creation_success:
+      type: object
+      properties:
+        result:
+          type: string
+          description: The name of the function
+    function_creation_error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: The error message
+
     function_deletion:
       type: object
       properties:
@@ -49,6 +75,19 @@ components:
           type: string
         namespace:
           type: string
+    function_deletion_success:
+      type: object
+      properties:
+        result:
+          type: string
+          description: The name of the function
+    function_deletion_error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: The error message
+
 paths:
   /invoke:
     post:
@@ -64,51 +103,36 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/invocation"
+              $ref: "#/components/schemas/function_invocation"
       responses:
         "200":
           description: The function invocation was successfully sent to a worker
           content:
             application/json:
               schema:
-                description: The function invocation result
-                type: object
-                properties:
-                  result:
-                    type: object
+                $ref: "#/components/schemas/function_invocation_success"
               examples:
                 Invocation of hello world:
-                  value: '{"result": "Hello, World!"}'
+                  value: '{"result": {"payload": "Hello, World!"}}'
         "400":
           description: The invocation request was invalid
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: The error message
+                $ref: "#/components/schemas/function_invocation_error"
+
         "404":
           description: The required function was not found
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: The error message
+                $ref: "#/components/schemas/function_invocation_error"
         "500":
           description: The function invocation failed for some unspecified internal error
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: The error message
+                $ref: "#/components/schemas/function_invocation_error"
               examples:
                 Invocation with internal error:
                   value: '{"error": "Failed to invoke function: internal worker error"}'
@@ -117,11 +141,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: The error message
+                $ref: "#/components/schemas/function_invocation_error"
               examples:
                 Invocation with no workers:
                   value: '{"error": "Failed to invoke function: no worker available"}'
@@ -144,11 +164,7 @@ paths:
           content:
             application/json:
               schema:
-                description: The name of the function
-                type: object
-                properties:
-                  result:
-                    type: object
+                $ref: "#/components/schemas/function_creation_success"
               examples:
                 Creation of the "hellojs" function:
                   value: '{"result": "hellojs"}'
@@ -157,21 +173,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: The error message
+                $ref: "#/components/schemas/function_creation_error"
         "500":
           description: The function creation request failed because the database transaction was aborted
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: The error message
+                $ref: "#/components/schemas/function_creation_error"
   /delete:
     post:
       summary: Delete a function
@@ -191,11 +199,7 @@ paths:
           content:
             application/json:
               schema:
-                description: The name of the function
-                type: object
-                properties:
-                  result:
-                    type: object
+                $ref: "#/components/schemas/function_deletion_success"
               examples:
                 Deletion of the "hellojs" function:
                   value: '{"result": "hellojs"}'
@@ -204,21 +208,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: The error message
+                $ref: "#/components/schemas/function_deletion_error"
         "500":
           description: The function deletion request failed because the database transaction was aborted
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: The error message
+                $ref: "#/components/schemas/function_deletion_error"
 
 servers:
   - url: http://localhost:4001

@@ -26,7 +26,7 @@ defmodule Core.Domain.Api.Invoker do
   alias Core.Domain.Ports.FunctionStorage
   alias Core.Domain.Scheduler
 
-  @spec invoke(Map.t()) :: {:ok, %{:result => String.t()}} | {:error, any}
+  @spec invoke(Map.t()) :: {:ok, any} | {:error, any}
   @doc """
   Sends an invocation request for the `name` function in the `ns` namespace,
   specified in the invocation parameters.

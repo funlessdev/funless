@@ -107,7 +107,7 @@ defmodule Core.Adapters.Requests.Http.Server do
   post "/invoke" do
     res = Api.Invoker.invoke(conn.body_params)
     conn = put_resp_content_type(conn, "application/json", nil)
-    reply_to_client(res, conn)
+    reply_to_client_invoke(res, conn)
   end
 
   # Function creation request handler
@@ -128,6 +128,14 @@ defmodule Core.Adapters.Requests.Http.Server do
     body = Jason.encode!(%{"error" => "Oops, this endpoint is not implemented yet"})
     conn = put_resp_content_type(conn, "application/json", nil)
     send_resp(conn, 404, body)
+  end
+
+  defp reply_to_client_invoke({:ok, result}, conn) do
+    reply_to_client({:ok, %{"result" => result}}, conn)
+  end
+
+  defp reply_to_client_invoke(any, conn) do
+    reply_to_client(any, conn)
   end
 
   defp reply_to_client({:ok, result}, conn) do
