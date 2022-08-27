@@ -48,7 +48,7 @@ defmodule FunlessWorker.MixProject do
 
       # Dev deps
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:mox, "~> 1.0", only: :test, runtime: false}
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 
