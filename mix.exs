@@ -43,9 +43,12 @@ defmodule FunlessWorker.MixProject do
     [
       {:rustler, "~> 0.25.0"},
       {:jason, "~> 1.3"},
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:libcluster, "~> 3.3"},
-      {:mox, "~> 1.0", only: :test}
+      {:logger_file_backend, "~> 0.0.13"},
+
+      # Dev deps
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:mox, "~> 1.0", only: :test, runtime: false}
     ]
   end
 
