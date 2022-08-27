@@ -23,11 +23,11 @@
 # docker run --rm -v /var/run/docker.sock:/var/run/docker-host.sock --network host image-name
 
 DOCKER_SOCK="/var/run/docker.sock"
+DOCKER_PROXY="/var/run/docker-host.sock"
 
 echo "Launching worker in daemon mode"
 /home/funless/worker/bin/worker daemon
 
-echo "proxy socket is listening on ${DOCKER_SOCK}"
-test -S ${DOCKER_SOCK} || exec sudo /usr/bin/socat \
-  UNIX-LISTEN:${DOCKER_SOCK},fork,mode=660,user=funless \
-  UNIX-CONNECT:/var/run/docker-host.sock
+echo "proxy docker socket ready"
+exec sudo /usr/bin/socat UNIX-LISTEN:${DOCKER_SOCK},fork,mode=660,user=funless UNIX-CONNECT:${DOCKER_PROXY}
+

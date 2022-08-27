@@ -18,8 +18,11 @@
 
 import Config
 
+# tell logger to load a LoggerFileBackend processes
 config :logger,
-  backends: [:console],
-  compile_time_purge_matching: [
-    [level_lower_than: :info]
-  ]
+  backends: [:console, {LoggerFileBackend, :info_log}]
+
+# configuration for the {LoggerFileBackend, :info_log} backend
+config :logger, :info_log,
+  path: "fl-worker.log",
+  level: :info
