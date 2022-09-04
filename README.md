@@ -59,8 +59,11 @@ docker build -t <IMAGE_NAME> .
 
 Afterwards, a network should be created to allow containers to communicate with each other (and therefore, to allow the Worker to communicate with runtimes):
 ```
-docker network create <NETWORK_NAME>
+docker network create <NETWORK_NAME> --internal
 ```
+
+The network should be internal, to as the worker gets its name and address from the external, worker-to-core network, and this avoids conflicts.
+
 
 Then, the container can be created using:
 ```
@@ -83,8 +86,6 @@ And then started:
 ```
 docker container start <CONTAINER_NAME>
 ```
-
-**As of right now, <SECOND_NETWORK_NAME> must be lexicographically smaller than <NETWORK_NAME> (e.g. `cl-net` vs `fl-net`)**.
 
 (containers have to be first connected to multiple networks, and then started, as stated here https://github.com/moby/moby/issues/17750).
 ___
