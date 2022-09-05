@@ -22,7 +22,7 @@ defmodule Core.Domain.Ports.Cluster do
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback all_nodes() :: List.t()
+  @callback all_nodes() :: list()
 
   @doc """
   Function to obtain a list with all active nodes in the cluster,

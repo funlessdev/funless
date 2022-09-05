@@ -178,8 +178,8 @@ defmodule Core.Adapters.Requests.Http.Server do
   end
 
   # currently unused, but could be used to handle errors in the future.
-  defp reply_to_client(_, conn) do
-    body = Jason.encode!(%{"error" => "Something went wrong..."})
-    send_resp(conn, 500, body)
-  end
+  # defp reply_to_client(_, conn) do
+  #   body = Jason.encode!(%{"error" => "Something went wrong..."})
+  #   send_resp(conn, 500, body)
+  # end
 end
