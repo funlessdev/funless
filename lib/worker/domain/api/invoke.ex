@@ -43,7 +43,7 @@ defmodule Worker.Domain.Api.Invoke do
       - %{...}: struct with all the fields required by Worker.Domain.Function
       - args: arguments passed to the function
   """
-  @spec invoke_function(Map.t(), Map.t()) :: {:ok, any} | {:error, any}
+  @spec invoke_function(map(), map()) :: {:ok, any} | {:error, any}
   def invoke_function(_, args \\ %{})
 
   def invoke_function(%{__struct__: _s} = f, args),

@@ -36,7 +36,7 @@ defmodule Worker.Domain.Api.Prepare do
   ## Parameters
   - %{...}: generic struct with all the fields required by Worker.Domain.Function
   """
-  @spec prepare_runtime(Map.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
+  @spec prepare_runtime(map()) :: {:ok, RuntimeStruct.t()} | {:error, any}
 
   def prepare_runtime(%{__struct__: _s} = f), do: prepare_runtime(Map.from_struct(f))
 

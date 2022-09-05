@@ -36,7 +36,7 @@ defmodule Worker.Domain.Api.Cleanup do
     ## Parameters
       - %{...}: generic struct with all the fields required by Worker.Domain.Function
   """
-  @spec cleanup(Map.t()) :: {:ok, String.t()} | {:error, any}
+  @spec cleanup(map()) :: {:ok, String.t()} | {:error, any}
   def cleanup(%{__struct__: _s} = f), do: cleanup(Map.from_struct(f))
 
   def cleanup(%{name: _fname, image: _image, namespace: _namespace, code: _code} = f) do
@@ -68,8 +68,8 @@ defmodule Worker.Domain.Api.Cleanup do
     ## Parameters
       - %{...}: generic struct with all the fields required by Worker.Domain.Function
   """
-  @spec cleanup_all(Map.t()) ::
-          {:ok, List.t()} | {:error, String.t()} | {:error, [{String.t(), any}]}
+  @spec cleanup_all(map()) ::
+          {:ok, list()} | {:error, String.t()} | {:error, [{String.t(), any}]}
 
   def cleanup_all(%{__struct__: _s} = f), do: cleanup_all(Map.from_struct(f))
 
