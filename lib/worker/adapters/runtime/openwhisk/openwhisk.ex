@@ -89,9 +89,17 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     response = send_init(runtime.host, runtime.port, function.code)
 
     case response do
-      {:ok, _} -> reply_from_init({:ok, runtime})
-      {:error, :socket_closed_remotely} -> retry_init(function, runtime, retries_left)
-      {:error, err} -> reply_from_init({:error, err})
+      {:ok, _} ->
+        reply_from_init({:ok, runtime})
+
+      {:error, :socket_closed_remotely} ->
+        retry_init(function, runtime, retries_left)
+
+      {:error, {:failed_connect, [{:to_address, _}, {_, _, :econnrefused}]}} ->
+        retry_init(function, runtime, retries_left)
+
+      {:error, err} ->
+        reply_from_init({:error, err})
     end
   end
 
