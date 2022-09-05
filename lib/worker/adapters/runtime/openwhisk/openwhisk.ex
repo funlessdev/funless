@@ -78,9 +78,16 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
 
   # sends function to /init endpoint of the OpenWhisk runtime
   # if the runtime refuses the connection (i.e. not ready yet), waits 0.01 seconds and retries at most max_retries times
-  defp init_runtime(_function, _runtime, 0 = _retries_left) do
+  defp init_runtime(_function, runtime, 0 = _retries_left) do
     Logger.error("OpenWhisk: runtime initialization failed.")
-    {:error, :max_runtime_init_retries_reached}
+
+    case cleanup(runtime) do
+      {:ok, _} ->
+        {:error, :max_runtime_init_retries_reached}
+
+      {:error, cleanup_err} ->
+        {:error, {:max_runtime_init_retries_reached, {:error, cleanup_err}}}
+    end
   end
 
   defp init_runtime(function, runtime, retries_left) do
@@ -99,7 +106,10 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
         retry_init(function, runtime, retries_left)
 
       {:error, err} ->
-        reply_from_init({:error, err})
+        case cleanup(runtime) do
+          {:ok, _} -> reply_from_init({:error, err})
+          {:error, cleanup_err} -> reply_from_init({:error, {err, {:error, cleanup_err}}})
+        end
     end
   end
 
