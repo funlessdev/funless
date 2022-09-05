@@ -26,7 +26,7 @@ defmodule Core.Domain.Api.Invoker do
   alias Core.Domain.Ports.FunctionStorage
   alias Core.Domain.Scheduler
 
-  @spec invoke(Map.t()) :: {:ok, any} | {:error, any}
+  @spec invoke(map()) :: {:ok, any} | {:error, any}
   @doc """
   Sends an invocation request for the `name` function in the `ns` namespace,
   specified in the invocation parameters.
@@ -66,18 +66,11 @@ defmodule Core.Domain.Api.Invoker do
         parse_wrk_reply(wrk_reply)
 
       {:error, :not_found} ->
-        Logger.error(
-          "API: function #{ivk_params.function} in namespace #{ivk_params.namespace} not found"
-        )
+        fun = ivk_params.function
+        ns = ivk_params.namespace
+        Logger.error("API: function #{fun} in namespace #{ns} not found")
 
         {:error, :not_found}
-
-      {:error, err} ->
-        Logger.error(
-          "API: encountered error when getting function #{ivk_params.function}: #{inspect(err)}"
-        )
-
-        {:error, err}
     end
   end
 

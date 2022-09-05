@@ -26,7 +26,7 @@ defmodule Core.Domain.Ports.FunctionStorage do
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback init_database([Atom.t()]) :: :ok | {:error, any}
+  @callback init_database([atom()]) :: :ok | {:error, any}
   @callback get_function(function_name, function_namespace) ::
               {:ok, FunctionStruct.t()} | {:error, any}
   @callback insert_function(FunctionStruct.t()) :: {:ok, function_name} | {:error, any}

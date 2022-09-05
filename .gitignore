@@ -50,3 +50,7 @@ core-*.tar
 Mnesia.*/
 
 fl-core.log
+
+# Dialyzer
+/priv/plts/*.plt
+/priv/plts/*.plt.hash

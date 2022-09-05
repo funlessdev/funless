@@ -47,7 +47,7 @@ defmodule Core.Domain.InvokeParams do
   @type t :: %__MODULE__{
           namespace: String.t(),
           function: String.t(),
-          args: Map.t()
+          args: map()
         }
   @enforce_keys [:function]
   defstruct [:function, namespace: "_", args: %{}]
