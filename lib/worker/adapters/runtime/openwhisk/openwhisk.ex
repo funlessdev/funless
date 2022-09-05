@@ -184,8 +184,16 @@ defmodule Worker.Adapters.Runtime.OpenWhisk do
     Nif.cleanup_runtime(runtime.name, socket)
 
     receive do
-      :ok -> {:ok, runtime}
-      {:error, err} -> {:error, err}
+      :ok ->
+        Logger.info("Runtime #{inspect(runtime)} removed")
+        {:ok, runtime}
+
+      {:error, err} ->
+        Logger.error(
+          "OpenWhisk: Error while removing runtime #{inspect(runtime)}: #{inspect(err)}"
+        )
+
+        {:error, err}
     end
   end
 end
