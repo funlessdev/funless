@@ -17,5 +17,7 @@
 //
 rustler::atoms! {
     ok,
-    error
+    error,
+    docker_response_server_error,
+    request_timeout_error
 }

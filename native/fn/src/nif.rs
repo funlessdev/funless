@@ -15,10 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-use crate::{
-    atoms::{error, ok},
-    utils,
-};
+use crate::{atoms, utils};
 use bollard::{
     container::{
         Config, CreateContainerOptions, KillContainerOptions, RemoveContainerOptions,
@@ -29,8 +26,8 @@ use bollard::{
 };
 use futures_util::{FutureExt, TryFutureExt};
 use once_cell::sync::Lazy;
-use rustler::{Encoder, Env, NifStruct, OwnedEnv};
-use std::thread;
+use rustler::{Encoder, Env, NifStruct, OwnedEnv, Term};
+use std::{ops::Deref, thread};
 use tokio::runtime::{Builder, Runtime};
 
 // https://github.com/rusterlium/rustler/issues/409
@@ -66,6 +63,31 @@ struct RuntimeContainer {
     port: String,
 }
 
+// can't implement external traits for arbitrary structs, so we define a custom struct, embedding bollard errors
+struct NifError(bollard::errors::Error);
+
+impl Deref for NifError {
+    type Target = bollard::errors::Error;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Encoder for NifError {
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
+        match &self.0 {
+            bollard::errors::Error::RequestTimeoutError => {
+                atoms::request_timeout_error().encode(env)
+            }
+            bollard::errors::Error::DockerResponseServerError {
+                status_code,
+                message,
+            } => (atoms::docker_response_server_error(), status_code, message).encode(env),
+            anything => anything.to_string().encode(env),
+        }
+    }
+}
 /*
     TODO: currently only works with docker; docker_host should either be:
         1. A struct, identifying the underlying container runtime => passed by Elixir
@@ -157,14 +179,20 @@ fn prepare_runtime(
                             host,
                             port,
                         };
-                        (ok(), container).encode(env)
+                        (atoms::ok(), container).encode(env)
                     }),
                     None => thread_env.send_and_clear(&pid, |env| {
-                        (error(), "Error fetching container network configuration").encode(env)
+                        (
+                            atoms::error(),
+                            "Error fetching container network configuration",
+                        )
+                            .encode(env)
                     }),
                 }
             }
-            Err(e) => thread_env.send_and_clear(&pid, |env| (error(), e.to_string()).encode(env)),
+            Err(e) => {
+                thread_env.send_and_clear(&pid, |env| (atoms::error(), NifError(e)).encode(env))
+            }
         }
     });
 }
@@ -185,9 +213,11 @@ fn runtime_logs(env: Env, container_name: String, docker_host: String) {
         match result {
             Ok(v) => {
                 let logs = v.iter().map(|l| l.to_string()).collect::<Vec<String>>();
-                thread_env.send_and_clear(&pid, |env| (ok(), logs).encode(env))
+                thread_env.send_and_clear(&pid, |env| (atoms::ok(), logs).encode(env))
             }
-            Err(e) => thread_env.send_and_clear(&pid, |env| (error(), e.to_string()).encode(env)),
+            Err(e) => {
+                thread_env.send_and_clear(&pid, |env| (atoms::error(), NifError(e)).encode(env))
+            }
         };
     });
 }
@@ -220,8 +250,10 @@ fn cleanup_runtime(env: Env, container_name: String, docker_host: String) {
         let result = TOKIO.block_on(f);
 
         match result {
-            Ok(()) => thread_env.send_and_clear(&pid, |env| ok().encode(env)),
-            Err(e) => thread_env.send_and_clear(&pid, |env| (error(), e.to_string()).encode(env)),
+            Ok(()) => thread_env.send_and_clear(&pid, |env| atoms::ok().encode(env)),
+            Err(e) => {
+                thread_env.send_and_clear(&pid, |env| (atoms::error(), NifError(e)).encode(env))
+            }
         }
     });
 }
