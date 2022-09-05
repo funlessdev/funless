@@ -48,8 +48,10 @@ funless_worker-*.tar
 /config/*.secret.exs
 /priv/native/*.so
 
-
-
 /native/**/Cargo.lock
 /native/**/target
 Cargo.lock
+
+# Dialyzer
+/priv/plts/*.plt
+/priv/plts/*.plt.hash
