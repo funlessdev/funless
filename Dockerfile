@@ -61,8 +61,12 @@ ENV REPLACE_OS_VARS=true \
     MIX_ENV=${MIX_ENV} \ 
     PORT=${PORT} 
 
-WORKDIR /opt/app
+WORKDIR /home/funless
+RUN adduser --disabled-password --home "$(pwd)" funless &&\
+    echo "funless ALL=(ALL:ALL) NOPASSWD: ALL" >>/etc/sudoers
 
-COPY --from=builder /opt/app/_build/${MIX_ENV}/rel/core .
+USER funless
 
-CMD PORT=${PORT} /opt/app/bin/core start
+COPY --chown=funless --from=builder /opt/app/_build/${MIX_ENV}/rel/core ./core
+
+CMD PORT=${PORT} core/bin/core start
