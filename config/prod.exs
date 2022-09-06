@@ -28,5 +28,5 @@ config :logger,
 
 # configuration for the {LoggerFileBackend, :info_log} backend
 config :logger, :info_log,
-  path: "fl-core.log",
+  path: "/tmp/funless/fl-core.log",
   level: :info
