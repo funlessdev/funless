@@ -16,25 +16,14 @@
 # under the License.
 #
 
-import Config
+defmodule Worker.Domain.Ports.Runner do
+  alias Worker.Domain.FunctionStruct
+  alias Worker.Domain.RuntimeStruct
 
-config :worker, Worker.Domain.Ports.Runtime, adapter: Worker.Adapters.Runtime.OpenWhisk
+  @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-config :worker, Worker.Domain.Ports.Provisioner,
-  adapter: Worker.Adapters.Runtime.OpenWhisk.Provisioner
+  @callback run_function(FunctionStruct.t(), any(), RuntimeStruct.t()) ::
+              {:ok, any} | {:error, any}
 
-config :worker, Worker.Domain.Ports.RuntimeTracker, adapter: Worker.Adapters.RuntimeTracker.ETS
-
-config :logger, :console,
-  format: "\n#####[$level] $time $metadata $message\n",
-  metadata: [:file, :line]
-
-config :libcluster,
-  topologies: [
-    funless: [
-      # The selected clustering strategy. Required.
-      strategy: Cluster.Strategy.Gossip
-    ]
-  ]
-
-import_config "#{Mix.env()}.exs"
+  defdelegate run_function(fl_function, args, runtime), to: @adapter
+end
