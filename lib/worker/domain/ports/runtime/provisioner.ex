@@ -16,28 +16,15 @@
 # under the License.
 #
 
-defmodule Worker.Domain.Ports.Runtime do
-  @moduledoc """
-  Port for runtime manipulation.
-  """
+defmodule Worker.Domain.Ports.Runtime.Provisioner do
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 
-  @type worker_function :: FunctionStruct.t()
-
-  @type args :: any()
-
-  @type runtime_name :: String.t()
-
-  @type runtime :: RuntimeStruct.t()
-
-  @callback prepare(worker_function, runtime_name) :: {:ok, runtime} | {:error, any}
-  @callback run_function(worker_function, args, runtime) :: {:ok, any} | {:error, any}
-  @callback cleanup(runtime) :: {:ok, runtime} | {:error, any}
-
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  defdelegate prepare(worker_function, runtime_name), to: @adapter
-  defdelegate run_function(worker_function, args, runtime), to: @adapter
-  defdelegate cleanup(runtime), to: @adapter
+  @callback prepare(FunctionStruct.t(), String.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
+  @callback init(FunctionStruct.t(), RuntimeStruct.t()) :: :ok | {:error, any}
+
+  defdelegate prepare(fl_function, runtime_name), to: @adapter
+  defdelegate init(fl_function, runtime), to: @adapter
 end

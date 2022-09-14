@@ -15,14 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Worker.Domain.Api.Invoke do
+defmodule Worker.Domain.InvokeFunction do
   @moduledoc """
   Contains functions used to run function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
-  alias Worker.Domain.Api.Prepare
-
-  alias Worker.Domain.Ports.Runtime
   alias Worker.Domain.Ports.RuntimeTracker
 
   alias Worker.Domain.FunctionStruct
@@ -68,7 +65,7 @@ defmodule Worker.Domain.Api.Invoke do
          args
        ) do
     Logger.info("API: Found runtime: #{runtime.name} for function #{function.name}")
-    Runtime.run_function(function, args, runtime)
+    # Runtime.run_function(function, args, runtime)
   end
 
   defp run_function(
@@ -78,9 +75,9 @@ defmodule Worker.Domain.Api.Invoke do
        ) do
     Logger.warn("API: no runtime found to run function #{function.name}, creating one...")
 
-    case Prepare.prepare_runtime(function) do
-      {:ok, runtime} -> Runtime.run_function(function, args, runtime)
-      {:error, err} -> {:error, err}
-    end
+    # case Prepare.prepare_runtime(function) do
+    #   {:ok, runtime} -> Runtime.run_function(function, args, runtime)
+    #   {:error, err} -> {:error, err}
+    # end
   end
 end

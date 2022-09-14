@@ -18,8 +18,10 @@
 
 import Config
 
-config :worker, Worker.Domain.Ports.Runtime, adapter: Worker.Runtime.Mock
 config :worker, Worker.Domain.Ports.RuntimeTracker, adapter: Worker.RuntimeTracker.Mock
+config :worker, Worker.Domain.Ports.Runtime.Provisioner, adapter: Worker.Provisioner.Mock
+config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Runner.Mock
+config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Cleaner.Mock
 
 # Logs turned off without backends (use :console to see them)
 config :logger, level: :warn, backends: []

@@ -16,5 +16,8 @@
 # under the License.
 #
 
-Mox.defmock(Worker.Runtime.Mock, for: Worker.Domain.Ports.Runtime)
+Mox.defmock(Worker.Provisioner.Mock, for: Worker.Domain.Ports.Runtime.Provisioner)
+Mox.defmock(Worker.Runner.Mock, for: Worker.Domain.Ports.Runtime.Runner)
+Mox.defmock(Worker.Cleaner.Mock, for: Worker.Domain.Ports.Runtime.Cleaner)
+
 Mox.defmock(Worker.RuntimeTracker.Mock, for: Worker.Domain.Ports.RuntimeTracker)

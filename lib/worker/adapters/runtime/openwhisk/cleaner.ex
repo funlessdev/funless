@@ -1,6 +1,8 @@
-defmodule Worker.Adapters.Runtime.Openwhisk.Provisioner do
-  @behaviour Worker.Domain.Ports.Provisioner
+defmodule Worker.Adapters.Runtime.OpenWhisk.Cleaner do
+  @behaviour Worker.Domain.Ports.Runtime.Cleaner
 
-  def prepare(fl_function, runtime_name) do
+  @impl true
+  def cleanup(runtime) do
+    {:ok, runtime}
   end
 end

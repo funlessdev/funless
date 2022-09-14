@@ -16,7 +16,7 @@
 # under the License.
 #
 
-defmodule Worker.Domain.Ports.Runner do
+defmodule Worker.Domain.Ports.Runtime.Runner do
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 

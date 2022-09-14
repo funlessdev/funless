@@ -16,12 +16,13 @@
 # under the License.
 #
 
-defmodule Worker.Domain.Ports.Provisioner do
+defmodule Worker.Domain.Ports.Runtime.Cleaner do
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 
+  @callback cleanup(RuntimeStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
+
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback prepare(FunctionStruct.t(), String.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
-  defdelegate prepare(fl_function, runtime_name), to: @adapter
+  defdelegate cleanup(runtime), to: @adapter
 end

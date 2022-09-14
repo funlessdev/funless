@@ -28,8 +28,10 @@ defmodule Worker.Domain.Ports.RuntimeTracker do
 
   @callback get_runtimes(function_name) :: [runtime]
 
+  # TODO: the ets tracker never returns an error and there are no error checks in domain
   @callback insert_runtime(function_name, runtime) ::
               {:ok, {function_name, runtime}} | {:error, any}
+
   @callback delete_runtime(function_name, runtime) ::
               {:ok, {function_name, runtime}} | {:error, any}
 

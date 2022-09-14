@@ -16,9 +16,9 @@
 # under the License.
 #
 
-defmodule Worker.Adapters.Runtime.Test do
+defmodule Worker.Adapters.Runtime.Provisioner.Test do
   @moduledoc false
-  @behaviour Worker.Domain.Ports.Runtime
+  @behaviour Worker.Domain.Ports.Runtime.Provisioner
   alias Worker.Domain.RuntimeStruct
 
   @impl true
@@ -27,9 +27,26 @@ defmodule Worker.Adapters.Runtime.Test do
   end
 
   @impl true
-  def run_function(_worker_function, _args, _runtime_name) do
-    {:ok, %{"result" => "output"}}
+  def init(_, _) do
+    :ok
   end
+end
+
+defmodule Worker.Adapters.Runtime.Runner.Test do
+  @moduledoc false
+  @behaviour Worker.Domain.Ports.Runtime.Runner
+  alias Worker.Domain.RuntimeStruct
+
+  @impl true
+  def run_function(_worker_function, _args, _runtime) do
+    {:ok, "hello"}
+  end
+end
+
+defmodule Worker.Adapters.Runtime.Cleaner.Test do
+  @moduledoc false
+  @behaviour Worker.Domain.Ports.Runtime.Cleaner
+  alias Worker.Domain.RuntimeStruct
 
   @impl true
   def cleanup(runtime) do

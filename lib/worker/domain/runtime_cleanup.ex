@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Worker.Domain.Api.Cleanup do
+defmodule Worker.Domain.RuntimeCleanup do
   @moduledoc """
   Contains functions used to remove function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
@@ -56,7 +56,7 @@ defmodule Worker.Domain.Api.Cleanup do
 
   defp runtime_cleanup([runtime | _]) do
     Logger.info("API: Cleaning up runtime: #{runtime.name}")
-    Runtime.cleanup(runtime)
+    # Runtime.cleanup(runtime)
   end
 
   @doc """
@@ -103,15 +103,15 @@ defmodule Worker.Domain.Api.Cleanup do
   defp runtime_cleanup_all([_runtime | _] = runtimes) do
     Logger.info("API: Cleaning up runtimes: #{runtimes}")
 
-    runtimes
-    |> Enum.map(fn runtime ->
-      res = Runtime.cleanup(runtime)
+    # runtimes
+    # |> Enum.map(fn runtime ->
+    #   res = Runtime.cleanup(runtime)
 
-      case res do
-        {:ok, runtime_name} -> {:ok, runtime_name}
-        {:error, err} -> {:error, runtime.name, err}
-      end
-    end)
+    #   case res do
+    #     {:ok, runtime_name} -> {:ok, runtime_name}
+    #     {:error, err} -> {:error, runtime.name, err}
+    #   end
+    # end)
   end
 
   defp remove_all_runtime_from_store({:error, err}, _) do

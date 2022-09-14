@@ -15,12 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Worker.Domain.Api.Prepare do
+defmodule Worker.Domain.RuntimeProvision do
   @moduledoc """
   Contains functions used to create function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
-  alias Worker.Domain.Ports.Runtime
+  alias Worker.Domain.Ports.Provisioner
   alias Worker.Domain.Ports.RuntimeTracker
 
   alias Worker.Domain.FunctionStruct
@@ -45,7 +45,7 @@ defmodule Worker.Domain.Api.Prepare do
     function = struct(FunctionStruct, f)
 
     runtime_name = fname <> "-funless"
-    Runtime.prepare(function, runtime_name) |> store_prepared_runtime(fname)
+    # Runtime.prepare(function, runtime_name) |> store_prepared_runtime(fname)
   end
 
   def prepare_runtime(_), do: {:error, :bad_params}

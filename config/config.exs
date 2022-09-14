@@ -18,10 +18,14 @@
 
 import Config
 
-config :worker, Worker.Domain.Ports.Runtime, adapter: Worker.Adapters.Runtime.OpenWhisk
-
-config :worker, Worker.Domain.Ports.Provisioner,
+config :worker, Worker.Domain.Ports.Runtime.Provisioner,
   adapter: Worker.Adapters.Runtime.OpenWhisk.Provisioner
+
+config :worker, Worker.Domain.Ports.Runtime.Runner,
+  adapter: Worker.Adapters.Runtime.OpenWhisk.Runner
+
+config :worker, Worker.Domain.Ports.Runtime.Cleaner,
+  adapter: Worker.Adapters.Runtime.OpenWhisk.Cleaner
 
 config :worker, Worker.Domain.Ports.RuntimeTracker, adapter: Worker.Adapters.RuntimeTracker.ETS
 

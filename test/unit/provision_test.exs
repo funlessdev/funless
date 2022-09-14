@@ -16,10 +16,10 @@
 # under the License.
 #
 
-defmodule ApiTest.PrepareTest do
+defmodule ProvisionTest do
   use ExUnit.Case, async: true
 
-  alias Worker.Domain.Api
+  alias Worker.Domain.RuntimeProvision
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!
@@ -35,34 +35,35 @@ defmodule ApiTest.PrepareTest do
     %{function: function}
   end
 
-  describe "Worker.Api prepare" do
+  describe "Provisioning requests" do
     setup do
-      Worker.Runtime.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Test)
-      Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.Test)
+      # Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
+      # Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.Test)
       :ok
     end
 
     test "prepare_runtime should return {:error, err} when the underlying functions encounter errors",
          %{function: function} do
-      Worker.Runtime.Mock
-      |> Mox.stub(:prepare, fn _function, _runtime ->
-        {:error, "generic error"}
-      end)
+      # Worker.Provisioner.Mock
+      # |> Mox.stub(
+      #   :prepare,
+      #   fn _function, _runtime -> {:error, "generic error"} end
+      # )
 
-      assert Api.Prepare.prepare_runtime(function) == {:error, "generic error"}
+      assert RuntimeProvision.prepare_runtime(function) == {:error, "generic error"}
     end
 
-    test "prepare_runtime should not call the function storage when the runtime is not created successfully",
-         %{function: function} do
-      Worker.Runtime.Mock
-      |> Mox.stub(:prepare, fn _function, _runtime ->
-        {:error, "generic error"}
-      end)
+    # test "prepare_runtime should not call the function storage when the runtime is not created successfully",
+    #      %{function: function} do
+    #   Worker.Runtime.Mock
+    #   |> Mox.stub(:prepare, fn _function, _runtime ->
+    #     {:error, "generic error"}
+    #   end)
 
-      Worker.RuntimeTracker.Mock
-      |> Mox.expect(:insert_runtime, 0, &Worker.Adapters.RuntimeTracker.Test.insert_runtime/2)
+    #   Worker.RuntimeTracker.Mock
+    #   |> Mox.expect(:insert_runtime, 0, &Worker.Adapters.RuntimeTracker.Test.insert_runtime/2)
 
-      assert Api.Prepare.prepare_runtime(function) == {:error, "generic error"}
-    end
+    #   assert Api.Prepare.prepare_runtime(function) == {:error, "generic error"}
+    # end
   end
 end
