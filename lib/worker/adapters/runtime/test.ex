@@ -23,7 +23,7 @@ defmodule Worker.Adapters.Runtime.Provisioner.Test do
 
   @impl true
   def prepare(_, _) do
-    {:ok, %RuntimeStruct{name: "hello-runtime", host: "localhost", port: "8080"}}
+    {:ok, %RuntimeStruct{name: "test-runtime", host: "localhost", port: "8080"}}
   end
 
   @impl true
@@ -39,7 +39,7 @@ defmodule Worker.Adapters.Runtime.Runner.Test do
 
   @impl true
   def run_function(_worker_function, _args, _runtime) do
-    {:ok, "hello"}
+    {:ok, "test-fn"}
   end
 end
 
