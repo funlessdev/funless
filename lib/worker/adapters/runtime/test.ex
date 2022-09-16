@@ -38,7 +38,7 @@ defmodule Worker.Adapters.Runtime.Runner.Test do
 
   @impl true
   def run_function(_worker_function, _args, _runtime) do
-    {:ok, "test-fn"}
+    {:ok, %{"result" => "test-output"}}
   end
 end
 

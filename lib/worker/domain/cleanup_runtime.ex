@@ -19,11 +19,10 @@ defmodule Worker.Domain.CleanupRuntime do
   @moduledoc """
   Contains functions used to remove function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
-
   alias Worker.Domain.Ports.Runtime.Cleaner
-  alias Worker.Domain.Ports.RuntimeTracker
-
   alias Worker.Domain.FunctionStruct
+
+  import Worker.Domain.Ports.RuntimeTracker, only: [get_runtimes: 1, delete_runtime: 2]
 
   require Elixir.Logger
 
@@ -41,7 +40,7 @@ defmodule Worker.Domain.CleanupRuntime do
 
   def cleanup(%{name: fname, image: _image, namespace: _namespace, code: _code} = _function) do
     fname
-    |> find_stored_runtimes
+    |> get_runtimes
     |> run_cleaner
     |> remove_runtime_from_store(fname)
   end
@@ -65,7 +64,7 @@ defmodule Worker.Domain.CleanupRuntime do
   def cleanup_all(%{name: fname, image: _image, namespace: _namespace, code: _code} = function) do
     r_list =
       fname
-      |> find_stored_runtimes
+      |> get_runtimes()
       |> run_cleaner_all
       |> remove_all_runtimes_from_store(function)
 
@@ -79,8 +78,6 @@ defmodule Worker.Domain.CleanupRuntime do
   def cleanup_all(_), do: {:error, :bad_params}
 
   # Private functions
-  defp find_stored_runtimes(function_name), do: RuntimeTracker.get_runtimes(function_name)
-
   defp run_cleaner([]) do
     Logger.error("API: Error cleaning up runtime: no runtime found to cleanup")
     {:error, "no runtime found to cleanup"}
@@ -117,7 +114,7 @@ defmodule Worker.Domain.CleanupRuntime do
   end
 
   defp remove_runtime_from_store({:ok, runtime}, function_name) do
-    case RuntimeTracker.delete_runtime(function_name, runtime) do
+    case delete_runtime(function_name, runtime) do
       {:ok, _} -> {:ok, runtime}
       {:error, err} -> {:error, err}
     end
