@@ -17,12 +17,22 @@
 #
 
 defmodule Worker.Domain.Ports.Runtime.Cleaner do
-  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 
   @callback cleanup(RuntimeStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
+  @doc """
+  Removes a runtime from the host system and stops tracking it in the RuntimeTracker.
+
+  ### Parameters
+  - `runtime` - The RuntimeStruct of the runtime to be removed.
+
+  ### Returns
+  - `{:ok, runtime}` - The RuntimeStruct of the runtime that was removed.
+  - `{:error, err}` - An error message if the runtime could not be removed.
+  """
+  @spec cleanup(RuntimeStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
   defdelegate cleanup(runtime), to: @adapter
 end
