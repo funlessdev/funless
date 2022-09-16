@@ -25,5 +25,19 @@ defmodule Worker.Domain.Ports.Runtime.Runner do
   @callback run_function(FunctionStruct.t(), any(), RuntimeStruct.t()) ::
               {:ok, any} | {:error, any}
 
+  @doc """
+  Runs a function in the given runtime.
+
+  ### Parameters
+    - function: a struct with all the fields required by Worker.Domain.Function
+    - input: the input to be passed to the function
+    - runtime: a struct with all the fields required by Worker.Domain.Runtime
+
+  ### Returns
+    - {:ok, output} if the function is successfully executed
+    - {:error, err} if any error is encountered
+  """
+  @spec run_function(FunctionStruct.t(), any(), RuntimeStruct.t()) ::
+          {:ok, any} | {:error, any}
   defdelegate run_function(fl_function, args, runtime), to: @adapter
 end

@@ -25,6 +25,31 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
   @callback prepare(FunctionStruct.t(), String.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
   @callback init(FunctionStruct.t(), RuntimeStruct.t()) :: :ok | {:error, any}
 
+  @doc """
+  Prepares a runtime for the given function.
+
+  ### Parameters
+    - function: a struct with all the fields required by Worker.Domain.Function
+    - runtime_name: the name of the runtime to be prepared
+
+  ### Returns
+    - {:ok, runtime} if the runtime is successfully prepared
+    - {:error, err} if any error is encountered
+  """
+  @spec prepare(FunctionStruct.t(), String.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
   defdelegate prepare(fl_function, runtime_name), to: @adapter
+
+  @doc """
+  Initializes a runtime for the given function.
+
+  ### Parameters
+    - function: a struct with all the fields required by Worker.Domain.Function
+    - runtime: a struct with all the fields required by Worker.Domain.Runtime
+
+  ### Returns
+    - :ok if the runtime is successfully initialized
+    - {:error, err} if any error is encountered
+  """
+  @spec init(FunctionStruct.t(), RuntimeStruct.t()) :: :ok | {:error, any}
   defdelegate init(fl_function, runtime), to: @adapter
 end
