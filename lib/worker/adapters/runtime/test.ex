@@ -25,11 +25,6 @@ defmodule Worker.Adapters.Runtime.Provisioner.Test do
   def prepare(_, _) do
     {:ok, %RuntimeStruct{name: "test-runtime", host: "localhost", port: "8080"}}
   end
-
-  @impl true
-  def init(_, _) do
-    :ok
-  end
 end
 
 defmodule Worker.Adapters.Runtime.Runner.Test do
