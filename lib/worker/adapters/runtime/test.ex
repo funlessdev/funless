@@ -35,7 +35,6 @@ end
 defmodule Worker.Adapters.Runtime.Runner.Test do
   @moduledoc false
   @behaviour Worker.Domain.Ports.Runtime.Runner
-  alias Worker.Domain.RuntimeStruct
 
   @impl true
   def run_function(_worker_function, _args, _runtime) do
@@ -46,7 +45,6 @@ end
 defmodule Worker.Adapters.Runtime.Cleaner.Test do
   @moduledoc false
   @behaviour Worker.Domain.Ports.Runtime.Cleaner
-  alias Worker.Domain.RuntimeStruct
 
   @impl true
   def cleanup(runtime) do

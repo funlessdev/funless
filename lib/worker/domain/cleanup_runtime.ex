@@ -79,9 +79,7 @@ defmodule Worker.Domain.CleanupRuntime do
   def cleanup_all(_), do: {:error, :bad_params}
 
   # Private functions
-  defp find_stored_runtimes(function_name) do
-    RuntimeTracker.get_runtimes(function_name)
-  end
+  defp find_stored_runtimes(function_name), do: RuntimeTracker.get_runtimes(function_name)
 
   defp run_cleaner([]) do
     Logger.error("API: Error cleaning up runtime: no runtime found to cleanup")

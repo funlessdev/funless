@@ -16,7 +16,7 @@
 # under the License.
 #
 
-defmodule ApiTest.CleanupTest do
+defmodule CleanupTest do
   use ExUnit.Case, async: true
 
   alias Worker.Domain.CleanupRuntime
@@ -35,7 +35,7 @@ defmodule ApiTest.CleanupTest do
     %{function: function}
   end
 
-  describe "Worker.Api cleanup" do
+  describe "Cleanup runtime requests" do
     setup do
       Worker.Cleaner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Cleaner.Test)
       Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.Test)
