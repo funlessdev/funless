@@ -19,6 +19,9 @@ defmodule Worker.Adapters.Requests.Cluster do
   @moduledoc """
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
+  alias Worker.Domain.ProvisionRuntime
+  alias Worker.Domain.InvokeFunction
+  alias Worker.Domain.CleanupRuntime
   require Logger
 
   @doc """
@@ -29,7 +32,7 @@ defmodule Worker.Adapters.Requests.Cluster do
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def prepare(function, from) do
-    # Api.Prepare.prepare_runtime(function) |> reply_to_core(from)
+    ProvisionRuntime.prepare_runtime(function) |> reply_to_core(from)
   end
 
   @doc """
@@ -43,7 +46,7 @@ defmodule Worker.Adapters.Requests.Cluster do
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def invoke(function, args, from) do
-    # Api.Invoke.invoke_function(function, args) |> reply_to_core(from)
+    InvokeFunction.invoke(function, args) |> reply_to_core(from)
   end
 
   @doc """
@@ -54,7 +57,7 @@ defmodule Worker.Adapters.Requests.Cluster do
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def cleanup(function, from) do
-    # Api.Cleanup.cleanup(function) |> reply_to_core(from)
+    CleanupRuntime.cleanup(function) |> reply_to_core(from)
   end
 
   @doc """
@@ -65,7 +68,7 @@ defmodule Worker.Adapters.Requests.Cluster do
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """
   def cleanup_all(function, from) do
-    # Api.Cleanup.cleanup_all(function) |> reply_to_core(from)
+    CleanupRuntime.cleanup_all(function) |> reply_to_core(from)
   end
 
   @doc false
