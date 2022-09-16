@@ -1,3 +1,20 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 defmodule Integration.ProvisionEtsTest do
   use ExUnit.Case
   alias Worker.Adapters.RuntimeTracker.ETS
@@ -11,11 +28,6 @@ defmodule Integration.ProvisionEtsTest do
     setup do
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
       Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.ETS)
-      :ok
-    end
-
-    test "prepare_runtime should insert runtime in storage when successfull" do
-      function = %{name: "fn", namespace: "_", image: "", code: ""}
 
       Worker.Provisioner.Mock
       |> Mox.stub(:prepare, fn _function, _runtime ->
@@ -26,6 +38,12 @@ defmodule Integration.ProvisionEtsTest do
            name: "test-runtime"
          }}
       end)
+
+      :ok
+    end
+
+    test "prepare_runtime should insert runtime in storage when successfull" do
+      function = %{name: "fn", namespace: "_", image: "", code: ""}
 
       assert ETS.get_runtimes("fn") == []
 
@@ -39,16 +57,6 @@ defmodule Integration.ProvisionEtsTest do
 
     test "multiple prepare_runtime should insert multiple runtimes in storage" do
       function = %{name: "test-fn", namespace: "_", image: "", code: ""}
-
-      Worker.Provisioner.Mock
-      |> Mox.stub(:prepare, fn _function, _runtime ->
-        {:ok,
-         %RuntimeStruct{
-           host: "127.0.0.1",
-           port: "8080",
-           name: "test-runtime"
-         }}
-      end)
 
       assert ETS.get_runtimes("test-fn") == []
 
