@@ -22,22 +22,56 @@ defmodule Worker.Domain.Ports.RuntimeTracker do
   """
   alias Worker.Domain.RuntimeStruct
 
-  @type function_name :: String.t()
-
+  @type fn_name :: String.t()
   @type runtime :: RuntimeStruct.t()
 
-  @callback get_runtimes(function_name) :: [runtime]
+  @callback get_runtimes(fn_name) :: [runtime]
 
-  # TODO: the ets tracker never returns an error and there are no error checks in domain
-  @callback insert_runtime(function_name, runtime) ::
-              {:ok, {function_name, runtime}} | {:error, any}
+  @callback insert_runtime(fn_name, runtime) ::
+              {:ok, {fn_name, runtime}} | {:error, any}
 
-  @callback delete_runtime(function_name, runtime) ::
-              {:ok, {function_name, runtime}} | {:error, any}
+  @callback delete_runtime(fn_name, runtime) ::
+              {:ok, {fn_name, runtime}} | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
+  @doc """
+  Returns a list of runtimes for a given function name.
+
+  ### Parameters
+  - `function_name` - The name of the function to get runtimes for.
+
+  ### Returns
+  - `runtimes` - A list of runtimes for the given function name.
+  """
+  @spec get_runtimes(fn_name) :: [runtime]
   defdelegate get_runtimes(function_name), to: @adapter
+
+  @doc """
+  Inserts a runtime into the RuntimeTracker associated with a function.
+
+  ### Parameters
+  - `function_name` - The name of the function to associate the runtime with.
+  - `runtime` - The RuntimeStruct of the runtime to be inserted.
+
+  ### Returns
+  - `{:ok, {function_name, runtime}}` - The function name and RuntimeStruct of the runtime that was inserted.
+  - `{:error, err}` - An error message if the runtime could not be inserted.
+  """
+  @spec insert_runtime(fn_name, runtime) :: {:ok, {fn_name, runtime}} | {:error, any}
   defdelegate insert_runtime(function_name, runtime), to: @adapter
+
+  @doc """
+  Removes a runtime associated with a function from the RuntimeTracker.
+
+  ### Parameters
+  - `function_name` - The name of the function that the runtime is associated with.
+  - `runtime` - The RuntimeStruct of the runtime to be removed.
+
+  ### Returns
+  - `{:ok, {function_name, runtime}}` - The function name and RuntimeStruct that was removed.
+  - `{:error, err}` - An error message if the runtime could not be removed.
+  """
+  @spec delete_runtime(fn_name, runtime) :: {:ok, {fn_name, runtime}} | {:error, any}
   defdelegate delete_runtime(function_name, runtime), to: @adapter
 end
