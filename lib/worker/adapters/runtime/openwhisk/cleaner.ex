@@ -16,6 +16,10 @@
 # under the License.
 #
 defmodule Worker.Adapters.Runtime.OpenWhisk.Cleaner do
+  @moduledoc """
+    Docker adapter for OpenWhisk Runtime removal.
+    The actual docker interaction is done by the Fn NIFs.
+  """
   @behaviour Worker.Domain.Ports.Runtime.Cleaner
 
   alias Worker.Adapters.Runtime.OpenWhisk.Nif

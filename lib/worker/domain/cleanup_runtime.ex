@@ -19,8 +19,8 @@ defmodule Worker.Domain.CleanupRuntime do
   @moduledoc """
   Contains functions used to remove function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
-  alias Worker.Domain.Ports.Runtime.Cleaner
   alias Worker.Domain.FunctionStruct
+  alias Worker.Domain.Ports.Runtime.Cleaner
 
   import Worker.Domain.Ports.RuntimeTracker, only: [get_runtimes: 1, delete_runtime: 2]
 

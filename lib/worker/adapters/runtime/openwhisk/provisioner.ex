@@ -16,12 +16,15 @@
 # under the License.
 #
 defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
+  @moduledoc """
+  Port for runtime manipulation.
+  """
   @behaviour Worker.Domain.Ports.Runtime.Provisioner
 
+  alias Worker.Adapters.Runtime.OpenWhisk.Nif
+  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.Ports.Runtime.Cleaner
   alias Worker.Domain.RuntimeStruct
-  alias Worker.Domain.FunctionStruct
-  alias Worker.Adapters.Runtime.OpenWhisk.Nif
 
   require Logger
 

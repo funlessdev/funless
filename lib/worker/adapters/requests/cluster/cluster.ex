@@ -19,9 +19,10 @@ defmodule Worker.Adapters.Requests.Cluster do
   @moduledoc """
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
-  alias Worker.Domain.ProvisionRuntime
-  alias Worker.Domain.InvokeFunction
   alias Worker.Domain.CleanupRuntime
+  alias Worker.Domain.InvokeFunction
+  alias Worker.Domain.ProvisionRuntime
+
   require Logger
 
   @doc """

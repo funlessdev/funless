@@ -34,7 +34,7 @@ defmodule Worker.Application do
     Supervisor.start_link(children, strategy: :rest_for_one)
   end
 
-  def docker_socket() do
+  def docker_socket do
     default = "unix:///var/run/docker.sock"
     docker_env = System.get_env("DOCKER_HOST", default)
 

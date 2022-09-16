@@ -17,9 +17,11 @@
 #
 defmodule Integration.CleanupEtsTest do
   use ExUnit.Case
+
   alias Worker.Adapters.RuntimeTracker.ETS
-  alias Worker.Domain.RuntimeStruct
   alias Worker.Domain.CleanupRuntime
+  alias Worker.Domain.RuntimeStruct
+
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!

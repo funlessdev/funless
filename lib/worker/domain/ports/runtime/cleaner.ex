@@ -17,6 +17,9 @@
 #
 
 defmodule Worker.Domain.Ports.Runtime.Cleaner do
+  @moduledoc """
+  Port for runtime removal.
+  """
   alias Worker.Domain.RuntimeStruct
 
   @callback cleanup(RuntimeStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}

@@ -17,6 +17,9 @@
 #
 
 defmodule Worker.Domain.Ports.Runtime.Runner do
+  @moduledoc """
+  Port to run functions in runtimes.
+  """
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 

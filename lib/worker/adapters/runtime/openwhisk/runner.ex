@@ -16,6 +16,9 @@
 # under the License.
 #
 defmodule Worker.Adapters.Runtime.OpenWhisk.Runner do
+  @moduledoc """
+    Adapter to invoke functions on OpenWhisk Runtimes.
+  """
   @behaviour Worker.Domain.Ports.Runtime.Runner
 
   require Logger

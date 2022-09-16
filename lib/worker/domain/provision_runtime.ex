@@ -23,6 +23,7 @@ defmodule Worker.Domain.ProvisionRuntime do
   alias Worker.Domain.Ports.Runtime.Provisioner
   alias Worker.Domain.Ports.RuntimeTracker
 
+  alias Worker.Domain.CleanupRuntime
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 
@@ -60,7 +61,7 @@ defmodule Worker.Domain.ProvisionRuntime do
 
       {:error, err} ->
         Logger.error("API: Failed to store runtime #{runtime.name} in Tracker after creation")
-        # TODO cleanup runtime
+        CleanupRuntime.cleanup(runtime)
         {:error, err}
     end
   end
