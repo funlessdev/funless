@@ -28,13 +28,6 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
 
   require Logger
 
-  @doc """
-    Checks the DOCKER_HOST environment variable for the docker socket path.
-    If an incorrect path is found, the default is used instead.
-
-    Returns the complete socket path, protocol included.
-  """
-
   @impl true
   def prepare(%FunctionStruct{} = function, runtime_name) do
     {:ok, socket} = Application.fetch_env(:worker, :docker_host)
