@@ -20,7 +20,6 @@ defmodule Worker.Application do
   @moduledoc false
   alias Worker.Adapters
   use Application
-  require Logger
 
   @impl true
   def start(_type, _args) do
@@ -33,5 +32,15 @@ defmodule Worker.Application do
     ]
 
     Supervisor.start_link(children, strategy: :rest_for_one)
+  end
+
+  def docker_socket do
+    default = "unix:///var/run/docker.sock"
+    docker_env = System.get_env("DOCKER_HOST", default)
+
+    case Regex.run(~r/^((unix|tcp|http):\/\/)(.*)$/, docker_env) do
+      nil -> default
+      [socket | _] -> socket
+    end
   end
 end

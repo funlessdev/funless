@@ -15,22 +15,35 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Worker.Adapters.Runtime.OpenWhisk.Cleaner do
+  @moduledoc """
+    Docker adapter for OpenWhisk Runtime removal.
+    The actual docker interaction is done by the Fn NIFs.
+  """
+  @behaviour Worker.Domain.Ports.Runtime.Cleaner
 
-defmodule DockerTest do
-  use ExUnit.Case
-  import Worker.Application, only: [docker_socket: 0]
+  alias Worker.Adapters.Runtime.OpenWhisk.Nif
 
-  describe "docker_socket" do
-    test "should return socket path when a valid one is present" do
-      System.put_env("DOCKER_HOST", "unix:///run/user/1001/docker.sock")
-      assert docker_socket() == "unix:///run/user/1001/docker.sock"
-      System.put_env("DOCKER_HOST", "tcp://127.0.0.1:2375")
-      assert docker_socket() == "tcp://127.0.0.1:2375"
-    end
+  require Logger
 
-    test "should return default value if an incorrect socket path is found" do
-      System.put_env("DOCKER_HOST", "test")
-      assert docker_socket() == "unix:///var/run/docker.sock"
+  @impl true
+  def cleanup(runtime) do
+    {:ok, socket} = Application.fetch_env(:worker, :docker_host)
+
+    Logger.info("OpenWhisk: Removing runtime '#{runtime.name}'")
+    Nif.cleanup_runtime(runtime.name, socket)
+
+    receive do
+      :ok ->
+        Logger.info("Runtime #{inspect(runtime)} removed")
+        {:ok, runtime}
+
+      {:error, err} ->
+        Logger.error(
+          "OpenWhisk: Error while removing runtime #{inspect(runtime)}: #{inspect(err)}"
+        )
+
+        {:error, err}
     end
   end
 end

@@ -16,15 +16,15 @@
 # under the License.
 #
 
-defmodule RuntimeTrackerTest do
+defmodule Integration.RuntimeTrackerTest do
   use ExUnit.Case
   alias Worker.Adapters.RuntimeTracker.ETS
-  alias(Worker.Domain.RuntimeStruct)
+  alias Worker.Domain.RuntimeStruct
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!
 
-  test "get_function_runtimes returns an error when no runtimes stored" do
+  test "get_function_runtimes returns an empty list when no runtimes stored" do
     result = ETS.get_runtimes("test-no-runtime")
     assert result == []
   end

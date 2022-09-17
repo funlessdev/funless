@@ -15,15 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Worker.Domain.Api.Invoke do
+defmodule Worker.Domain.InvokeFunction do
   @moduledoc """
   Contains functions used to run function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
-  alias Worker.Domain.Api.Prepare
-
-  alias Worker.Domain.Ports.Runtime
-  alias Worker.Domain.Ports.RuntimeTracker
+  alias Worker.Domain.Ports.Runtime.Runner
+  alias Worker.Domain.ProvisionRuntime
+  import Worker.Domain.Ports.RuntimeTracker, only: [get_runtimes: 1]
 
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
@@ -43,43 +42,38 @@ defmodule Worker.Domain.Api.Invoke do
       - %{...}: struct with all the fields required by Worker.Domain.Function
       - args: arguments passed to the function
   """
-  @spec invoke_function(map(), map()) :: {:ok, any} | {:error, any}
-  def invoke_function(_, args \\ %{})
+  @spec invoke(map(), map()) :: {:ok, any} | {:error, any}
+  def invoke(_, args \\ %{})
 
-  def invoke_function(%{__struct__: _s} = f, args),
-    do: invoke_function(Map.from_struct(f), args)
+  def invoke(%{__struct__: _s} = f, args), do: invoke(Map.from_struct(f), args)
 
-  def invoke_function(
-        %{name: _fname, image: _image, namespace: _namespace, code: _code} = f,
+  def invoke(
+        %{name: _fname, image: _image, namespace: _namespace, code: _code} = function,
         args
       ) do
-    function = struct(FunctionStruct, f)
-    Logger.info("API: Invoking function #{function.name}")
-    RuntimeTracker.get_runtimes(function.name) |> run_function(function, args)
+    f = struct(FunctionStruct, function)
+    Logger.info("API: Invoking function #{f.name}")
+
+    f.name
+    |> get_runtimes
+    |> run_function(f, args)
   end
 
-  def invoke_function(_, _), do: {:error, :bad_params}
+  def invoke(_, _), do: {:error, :bad_params}
 
-  @spec run_function([RuntimeStruct], FunctionStruct.t(), map()) ::
+  @spec run_function([RuntimeStruct.t()], FunctionStruct.t(), map()) ::
           {:ok, any} | {:error, any}
-  defp run_function(
-         [runtime | _],
-         %FunctionStruct{} = function,
-         args
-       ) do
+  defp run_function([runtime | _], %FunctionStruct{} = function, args) do
     Logger.info("API: Found runtime: #{runtime.name} for function #{function.name}")
-    Runtime.run_function(function, args, runtime)
+    Runner.run_function(function, args, runtime)
   end
 
-  defp run_function(
-         [],
-         %FunctionStruct{} = function,
-         args
-       ) do
+  @dialyzer {:nowarn_function, run_function: 3}
+  defp run_function([], %FunctionStruct{} = function, args) do
     Logger.warn("API: no runtime found to run function #{function.name}, creating one...")
 
-    case Prepare.prepare_runtime(function) do
-      {:ok, runtime} -> Runtime.run_function(function, args, runtime)
+    case ProvisionRuntime.prepare_runtime(function) do
+      {:ok, runtime} -> run_function([runtime], function, args)
       {:error, err} -> {:error, err}
     end
   end

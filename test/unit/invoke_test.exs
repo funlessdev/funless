@@ -16,17 +16,17 @@
 # under the License.
 #
 
-defmodule ApiTest.InvokeTest do
+defmodule InvokeTest do
   use ExUnit.Case, async: true
 
-  alias Worker.Domain.Api
+  alias Worker.Domain.InvokeFunction
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!
 
   setup_all do
     function = %{
-      name: "hellojs",
+      name: "test-ivk-fn",
       namespace: "_",
       image: "nodejs",
       code: "console.log(\"hello\")"
@@ -35,40 +35,47 @@ defmodule ApiTest.InvokeTest do
     %{function: function}
   end
 
-  describe "Worker.Api invoke" do
+  describe "Invoke requests" do
     setup do
-      Worker.Runtime.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Test)
+      Worker.Runner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Runner.Test)
+      Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
       Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.Test)
       :ok
     end
 
-    test "invoke_function should return {:ok, result map} from the called function when no error is present",
+    test "invoke should return {:ok, result map} from the called function when no error is present",
          %{function: function} do
-      assert {:ok, %{"result" => "output"}} == Api.Invoke.invoke_function(function)
+      assert {:ok, %{"result" => "test-output"}} == InvokeFunction.invoke(function)
     end
 
-    test "invoke_function should return {:error, err} when running the given function raises an error",
-         %{
-           function: function
-         } do
-      Worker.Runtime.Mock
-      |> Mox.stub(:run_function, fn _function, _args, _runtime ->
+    test "invoke should return {:error, err} when running the given function raises an error",
+         %{function: function} do
+      Worker.Runner.Mock
+      |> Mox.expect(:run_function, fn _function, _args, _runtime ->
         {:error, "generic error"}
       end)
 
-      assert {:error, "generic error"} == Api.Invoke.invoke_function(function)
+      assert {:error, "generic error"} == InvokeFunction.invoke(function)
+    end
+
+    test "invoke should call prepare when no runtime is found for the given function",
+         %{function: function} do
+      Worker.RuntimeTracker.Mock
+      |> Mox.expect(:get_runtimes, fn _ -> [] end)
+
+      Worker.Provisioner.Mock |> Mox.expect(:prepare, fn _, _ -> {:ok, %{}} end)
+
+      assert {:ok, %{"result" => "test-output"}} == InvokeFunction.invoke(function)
     end
 
     test "invoke_function should return {:error, err} when no runtime available and its creation fails",
-         %{
-           function: function
-         } do
+         %{function: function} do
       Worker.RuntimeTracker.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
 
-      Worker.Runtime.Mock
+      Worker.Provisioner.Mock
       |> Mox.expect(:prepare, fn _, _ -> {:error, "creation error"} end)
 
-      assert {:error, "creation error"} == Api.Invoke.invoke_function(function)
+      assert {:error, "creation error"} == InvokeFunction.invoke(function)
     end
   end
 end

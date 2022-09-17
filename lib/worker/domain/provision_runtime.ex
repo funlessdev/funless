@@ -15,14 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule Worker.Domain.Api.Prepare do
+defmodule Worker.Domain.ProvisionRuntime do
   @moduledoc """
   Contains functions used to create function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
-  alias Worker.Domain.Ports.Runtime
+  alias Worker.Domain.Ports.Runtime.Provisioner
   alias Worker.Domain.Ports.RuntimeTracker
 
+  alias Worker.Domain.CleanupRuntime
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 
@@ -37,23 +38,33 @@ defmodule Worker.Domain.Api.Prepare do
   - %{...}: generic struct with all the fields required by Worker.Domain.Function
   """
   @spec prepare_runtime(map()) :: {:ok, RuntimeStruct.t()} | {:error, any}
-
   def prepare_runtime(%{__struct__: _s} = f), do: prepare_runtime(Map.from_struct(f))
 
   def prepare_runtime(%{name: fname, image: _image, namespace: _namespace, code: _code} = f) do
-    ## Conversion needed to pass it to the rustler prepare_runtime function, perhaps move the conversion in cluster.ex?
+    # Conversion needed to pass it to the rustler prepare_runtime function, perhaps move the conversion in cluster.ex?
     function = struct(FunctionStruct, f)
 
     runtime_name = fname <> "-funless"
-    Runtime.prepare(function, runtime_name) |> store_prepared_runtime(fname)
+
+    Provisioner.prepare(function, runtime_name) |> store_prepared_runtime(fname)
   end
 
   def prepare_runtime(_), do: {:error, :bad_params}
 
+  @dialyzer {:nowarn_function, [store_prepared_runtime: 2]}
+  @spec store_prepared_runtime({atom(), any}, String.t()) ::
+          {:ok, RuntimeStruct.t()} | {:error, any}
   defp store_prepared_runtime({:ok, runtime}, function_name) do
-    Logger.info("API: Runtime prepared #{runtime.name}")
-    RuntimeTracker.insert_runtime(function_name, runtime)
-    {:ok, runtime}
+    case RuntimeTracker.insert_runtime(function_name, runtime) do
+      {:ok, _} ->
+        Logger.info("API: Runtime #{runtime.name} ready and tracked")
+        {:ok, runtime}
+
+      {:error, err} ->
+        Logger.error("API: Failed to store runtime #{runtime.name} in Tracker after creation")
+        CleanupRuntime.cleanup(runtime)
+        {:error, err}
+    end
   end
 
   defp store_prepared_runtime({:error, err}, _) do

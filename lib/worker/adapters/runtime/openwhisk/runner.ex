@@ -15,34 +15,30 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-defmodule Worker.Adapters.Runtime.Provisioner.Test do
-  @moduledoc false
-  @behaviour Worker.Domain.Ports.Runtime.Provisioner
-  alias Worker.Domain.RuntimeStruct
-
-  @impl true
-  def prepare(_, _) do
-    {:ok, %RuntimeStruct{name: "test-runtime", host: "localhost", port: "8080"}}
-  end
-end
-
-defmodule Worker.Adapters.Runtime.Runner.Test do
-  @moduledoc false
+defmodule Worker.Adapters.Runtime.OpenWhisk.Runner do
+  @moduledoc """
+    Adapter to invoke functions on OpenWhisk Runtimes.
+  """
   @behaviour Worker.Domain.Ports.Runtime.Runner
 
-  @impl true
-  def run_function(_worker_function, _args, _runtime) do
-    {:ok, %{"result" => "test-output"}}
-  end
-end
-
-defmodule Worker.Adapters.Runtime.Cleaner.Test do
-  @moduledoc false
-  @behaviour Worker.Domain.Ports.Runtime.Cleaner
+  require Logger
 
   @impl true
-  def cleanup(runtime) do
-    {:ok, runtime}
+  def run_function(_fl_function, args, runtime) do
+    Logger.info("OpenWhisk: Running function on runtime '#{runtime.name}'")
+    body = Jason.encode!(%{"value" => args})
+
+    request = {"http://#{runtime.host}:#{runtime.port}/run", [], ["application/json"], body}
+    response = :httpc.request(:post, request, [], [])
+
+    case response do
+      {:ok, {_, _, payload}} ->
+        Logger.info("OpenWhisk: Function executed successfully")
+        {:ok, Jason.decode!(payload)}
+
+      {:error, err} ->
+        Logger.error("OpenWhisk: Error while running function: #{inspect(err)}")
+        {:error, err}
+    end
   end
 end
