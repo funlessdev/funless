@@ -24,7 +24,7 @@ defmodule Core.Adapters.Telemetry.Native.Api do
 
   @impl true
   def resources(worker) do
-    res = :ets.lookup(:telemetry_ets_server, worker) |> Enum.map(fn {_w, r} -> r end)
+    res = :ets.lookup(:worker_resources, worker) |> Enum.map(fn {_w, r} -> r end)
 
     case res do
       [r | _] -> {:ok, r}

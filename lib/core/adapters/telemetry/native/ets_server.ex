@@ -31,7 +31,7 @@ defmodule Core.Adapters.Telemetry.Native.EtsServer do
 
   @impl true
   def init(_args) do
-    table = :ets.new(:functions_runtimes, [:set, :named_table, :protected])
+    table = :ets.new(:worker_resources, [:set, :named_table, :protected])
     Logger.info("Telemetry ETS Server: started")
     {:ok, table}
   end
