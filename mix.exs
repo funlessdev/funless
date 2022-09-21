@@ -37,7 +37,7 @@ defmodule FunlessWorker.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :inets],
+      extra_applications: [:logger, :inets, :os_mon],
       mod: {Worker.Application, []}
     ]
   end
@@ -49,6 +49,8 @@ defmodule FunlessWorker.MixProject do
       {:jason, "~> 1.3"},
       {:libcluster, "~> 3.3"},
       {:logger_file_backend, "~> 0.0.13"},
+      {:telemetry, "~> 1.1.0"},
+      {:telemetry_poller, "~> 1.0"},
 
       # Dev deps
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
