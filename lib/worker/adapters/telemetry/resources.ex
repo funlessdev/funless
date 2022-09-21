@@ -17,8 +17,15 @@
 #
 
 defmodule Worker.Adapters.Telemetry.Resources do
+  @moduledoc """
+    Contains functions used to observe system resources and emit related telemetry events.
+  """
   require Logger
 
+  @doc """
+    Measures cpu utilization, load average in the last 1/5/15 minutes, and memory utilization in the system.
+    Emits a [:worker, :resources] telemetry events, adding the current node as metadata.
+  """
   def measure_resources do
     cpu_utilization = :cpu_sup.util()
     load_avg1 = :cpu_sup.avg1() / 256
