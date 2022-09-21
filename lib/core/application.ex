@@ -34,7 +34,8 @@ defmodule Core.Application do
 
     children = [
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
-      {Bandit, plug: Core.Adapters.Requests.Http.Server, scheme: :http, options: [port: port]}
+      {Bandit, plug: Core.Adapters.Requests.Http.Server, scheme: :http, options: [port: port]},
+      {Core.Adapters.Telemetry.Native.Supervisor, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
