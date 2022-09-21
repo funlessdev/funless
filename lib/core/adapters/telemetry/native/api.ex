@@ -16,23 +16,19 @@
 # under the License.
 #
 
-import Config
+defmodule Core.Adapters.Telemetry.Native.Api do
+  @moduledoc """
+  Adapter to request telemetry data about workers.
+  """
+  @behaviour Core.Domain.Ports.Telemetry.Api
 
-config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
-config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
-config :core, Core.Domain.Ports.FunctionStorage, adapter: Core.Adapters.FunctionStorage.Mnesia
-config :core, Core.Domain.Ports.Telemetry.Api, adapter: Core.Adapters.Telemetry.Native.Api
+  @impl true
+  def resources(worker) do
+    res = :ets.lookup(:telemetry_ets_server, worker) |> Enum.map(fn {_w, r} -> r end)
 
-config :logger, :console,
-  format: "\n##### $time $metadata[$level] $levelpad$message\n",
-  metadata: [:error_code, :file, :line]
-
-config :libcluster,
-  topologies: [
-    funless: [
-      # The selected clustering strategy. Required.
-      strategy: Cluster.Strategy.Gossip
-    ]
-  ]
-
-import_config "#{Mix.env()}.exs"
+    case res do
+      [r | _] -> {:ok, r}
+      [] -> {:error, :not_found}
+    end
+  end
+end
