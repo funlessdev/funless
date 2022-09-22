@@ -16,32 +16,20 @@
 # under the License.
 #
 
-defmodule Worker.Application do
-  @moduledoc false
-  alias Worker.Adapters
-  use Application
+defmodule Worker.Adapters.Telemetry.Handler do
+  @moduledoc """
+    Contains functions to monitor telemetry events produced by the worker.
+  """
 
-  @impl true
-  def start(_type, _args) do
-    topologies = Application.get_env(:libcluster, :topologies)
-
-    children = [
-      {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
-      {Adapters.RuntimeTracker.ETS.WriteServer, []},
-      {Adapters.Requests.Cluster.Server, []},
-      {Adapters.Telemetry.Supervisor, []}
+  def setup do
+    events = [
+      [:worker, :resources]
     ]
 
-    Supervisor.start_link(children, strategy: :rest_for_one)
+    :telemetry.attach_many("worker-telemetry-handler", events, &__MODULE__.handle_event/4, nil)
   end
 
-  def docker_socket do
-    default = "unix:///var/run/docker.sock"
-    docker_env = System.get_env("DOCKER_HOST", default)
-
-    case Regex.run(~r/^((unix|tcp|http):\/\/)(.*)$/, docker_env) do
-      nil -> default
-      [socket | _] -> socket
-    end
+  def handle_event([:worker, :resources], resources, _metadata, _config) do
+    GenServer.call(:telemetry_ets_server, {:insert, :resources, resources})
   end
 end

@@ -15,33 +15,34 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Worker.Adapters.Telemetry.RequestServer do
+  @moduledoc """
+    Implements GenServer behaviour; the actor receives telemetry :pull requests, and returns the contents of the relative ETS table.
+  """
+  use GenServer, restart: :permanent
+  require Logger
 
-defmodule Worker.Application do
-  @moduledoc false
-  alias Worker.Adapters
-  use Application
-
-  @impl true
-  def start(_type, _args) do
-    topologies = Application.get_env(:libcluster, :topologies)
-
-    children = [
-      {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
-      {Adapters.RuntimeTracker.ETS.WriteServer, []},
-      {Adapters.Requests.Cluster.Server, []},
-      {Adapters.Telemetry.Supervisor, []}
-    ]
-
-    Supervisor.start_link(children, strategy: :rest_for_one)
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: :worker_telemetry)
   end
 
-  def docker_socket do
-    default = "unix:///var/run/docker.sock"
-    docker_env = System.get_env("DOCKER_HOST", default)
+  @impl true
+  def init(_args) do
+    # Process.flag(:trap_exit, true)
+    Logger.info("Telemetry Request Server: started")
+    {:ok, nil}
+  end
 
-    case Regex.run(~r/^((unix|tcp|http):\/\/)(.*)$/, docker_env) do
-      nil -> default
-      [socket | _] -> socket
-    end
+  @impl true
+  def handle_call(:pull, _from, _state) do
+    res = :ets.lookup(:worker_telemetry_ets, :resources) |> Enum.map(fn {_k, v} -> v end)
+
+    reply =
+      case res do
+        [r | _] -> {:ok, r}
+        [] -> {:error, :not_found}
+      end
+
+    {:reply, reply, nil}
   end
 end

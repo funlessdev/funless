@@ -16,32 +16,11 @@
 # under the License.
 #
 
-defmodule Worker.Application do
-  @moduledoc false
-  alias Worker.Adapters
-  use Application
+defmodule Integration.TelemetryTest do
+  use ExUnit.Case
 
-  @impl true
-  def start(_type, _args) do
-    topologies = Application.get_env(:libcluster, :topologies)
-
-    children = [
-      {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
-      {Adapters.RuntimeTracker.ETS.WriteServer, []},
-      {Adapters.Requests.Cluster.Server, []},
-      {Adapters.Telemetry.Supervisor, []}
-    ]
-
-    Supervisor.start_link(children, strategy: :rest_for_one)
-  end
-
-  def docker_socket do
-    default = "unix:///var/run/docker.sock"
-    docker_env = System.get_env("DOCKER_HOST", default)
-
-    case Regex.run(~r/^((unix|tcp|http):\/\/)(.*)$/, docker_env) do
-      nil -> default
-      [socket | _] -> socket
-    end
+  test "resource telemetry event data should be saved and accessible via Request Server" do
+    resources = GenServer.call(:worker_telemetry, :pull)
+    assert match?({:ok, %{cpu: _, load_avg: _, memory: _}}, resources)
   end
 end

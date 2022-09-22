@@ -41,4 +41,11 @@ config :libcluster,
     ]
   ]
 
+config :os_mon,
+  start_cpu_sup: true,
+  start_memsup: true,
+  start_disksup: false,
+  start_os_sup: false,
+  memsup_system_only: true
+
 import_config "#{Mix.env()}.exs"

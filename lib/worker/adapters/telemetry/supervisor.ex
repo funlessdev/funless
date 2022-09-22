@@ -16,32 +16,37 @@
 # under the License.
 #
 
-defmodule Worker.Application do
-  @moduledoc false
-  alias Worker.Adapters
-  use Application
+defmodule Worker.Adapters.Telemetry.Supervisor do
+  @moduledoc """
+    Implements Supervisor behaviour; starts the telemetry measurements, the ETS Server and the Request Server.
+  """
+  use Supervisor
+  alias Worker.Adapters.Telemetry.Handler
 
-  @impl true
-  def start(_type, _args) do
-    topologies = Application.get_env(:libcluster, :topologies)
+  require Logger
 
-    children = [
-      {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
-      {Adapters.RuntimeTracker.ETS.WriteServer, []},
-      {Adapters.Requests.Cluster.Server, []},
-      {Adapters.Telemetry.Supervisor, []}
-    ]
-
-    Supervisor.start_link(children, strategy: :rest_for_one)
+  def start_link(args) do
+    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
   end
 
-  def docker_socket do
-    default = "unix:///var/run/docker.sock"
-    docker_env = System.get_env("DOCKER_HOST", default)
+  @impl true
+  def init(_args) do
+    # Process.flag(:trap_exit, true)
+    Logger.info("Telemetry supervisor: started")
 
-    case Regex.run(~r/^((unix|tcp|http):\/\/)(.*)$/, docker_env) do
-      nil -> default
-      [socket | _] -> socket
-    end
+    children = [
+      {:telemetry_poller, measurements: periodic_measurements(), period: 2_500},
+      {Worker.Adapters.Telemetry.EtsServer, []},
+      {Worker.Adapters.Telemetry.RequestServer, []}
+    ]
+
+    Handler.setup()
+    Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  defp periodic_measurements do
+    [
+      {Worker.Adapters.Telemetry.Resources, :measure_resources, []}
+    ]
   end
 end
