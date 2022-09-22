@@ -33,9 +33,15 @@ defmodule Core.Adapters.Telemetry.Native.Supervisor do
 
     children = [
       {Core.Adapters.Telemetry.Native.EtsServer, []},
-      {Core.Adapters.Telemetry.Native.Collector, []}
+      {DynamicSupervisor,
+       strategy: :one_for_one,
+       max_restarts: 5,
+       max_seconds: 5,
+       name: Core.Adapters.Telemetry.Native.DynamicSupervisor},
+      {Registry, keys: :unique, name: Core.Adapters.Telemetry.Native.Registry},
+      {Core.Adapters.Telemetry.Native.Collector, Core.Adapters.Telemetry.Native.DynamicSupervisor}
     ]
 
-    Supervisor.init(children, strategy: :rest_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end
