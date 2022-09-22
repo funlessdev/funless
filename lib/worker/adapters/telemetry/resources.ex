@@ -28,9 +28,13 @@ defmodule Worker.Adapters.Telemetry.Resources do
   """
   def measure_resources do
     cpu_utilization = :cpu_sup.util()
+
+    # the load_avg value is divided by 256 to align it with data from software such as top
+    # erlang docs for reference: https://www.erlang.org/doc/man/cpu_sup.html
     load_avg1 = :cpu_sup.avg1() / 256
     load_avg5 = :cpu_sup.avg5() / 256
     load_avg15 = :cpu_sup.avg15() / 256
+
     memory_stats = :memsup.get_system_memory_data()
 
     {free_memory, available_memory, total_memory} =
