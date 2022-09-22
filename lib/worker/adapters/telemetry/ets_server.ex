@@ -20,7 +20,7 @@ defmodule Worker.Adapters.Telemetry.EtsServer do
     Implements GenServer behaviour; represents a process having exclusive writing rights on an underlying ETS table.
 
     The {key, value} couples are inserted or deleted by using GenServer.call() on this process; the table name is currently hardcoded to
-    :worker_telemetry.
+    :worker_telemetry_ets.
   """
   use GenServer, restart: :permanent
   require Logger
@@ -31,7 +31,7 @@ defmodule Worker.Adapters.Telemetry.EtsServer do
 
   @impl true
   def init(_args) do
-    table = :ets.new(:worker_telemetry, [:set, :named_table, :protected])
+    table = :ets.new(:worker_telemetry_ets, [:set, :named_table, :protected])
     Logger.info("Telemetry ETS Server: started")
     {:ok, table}
   end
