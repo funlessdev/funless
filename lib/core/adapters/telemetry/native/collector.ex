@@ -85,9 +85,17 @@ defmodule Core.Adapters.Telemetry.Native.Collector do
   def retrieve_information(worker) do
     receive do
       :pull ->
-        resources = GenServer.call({:worker_telemetry, worker}, :pull)
-        resources = resources |> Map.put(:timestamp, DateTime.utc_now())
-        GenServer.call(:telemetry_ets_server, {:insert, worker, resources})
+        response = GenServer.call({:worker_telemetry, worker}, :pull)
+
+        case response do
+          {:ok, res} ->
+            resources = res |> Map.put(:timestamp, DateTime.utc_now())
+            GenServer.call(:telemetry_ets_server, {:insert, worker, resources})
+
+          {:error, _} ->
+            nil
+        end
+
         Process.send_after(self(), :pull, 5_000)
         retrieve_information(worker)
     end
