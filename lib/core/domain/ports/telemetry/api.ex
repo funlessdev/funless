@@ -16,23 +16,17 @@
 # under the License.
 #
 
-import Config
+defmodule Core.Domain.Ports.Telemetry.Api do
+  @moduledoc """
+  Port for requesting telemetry information about workers.
+  """
+  @type worker :: atom()
+  @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
-config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
-config :core, Core.Domain.Ports.FunctionStorage, adapter: Core.Adapters.FunctionStorage.Mnesia
-config :core, Core.Domain.Ports.Telemetry.Api, adapter: Core.Adapters.Telemetry.Native.Api
+  @callback resources(worker) :: {:ok, any} | {:error, :not_found}
 
-config :logger, :console,
-  format: "\n##### $time $metadata[$level] $levelpad$message\n",
-  metadata: [:error_code, :file, :line]
-
-config :libcluster,
-  topologies: [
-    funless: [
-      # The selected clustering strategy. Required.
-      strategy: Cluster.Strategy.Gossip
-    ]
-  ]
-
-import_config "#{Mix.env()}.exs"
+  @doc """
+  Function to obtain resource information on a specific worker.
+  """
+  defdelegate resources(worker), to: @adapter
+end
