@@ -20,10 +20,16 @@ defmodule Core.Domain.Ports.Telemetry.Api do
   @moduledoc """
   Port for requesting telemetry information about workers.
   """
+  @type metrics :: %{
+          cpu: number(),
+          load_avg: %{l1: number(), l5: number(), l15: number()},
+          memory: %{free: number(), available: number(), total: number()}
+        }
+
   @type worker :: atom()
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback resources(worker) :: {:ok, any} | {:error, :not_found}
+  @callback resources(worker) :: {:ok, metrics} | {:error, :not_found}
 
   @doc """
   Function to obtain resource information on a specific worker.

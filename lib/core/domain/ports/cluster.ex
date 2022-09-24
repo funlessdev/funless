@@ -22,11 +22,12 @@ defmodule Core.Domain.Ports.Cluster do
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback all_nodes() :: list()
+  @callback all_nodes() :: list(atom())
 
   @doc """
   Function to obtain a list with all active nodes in the cluster,
   which can be processed to retrieve all worker nodes.
   """
+  @spec all_nodes :: list(atom())
   defdelegate all_nodes, to: @adapter
 end
