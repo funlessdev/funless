@@ -24,7 +24,7 @@ config :core, Core.Domain.Ports.FunctionStorage, adapter: Core.Adapters.Function
 config :core, Core.Domain.Ports.Telemetry.Api, adapter: Core.Adapters.Telemetry.Native.Api
 
 config :logger, :console,
-  format: "\n##### $time $metadata[$level] $levelpad$message\n",
+  format: "\n##### $time $metadata[$level] $message\n",
   metadata: [:error_code, :file, :line]
 
 config :libcluster,
