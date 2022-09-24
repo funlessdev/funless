@@ -35,10 +35,10 @@ defmodule Worker.Adapters.Telemetry.RequestServer do
 
   @impl true
   def handle_call(:pull, _from, _state) do
-    res = :ets.lookup(:worker_telemetry_ets, :resources) |> Enum.map(fn {_k, v} -> v end)
-
     reply =
-      case res do
+      :ets.lookup(:worker_telemetry_ets, :resources)
+      |> Enum.map(fn {_k, v} -> v end)
+      |> case do
         [r | _] -> {:ok, r}
         [] -> {:error, :not_found}
       end
