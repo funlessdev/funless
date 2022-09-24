@@ -15,13 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+defmodule Core.Adapters.Telemetry.Native.Test do
+  @moduledoc false
+  @behaviour Core.Domain.Ports.Telemetry.Api
 
-import Config
-
-config :core, Core.Domain.Ports.Commands, adapter: Core.Commands.Mock
-config :core, Core.Domain.Ports.Cluster, adapter: Core.Cluster.Mock
-config :core, Core.Domain.Ports.FunctionStorage, adapter: Core.FunctionStorage.Mock
-config :core, Core.Domain.Ports.Telemetry.Api, adapter: Core.Telemetry.Api.Mock
-
-# Print only errors during test
-config :logger, level: :error
+  @impl true
+  def resources(_worker) do
+    {:ok,
+     %{
+       cpu: 1,
+       load_avg: %{l1: 1, l5: 5, l15: 15},
+       memory: %{free: 20, available: 10, total: 50}
+     }}
+  end
+end
