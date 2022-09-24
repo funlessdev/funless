@@ -19,11 +19,13 @@ defmodule Core.Domain.Ports.Commands do
   @moduledoc """
   Port for sending commands to workers.
   """
+
   @type worker :: atom()
+  @type fl_function :: Core.Domain.FunctionStruct.t()
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback send_invocation_command(worker, Core.Domain.FunctionStruct.t(), map()) ::
+  @callback send_invocation_command(worker, fl_function, map()) ::
               {:ok, %{:result => String.t()}} | {:error, atom}
 
   @doc """
@@ -31,5 +33,7 @@ defmodule Core.Domain.Ports.Commands do
   It requires a worker (a fully qualified name of another node with the :worker actor on), a function struct and
   (optionally empty) function arguments.
   """
+  @spec send_invocation_command(worker, fl_function, map()) ::
+          {:ok, %{:result => String.t()}} | {:error, atom}
   defdelegate send_invocation_command(worker, function, args), to: @adapter
 end

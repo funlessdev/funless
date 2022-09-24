@@ -23,5 +23,6 @@ defmodule Core.Adapters.Cluster do
   @behaviour Core.Domain.Ports.Cluster
 
   @impl true
+  @spec all_nodes :: [atom]
   def all_nodes, do: Node.list()
 end

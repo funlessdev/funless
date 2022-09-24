@@ -21,17 +21,15 @@ defmodule Core.Domain.Ports.FunctionStorage do
   """
   alias Core.Domain.FunctionStruct
 
-  @type function_name :: String.t()
-  @type function_namespace :: String.t()
+  @type f_name :: String.t()
+  @type f_namespace :: String.t()
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback init_database([atom()]) :: :ok | {:error, any}
-  @callback get_function(function_name, function_namespace) ::
-              {:ok, FunctionStruct.t()} | {:error, any}
-  @callback insert_function(FunctionStruct.t()) :: {:ok, function_name} | {:error, any}
-  @callback delete_function(function_name, function_namespace) ::
-              {:ok, function_name} | {:error, any}
+  @callback init_database(list(atom())) :: :ok | {:error, any}
+  @callback get_function(f_name, f_namespace) :: {:ok, FunctionStruct.t()} | {:error, any}
+  @callback insert_function(FunctionStruct.t()) :: {:ok, f_name} | {:error, any}
+  @callback delete_function(f_name, f_namespace) :: {:ok, f_name} | {:error, any}
 
   @doc """
   Creates the Function database.
@@ -40,6 +38,7 @@ defmodule Core.Domain.Ports.FunctionStorage do
   ## Parameters
     - nodes: list of nodes where the database will be created
   """
+  @spec init_database(list(atom())) :: :ok | {:error, any}
   defdelegate init_database(nodes), to: @adapter
 
   @doc """
@@ -51,6 +50,7 @@ defmodule Core.Domain.Ports.FunctionStorage do
     - function_namespace: Namespace the function is in
 
   """
+  @spec get_function(f_name, f_namespace) :: {:ok, FunctionStruct.t()} | {:error, any}
   defdelegate get_function(function_name, function_namespace), to: @adapter
 
   @doc """
@@ -61,6 +61,7 @@ defmodule Core.Domain.Ports.FunctionStorage do
     - function: a FunctionStruct
 
   """
+  @spec insert_function(FunctionStruct.t()) :: {:ok, f_name} | {:error, any}
   defdelegate insert_function(function), to: @adapter
 
   @doc """
@@ -71,5 +72,6 @@ defmodule Core.Domain.Ports.FunctionStorage do
     - function_name: Name of the function, unique in a namespace
     - function_namespace: Namespace the function is in
   """
+  @spec delete_function(f_name, f_namespace) :: {:ok, f_name} | {:error, any}
   defdelegate delete_function(function_name, function_namespace), to: @adapter
 end

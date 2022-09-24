@@ -22,7 +22,14 @@ defmodule Core.Adapters.Telemetry.Native.Api do
   """
   @behaviour Core.Domain.Ports.Telemetry.Api
 
+  @type metrics :: %{
+          cpu: number(),
+          load_avg: %{l1: number(), l5: number(), l15: number()},
+          memory: %{free: number(), available: number(), total: number()}
+        }
+
   @impl true
+  @spec resources(any) :: {:ok, metrics} | {:error, :not_found}
   def resources(worker) do
     res = :ets.lookup(:worker_resources, worker) |> Enum.map(fn {_w, r} -> r end)
 
