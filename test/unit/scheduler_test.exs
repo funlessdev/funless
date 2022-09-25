@@ -50,8 +50,8 @@ defmodule SchedulerTest do
       Core.Telemetry.Api.Mock
       |> expect(:resources, 2, fn w ->
         case w do
-          :worker1 -> %{cpu: 10}
-          :worker2 -> %{cpu: 5}
+          :worker1 -> {:ok, %{cpu: 10}}
+          :worker2 -> {:ok, %{cpu: 5}}
         end
       end)
 

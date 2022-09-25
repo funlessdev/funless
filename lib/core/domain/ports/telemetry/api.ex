@@ -34,5 +34,6 @@ defmodule Core.Domain.Ports.Telemetry.Api do
   @doc """
   Function to obtain resource information on a specific worker.
   """
+  @spec resources(worker) :: {:ok, metrics} | {:error, :not_found}
   defdelegate resources(worker), to: @adapter
 end
