@@ -26,6 +26,7 @@ defmodule Core.Domain.Nodes do
   @doc """
   Obtains all nodes in the cluster and filters the ones with 'worker' as their sname.
   """
+  @spec worker_nodes :: list(atom())
   def worker_nodes do
     Cluster.all_nodes()
     |> Enum.map(&Atom.to_string(&1))
@@ -36,6 +37,7 @@ defmodule Core.Domain.Nodes do
   @doc """
   Obtains all nodes in the cluster and filters the ones with 'core' as their sname (including the current node).
   """
+  @spec core_nodes :: list(atom())
   def core_nodes do
     [
       node()
