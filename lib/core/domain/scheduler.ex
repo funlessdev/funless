@@ -41,11 +41,11 @@ defmodule Core.Domain.Scheduler do
     Logger.info("Scheduler: selection with #{length(workers)} workers")
 
     # Get the resources
-    resources = Enum.map(workers, &Api.resources/1)
-    # Couple worker -> resources
+    resources = Enum.map(workers, &Api.resources/1) |> Enum.filter(&match?({:ok, _}, &1))
+    # Couple worker -> {:ok, resources}
     workers_resources = Enum.zip(workers, resources)
-    # Get the {worker, resources} with the lowest cpu utilization
-    Enum.min_by(workers_resources, fn {_w, r} -> r.cpu end)
+    # Get the {worker, {:ok, resources} with the lowest cpu utilization
+    Enum.min_by(workers_resources, fn {_w, {:ok, r}} -> r.cpu end)
     |> elem(0)
   end
 end
