@@ -25,7 +25,7 @@ on:
 
 jobs:
   dialyzer:
-    name: Dyalzer check
+    name: Dialyzer check
     runs-on: ubuntu-latest
 
     steps:
