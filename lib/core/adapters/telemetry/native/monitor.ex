@@ -15,64 +15,77 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
 defmodule Core.Adapters.Telemetry.Native.Monitor do
   @moduledoc """
-    Implements GenServer behaviour. Represents a process periodically pulling telemetry information from a single worker.
-    This is meant to be run under a supervisor.
+    Implements GenServer behaviour.
+    Watches the status of nodes in the cluster and retrieves telemetry information from workers.
+    The GenServer state is just the name of the dynamic supervisor used for handling the various Telemetry.Native.Collector processes.
   """
   use GenServer, restart: :permanent
   require Logger
 
-  def start_link(node) do
-    GenServer.start_link(__MODULE__, node,
-      name: {:via, Registry, {Core.Adapters.Telemetry.Native.Registry, "telemetry_#{node}"}}
-    )
+  def start_link(dynamic_supervisor) do
+    GenServer.start_link(__MODULE__, dynamic_supervisor)
   end
 
   @impl true
-  def init(node) do
-    Logger.info("Telemetry Monitor: monitoring of node #{node} started")
-    send(self(), :pull)
-    {:ok, node}
+  def init(dynamic_supervisor) do
+    :net_kernel.monitor_nodes(true)
+    Logger.info("Telemetry Monitor: started")
+    {:ok, dynamic_supervisor}
   end
 
   @impl true
-  def handle_info(:pull, node) do
-    retrieve(node)
-    {:noreply, node}
+  def terminate(_reason, dynamic_supervisor) do
+    :net_kernel.monitor_nodes(false)
+
+    Node.list()
+    |> Enum.each(fn node -> terminate_child(node, dynamic_supervisor) end)
+
+    Logger.info("Telemetry Monitor: terminated")
+    :ok
   end
 
-  @doc """
-    Pulls telemetry information from the given worker node every 5s.
-  """
-  def retrieve(worker) do
-    with :ok <- find_telemetry_process(worker),
-         {:ok, metrics} <- pull_metrics(worker),
-         {:ok, _} <- save_metrics_with_timestamp(worker, metrics) do
-      Logger.info("Telemetry Monitor: metrics pulled from #{worker}")
-    else
-      {:error, reason} ->
-        Logger.warn("Telemetry Monitor: error pulling metrics #{inspect(reason)}")
-    end
-
-    Process.send_after(self(), :pull, 5_000)
-  end
-
-  defp find_telemetry_process(worker) do
-    :rpc.call(worker, Process, :whereis, [:worker_telemetry])
+  defp terminate_child(node, dynamic_supervisor) do
+    Registry.lookup(Core.Adapters.Telemetry.Native.Registry, "telemetry_#{node}")
     |> case do
-      nil -> {:error, "Telemetry process not found on #{worker}"}
-      {:badrpc, reason} -> {:error, reason}
-      _ -> :ok
+      [{pid, _} | _] -> DynamicSupervisor.terminate_child(dynamic_supervisor, pid)
+      _ -> nil
     end
   end
 
-  @spec pull_metrics(atom()) :: {:ok, map()} | {:error, :not_found}
-  defp pull_metrics(worker), do: GenServer.call({:worker_telemetry, worker}, :pull)
+  @impl true
+  def handle_info({:nodeup, node}, dynamic_supervisor) do
+    if is_worker(node) do
+      DynamicSupervisor.start_child(
+        dynamic_supervisor,
+        {Core.Adapters.Telemetry.Native.Collector, node}
+      )
 
-  defp save_metrics_with_timestamp(worker, metrics) do
-    resources = metrics |> Map.put(:timestamp, DateTime.utc_now())
-    GenServer.call(:telemetry_ets_server, {:insert, worker, resources})
+      Logger.info("Telemetry Monitor: monitoring of node #{node} started")
+    end
+
+    {:noreply, dynamic_supervisor}
+  end
+
+  @impl true
+  def handle_info({:nodedown, node}, dynamic_supervisor) do
+    Registry.lookup(Core.Adapters.Telemetry.Native.Registry, "telemetry_#{node}")
+    |> case do
+      [{pid, _} | _] -> clear_node(node, pid, dynamic_supervisor)
+      _ -> nil
+    end
+
+    {:noreply, dynamic_supervisor}
+  end
+
+  defp clear_node(node, pid, sup) do
+    GenServer.call(:telemetry_ets_server, {:delete, node})
+    DynamicSupervisor.terminate_child(sup, pid)
+    Logger.info("Telemetry Monitor: monitoring of node #{node} stopped")
+  end
+
+  defp is_worker(node) do
+    node |> Atom.to_string() |> String.contains?("worker")
   end
 end
