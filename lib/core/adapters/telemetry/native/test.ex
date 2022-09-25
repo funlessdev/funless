@@ -15,28 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-defmodule Core.Adapters.Telemetry.Native.Api do
-  @moduledoc """
-  Adapter to request telemetry data about workers.
-  """
+defmodule Core.Adapters.Telemetry.Native.Test do
+  @moduledoc false
   @behaviour Core.Domain.Ports.Telemetry.Api
 
-  @type metrics :: %{
-          cpu: number(),
-          load_avg: %{l1: number(), l5: number(), l15: number()},
-          memory: %{free: number(), available: number(), total: number()}
-        }
-
   @impl true
-  @spec resources(any) :: {:ok, metrics} | {:error, :not_found}
-  def resources(worker) do
-    worker
-    |> retrieve_metrics
-    |> extract_resources
+  def resources(_worker) do
+    {:ok,
+     %{
+       cpu: 1,
+       load_avg: %{l1: 1, l5: 5, l15: 15},
+       memory: %{free: 20, available: 10, total: 50}
+     }}
   end
-
-  defp retrieve_metrics(worker), do: :ets.lookup(:worker_resources, worker)
-  defp extract_resources([{_, r} | _]), do: {:ok, r}
-  defp extract_resources([]), do: {:error, :not_found}
 end

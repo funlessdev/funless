@@ -15,14 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-defmodule ApiTest do
-  alias Core.Domain.Api
-  alias Core.Domain.Internal.Invoker
-
+defmodule SchedulerTest do
   use ExUnit.Case, async: true
 
+  alias Core.Domain.Scheduler
+
+  import Mox
+
+  setup :verify_on_exit!
+
   describe "Scheduler" do
-    test "select should return a worker" do
+    setup do
+      Core.Telemetry.Api.Mock |> Mox.stub_with(Core.Adapters.Telemetry.Native.Test)
+      :ok
+    end
+
+    test "select should return the worker when list has only one element" do
       expected = :worker
       w_nodes = [:worker]
       workers = Scheduler.select(w_nodes)
@@ -36,6 +44,19 @@ defmodule ApiTest do
       workers = Scheduler.select(w_nodes)
 
       assert workers == expected
+    end
+
+    test "select should return worker with fewer cpu utilization" do
+      Core.Telemetry.Api.Mock
+      |> expect(:resources, 2, fn w ->
+        case w do
+          :worker1 -> %{cpu: 10}
+          :worker2 -> %{cpu: 5}
+        end
+      end)
+
+      selected = Scheduler.select([:worker1, :worker2])
+      assert selected == :worker2
     end
   end
 end

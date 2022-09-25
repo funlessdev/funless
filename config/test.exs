@@ -21,6 +21,7 @@ import Config
 config :core, Core.Domain.Ports.Commands, adapter: Core.Commands.Mock
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Cluster.Mock
 config :core, Core.Domain.Ports.FunctionStorage, adapter: Core.FunctionStorage.Mock
+config :core, Core.Domain.Ports.Telemetry.Api, adapter: Core.Telemetry.Api.Mock
 
 # Print only errors during test
 config :logger, level: :error

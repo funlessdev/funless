@@ -24,6 +24,7 @@ defmodule Core.Domain.Api.Function do
   alias Core.Domain.FunctionStruct
   alias Core.Domain.Ports.FunctionStorage
 
+  @spec new(FunctionStruct.t()) :: {:ok, %{result: String.t()}} | {:error, any}
   def new(%{"name" => name, "code" => code, "image" => image} = raw_params) do
     function = %FunctionStruct{
       name: name,
@@ -46,6 +47,7 @@ defmodule Core.Domain.Api.Function do
 
   def new(_), do: {:error, :bad_params}
 
+  @spec delete(FunctionStruct.t()) :: {:ok, %{result: String.t()}} | {:error, any}
   def delete(%{"name" => name, "namespace" => namespace}) do
     Logger.info("API: received deletion request for function #{name} in namespace #{namespace}")
     res = FunctionStorage.delete_function(name, namespace)

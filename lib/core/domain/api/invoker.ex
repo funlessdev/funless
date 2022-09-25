@@ -26,7 +26,6 @@ defmodule Core.Domain.Api.Invoker do
   alias Core.Domain.Ports.FunctionStorage
   alias Core.Domain.Scheduler
 
-  @spec invoke(map()) :: {:ok, any} | {:error, any}
   @doc """
   Sends an invocation request for the `name` function in the `ns` namespace,
   specified in the invocation parameters.
@@ -34,8 +33,9 @@ defmodule Core.Domain.Api.Invoker do
   The request is sent with the worker adapter to a worker chosen from the `worker_nodes`, if any.
 
   ## Parameters
-    - ivk_params: a map with namespace name, function name and a map of args.
+  - ivk_params: a map with namespace name, function name and a map of args.
   """
+  @spec invoke(map()) :: {:ok, any} | {:error, any}
   def invoke(%{"function" => f} = raw_params) do
     # not pretty, but we avoid calling Map.keys() on each invocation
     keys = ["function", "namespace", "args"]

@@ -18,7 +18,7 @@
 
 defmodule Core.Adapters.Telemetry.Native.Supervisor do
   @moduledoc """
-    Implements Supervisor behaviour; starts both the collector and the ETS server for handling worker telemetry information.
+    Implements Supervisor behaviour; starts both the Monitor and the ETS server for handling worker telemetry information.
   """
   use Supervisor
   require Logger
@@ -39,7 +39,7 @@ defmodule Core.Adapters.Telemetry.Native.Supervisor do
        max_seconds: 5,
        name: Core.Adapters.Telemetry.Native.DynamicSupervisor},
       {Registry, keys: :unique, name: Core.Adapters.Telemetry.Native.Registry},
-      {Core.Adapters.Telemetry.Native.Collector, Core.Adapters.Telemetry.Native.DynamicSupervisor}
+      {Core.Adapters.Telemetry.Native.Monitor, Core.Adapters.Telemetry.Native.DynamicSupervisor}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
