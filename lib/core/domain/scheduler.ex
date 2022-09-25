@@ -20,18 +20,32 @@ defmodule Core.Domain.Scheduler do
   Scheduler for the funless platform. It is used to choose a worker to run a function.
   """
 
+  alias Core.Domain.Ports.Telemetry.Api
   require Logger
 
   @doc """
   Receives a list of workers and chooses one which can be used for invocation.
   """
+  @spec select(list()) :: atom()
   def select([]) do
     Logger.warn("Scheduler: tried selection with NO workers")
     :no_workers
   end
 
-  def select([first_w | _] = workers) do
-    Logger.info("Scheduler: selecting between workers #{inspect(workers)}")
-    first_w
+  def select([w]) do
+    Logger.info("Scheduler: selection with only one worker #{inspect(w)}")
+    w
+  end
+
+  def select(workers) do
+    Logger.info("Scheduler: selection with #{length(workers)} workers")
+
+    # Get the resources
+    resources = Enum.map(workers, &Api.resources/1)
+    # Couple worker -> resources
+    workers_resources = Enum.zip(workers, resources)
+    # Get the {worker, resources} with the lowest cpu utilization
+    Enum.min_by(workers_resources, fn {_w, r} -> r.cpu end)
+    |> elem(0)
   end
 end
