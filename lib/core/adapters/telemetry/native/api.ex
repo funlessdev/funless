@@ -31,11 +31,12 @@ defmodule Core.Adapters.Telemetry.Native.Api do
   @impl true
   @spec resources(any) :: {:ok, metrics} | {:error, :not_found}
   def resources(worker) do
-    res = :ets.lookup(:worker_resources, worker) |> Enum.map(fn {_w, r} -> r end)
-
-    case res do
-      [r | _] -> {:ok, r}
-      [] -> {:error, :not_found}
-    end
+    worker
+    |> retrieve_metrics
+    |> extract_resources
   end
+
+  defp retrieve_metrics(worker), do: :ets.lookup(:worker_resources, worker)
+  defp extract_resources([{_, r} | _]), do: {:ok, r}
+  defp extract_resources([]), do: {:error, :not_found}
 end

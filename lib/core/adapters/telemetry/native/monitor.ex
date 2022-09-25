@@ -16,7 +16,7 @@
 # under the License.
 #
 
-defmodule Core.Adapters.Telemetry.Native.InformationRetriever do
+defmodule Core.Adapters.Telemetry.Native.Monitor do
   @moduledoc """
     Implements GenServer behaviour. Represents a process periodically pulling telemetry information from a single worker.
     This is meant to be run under a supervisor.
@@ -26,46 +26,53 @@ defmodule Core.Adapters.Telemetry.Native.InformationRetriever do
 
   def start_link(node) do
     GenServer.start_link(__MODULE__, node,
-      name:
-        {:via, Registry,
-         {Core.Adapters.Telemetry.Native.Registry, "telemetry_information_#{node}"}}
+      name: {:via, Registry, {Core.Adapters.Telemetry.Native.Registry, "telemetry_#{node}"}}
     )
   end
 
   @impl true
   def init(node) do
-    Logger.info("Telemetry Information Retriever: monitoring of node #{node} started")
+    Logger.info("Telemetry Monitor: monitoring of node #{node} started")
     send(self(), :pull)
     {:ok, node}
   end
 
   @impl true
   def handle_info(:pull, node) do
-    retrieve_information(node)
+    retrieve(node)
     {:noreply, node}
   end
 
   @doc """
     Pulls telemetry information from the given worker node every 5s.
   """
-  def retrieve_information(worker) do
-    if :rpc.call(worker, Process, :whereis, [:worker_telemetry]) != nil do
-      response = GenServer.call({:worker_telemetry, worker}, :pull)
-
-      case response do
-        {:ok, res} ->
-          resources = res |> Map.put(:timestamp, DateTime.utc_now())
-          GenServer.call(:telemetry_ets_server, {:insert, worker, resources})
-
-        {:error, _} ->
-          nil
-      end
+  def retrieve(worker) do
+    with :ok <- find_telemetry_process(worker),
+         {:ok, metrics} <- pull_metrics(worker),
+         {:ok, _} <- save_metrics_with_timestamp(worker, metrics) do
+      Logger.info("Telemetry Monitor: metrics pulled from #{worker}")
     else
-      Logger.warn(
-        "Telemetry Information Retriever: no worker_telemetry process found for #{worker}"
-      )
+      {:error, reason} ->
+        Logger.warn("Telemetry Monitor: error pulling metrics #{inspect(reason)}")
     end
 
     Process.send_after(self(), :pull, 5_000)
+  end
+
+  defp find_telemetry_process(worker) do
+    :rpc.call(worker, Process, :whereis, [:worker_telemetry])
+    |> case do
+      nil -> {:error, "Telemetry process not found on #{worker}"}
+      {:badrpc, reason} -> {:error, reason}
+      _ -> :ok
+    end
+  end
+
+  @spec pull_metrics(atom()) :: {:ok, map()} | {:error, :not_found}
+  defp pull_metrics(worker), do: GenServer.call({:worker_telemetry, worker}, :pull)
+
+  defp save_metrics_with_timestamp(worker, metrics) do
+    resources = metrics |> Map.put(:timestamp, DateTime.utc_now())
+    GenServer.call(:telemetry_ets_server, {:insert, worker, resources})
   end
 end
