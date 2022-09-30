@@ -21,17 +21,19 @@ defmodule Worker.Domain.RuntimeStruct do
     Runtime struct, passed to adapters.
 
     ## Fields
-      - name: runtime name
-      - host: runtime IP address
-      - port: runtime port
+      - name: runtime name, used with Docker runtimes
+      - host: runtime IP address, used with Docker runtimes
+      - port: runtime port, used with Docker runtimes
+      - wasm: WebAssembly code of a function, used with WebAssembly runtimes
   """
   @type t :: %__MODULE__{
           name: String.t(),
           host: String.t(),
-          port: String.t()
+          port: String.t(),
+          wasm: binary()
         }
   @enforce_keys [:name]
-  defstruct [:name, :host, :port]
+  defstruct [:name, :host, :port, :wasm]
 end
 
 defmodule Worker.Domain.FunctionStruct do
@@ -50,6 +52,6 @@ defmodule Worker.Domain.FunctionStruct do
           code: String.t(),
           namespace: String.t()
         }
-  @enforce_keys [:name, :image, :code, :namespace]
+  @enforce_keys [:name, :namespace]
   defstruct [:name, :image, :code, :namespace]
 end
