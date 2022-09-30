@@ -33,7 +33,7 @@ defmodule Worker.Domain.RuntimeStruct do
           wasm: binary()
         }
   @enforce_keys [:name]
-  defstruct [:name, :host, :port, :wasm]
+  defstruct [:name, :host, :port, wasm: <<>>]
 end
 
 defmodule Worker.Domain.FunctionStruct do
