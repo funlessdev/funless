@@ -16,12 +16,12 @@
 # under the License.
 #
 [package]
-name = "fn"
+name = "fn_docker"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "fn"
+name = "fn_docker"
 path = "src/init.rs"
 crate-type = ["cdylib", "lib"]
 
