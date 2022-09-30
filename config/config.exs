@@ -19,13 +19,11 @@
 import Config
 
 config :worker, Worker.Domain.Ports.Runtime.Provisioner,
-  adapter: Worker.Adapters.Runtime.OpenWhisk.Provisioner
+  adapter: Worker.Adapters.Runtime.Wasm.Provisioner
 
-config :worker, Worker.Domain.Ports.Runtime.Runner,
-  adapter: Worker.Adapters.Runtime.OpenWhisk.Runner
+config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Adapters.Runtime.Wasm.Runner
 
-config :worker, Worker.Domain.Ports.Runtime.Cleaner,
-  adapter: Worker.Adapters.Runtime.OpenWhisk.Cleaner
+config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Adapters.Runtime.Wasm.Cleaner
 
 config :worker, Worker.Domain.Ports.RuntimeTracker, adapter: Worker.Adapters.RuntimeTracker.ETS
 
