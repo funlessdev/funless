@@ -12,9 +12,9 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
   def run_function(_fl_function, args, %{wasm: wasm} = _runtime) do
     Logger.info("Wasm: Running function on WebAssembly runtime")
 
-    response = Nif.run_function(wasm, args)
+    Nif.run_function(wasm, args)
 
-    case response do
+    receive do
       {:ok, payload} ->
         Logger.info("Wasm: Function executed successfully")
         {:ok, Jason.decode!(payload)}
