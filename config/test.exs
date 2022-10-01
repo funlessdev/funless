@@ -20,4 +20,14 @@ config :core, Core.Domain.Ports.FunctionStorage, adapter: Core.FunctionStorage.M
 config :core, Core.Domain.Ports.Telemetry.Api, adapter: Core.Telemetry.Api.Mock
 
 # Print only errors during test
-config :logger, level: :error
+config :logger, level: :warn
+
+# We don't run a server during test. If one is required,
+# you can enable the server option below.
+config :core_web, CoreWeb.Endpoint,
+  http: [ip: {127, 0, 0, 1}, port: 4002],
+  secret_key_base: "qUx9qUZ2rw23iFpaaPtFTwDhcULosXXK5l/wAv3o4MSHS0WYWNFC7D4v6m2e1pX7",
+  server: false
+
+# Initialize plugs at runtime for faster test compilation
+config :phoenix, :plug_init_mode, :runtime

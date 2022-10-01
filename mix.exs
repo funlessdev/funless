@@ -12,54 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.MixProject do
+defmodule Core.Umbrella.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :core,
+      apps_path: "apps",
       version: "0.3.0",
-      elixir: "~> 1.13",
-      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
-        plt_add_apps: [:ex_unit, :mix]
+        plt_add_apps: [:ex_unit, :mix, :mnesia],
+        flags: ["-Wunmatched_returns", :error_handling, :underspecs]
       ],
-      deps: deps()
+      deps: deps(),
+      aliases: aliases()
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
-  def application do
-    [
-      extra_applications: [:logger, :mnesia],
-      mod: {Core.Application, []},
-      start_phases: [
-        init_db: Mix.env()
-      ]
-    ]
-  end
-
-  # Run "mix help deps" to learn about dependencies.
+  # Dependencies listed here are available only for this project
+  # and cannot be accessed from applications inside the apps/ folder.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.2"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "x.x.x"}
-      # {:rustler, "~> 0.25.0"},
-      {:plug, "~> 1.13"},
-      {:bandit, "~> 0.5.0"},
-      {:jason, "~> 1.3"},
-      {:libcluster, "~> 3.3"},
-      {:logger_file_backend, "~> 0.0.13"},
-      # dev deps
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:mox, "~> 1.0", only: :test},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
 
-  defp elixirc_paths(:test), do: ["test/support", "lib"]
-  defp elixirc_paths(_), do: ["lib"]
+  # Aliases are shortcuts or tasks specific to the current project.
+  # For example, to install project dependencies and perform other setup tasks, run:
+  #
+  #     $ mix setup
+  #
+  # See the documentation for `Mix` for more info on aliases.
+  #
+  # Aliases listed here are available only for this project
+  # and cannot be accessed from applications inside the apps/ folder.
+  defp aliases do
+    [
+      # run `mix setup` in all child apps
+      setup: ["cmd mix setup"]
+    ]
+  end
 end
