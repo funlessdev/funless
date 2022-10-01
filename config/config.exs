@@ -19,9 +19,10 @@ config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
 config :core, Core.Domain.Ports.FunctionStorage, adapter: Core.Adapters.FunctionStorage.Mnesia
 config :core, Core.Domain.Ports.Telemetry.Api, adapter: Core.Adapters.Telemetry.Native.Api
 
+# Configures Elixir's Logger
 config :logger, :console,
-  format: "\n##### $time $metadata[$level] $message\n",
-  metadata: [:error_code, :file, :line]
+  format: "$time $metadata[$level] $message\n",
+  metadata: [:request_id, :file, :line]
 
 config :libcluster,
   topologies: [
@@ -31,4 +32,19 @@ config :libcluster,
     ]
   ]
 
-import_config "#{Mix.env()}.exs"
+config :core_web,
+  generators: [context_app: :core]
+
+# Configures the endpoint
+config :core_web, CoreWeb.Endpoint,
+  url: [host: "localhost"],
+  render_errors: [view: CoreWeb.ErrorView, accepts: ~w(json), layout: false],
+  pubsub_server: Core.PubSub,
+  live_view: [signing_salt: "sRzweIOe"]
+
+# Use Jason for JSON parsing in Phoenix
+config :phoenix, :json_library, Jason
+
+# Import environment specific config. This must remain at the bottom
+# of this file so it overrides the configuration defined above.
+import_config "#{config_env()}.exs"
