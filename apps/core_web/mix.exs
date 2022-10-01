@@ -1,16 +1,17 @@
-defmodule Core.MixProject do
+defmodule CoreWeb.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :core,
-      version: "0.3.0",
+      app: :core_web,
+      version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -22,11 +23,8 @@ defmodule Core.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Core.Application, []},
-      extra_applications: [:logger, :mnesia, :runtime_tools],
-      start_phases: [
-        init_db: Mix.env()
-      ]
+      mod: {CoreWeb.Application, []},
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -39,17 +37,14 @@ defmodule Core.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:plug, "~> 1.13"},
-      {:bandit, "~> 0.5.0"},
-      {:jason, "~> 1.3"},
-      {:libcluster, "~> 3.3"},
-      {:logger_file_backend, "~> 0.0.13"},
-
-      # dev deps
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:mox, "~> 1.0", only: :test},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
+      {:phoenix, "~> 1.6.11"},
+      {:phoenix_live_dashboard, "~> 0.6"},
+      {:telemetry_metrics, "~> 0.6"},
+      {:telemetry_poller, "~> 1.0"},
+      {:gettext, "~> 0.18"},
+      {:core, in_umbrella: true},
+      {:jason, "~> 1.2"},
+      {:plug_cowboy, "~> 2.5"}
     ]
   end
 
