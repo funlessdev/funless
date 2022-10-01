@@ -27,14 +27,14 @@ defmodule Core.Adapters.Telemetry.Native.Monitor do
 
   @impl true
   def init(dynamic_supervisor) do
-    :net_kernel.monitor_nodes(true)
+    _ = :net_kernel.monitor_nodes(true)
     Logger.info("Telemetry Monitor: started")
     {:ok, dynamic_supervisor}
   end
 
   @impl true
   def terminate(_reason, dynamic_supervisor) do
-    :net_kernel.monitor_nodes(false)
+    _ = :net_kernel.monitor_nodes(false)
 
     Node.list()
     |> Enum.each(fn node -> terminate_child(node, dynamic_supervisor) end)
@@ -54,10 +54,11 @@ defmodule Core.Adapters.Telemetry.Native.Monitor do
   @impl true
   def handle_info({:nodeup, node}, dynamic_supervisor) do
     if is_worker(node) do
-      DynamicSupervisor.start_child(
-        dynamic_supervisor,
-        {Core.Adapters.Telemetry.Native.Collector, node}
-      )
+      _ =
+        DynamicSupervisor.start_child(
+          dynamic_supervisor,
+          {Core.Adapters.Telemetry.Native.Collector, node}
+        )
 
       Logger.info("Telemetry Monitor: monitoring of node #{node} started")
     end
@@ -77,8 +78,8 @@ defmodule Core.Adapters.Telemetry.Native.Monitor do
   end
 
   defp clear_node(node, pid, sup) do
-    GenServer.call(:telemetry_ets_server, {:delete, node})
-    DynamicSupervisor.terminate_child(sup, pid)
+    _ = GenServer.call(:telemetry_ets_server, {:delete, node})
+    _ = DynamicSupervisor.terminate_child(sup, pid)
     Logger.info("Telemetry Monitor: monitoring of node #{node} stopped")
   end
 

@@ -22,7 +22,8 @@ defmodule Core.Umbrella.MixProject do
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
-        plt_add_apps: [:ex_unit, :mix]
+        plt_add_apps: [:ex_unit, :mix, :mnesia],
+        flags: ["-Wunmatched_returns", :error_handling, :underspecs]
       ],
       deps: deps(),
       aliases: aliases()
@@ -32,7 +33,10 @@ defmodule Core.Umbrella.MixProject do
   # Dependencies listed here are available only for this project
   # and cannot be accessed from applications inside the apps/ folder.
   defp deps do
-    []
+    [
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
+    ]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

@@ -45,6 +45,8 @@ defmodule CoreWeb.MixProject do
       {:core, in_umbrella: true},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"}
+
+      # dev deps
     ]
   end
 

@@ -1,4 +1,8 @@
 defmodule CoreWeb.Telemetry do
+  @moduledoc """
+  Telemetry module for Core Web API
+  """
+
   use Supervisor
   import Telemetry.Metrics
 

@@ -46,10 +46,7 @@ defmodule Core.MixProject do
       {:logger_file_backend, "~> 0.0.13"},
 
       # dev deps
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:mox, "~> 1.0", only: :test},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 
