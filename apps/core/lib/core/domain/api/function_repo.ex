@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Domain.Api.Function do
+defmodule Core.Domain.Api.FunctionRepo do
   @moduledoc """
   Provides functions to interact with creation and deletion of FunctionStruct on FunctionStorage.
   """
@@ -30,13 +30,10 @@ defmodule Core.Domain.Api.Function do
       code: code
     }
 
-    Logger.info(
-      "API: received creation request for function #{function.name} in namespace #{function.namespace}"
-    )
+    Logger.info("API: creation request for function #{name} in namespace #{function.namespace}")
 
-    res = FunctionStorage.insert_function(function)
-
-    case res do
+    FunctionStorage.insert_function(function)
+    |> case do
       {:ok, function_name} -> {:ok, %{result: function_name}}
       err -> err
     end
@@ -46,7 +43,7 @@ defmodule Core.Domain.Api.Function do
 
   @spec delete(FunctionStruct.t()) :: {:ok, %{result: String.t()}} | {:error, any}
   def delete(%{"name" => name, "namespace" => namespace}) do
-    Logger.info("API: received deletion request for function #{name} in namespace #{namespace}")
+    Logger.info("API: deletion request for function #{name} in namespace #{namespace}")
     res = FunctionStorage.delete_function(name, namespace)
 
     case res do
