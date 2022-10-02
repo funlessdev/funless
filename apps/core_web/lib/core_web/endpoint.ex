@@ -24,7 +24,7 @@ defmodule CoreWeb.Endpoint do
     signing_salt: "8P0asjT/"
   ]
 
-  socket("/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]])
+  # socket("/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]])
 
   # Serve at "/" the static files from "priv/static" directory.
   #
