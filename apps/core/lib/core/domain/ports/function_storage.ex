@@ -25,7 +25,7 @@ defmodule Core.Domain.Ports.FunctionStorage do
 
   @callback init_database(list(atom())) :: :ok | {:error, any}
   @callback get_function(f_name, f_namespace) :: {:ok, FunctionStruct.t()} | {:error, any}
-  @callback insert_function(FunctionStruct.t()) :: {:ok, f_name} | {:error, any}
+  @callback insert_function(FunctionStruct.t()) :: {:ok, f_name} | {:error, {:aborted, any}}
   @callback delete_function(f_name, f_namespace) :: {:ok, f_name} | {:error, any}
 
   @doc """
@@ -57,8 +57,11 @@ defmodule Core.Domain.Ports.FunctionStorage do
   ## Parameters
     - function: a FunctionStruct
 
+  ## Returns
+    - {:ok, function_name}: if the function was successfully stored.
+    - {:error, {:aborted, reason}}: if the function could not be stored.
   """
-  @spec insert_function(FunctionStruct.t()) :: {:ok, f_name} | {:error, any}
+  @spec insert_function(FunctionStruct.t()) :: {:ok, f_name} | {:error, {:aborted, any}}
   defdelegate insert_function(function), to: @adapter
 
   @doc """

@@ -21,7 +21,19 @@ defmodule Core.Domain.Api.FunctionRepo do
   alias Core.Domain.FunctionStruct
   alias Core.Domain.Ports.FunctionStorage
 
-  @spec new(FunctionStruct.t()) :: {:ok, %{result: String.t()}} | {:error, any}
+  @doc """
+  Creates a new functions and stores it on FunctionStorage.
+
+  ## Parameters
+  - `function`: FunctionStruct to be stored.
+
+  ## Returns
+  - `{:ok, %{"result" => function_name}}`: if the function was successfully stored.
+  - `{:error, :bad_params}`: if the function is not a valid FunctionStruct.
+  - `{:error, {:aborted, reason}}`: if the function could not be stored.
+  """
+  @spec new(FunctionStruct.t()) ::
+          {:ok, %{result: String.t()}} | {:error, :bad_params} | {:error, {:bad_insert, any}}
   def new(%{"name" => name, "code" => code, "image" => image} = raw_params) do
     function = %FunctionStruct{
       name: name,
@@ -34,8 +46,12 @@ defmodule Core.Domain.Api.FunctionRepo do
 
     FunctionStorage.insert_function(function)
     |> case do
-      {:ok, function_name} -> {:ok, %{result: function_name}}
-      err -> err
+      {:ok, function_name} ->
+        {:ok, %{"result" => function_name}}
+
+      {:error, {:aborted, reason}} ->
+        Logger.warn("API: creation request for function #{name} failed: #{inspect(reason)}")
+        {:error, {:bad_insert, reason}}
     end
   end
 
@@ -47,7 +63,7 @@ defmodule Core.Domain.Api.FunctionRepo do
     res = FunctionStorage.delete_function(name, namespace)
 
     case res do
-      {:ok, function_name} -> {:ok, %{result: function_name}}
+      {:ok, function_name} -> {:ok, %{"result" => function_name}}
       err -> err
     end
   end
