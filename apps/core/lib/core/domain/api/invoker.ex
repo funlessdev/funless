@@ -21,6 +21,7 @@ defmodule Core.Domain.Api.Invoker do
   alias Core.Domain.Nodes
   alias Core.Domain.Ports.Commands
   alias Core.Domain.Ports.FunctionStorage
+  alias Core.Domain.ResultStruct
   alias Core.Domain.Scheduler
 
   @doc """
@@ -31,9 +32,16 @@ defmodule Core.Domain.Api.Invoker do
 
   ## Parameters
   - ivk_params: a map with namespace name, function name and a map of args.
+
+  ## Returns
+  - {:ok, result} if the invocation was successful, where result is the function result.
+  - {:error, :bad_params} if the invocation was requested with invalid invocation parameters.
+  - {:error, :not_found} if the function was not found.
+  - {:error, :no_workers} if no workers are available.
+  - {:error, :worker_error} if the worker returned an error.
   """
   @spec invoke(map()) ::
-          {:ok, any}
+          {:ok, ResultStruct.t()}
           | {:error, :bad_params}
           | {:error, :not_found}
           | {:error, :no_workers}

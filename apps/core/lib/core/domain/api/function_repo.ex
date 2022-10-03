@@ -20,6 +20,7 @@ defmodule Core.Domain.Api.FunctionRepo do
   require Logger
   alias Core.Domain.FunctionStruct
   alias Core.Domain.Ports.FunctionStorage
+  alias Core.Domain.ResultStruct
 
   @doc """
   Creates a new functions and stores it on FunctionStorage.
@@ -33,7 +34,7 @@ defmodule Core.Domain.Api.FunctionRepo do
   - `{:error, {:aborted, reason}}`: if the function could not be stored.
   """
   @spec new(FunctionStruct.t()) ::
-          {:ok, %{result: String.t()}} | {:error, :bad_params} | {:error, {:bad_insert, any}}
+          {:ok, ResultStruct.t()} | {:error, :bad_params} | {:error, {:bad_insert, any}}
   def new(%{"name" => name, "code" => code, "image" => image} = raw_params) do
     function = %FunctionStruct{
       name: name,
@@ -57,7 +58,7 @@ defmodule Core.Domain.Api.FunctionRepo do
 
   def new(_), do: {:error, :bad_params}
 
-  @spec delete(FunctionStruct.t()) :: {:ok, %{result: String.t()}} | {:error, any}
+  @spec delete(FunctionStruct.t()) :: {:ok, ResultStruct.t()} | {:error, any}
   def delete(%{"name" => name, "namespace" => namespace}) do
     Logger.info("API: deletion request for function #{name} in namespace #{namespace}")
     res = FunctionStorage.delete_function(name, namespace)

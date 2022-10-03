@@ -49,3 +49,14 @@ defmodule Core.Domain.InvokeParams do
   @enforce_keys [:function]
   defstruct [:function, namespace: "_", args: %{}]
 end
+
+defmodule Core.Domain.ResultStruct do
+  @moduledoc """
+  Result struct used for operation results (create/invoke/delete).
+  """
+  @type t :: %__MODULE__{
+          result: any
+        }
+  @enforce_keys [:result]
+  defstruct [:result]
+end
