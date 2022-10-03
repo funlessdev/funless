@@ -15,6 +15,7 @@
 defmodule ApiTest.FunctionTest do
   alias Core.Domain.Api
   alias Core.Domain.FunctionStruct
+  alias Core.Domain.ResultStruct
 
   use ExUnit.Case, async: true
   import Mox, only: [verify_on_exit!: 1]
@@ -38,7 +39,7 @@ defmodule ApiTest.FunctionTest do
         "image" => "nodejs"
       }
 
-      assert Api.FunctionRepo.new(f) == {:ok, %{"result" => "hello"}}
+      assert Api.FunctionRepo.new(f) == {:ok, %ResultStruct{result: "hello"}}
     end
 
     test "new_function should return {:error, :bad_params} when the given parameter map lacks the necessary keys" do
@@ -66,12 +67,12 @@ defmodule ApiTest.FunctionTest do
       end)
       |> Mox.expect(:insert_function, 0, fn _ -> {:error, "some error"} end)
 
-      assert Api.FunctionRepo.new(f) == {:ok, %{"result" => "hello"}}
+      assert Api.FunctionRepo.new(f) == {:ok, %ResultStruct{result: "hello"}}
     end
 
     test "delete_function should return {:ok, %{result => function_name}} when no error occurs" do
       assert Api.FunctionRepo.delete(%{"name" => "hello", "namespace" => "ns"}) ==
-               {:ok, %{"result" => "hello"}}
+               {:ok, %ResultStruct{result: "hello"}}
     end
 
     test "delete_function should return {:error, :bad_params}  when the given parameter map lacks the necessary keys" do

@@ -48,10 +48,10 @@ defmodule Core.Domain.Api.FunctionRepo do
     FunctionStorage.insert_function(function)
     |> case do
       {:ok, function_name} ->
-        {:ok, %{"result" => function_name}}
+        {:ok, %ResultStruct{result: function_name}}
 
       {:error, {:aborted, reason}} ->
-        Logger.warn("API: create request for function #{name} failed: #{inspect(reason)}")
+        Logger.error("API: create request for function #{name} failed: #{inspect(reason)}")
         {:error, {:bad_insert, reason}}
     end
   end
@@ -76,10 +76,10 @@ defmodule Core.Domain.Api.FunctionRepo do
 
     case res do
       {:ok, function_name} ->
-        {:ok, %{"result" => function_name}}
+        {:ok, %ResultStruct{result: function_name}}
 
       {:error, {:aborted, reason}} ->
-        Logger.warn("API: delete request for function #{name} failed: #{inspect(reason)}")
+        Logger.error("API: delete request for function #{name} failed: #{inspect(reason)}")
         {:error, {:bad_delete, reason}}
     end
   end

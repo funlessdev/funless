@@ -82,9 +82,7 @@ defmodule HttpServerTest.InvokeTest do
       conn = Server.call(conn, @opts)
 
       # Assert the response and status
-      Common.assert_http_response(conn, 200, %{
-        "result" => %{"result" => "Hello, World!"}
-      })
+      Common.assert_http_response(conn, 200, %{"result" => "Hello, World!"})
     end
 
     test "should return 400 bad request when bad parameters" do

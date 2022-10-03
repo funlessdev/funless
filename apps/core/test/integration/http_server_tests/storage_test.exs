@@ -17,6 +17,8 @@ defmodule HttpServerTest.FunctionStorageTest do
   import Mox, only: [verify_on_exit!: 1]
   use Plug.Test
 
+  alias Core.Domain.ResultStruct
+
   alias Core.Adapters.Requests.Http.Server
 
   @opts Core.Adapters.Requests.Http.Server.init([])
@@ -44,9 +46,7 @@ defmodule HttpServerTest.FunctionStorageTest do
       conn = Server.call(conn, @opts)
 
       # Assert the response and status
-      Common.assert_http_response(conn, 200, %{
-        "result" => "hello"
-      })
+      Common.assert_http_response(conn, 200, %{"result" => "hello"})
     end
 
     test "/create should return 400 when given bad parameters" do
@@ -99,9 +99,7 @@ defmodule HttpServerTest.FunctionStorageTest do
       conn = Server.call(conn, @opts)
 
       # Assert the response and status
-      Common.assert_http_response(conn, 200, %{
-        "result" => "hello"
-      })
+      Common.assert_http_response(conn, 200, %{"result" => "hello"})
     end
 
     test "/delete should return 400 when given bad parameters" do
