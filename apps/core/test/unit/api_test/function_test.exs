@@ -15,6 +15,7 @@
 defmodule ApiTest.FunctionTest do
   alias Core.Domain.Api
   alias Core.Domain.FunctionStruct
+  alias Core.Domain.ResultStruct
 
   use ExUnit.Case, async: true
   import Mox, only: [verify_on_exit!: 1]
@@ -38,12 +39,12 @@ defmodule ApiTest.FunctionTest do
         "image" => "nodejs"
       }
 
-      assert Api.Function.new(f) == {:ok, %{result: "hello"}}
+      assert Api.FunctionRepo.new(f) == {:ok, %ResultStruct{result: "hello"}}
     end
 
     test "new_function should return {:error, :bad_params} when the given parameter map lacks the necessary keys" do
       f = %{"name" => "hello", "code" => "some code"}
-      assert Api.Function.new(f) == {:error, :bad_params}
+      assert Api.FunctionRepo.new(f) == {:error, :bad_params}
     end
 
     test "new_function should return {:ok, %{result: function_name}} and ignore unused parameters in the input map when unnecessary keys are given" do
@@ -66,16 +67,16 @@ defmodule ApiTest.FunctionTest do
       end)
       |> Mox.expect(:insert_function, 0, fn _ -> {:error, "some error"} end)
 
-      assert Api.Function.new(f) == {:ok, %{result: "hello"}}
+      assert Api.FunctionRepo.new(f) == {:ok, %ResultStruct{result: "hello"}}
     end
 
-    test "delete_function should return {:ok, %{result: function_name}} when no error occurs" do
-      assert Api.Function.delete(%{"name" => "hello", "namespace" => "ns"}) ==
-               {:ok, %{result: "hello"}}
+    test "delete_function should return {:ok, %{result => function_name}} when no error occurs" do
+      assert Api.FunctionRepo.delete(%{"name" => "hello", "namespace" => "ns"}) ==
+               {:ok, %ResultStruct{result: "hello"}}
     end
 
     test "delete_function should return {:error, :bad_params}  when the given parameter map lacks the necessary keys" do
-      assert Api.Function.delete(%{"namespace" => "ns"}) == {:error, :bad_params}
+      assert Api.FunctionRepo.delete(%{"namespace" => "ns"}) == {:error, :bad_params}
     end
   end
 end

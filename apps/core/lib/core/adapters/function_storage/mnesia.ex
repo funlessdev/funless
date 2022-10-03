@@ -52,7 +52,7 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
   end
 
   @impl true
-  @spec get_function(String.t(), String.t()) :: {:ok, FunctionStruct.t()} | {:error, any}
+  @spec get_function(String.t(), String.t()) :: {:ok, FunctionStruct.t()} | {:error, :not_found}
   def get_function(function_name, function_namespace) do
     case :mnesia.dirty_read(Function, {function_name, function_namespace}) do
       [] -> {:error, :not_found}
@@ -61,7 +61,7 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
   end
 
   @impl true
-  @spec insert_function(FunctionStruct.t()) :: {:ok, String.t()} | {:error, any}
+  @spec insert_function(FunctionStruct.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
   def insert_function(%FunctionStruct{name: name, namespace: namespace} = function) do
     data = fn ->
       :mnesia.write({Function, {name, namespace}, Map.from_struct(function)})
@@ -74,7 +74,7 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
   end
 
   @impl true
-  @spec delete_function(String.t(), String.t()) :: {:ok, String.t()} | {:error, any}
+  @spec delete_function(String.t(), String.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
   def delete_function(function_name, function_namespace) do
     data = fn ->
       :mnesia.delete({Function, {function_name, function_namespace}})

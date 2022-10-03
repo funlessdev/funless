@@ -36,7 +36,6 @@ defmodule CoreWeb do
       use Phoenix.Controller, namespace: CoreWeb
 
       import Plug.Conn
-      import CoreWeb.Gettext
       alias CoreWeb.Router.Helpers, as: Routes
     end
   end
@@ -68,7 +67,6 @@ defmodule CoreWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      import CoreWeb.Gettext
     end
   end
 
@@ -78,7 +76,6 @@ defmodule CoreWeb do
       import Phoenix.View
 
       import CoreWeb.ErrorHelpers
-      import CoreWeb.Gettext
       alias CoreWeb.Router.Helpers, as: Routes
     end
   end

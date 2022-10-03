@@ -16,8 +16,10 @@ defmodule Core.Adapters.Commands.Test do
   @moduledoc false
   @behaviour Core.Domain.Ports.Commands
 
+  alias Core.Domain.ResultStruct
+
   @impl true
   def send_invocation_command(_worker, function, _args) do
-    {:ok, %{result: function.name}}
+    {:ok, %ResultStruct{result: function.name}}
   end
 end

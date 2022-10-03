@@ -21,6 +21,7 @@ defmodule Core.Domain.Api.Invoker do
   alias Core.Domain.Nodes
   alias Core.Domain.Ports.Commands
   alias Core.Domain.Ports.FunctionStorage
+  alias Core.Domain.ResultStruct
   alias Core.Domain.Scheduler
 
   @doc """
@@ -31,8 +32,20 @@ defmodule Core.Domain.Api.Invoker do
 
   ## Parameters
   - ivk_params: a map with namespace name, function name and a map of args.
+
+  ## Returns
+  - {:ok, result} if the invocation was successful, where result is the function result.
+  - {:error, :bad_params} if the invocation was requested with invalid invocation parameters.
+  - {:error, :not_found} if the function was not found.
+  - {:error, :no_workers} if no workers are available.
+  - {:error, :worker_error} if the worker returned an error.
   """
-  @spec invoke(map()) :: {:ok, any} | {:error, any}
+  @spec invoke(InvokeParams.t()) ::
+          {:ok, ResultStruct.t()}
+          | {:error, :bad_params}
+          | {:error, :not_found}
+          | {:error, :no_workers}
+          | {:error, :worker_error}
   def invoke(%{"function" => f} = raw_params) do
     # not pretty, but we avoid calling Map.keys() on each invocation
     keys = ["function", "namespace", "args"]
@@ -43,11 +56,18 @@ defmodule Core.Domain.Api.Invoker do
     ivk_params = struct(InvokeParams, parsed_params)
     Logger.info("API: received invocation for function #{f} with params #{inspect(ivk_params)}")
 
-    Nodes.worker_nodes() |> Scheduler.select() |> invoke_on_chosen(ivk_params)
+    Nodes.worker_nodes()
+    |> Scheduler.select()
+    |> invoke_on_chosen(ivk_params)
   end
 
   def invoke(_), do: {:error, :bad_params}
 
+  @spec invoke_on_chosen(atom(), InvokeParams.t()) ::
+          {:ok, ResultStruct.t()}
+          | {:error, :not_found}
+          | {:error, :no_workers}
+          | {:error, :worker_error}
   defp invoke_on_chosen(:no_workers, _) do
     Logger.warn("API: no workers found")
     {:error, :no_workers}
@@ -71,6 +91,8 @@ defmodule Core.Domain.Api.Invoker do
     end
   end
 
+  @spec parse_wrk_reply({:ok, ResultStruct.t()} | {:error, any}) ::
+          {:ok, ResultStruct.t()} | {:error, :worker_error}
   defp parse_wrk_reply({:ok, _} = reply) do
     Logger.info("API: received success reply from worker")
     reply

@@ -14,7 +14,7 @@
 
 import Config
 
-config :libcluster, debug: true
+config :libcluster, debug: false
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
@@ -27,7 +27,7 @@ config :core_web, CoreWeb.Endpoint,
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {127, 0, 0, 1}, port: 4000],
   check_origin: false,
-  code_reloader: true,
+  code_reloader: false,
   debug_errors: true,
   secret_key_base: "YQWoCfQDbuv2yB8YdF+TXhDHI+9T3wJj0W1iT0A0yg+i7f0I0jyo3mtUvULET37c",
   watchers: []

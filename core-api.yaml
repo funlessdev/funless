@@ -17,6 +17,7 @@ info:
   title: Funless Platfom API
   description: The API for the Funless Platform
   version: "1.0"
+
 components:
   schemas:
     function_invocation:
@@ -86,7 +87,7 @@ components:
           description: The error message
 
 paths:
-  /invoke:
+  /fn/invoke:
     post:
       summary: Invoke a function
       description: >-
@@ -142,7 +143,7 @@ paths:
               examples:
                 Invocation with no workers:
                   value: '{"error": "Failed to invoke function: no worker available"}'
-  /create:
+  /fn/create:
     post:
       summary: Create a new function
       description: >-
@@ -177,15 +178,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/function_creation_error"
-  /delete:
-    post:
+  /fn/delete:
+    delete:
       summary: Delete a function
       description: >-
-        Deletes the function with the given name and namespace, extracted from the POST body
+        Deletes the function with the given name and namespace in the request body
       requestBody:
         required: true
         description: >-
-          Object containing the name and namespace of the function to delete
+          Object containing the function's name and namespace to delete
         content:
           application/json:
             schema:
@@ -214,6 +215,6 @@ paths:
                 $ref: "#/components/schemas/function_deletion_error"
 
 servers:
-  - url: http://localhost:4001
+  - url: http://localhost:4000
     variables: {}
     description: The dev server for the funless core launched locally

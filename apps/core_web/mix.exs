@@ -51,16 +51,13 @@ defmodule CoreWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:core, in_umbrella: true},
       {:phoenix, "~> 1.6.11"},
       {:phoenix_live_dashboard, "~> 0.6"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.18"},
-      {:core, in_umbrella: true},
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"}
-
-      # dev deps
+      {:bandit, ">= 0.5.6"}
     ]
   end
 
