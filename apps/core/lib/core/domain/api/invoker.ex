@@ -40,7 +40,7 @@ defmodule Core.Domain.Api.Invoker do
   - {:error, :no_workers} if no workers are available.
   - {:error, :worker_error} if the worker returned an error.
   """
-  @spec invoke(map()) ::
+  @spec invoke(InvokeParams.t()) ::
           {:ok, ResultStruct.t()}
           | {:error, :bad_params}
           | {:error, :not_found}
@@ -64,7 +64,10 @@ defmodule Core.Domain.Api.Invoker do
   def invoke(_), do: {:error, :bad_params}
 
   @spec invoke_on_chosen(atom(), InvokeParams.t()) ::
-          {:ok, any} | {:error, :not_found} | {:error, :no_workers} | {:error, :worker_error}
+          {:ok, ResultStruct.t()}
+          | {:error, :not_found}
+          | {:error, :no_workers}
+          | {:error, :worker_error}
   defp invoke_on_chosen(:no_workers, _) do
     Logger.warn("API: no workers found")
     {:error, :no_workers}
@@ -88,7 +91,8 @@ defmodule Core.Domain.Api.Invoker do
     end
   end
 
-  @spec parse_wrk_reply(any()) :: {:ok, any} | {:error, :worker_error}
+  @spec parse_wrk_reply({:ok, ResultStruct.t()} | {:error, any}) ::
+          {:ok, ResultStruct.t()} | {:error, :worker_error}
   defp parse_wrk_reply({:ok, _} = reply) do
     Logger.info("API: received success reply from worker")
     reply

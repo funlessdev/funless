@@ -163,7 +163,8 @@ defmodule Core.Adapters.Requests.Http.Server do
     send_resp(conn, 404, body)
   end
 
-  defp reply_to_client({:error, {:aborted, reason}}, conn) do
+  defp reply_to_client({:error, {err, reason}}, conn)
+       when err == :bad_insert or err == :bad_delete do
     body =
       Jason.encode!(%{
         "error" =>

@@ -23,7 +23,7 @@ defmodule Core.Domain.Api.FunctionRepo do
   alias Core.Domain.ResultStruct
 
   @doc """
-  Creates a new functions and stores it on FunctionStorage.
+  Stores a new function in the FunctionStorage.
 
   ## Parameters
   - `function`: FunctionStruct to be stored.
@@ -43,7 +43,7 @@ defmodule Core.Domain.Api.FunctionRepo do
       code: code
     }
 
-    Logger.info("API: creation request for function #{name} in namespace #{function.namespace}")
+    Logger.info("API: create request for function #{name} in namespace #{function.namespace}")
 
     FunctionStorage.insert_function(function)
     |> case do
@@ -51,21 +51,36 @@ defmodule Core.Domain.Api.FunctionRepo do
         {:ok, %{"result" => function_name}}
 
       {:error, {:aborted, reason}} ->
-        Logger.warn("API: creation request for function #{name} failed: #{inspect(reason)}")
+        Logger.warn("API: create request for function #{name} failed: #{inspect(reason)}")
         {:error, {:bad_insert, reason}}
     end
   end
 
   def new(_), do: {:error, :bad_params}
 
-  @spec delete(FunctionStruct.t()) :: {:ok, ResultStruct.t()} | {:error, any}
+  @doc """
+  Deletes a function from the FunctionStorage.
+
+  ## Parameters
+  - function: The function struct with the name and namespace of the function to delete.
+
+  ## Returns
+  - `{:ok, %{"result" => function_name}}`: if the function was successfully deleted.
+  - `{:error, :bad_params}`: if the function is not a valid FunctionStruct.
+  - `{:error, {:bad_delete, reason}}`: if the function could not be deleted.
+  """
+  @spec delete(FunctionStruct.t()) :: {:ok, ResultStruct.t()} | {:error, {:bad_delete, any}}
   def delete(%{"name" => name, "namespace" => namespace}) do
-    Logger.info("API: deletion request for function #{name} in namespace #{namespace}")
+    Logger.info("API: delete request for function #{name} in namespace #{namespace}")
     res = FunctionStorage.delete_function(name, namespace)
 
     case res do
-      {:ok, function_name} -> {:ok, %{"result" => function_name}}
-      err -> err
+      {:ok, function_name} ->
+        {:ok, %{"result" => function_name}}
+
+      {:error, {:aborted, reason}} ->
+        Logger.warn("API: delete request for function #{name} failed: #{inspect(reason)}")
+        {:error, {:bad_delete, reason}}
     end
   end
 
