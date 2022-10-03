@@ -38,7 +38,7 @@ defmodule Worker.Domain.CleanupRuntime do
   @spec cleanup(map()) :: {:ok, String.t()} | {:error, any}
   def cleanup(%{__struct__: _s} = function), do: cleanup(Map.from_struct(function))
 
-  def cleanup(%{name: fname, image: _image, namespace: _namespace, code: _code} = _function) do
+  def cleanup(%{name: fname, namespace: _namespace} = _function) do
     fname
     |> get_runtimes
     |> run_cleaner
@@ -61,7 +61,7 @@ defmodule Worker.Domain.CleanupRuntime do
 
   def cleanup_all(%{__struct__: _s} = function), do: cleanup_all(Map.from_struct(function))
 
-  def cleanup_all(%{name: fname, image: _image, namespace: _namespace, code: _code} = function) do
+  def cleanup_all(%{name: fname, namespace: _namespace} = function) do
     r_list =
       fname
       |> get_runtimes()

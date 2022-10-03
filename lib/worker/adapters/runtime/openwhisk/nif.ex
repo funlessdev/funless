@@ -19,7 +19,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Nif do
   @moduledoc """
   NIFs used to manipulate docker OpenWhisk runtimes.
   """
-  use Rustler, otp_app: :worker, crate: :fn
+  use Rustler, otp_app: :worker, crate: :fn_docker
 
   #   Creates the `_runtime_name` container, with information taken from `_function`.
   #   ## Parameters

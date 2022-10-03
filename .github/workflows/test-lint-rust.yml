@@ -34,12 +34,12 @@ jobs:
 
       - name: Build FN rust module
         run: cargo build --verbose
-        working-directory: native/fn
+        working-directory: native/fn_docker
 
       - name: Run cargo clippy on FN
         run: cargo clippy --verbose
-        working-directory: native/fn
+        working-directory: native/fn_docker
 
       - name: Run FN tests
         run: cargo test --verbose
-        working-directory: native/fn
+        working-directory: native/fn_docker

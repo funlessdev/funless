@@ -40,7 +40,7 @@ defmodule Worker.Domain.ProvisionRuntime do
   @spec prepare_runtime(map()) :: {:ok, RuntimeStruct.t()} | {:error, any}
   def prepare_runtime(%{__struct__: _s} = f), do: prepare_runtime(Map.from_struct(f))
 
-  def prepare_runtime(%{name: fname, image: _image, namespace: _namespace, code: _code} = f) do
+  def prepare_runtime(%{name: fname, namespace: _namespace} = f) do
     # Conversion needed to pass it to the rustler prepare_runtime function, perhaps move the conversion in cluster.ex?
     function = struct(FunctionStruct, f)
 

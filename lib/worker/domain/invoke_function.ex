@@ -48,7 +48,7 @@ defmodule Worker.Domain.InvokeFunction do
   def invoke(%{__struct__: _s} = f, args), do: invoke(Map.from_struct(f), args)
 
   def invoke(
-        %{name: _fname, image: _image, namespace: _namespace, code: _code} = function,
+        %{name: _fname, namespace: _namespace} = function,
         args
       ) do
     f = struct(FunctionStruct, function)
