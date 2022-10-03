@@ -24,9 +24,9 @@ defmodule Core.Domain.Ports.FunctionStorage do
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @callback init_database(list(atom())) :: :ok | {:error, any}
-  @callback get_function(f_name, f_namespace) :: {:ok, FunctionStruct.t()} | {:error, any}
+  @callback get_function(f_name, f_namespace) :: {:ok, FunctionStruct.t()} | {:error, :not_found}
   @callback insert_function(FunctionStruct.t()) :: {:ok, f_name} | {:error, {:aborted, any}}
-  @callback delete_function(f_name, f_namespace) :: {:ok, f_name} | {:error, any}
+  @callback delete_function(f_name, f_namespace) :: {:ok, f_name} | {:error, {:aborted, any}}
 
   @doc """
   Creates the Function database.
@@ -47,7 +47,7 @@ defmodule Core.Domain.Ports.FunctionStorage do
     - function_namespace: Namespace the function is in
 
   """
-  @spec get_function(f_name, f_namespace) :: {:ok, FunctionStruct.t()} | {:error, any}
+  @spec get_function(f_name, f_namespace) :: {:ok, FunctionStruct.t()} | {:error, :not_found}
   defdelegate get_function(function_name, function_namespace), to: @adapter
 
   @doc """
@@ -72,6 +72,6 @@ defmodule Core.Domain.Ports.FunctionStorage do
     - function_name: Name of the function, unique in a namespace
     - function_namespace: Namespace the function is in
   """
-  @spec delete_function(f_name, f_namespace) :: {:ok, f_name} | {:error, any}
+  @spec delete_function(f_name, f_namespace) :: {:ok, f_name} | {:error, {:aborted, any}}
   defdelegate delete_function(function_name, function_namespace), to: @adapter
 end
