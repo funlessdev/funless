@@ -28,7 +28,7 @@ defmodule Core.Domain.Api.FunctionRepo do
   - `function`: FunctionStruct to be stored.
 
   ## Returns
-  - `{:ok, %{result: function_name}}`: if the function was successfully stored.
+  - `{:ok, function_name}`: if the function was successfully stored.
   - `{:error, :bad_params}`: if the function is not a valid FunctionStruct.
   - `{:error, {:aborted, reason}}`: if the function could not be stored.
   """
@@ -58,11 +58,12 @@ defmodule Core.Domain.Api.FunctionRepo do
   - function: The function struct with the name and namespace of the function to delete.
 
   ## Returns
-  - `{:ok, %{"result" => function_name}}`: if the function was successfully deleted.
+  - `{:ok, function_name}`: if the function was successfully deleted.
   - `{:error, :bad_params}`: if the function is not a valid FunctionStruct.
   - `{:error, {:bad_delete, reason}}`: if the function could not be deleted.
   """
-  @spec delete(FunctionStruct.t()) :: {:ok, String.t()} | {:error, {:bad_delete, any}}
+  @spec delete(FunctionStruct.t()) ::
+          {:ok, String.t()} | {:error, :bad_params} | {:error, {:bad_delete, any}}
   def delete(%{"name" => name, "namespace" => namespace}) do
     Logger.info("API: delete request for function #{name} in namespace #{namespace}")
 
