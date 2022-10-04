@@ -52,13 +52,13 @@ defmodule CoreWeb.FnFallbackController do
     conn
     |> put_status(:service_unavailable)
     |> put_view(CoreWeb.ErrorView)
-    |> render("create_db_aborted.json", reason: reason)
+    |> render("db_aborted.json", action: "create", reason: reason)
   end
 
   def call(conn, {:error, {:bad_delete, reason}}) do
     conn
     |> put_status(:service_unavailable)
     |> put_view(CoreWeb.ErrorView)
-    |> render("delete_db_aborted.json", reason: reason)
+    |> render("delete_db_aborted.json", action: "delete", reason: reason)
   end
 end

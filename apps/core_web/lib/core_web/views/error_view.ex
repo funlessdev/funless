@@ -32,19 +32,8 @@ defmodule CoreWeb.ErrorView do
     %{errors: %{detail: "Failed to perform operation: bad request"}}
   end
 
-  def render("create_db_aborted.json", %{reason: reason}) do
-    %{
-      errors: %{
-        detail: "Failed to create new function: database error because #{reason}"
-      }
-    }
-  end
-
-  def render("delete_db_aborted.json", %{reason: reason}) do
-    %{
-      errors: %{
-        detail: "Failed to delete function: database error because #{reason}"
-      }
-    }
+  def render("db_aborted.json", %{action: action, reason: reason}) do
+    message = "Failed to #{action} function: database error because #{reason}"
+    %{errors: %{detail: message}}
   end
 end
