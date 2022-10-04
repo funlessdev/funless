@@ -16,10 +16,31 @@ defmodule CoreWeb.FnControllerTest do
   use CoreWeb.ConnCase, async: true
 
   describe "POST /v1/fn/create" do
-    test "error: does not create, returns 400 when given invalid params", %{conn: conn} do
+    test "error: should returns 400 when given invalid params", %{conn: conn} do
       conn = post(conn, "/v1/fn/create", %{bad: "params"})
 
       assert body = json_response(conn, 400)
+
+      actual_errors = body["errors"]
+      refute Enum.empty?(actual_errors)
+
+      expected_error_keys = ["detail"]
+
+      assert expected_error_keys == Map.keys(actual_errors)
+    end
+
+    test "error: should return 503 when the underlying storage transaction fails", %{conn: conn} do
+      Core.FunctionStorage.Mock
+      |> Mox.expect(:insert_function, fn _ -> {:error, {:aborted, "some reason"}} end)
+
+      conn =
+        post(conn, "/v1/fn/create", %{
+          "name" => "hello",
+          "namespace" => "ns",
+          "code" => "some code"
+        })
+
+      assert body = json_response(conn, 503)
 
       actual_errors = body["errors"]
       refute Enum.empty?(actual_errors)

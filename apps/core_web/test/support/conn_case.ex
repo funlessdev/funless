@@ -37,6 +37,7 @@ defmodule CoreWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import CoreWeb.ConnCase
+      import Mox
 
       alias CoreWeb.Router.Helpers, as: Routes
 
@@ -46,6 +47,7 @@ defmodule CoreWeb.ConnCase do
   end
 
   setup _tags do
+    Mox.verify_on_exit!()
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end
