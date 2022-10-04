@@ -29,18 +29,18 @@ defmodule Core.Domain.Api.FunctionRepo do
   - `function`: FunctionStruct to be stored.
 
   ## Returns
-  - `{:ok, %{"result" => function_name}}`: if the function was successfully stored.
+  - `{:ok, %{result: function_name}}`: if the function was successfully stored.
   - `{:error, :bad_params}`: if the function is not a valid FunctionStruct.
   - `{:error, {:aborted, reason}}`: if the function could not be stored.
   """
   @spec new(FunctionStruct.t()) ::
           {:ok, ResultStruct.t()} | {:error, :bad_params} | {:error, {:bad_insert, any}}
-  def new(%{"name" => name, "code" => code, "image" => image} = raw_params) do
+  def new(%{"name" => name, "code" => code} = raw_params) do
     function = %FunctionStruct{
       name: name,
       namespace: raw_params["namespace"] || "_",
-      image: image,
-      code: code
+      code: code,
+      image: raw_params["image"] || "_"
     }
 
     Logger.info("API: create request for function #{name} in namespace #{function.namespace}")
