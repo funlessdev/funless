@@ -35,19 +35,18 @@ defmodule ApiTest.FunctionTest do
       f = %{
         "name" => "hello",
         "namespace" => "ns",
-        "code" => "console.log(\"hello\")",
-        "image" => "nodejs"
+        "code" => "console.log(\"hello\")"
       }
 
-      assert Api.FunctionRepo.new(f) == {:ok, %ResultStruct{result: "hello"}}
+      assert Api.FunctionRepo.new(f) == {:ok, "hello"}
     end
 
     test "new_function should return {:error, :bad_params} when the given parameter map lacks the necessary keys" do
-      f = %{"name" => "hello", "code" => "some code"}
+      f = %{"name" => "hello"}
       assert Api.FunctionRepo.new(f) == {:error, :bad_params}
     end
 
-    test "new_function should return {:ok, %{result: function_name}} and ignore unused parameters in the input map when unnecessary keys are given" do
+    test "new_function should return {:ok, function_name} and ignore unused parameters in the input map when unnecessary keys are given" do
       f = %{
         "name" => "hello",
         "code" => "some code",
@@ -67,12 +66,12 @@ defmodule ApiTest.FunctionTest do
       end)
       |> Mox.expect(:insert_function, 0, fn _ -> {:error, "some error"} end)
 
-      assert Api.FunctionRepo.new(f) == {:ok, %ResultStruct{result: "hello"}}
+      assert Api.FunctionRepo.new(f) == {:ok, "hello"}
     end
 
     test "delete_function should return {:ok, %{result => function_name}} when no error occurs" do
       assert Api.FunctionRepo.delete(%{"name" => "hello", "namespace" => "ns"}) ==
-               {:ok, %ResultStruct{result: "hello"}}
+               {:ok, "hello"}
     end
 
     test "delete_function should return {:error, :bad_params}  when the given parameter map lacks the necessary keys" do
