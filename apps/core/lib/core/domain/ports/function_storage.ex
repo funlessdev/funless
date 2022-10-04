@@ -18,15 +18,14 @@ defmodule Core.Domain.Ports.FunctionStorage do
   """
   alias Core.Domain.FunctionStruct
 
-  @type f_name :: String.t()
-  @type f_namespace :: String.t()
-
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @callback init_database(list(atom())) :: :ok | {:error, any}
-  @callback get_function(f_name, f_namespace) :: {:ok, FunctionStruct.t()} | {:error, :not_found}
-  @callback insert_function(FunctionStruct.t()) :: {:ok, f_name} | {:error, {:aborted, any}}
-  @callback delete_function(f_name, f_namespace) :: {:ok, f_name} | {:error, {:aborted, any}}
+  @callback get_function(String.t(), String.t()) ::
+              {:ok, FunctionStruct.t()} | {:error, :not_found}
+  @callback insert_function(FunctionStruct.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
+  @callback delete_function(String.t(), String.t()) ::
+              {:ok, String.t()} | {:error, {:aborted, any}}
 
   @doc """
   Creates the Function database.
@@ -46,8 +45,11 @@ defmodule Core.Domain.Ports.FunctionStorage do
     - function_name: Name of the function, unique in a namespace
     - function_namespace: Namespace the function is in
 
+  ## Returns
+    - {:ok, function}: if the function was found
+    - {:error, :not_found}: if the function was not found
   """
-  @spec get_function(f_name, f_namespace) :: {:ok, FunctionStruct.t()} | {:error, :not_found}
+  @spec get_function(String.t(), String.t()) :: {:ok, FunctionStruct.t()} | {:error, :not_found}
   defdelegate get_function(function_name, function_namespace), to: @adapter
 
   @doc """
@@ -61,7 +63,7 @@ defmodule Core.Domain.Ports.FunctionStorage do
     - {:ok, function_name}: if the function was successfully stored.
     - {:error, {:aborted, reason}}: if the function could not be stored.
   """
-  @spec insert_function(FunctionStruct.t()) :: {:ok, f_name} | {:error, {:aborted, any}}
+  @spec insert_function(FunctionStruct.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
   defdelegate insert_function(function), to: @adapter
 
   @doc """
@@ -71,7 +73,11 @@ defmodule Core.Domain.Ports.FunctionStorage do
   ## Parameters
     - function_name: Name of the function, unique in a namespace
     - function_namespace: Namespace the function is in
+
+  ## Returns
+    - {:ok, function_name}: if the function was successfully deleted.
+    - {:error, {:aborted, reason}}: if the function could not be deleted.
   """
-  @spec delete_function(f_name, f_namespace) :: {:ok, f_name} | {:error, {:aborted, any}}
+  @spec delete_function(String.t(), String.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
   defdelegate delete_function(function_name, function_namespace), to: @adapter
 end
