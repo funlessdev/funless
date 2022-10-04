@@ -37,6 +37,8 @@ defmodule CoreWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import CoreWeb.ConnCase
+
+      import Support.AssertionHelpers
       import Mox
 
       alias CoreWeb.Router.Helpers, as: Routes
