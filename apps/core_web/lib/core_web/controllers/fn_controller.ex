@@ -20,8 +20,8 @@ defmodule CoreWeb.FnController do
   action_fallback(CoreWeb.FnFallbackController)
 
   def create(conn, params) do
-    with {:ok, result} <- FunctionRepo.new(params) do
-      render(conn, "create.json", result)
+    with {:ok, function_name} <- FunctionRepo.new(params) do
+      render(conn, "create.json", function_name: function_name)
     end
   end
 end

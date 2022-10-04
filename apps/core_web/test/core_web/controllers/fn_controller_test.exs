@@ -16,17 +16,35 @@ defmodule CoreWeb.FnControllerTest do
   use CoreWeb.ConnCase, async: true
 
   describe "POST /v1/fn/create" do
+    setup do
+      Core.FunctionStorage.Mock
+      |> Mox.stub_with(Core.Adapters.FunctionStorage.Test)
+
+      :ok
+    end
+
+    test "success: should return 200 when the creation is successful", %{conn: conn} do
+      conn =
+        conn
+        |> post("/v1/fn/create", %{
+          "name" => "hello",
+          "namespace" => "ns",
+          "code" => "some code"
+        })
+
+      assert body = json_response(conn, 200)
+      expected_keys = ["result"]
+
+      assert_json_has_correct_keys(actual: body, expected: expected_keys)
+    end
+
     test "error: should returns 400 when given invalid params", %{conn: conn} do
       conn = post(conn, "/v1/fn/create", %{bad: "params"})
 
       assert body = json_response(conn, 400)
-
-      actual_errors = body["errors"]
-      refute Enum.empty?(actual_errors)
-
       expected_error_keys = ["detail"]
 
-      assert expected_error_keys == Map.keys(actual_errors)
+      assert_json_has_correct_keys(actual: body["errors"], expected: expected_error_keys)
     end
 
     test "error: should return 503 when the underlying storage transaction fails", %{conn: conn} do
@@ -41,13 +59,9 @@ defmodule CoreWeb.FnControllerTest do
         })
 
       assert body = json_response(conn, 503)
-
-      actual_errors = body["errors"]
-      refute Enum.empty?(actual_errors)
-
       expected_error_keys = ["detail"]
 
-      assert expected_error_keys == Map.keys(actual_errors)
+      assert_json_has_correct_keys(actual: body["errors"], expected: expected_error_keys)
     end
   end
 end
