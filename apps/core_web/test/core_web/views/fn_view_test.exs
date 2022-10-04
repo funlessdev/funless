@@ -22,4 +22,9 @@ defmodule CoreWeb.FnViewTest do
     result = render(CoreWeb.FnView, "create.json", %{function_name: "test"})
     assert result == %{result: "test"}
   end
+
+  test "delete.json" do
+    result = render(CoreWeb.FnView, "delete.json", %{function_name: "test"})
+    assert result == %{result: "test"}
+  end
 end

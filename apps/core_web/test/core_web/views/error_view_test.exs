@@ -27,12 +27,12 @@ defmodule CoreWeb.ErrorViewTest do
              %{errors: %{detail: "Internal Server Error"}}
   end
 
-  test "renders create_bad_request.json" do
+  test "renders bad_request.json" do
     out = %{
-      errors: %{detail: "Failed to create new function: bad request"}
+      errors: %{detail: "Failed to perform operation: bad request"}
     }
 
-    assert render(CoreWeb.ErrorView, "create_bad_request.json", []) == out
+    assert render(CoreWeb.ErrorView, "bad_request.json", []) == out
   end
 
   test "renders create_db_aborted.json" do
@@ -43,5 +43,15 @@ defmodule CoreWeb.ErrorViewTest do
     }
 
     assert render(CoreWeb.ErrorView, "create_db_aborted.json", reason: "reason") == out
+  end
+
+  test "renders delete_db_aborted.json" do
+    out = %{
+      errors: %{
+        detail: "Failed to delete function: database error because reason"
+      }
+    }
+
+    assert render(CoreWeb.ErrorView, "delete_db_aborted.json", reason: "reason") == out
   end
 end

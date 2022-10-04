@@ -28,14 +28,22 @@ defmodule CoreWeb.ErrorView do
     %{errors: %{detail: Phoenix.Controller.status_message_from_template(template)}}
   end
 
-  def render("create_bad_request.json", _assigns) do
-    %{errors: %{detail: "Failed to create new function: bad request"}}
+  def render("bad_request.json", _assigns) do
+    %{errors: %{detail: "Failed to perform operation: bad request"}}
   end
 
   def render("create_db_aborted.json", %{reason: reason}) do
     %{
       errors: %{
         detail: "Failed to create new function: database error because #{reason}"
+      }
+    }
+  end
+
+  def render("delete_db_aborted.json", %{reason: reason}) do
+    %{
+      errors: %{
+        detail: "Failed to delete function: database error because #{reason}"
       }
     }
   end

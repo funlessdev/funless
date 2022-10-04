@@ -18,4 +18,8 @@ defmodule CoreWeb.FnView do
   def render("create.json", %{function_name: name}) do
     %{result: name}
   end
+
+  def render("delete.json", %{function_name: name}) do
+    %{result: name}
+  end
 end

@@ -24,6 +24,12 @@ defmodule CoreWeb.FnController do
       render(conn, "create.json", function_name: function_name)
     end
   end
+
+  def delete(conn, params) do
+    with {:ok, function_name} <- FunctionRepo.delete(params) do
+      render(conn, "delete.json", function_name: function_name)
+    end
+  end
 end
 
 defmodule CoreWeb.FnFallbackController do
@@ -39,7 +45,7 @@ defmodule CoreWeb.FnFallbackController do
     conn
     |> put_status(:bad_request)
     |> put_view(CoreWeb.ErrorView)
-    |> render("create_bad_request.json")
+    |> render("bad_request.json")
   end
 
   def call(conn, {:error, {:bad_insert, reason}}) do
@@ -47,5 +53,12 @@ defmodule CoreWeb.FnFallbackController do
     |> put_status(:service_unavailable)
     |> put_view(CoreWeb.ErrorView)
     |> render("create_db_aborted.json", reason: reason)
+  end
+
+  def call(conn, {:error, {:bad_delete, reason}}) do
+    conn
+    |> put_status(:service_unavailable)
+    |> put_view(CoreWeb.ErrorView)
+    |> render("delete_db_aborted.json", reason: reason)
   end
 end

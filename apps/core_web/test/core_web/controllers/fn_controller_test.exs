@@ -15,14 +15,14 @@
 defmodule CoreWeb.FnControllerTest do
   use CoreWeb.ConnCase, async: true
 
+  setup do
+    Core.FunctionStorage.Mock
+    |> Mox.stub_with(Core.Adapters.FunctionStorage.Test)
+
+    :ok
+  end
+
   describe "POST /v1/fn/create" do
-    setup do
-      Core.FunctionStorage.Mock
-      |> Mox.stub_with(Core.Adapters.FunctionStorage.Test)
-
-      :ok
-    end
-
     test "success: should return 200 when the creation is successful", %{conn: conn} do
       conn =
         conn
@@ -38,8 +38,17 @@ defmodule CoreWeb.FnControllerTest do
       assert_json_has_correct_keys(actual: body, expected: expected_keys)
     end
 
-    test "error: should returns 400 when given invalid params", %{conn: conn} do
+    test "error: should returns 400 when given invalid parameters", %{conn: conn} do
       conn = post(conn, "/v1/fn/create", %{bad: "params"})
+
+      assert body = json_response(conn, 400)
+      expected_error_keys = ["detail"]
+
+      assert_json_has_correct_keys(actual: body["errors"], expected: expected_error_keys)
+    end
+
+    test "error: should returns 400 when missing parameters", %{conn: conn} do
+      conn = post(conn, "/v1/fn/create", %{name: "a_function"})
 
       assert body = json_response(conn, 400)
       expected_error_keys = ["detail"]
@@ -51,12 +60,48 @@ defmodule CoreWeb.FnControllerTest do
       Core.FunctionStorage.Mock
       |> Mox.expect(:insert_function, fn _ -> {:error, {:aborted, "some reason"}} end)
 
-      conn =
-        post(conn, "/v1/fn/create", %{
-          "name" => "hello",
-          "namespace" => "ns",
-          "code" => "some code"
-        })
+      conn = post(conn, "/v1/fn/create", %{name: "hello", code: "some code"})
+
+      assert body = json_response(conn, 503)
+      expected_error_keys = ["detail"]
+
+      assert_json_has_correct_keys(actual: body["errors"], expected: expected_error_keys)
+    end
+  end
+
+  describe "DELETE /v1/fn/delete" do
+    test "success: should return 200 when the deletion is successful", %{conn: conn} do
+      conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
+
+      assert body = json_response(conn, 200)
+      expected_keys = ["result"]
+
+      assert_json_has_correct_keys(actual: body, expected: expected_keys)
+    end
+
+    test "error: should return 400 when given bad parameters", %{conn: conn} do
+      conn = delete(conn, "/v1/fn/delete", %{bad: "params"})
+
+      assert body = json_response(conn, 400)
+      expected_error_keys = ["detail"]
+
+      assert_json_has_correct_keys(actual: body["errors"], expected: expected_error_keys)
+    end
+
+    test "error: should return 400 when missing parameters", %{conn: conn} do
+      conn = delete(conn, "/v1/fn/delete", %{namespace: "a_ns"})
+
+      assert body = json_response(conn, 400)
+      expected_error_keys = ["detail"]
+
+      assert_json_has_correct_keys(actual: body["errors"], expected: expected_error_keys)
+    end
+
+    test "error: should return 503 when the underlying storage transaction fails", %{conn: conn} do
+      Core.FunctionStorage.Mock
+      |> Mox.expect(:delete_function, fn _, _ -> {:error, {:aborted, "some reason"}} end)
+
+      conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
 
       assert body = json_response(conn, 503)
       expected_error_keys = ["detail"]

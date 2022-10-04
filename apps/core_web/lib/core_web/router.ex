@@ -24,6 +24,8 @@ defmodule CoreWeb.Router do
 
     scope "/fn" do
       post("/create", FnController, :create)
+
+      delete("/delete", FnController, :delete)
     end
   end
 
