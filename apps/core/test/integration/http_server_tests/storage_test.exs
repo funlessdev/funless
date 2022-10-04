@@ -33,22 +33,6 @@ defmodule HttpServerTest.FunctionStorageTest do
       :ok
     end
 
-    test "/create should return 200 when the creation is successful" do
-      conn =
-        conn(:post, "/create", %{
-          "name" => "hello",
-          "namespace" => "ns",
-          "code" => "some code",
-          "image" => "nodejs"
-        })
-
-      # Invoke the plug
-      conn = Server.call(conn, @opts)
-
-      # Assert the response and status
-      Common.assert_http_response(conn, 200, %{"result" => "hello"})
-    end
-
     test "/create should return 400 when given bad parameters" do
       conn =
         conn(:post, "/create", %{
@@ -99,7 +83,7 @@ defmodule HttpServerTest.FunctionStorageTest do
       conn = Server.call(conn, @opts)
 
       # Assert the response and status
-      Common.assert_http_response(conn, 200, %{"result" => "hello"})
+      Common.assert_http_response(conn, 200, "hello")
     end
 
     test "/delete should return 400 when given bad parameters" do

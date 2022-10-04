@@ -20,7 +20,6 @@ defmodule Core.Domain.Api.FunctionRepo do
   require Logger
   alias Core.Domain.FunctionStruct
   alias Core.Domain.Ports.FunctionStorage
-  alias Core.Domain.ResultStruct
 
   @doc """
   Stores a new function in the FunctionStorage.
@@ -29,31 +28,25 @@ defmodule Core.Domain.Api.FunctionRepo do
   - `function`: FunctionStruct to be stored.
 
   ## Returns
-  - `{:ok, %{"result" => function_name}}`: if the function was successfully stored.
+  - `{:ok, %{result: function_name}}`: if the function was successfully stored.
   - `{:error, :bad_params}`: if the function is not a valid FunctionStruct.
   - `{:error, {:aborted, reason}}`: if the function could not be stored.
   """
   @spec new(FunctionStruct.t()) ::
-          {:ok, ResultStruct.t()} | {:error, :bad_params} | {:error, {:bad_insert, any}}
-  def new(%{"name" => name, "code" => code, "image" => image} = raw_params) do
+          {:ok, String.t()} | {:error, :bad_params} | {:error, {:bad_insert, any}}
+  def new(%{"name" => name, "code" => code} = raw_params) do
     function = %FunctionStruct{
       name: name,
       namespace: raw_params["namespace"] || "_",
-      image: image,
-      code: code
+      code: code,
+      image: raw_params["image"] || "_"
     }
 
     Logger.info("API: create request for function #{name} in namespace #{function.namespace}")
 
-    FunctionStorage.insert_function(function)
-    |> case do
-      {:ok, function_name} ->
-        {:ok, %ResultStruct{result: function_name}}
-
-      {:error, {:aborted, reason}} ->
-        Logger.error("API: create request for function #{name} failed: #{inspect(reason)}")
-        {:error, {:bad_insert, reason}}
-    end
+    function
+    |> FunctionStorage.insert_function()
+    |> parse_create_result(name)
   end
 
   def new(_), do: {:error, :bad_params}
@@ -69,20 +62,37 @@ defmodule Core.Domain.Api.FunctionRepo do
   - `{:error, :bad_params}`: if the function is not a valid FunctionStruct.
   - `{:error, {:bad_delete, reason}}`: if the function could not be deleted.
   """
-  @spec delete(FunctionStruct.t()) :: {:ok, ResultStruct.t()} | {:error, {:bad_delete, any}}
+  @spec delete(FunctionStruct.t()) :: {:ok, String.t()} | {:error, {:bad_delete, any}}
   def delete(%{"name" => name, "namespace" => namespace}) do
     Logger.info("API: delete request for function #{name} in namespace #{namespace}")
-    res = FunctionStorage.delete_function(name, namespace)
 
-    case res do
-      {:ok, function_name} ->
-        {:ok, %ResultStruct{result: function_name}}
-
-      {:error, {:aborted, reason}} ->
-        Logger.error("API: delete request for function #{name} failed: #{inspect(reason)}")
-        {:error, {:bad_delete, reason}}
-    end
+    FunctionStorage.delete_function(name, namespace)
+    |> parse_delete_result(name)
   end
 
   def delete(_), do: {:error, :bad_params}
+
+  @spec parse_create_result({:ok, String.t()} | {:error, {:aborted, any}}, String.t()) ::
+          {:ok, String.t()} | {:error, {:bad_insert, any}}
+  defp parse_create_result({:error, {:aborted, reason}}, f_name) do
+    Logger.error("API: create request for function #{f_name} failed: #{inspect(reason)}")
+    {:error, {:bad_insert, reason}}
+  end
+
+  defp parse_create_result(result, f_name) do
+    Logger.info("API: function #{f_name} stored successfully")
+    result
+  end
+
+  @spec parse_delete_result({:ok, String.t()} | {:error, {:aborted, any}}, String.t()) ::
+          {:ok, String.t()} | {:error, {:bad_delete, any}}
+  def parse_delete_result({:error, {:aborted, reason}}, f_name) do
+    Logger.error("API: delete request for function #{f_name} failed: #{inspect(reason)}")
+    {:error, {:bad_delete, reason}}
+  end
+
+  def parse_delete_result(result, f_name) do
+    Logger.info("API: function #{f_name} deleted successfully")
+    result
+  end
 end

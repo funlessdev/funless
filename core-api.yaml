@@ -51,8 +51,6 @@ components:
           type: string
         code:
           type: string
-        image:
-          type: string
     function_creation_success:
       type: object
       properties:
@@ -87,7 +85,7 @@ components:
           description: The error message
 
 paths:
-  /fn/invoke:
+  /v1/fn/invoke:
     post:
       summary: Invoke a function
       description: >-
@@ -143,7 +141,7 @@ paths:
               examples:
                 Invocation with no workers:
                   value: '{"error": "Failed to invoke function: no worker available"}'
-  /fn/create:
+  /v1/fn/create:
     post:
       summary: Create a new function
       description: >-
@@ -178,7 +176,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/function_creation_error"
-  /fn/delete:
+  /v1/fn/delete:
     delete:
       summary: Delete a function
       description: >-

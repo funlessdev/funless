@@ -38,6 +38,9 @@ defmodule CoreWeb.ConnCase do
       import Phoenix.ConnTest
       import CoreWeb.ConnCase
 
+      import Support.AssertionHelpers
+      import Mox
+
       alias CoreWeb.Router.Helpers, as: Routes
 
       # The default endpoint for testing
@@ -46,6 +49,7 @@ defmodule CoreWeb.ConnCase do
   end
 
   setup _tags do
+    Mox.verify_on_exit!()
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

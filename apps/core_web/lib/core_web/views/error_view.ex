@@ -27,4 +27,16 @@ defmodule CoreWeb.ErrorView do
   def template_not_found(template, _assigns) do
     %{errors: %{detail: Phoenix.Controller.status_message_from_template(template)}}
   end
+
+  def render("create_bad_request.json", _assigns) do
+    %{errors: %{detail: "Failed to create new function: bad request"}}
+  end
+
+  def render("create_db_aborted.json", %{reason: reason}) do
+    %{
+      errors: %{
+        detail: "Failed to create new function: database error because #{reason}"
+      }
+    }
+  end
 end
