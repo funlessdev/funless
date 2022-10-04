@@ -19,8 +19,12 @@ defmodule CoreWeb.Router do
     plug(:accepts, ["json"])
   end
 
-  scope "/api", CoreWeb do
+  scope "/v1", CoreWeb do
     pipe_through(:api)
+
+    scope "/fn" do
+      post("/create", FnController, :create)
+    end
   end
 
   # Enables LiveDashboard only for development

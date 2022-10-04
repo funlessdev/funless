@@ -12,26 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule CoreWeb.ErrorViewTest do
+defmodule CoreWeb.FnControllerTest do
   use CoreWeb.ConnCase, async: true
 
-  # Bring render/3 and render_to_string/3 for testing custom views
-  import Phoenix.View
+  describe "POST /v1/fn/create" do
+    test "error: does not create, returns 400 when given invalid params", %{conn: conn} do
+      conn = post(conn, "/v1/fn/create", %{bad: "params"})
 
-  test "renders 404.json" do
-    assert render(CoreWeb.ErrorView, "404.json", []) == %{errors: %{detail: "Not Found"}}
-  end
+      assert body = json_response(conn, 400)
 
-  test "renders 500.json" do
-    assert render(CoreWeb.ErrorView, "500.json", []) ==
-             %{errors: %{detail: "Internal Server Error"}}
-  end
+      actual_errors = body["errors"]
+      refute Enum.empty?(actual_errors)
 
-  test "renders bad_create_request.json" do
-    out = %{
-      errors: %{detail: "Failed to create new function: bad request"}
-    }
+      expected_error_keys = ["detail"]
 
-    assert render(CoreWeb.ErrorView, "bad_create_request.json", []) == out
+      assert expected_error_keys == Map.keys(actual_errors)
+    end
   end
 end
