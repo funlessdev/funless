@@ -86,7 +86,7 @@ defmodule CoreWeb.FnControllerTest do
     test "success: should return 200 when the creation is successful", %{conn: conn} do
       conn = post(conn, "/v1/fn/create", %{name: "hello", code: "some code"})
 
-      assert body = json_response(conn, 200)
+      assert body = json_response(conn, 201)
       expected_keys = ["result"]
 
       assert_json_has_correct_keys(actual: body, expected: expected_keys)
@@ -118,14 +118,13 @@ defmodule CoreWeb.FnControllerTest do
     test "success: should return 200 when the deletion is successful", %{conn: conn} do
       conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
 
-      assert body = json_response(conn, 200)
+      assert body = json_response(conn, 204)
       expected_keys = ["result"]
       assert_json_has_correct_keys(actual: body, expected: expected_keys)
     end
 
     test "error: should return 400 when given bad parameters", %{conn: conn} do
       conn = delete(conn, "/v1/fn/delete", %{bad: "params"})
-
       assert json_response(conn, 400) |> assert_error_keys
     end
 
@@ -143,5 +142,61 @@ defmodule CoreWeb.FnControllerTest do
 
       assert json_response(conn, 503) |> assert_error_keys
     end
+  end
+
+  describe "Invalid json handling" do
+    # test "should return a 400 code with a related message" do
+    #   body = %{
+    #     "name" => "hello",
+    #     "namespace" => "ns",
+    #     "code" => "some code"
+    #   }
+
+    #   invalid_body = Jason.encode!(body) <> ","
+
+    #   expected_response =
+    #     Jason.encode!(%{
+    #       "error" => "The provided body was not a valid JSON string"
+    #     })
+
+    #   conn = post(conn, "/v1/fn/create", invalid_body)
+
+    #   # Invoke the plug; should raise an error
+    #   assert_raise Plug.Parsers.ParseError, ~r/^.+$/, fn ->
+    #     _conn = Server.call(conn, @opts)
+    #   end
+
+    #   # checks if the expected response was sent, even after a crash
+    #   assert {400, _headers, ^expected_response} = sent_resp(conn)
+    # end
+
+    # test "internal crashes should return a 500 code with a generic message" do
+    #   Core.FunctionStorage.Mock
+    #   |> Mox.expect(:insert_function, fn _ ->
+    #     raise "some error"
+    #     {:ok, "hello"}
+    #   end)
+
+    #   expected_response =
+    #     Jason.encode!(%{
+    #       "error" => "Something went wrong"
+    #     })
+
+    #   conn =
+    #     conn(:post, "/create", %{
+    #       "name" => "hello",
+    #       "namespace" => "ns",
+    #       "code" => "some code",
+    #       "image" => "nodejs"
+    #     })
+
+    #   # Invoke the plug; should raise an error
+    #   assert_raise Plug.Conn.WrapperError, "** (RuntimeError) some error", fn ->
+    #     _conn = Server.call(conn, @opts)
+    #   end
+
+    #   # checks if the expected response was sent, even after a crash
+    #   assert {500, _headers, ^expected_response} = sent_resp(conn)
+    # end
   end
 end

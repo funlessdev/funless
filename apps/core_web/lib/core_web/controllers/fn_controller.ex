@@ -28,13 +28,17 @@ defmodule CoreWeb.FnController do
 
   def create(conn, params) do
     with {:ok, function_name} <- FunctionRepo.new(params) do
-      render(conn, "create.json", function_name: function_name)
+      conn
+      |> put_status(:created)
+      |> render("create.json", function_name: function_name)
     end
   end
 
   def delete(conn, params) do
     with {:ok, function_name} <- FunctionRepo.delete(params) do
-      render(conn, "delete.json", function_name: function_name)
+      conn
+      |> put_status(:no_content)
+      |> render("delete.json", function_name: function_name)
     end
   end
 end
