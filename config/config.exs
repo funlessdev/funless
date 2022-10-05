@@ -26,9 +26,12 @@ config :logger, :console,
 
 config :libcluster,
   topologies: [
-    funless: [
+    funless_core: [
       # The selected clustering strategy. Required.
-      strategy: Cluster.Strategy.Gossip
+      strategy: Cluster.Strategy.Gossip,
+      config: [
+        port: 45891
+      ]
     ]
   ]
 
@@ -39,10 +42,10 @@ config :core_web,
 config :core_web, CoreWeb.Endpoint,
   url: [host: "localhost"],
   render_errors: [view: CoreWeb.ErrorView, accepts: ~w(json), layout: false],
+  live_view: [signing_salt: "sRzweIOe"],
   adapter: Bandit.PhoenixAdapter
 
 # pubsub_server: Core.PubSub,
-# live_view: [signing_salt: "sRzweIOe"],
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
