@@ -19,13 +19,13 @@ defmodule Core.Domain.FunctionStruct do
     ## Fields
       - name: function name
       - namespace: function namespace
-      - code: function code as a string
+      - code: function code as a string or binary
       - image: runtime image corresponding to the language with which the function is written
   """
   @type t :: %__MODULE__{
           namespace: String.t(),
           name: String.t(),
-          code: String.t(),
+          code: String.t() | binary(),
           image: String.t()
         }
   @enforce_keys [:name, :namespace, :code]
@@ -50,14 +50,11 @@ defmodule Core.Domain.InvokeParams do
   defstruct [:function, namespace: "_", args: %{}]
 end
 
-defmodule Core.Domain.ResultStruct do
+defmodule Core.Domain.IvkResult do
   @moduledoc """
   Result struct used for operation results (create/invoke/delete).
   """
-  @derive Jason.Encoder
-  @type t :: %__MODULE__{
-          result: any
-        }
+  @type t :: %__MODULE__{result: any()}
   @enforce_keys [:result]
   defstruct [:result]
 end
