@@ -16,10 +16,10 @@ defmodule Core.Adapters.Commands.Test do
   @moduledoc false
   @behaviour Core.Domain.Ports.Commands
 
-  alias Core.Domain.IvkResult
+  alias Core.Domain.InvokeResult
 
   @impl true
   def send_invocation_command(_worker, function, _args) do
-    {:ok, %IvkResult{result: function.name}}
+    {:ok, %InvokeResult{result: function.name}}
   end
 end

@@ -14,7 +14,7 @@
 
 defmodule ApiTest.InvokeTest do
   alias Core.Domain.Api
-  alias Core.Domain.IvkResult
+  alias Core.Domain.InvokeResult
 
   use ExUnit.Case, async: true
   import Mox, only: [verify_on_exit!: 1]
@@ -39,7 +39,7 @@ defmodule ApiTest.InvokeTest do
     test "invoke should return {:ok, result} when there is at least a worker and no error occurs" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
-      assert Api.Invoker.invoke(%{"function" => "test"}) == {:ok, %IvkResult{result: "test"}}
+      assert Api.Invoker.invoke(%{"function" => "test"}) == {:ok, %InvokeResult{result: "test"}}
     end
 
     test "invoke should return {:error, err} when the invocation on worker encounter errors" do

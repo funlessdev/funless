@@ -19,12 +19,12 @@ defmodule Core.Adapters.Commands.Worker do
   """
   require Logger
   alias Core.Domain.FunctionStruct
-  alias Core.Domain.IvkResult
+  alias Core.Domain.InvokeResult
   @behaviour Core.Domain.Ports.Commands
 
   @impl true
   @spec send_invocation_command(atom(), FunctionStruct.t(), map()) ::
-          {:ok, IvkResult.t()} | {:error, atom}
+          {:ok, InvokeResult.t()} | {:error, atom}
   def send_invocation_command(worker, %FunctionStruct{} = function, args) do
     worker_addr = worker_address(worker)
     cmd = invoke_command(function, args)

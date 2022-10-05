@@ -50,7 +50,7 @@ defmodule Core.Domain.InvokeParams do
   defstruct [:function, namespace: "_", args: %{}]
 end
 
-defmodule Core.Domain.IvkResult do
+defmodule Core.Domain.InvokeResult do
   @moduledoc """
   Result struct used for operation results (create/invoke/delete).
   """

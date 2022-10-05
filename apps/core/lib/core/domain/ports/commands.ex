@@ -17,7 +17,7 @@ defmodule Core.Domain.Ports.Commands do
   Port for sending commands to workers.
   """
 
-  alias Core.Domain.IvkResult
+  alias Core.Domain.InvokeResult
 
   @type worker :: atom()
   @type fl_function :: Core.Domain.FunctionStruct.t()
@@ -25,7 +25,7 @@ defmodule Core.Domain.Ports.Commands do
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @callback send_invocation_command(worker, fl_function, map()) ::
-              {:ok, IvkResult.t()} | {:error, atom}
+              {:ok, InvokeResult.t()} | {:error, atom}
 
   @doc """
   Sends an invocation command to a worker.
@@ -33,6 +33,6 @@ defmodule Core.Domain.Ports.Commands do
   (optionally empty) function arguments.
   """
   @spec send_invocation_command(worker, fl_function, map()) ::
-          {:ok, IvkResult.t()} | {:error, atom}
+          {:ok, InvokeResult.t()} | {:error, atom}
   defdelegate send_invocation_command(worker, function, args), to: @adapter
 end

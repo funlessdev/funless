@@ -18,10 +18,10 @@ defmodule Core.Domain.Api.Invoker do
   """
   require Logger
   alias Core.Domain.InvokeParams
+  alias Core.Domain.InvokeResult
   alias Core.Domain.Nodes
   alias Core.Domain.Ports.Commands
   alias Core.Domain.Ports.FunctionStorage
-  alias Core.Domain.IvkResult
   alias Core.Domain.Scheduler
 
   @doc """
@@ -41,7 +41,7 @@ defmodule Core.Domain.Api.Invoker do
   - {:error, :worker_error} if the worker returned an error.
   """
   @spec invoke(InvokeParams.t()) ::
-          {:ok, IvkResult.t()}
+          {:ok, InvokeResult.t()}
           | {:error, :bad_params}
           | {:error, :not_found}
           | {:error, :no_workers}
@@ -64,7 +64,7 @@ defmodule Core.Domain.Api.Invoker do
   def invoke(_), do: {:error, :bad_params}
 
   @spec invoke_on_chosen(atom(), InvokeParams.t()) ::
-          {:ok, IvkResult.t()}
+          {:ok, InvokeResult.t()}
           | {:error, :not_found}
           | {:error, :no_workers}
           | {:error, :worker_error}
@@ -91,8 +91,8 @@ defmodule Core.Domain.Api.Invoker do
     end
   end
 
-  @spec parse_wrk_reply({:ok, IvkResult.t()} | {:error, any}) ::
-          {:ok, IvkResult.t()} | {:error, :worker_error}
+  @spec parse_wrk_reply({:ok, InvokeResult.t()} | {:error, any}) ::
+          {:ok, InvokeResult.t()} | {:error, :worker_error}
   defp parse_wrk_reply({:ok, _} = reply) do
     Logger.info("API: received success reply from worker")
     reply
