@@ -32,8 +32,20 @@ defmodule CoreWeb.ErrorView do
     %{errors: %{detail: "Failed to perform operation: bad request"}}
   end
 
+  def render("function_not_found.json", _assigns) do
+    %{errors: %{detail: "Failed to invoke function: not found in given namespace"}}
+  end
+
   def render("db_aborted.json", %{action: action, reason: reason}) do
     message = "Failed to #{action} function: database error because #{reason}"
     %{errors: %{detail: message}}
+  end
+
+  def render("no_workers.json", _assigns) do
+    %{errors: %{detail: "Failed to perform operation: no worker available"}}
+  end
+
+  def render("worker_error.json", _assigns) do
+    %{errors: %{detail: "Failed to perform operation: worker error"}}
   end
 end

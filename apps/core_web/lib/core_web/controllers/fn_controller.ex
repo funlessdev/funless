@@ -16,8 +16,15 @@ defmodule CoreWeb.FnController do
   use CoreWeb, :controller
 
   alias Core.Domain.Api.FunctionRepo
+  alias Core.Domain.Api.Invoker
 
   action_fallback(CoreWeb.FnFallbackController)
+
+  def invoke(conn, params) do
+    with {:ok, %{result: res}} <- Invoker.invoke(params) do
+      render(conn, "invoke.json", result: res)
+    end
+  end
 
   def create(conn, params) do
     with {:ok, function_name} <- FunctionRepo.new(params) do
@@ -46,6 +53,27 @@ defmodule CoreWeb.FnFallbackController do
     |> put_status(:bad_request)
     |> put_view(CoreWeb.ErrorView)
     |> render("bad_request.json")
+  end
+
+  def call(conn, {:error, :not_found}) do
+    conn
+    |> put_status(:not_found)
+    |> put_view(CoreWeb.ErrorView)
+    |> render("function_not_found.json")
+  end
+
+  def call(conn, {:error, :no_workers}) do
+    conn
+    |> put_status(:service_unavailable)
+    |> put_view(CoreWeb.ErrorView)
+    |> render("no_workers.json")
+  end
+
+  def call(conn, {:error, :worker_error}) do
+    conn
+    |> put_status(:internal_server_error)
+    |> put_view(CoreWeb.ErrorView)
+    |> render("worker_error.json")
   end
 
   def call(conn, {:error, {:bad_insert, reason}}) do

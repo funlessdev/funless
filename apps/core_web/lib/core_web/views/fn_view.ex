@@ -15,11 +15,9 @@
 defmodule CoreWeb.FnView do
   use CoreWeb, :view
 
-  def render("create.json", %{function_name: name}) do
-    %{result: name}
-  end
+  def render("invoke.json", %{result: ivk_res}), do: %{result: ivk_res}
 
-  def render("delete.json", %{function_name: name}) do
-    %{result: name}
-  end
+  def render("create.json", %{function_name: name}), do: %{result: name}
+
+  def render("delete.json", %{function_name: name}), do: %{result: name}
 end
