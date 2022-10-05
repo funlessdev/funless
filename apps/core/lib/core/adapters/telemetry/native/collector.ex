@@ -46,7 +46,6 @@ defmodule Core.Adapters.Telemetry.Native.Collector do
     with :ok <- find_telemetry_process(worker),
          {:ok, metrics} <- pull_metrics(worker),
          {:ok, _} <- save_metrics_with_timestamp(worker, metrics) do
-      Logger.info("Telemetry Collector: metrics pulled from #{worker}")
     else
       {:error, reason} ->
         Logger.warn("Telemetry Collector: error pulling metrics #{inspect(reason)}")
