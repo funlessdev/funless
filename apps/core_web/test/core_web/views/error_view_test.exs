@@ -23,35 +23,38 @@ defmodule CoreWeb.ErrorViewTest do
   end
 
   test "renders 500.json" do
-    assert render(CoreWeb.ErrorView, "500.json", []) ==
-             %{errors: %{detail: "Internal Server Error"}}
+    assert render(CoreWeb.ErrorView, "500.json", []) == %{
+             errors: %{detail: "Internal Server Error"}
+           }
   end
 
   test "renders bad_request.json" do
-    out = %{
-      errors: %{detail: "Failed to perform operation: bad request"}
-    }
-
+    out = %{errors: %{detail: "Failed to perform operation: bad request"}}
     assert render(CoreWeb.ErrorView, "bad_request.json", []) == out
   end
 
-  test "renders create_db_aborted.json" do
-    out = %{
-      errors: %{
-        detail: "Failed to create new function: database error because reason"
-      }
-    }
-
-    assert render(CoreWeb.ErrorView, "create_db_aborted.json", reason: "reason") == out
+  test "renders function_not_found.json" do
+    out = %{errors: %{detail: "Failed to invoke function: not found in given namespace"}}
+    assert render(CoreWeb.ErrorView, "function_not_found.json", []) == out
   end
 
-  test "renders delete_db_aborted.json" do
-    out = %{
-      errors: %{
-        detail: "Failed to delete function: database error because reason"
-      }
-    }
+  test "renders no_workers.json" do
+    out = %{errors: %{detail: "Failed to perform operation: no worker available"}}
+    assert render(CoreWeb.ErrorView, "no_workers.json", []) == out
+  end
 
-    assert render(CoreWeb.ErrorView, "delete_db_aborted.json", reason: "reason") == out
+  test "renders worker_error.json" do
+    out = %{errors: %{detail: "Failed to perform operation: worker error"}}
+    assert render(CoreWeb.ErrorView, "worker_error.json", []) == out
+  end
+
+  test "renders db_aborted.json for create function" do
+    out = %{errors: %{detail: "Failed to create function: database error because reason"}}
+    assert render(CoreWeb.ErrorView, "db_aborted.json", action: "create", reason: "reason") == out
+  end
+
+  test "renders db_aborted.json for delete" do
+    out = %{errors: %{detail: "Failed to delete function: database error because reason"}}
+    assert render(CoreWeb.ErrorView, "db_aborted.json", action: "delete", reason: "reason") == out
   end
 end

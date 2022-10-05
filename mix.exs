@@ -26,7 +26,15 @@ defmodule Core.Umbrella.MixProject do
         flags: ["-Wunmatched_returns", :error_handling, :underspecs]
       ],
       deps: deps(),
-      aliases: aliases()
+      aliases: aliases(),
+      releases: [
+        core: [
+          applications: [
+            core: :permanent,
+            core_web: :permanent
+          ]
+        ]
+      ]
     ]
   end
 

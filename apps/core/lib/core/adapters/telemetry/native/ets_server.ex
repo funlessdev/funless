@@ -36,7 +36,6 @@ defmodule Core.Adapters.Telemetry.Native.EtsServer do
   @impl true
   def handle_call({:insert, worker_node, resources}, _from, table) do
     :ets.insert(table, {worker_node, resources})
-    Logger.info("Telemetry ETS Server: added #{worker_node}")
     {:reply, {:ok, {worker_node, resources}}, table}
   end
 

@@ -16,6 +16,12 @@ defmodule Support.AssertionHelpers do
   @moduledoc false
   import ExUnit.Assertions
 
+  def assert_error_keys(json) do
+    actual_errors = json["errors"]
+    expected_error_keys = ["detail"]
+    assert_json_has_correct_keys(actual: actual_errors, expected: expected_error_keys)
+  end
+
   def assert_json_has_correct_keys(lists) do
     actual = Keyword.fetch!(lists, :actual)
     refute Enum.empty?(actual)

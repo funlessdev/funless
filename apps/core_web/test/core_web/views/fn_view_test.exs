@@ -18,6 +18,11 @@ defmodule CoreWeb.FnViewTest do
   # Bring render/3 and render_to_string/3 for testing custom views
   import Phoenix.View
 
+  test "invoke.json" do
+    result = render(CoreWeb.FnView, "invoke.json", %{result: "result"})
+    assert result == %{result: "result"}
+  end
+
   test "create.json" do
     result = render(CoreWeb.FnView, "create.json", %{function_name: "test"})
     assert result == %{result: "test"}
