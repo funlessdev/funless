@@ -16,8 +16,6 @@ import Config
 
 config :iex, default_prompt: ">>>"
 
-config :core, port: System.get_env("PORT") || "4001"
-
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
 # system starts, so it is typically used to load production configuration
