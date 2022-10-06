@@ -52,7 +52,7 @@ end
 
 defmodule Core.Domain.InvokeResult do
   @moduledoc """
-  Result struct used for operation results (create/invoke/delete).
+  Struct used for invocation results.
   """
   @type t :: %__MODULE__{result: any()}
   @enforce_keys [:result]
