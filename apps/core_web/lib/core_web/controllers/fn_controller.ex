@@ -28,13 +28,17 @@ defmodule CoreWeb.FnController do
 
   def create(conn, params) do
     with {:ok, function_name} <- FunctionRepo.new(params) do
-      render(conn, "create.json", function_name: function_name)
+      conn
+      |> put_status(:created)
+      |> render("create.json", function_name: function_name)
     end
   end
 
   def delete(conn, params) do
     with {:ok, function_name} <- FunctionRepo.delete(params) do
-      render(conn, "delete.json", function_name: function_name)
+      conn
+      |> put_status(:no_content)
+      |> render("delete.json", function_name: function_name)
     end
   end
 end
@@ -52,7 +56,7 @@ defmodule CoreWeb.FnFallbackController do
     conn
     |> put_status(:bad_request)
     |> put_view(CoreWeb.ErrorView)
-    |> render("bad_request.json")
+    |> render("400.json")
   end
 
   def call(conn, {:error, :not_found}) do
@@ -76,17 +80,17 @@ defmodule CoreWeb.FnFallbackController do
     |> render("worker_error.json")
   end
 
-  def call(conn, {:error, {:bad_insert, reason}}) do
-    conn
-    |> put_status(:service_unavailable)
-    |> put_view(CoreWeb.ErrorView)
-    |> render("db_aborted.json", action: "create", reason: reason)
-  end
+  def call(conn, {:error, {kind, reason}}) when kind == :bad_insert or kind == :bad_delete do
+    action =
+      if kind == :bad_insert do
+        "create"
+      else
+        "delete"
+      end
 
-  def call(conn, {:error, {:bad_delete, reason}}) do
     conn
     |> put_status(:service_unavailable)
     |> put_view(CoreWeb.ErrorView)
-    |> render("delete_db_aborted.json", action: "delete", reason: reason)
+    |> render("db_aborted.json", action: action, reason: reason)
   end
 end

@@ -28,9 +28,9 @@ defmodule CoreWeb.ErrorViewTest do
            }
   end
 
-  test "renders bad_request.json" do
+  test "renders 400.json" do
     out = %{errors: %{detail: "Failed to perform operation: bad request"}}
-    assert render(CoreWeb.ErrorView, "bad_request.json", []) == out
+    assert render(CoreWeb.ErrorView, "400.json", []) == out
   end
 
   test "renders function_not_found.json" do
@@ -39,12 +39,12 @@ defmodule CoreWeb.ErrorViewTest do
   end
 
   test "renders no_workers.json" do
-    out = %{errors: %{detail: "Failed to perform operation: no worker available"}}
+    out = %{errors: %{detail: "Failed to invoke function: no worker available"}}
     assert render(CoreWeb.ErrorView, "no_workers.json", []) == out
   end
 
   test "renders worker_error.json" do
-    out = %{errors: %{detail: "Failed to perform operation: worker error"}}
+    out = %{errors: %{detail: "Failed to invoke function: worker error"}}
     assert render(CoreWeb.ErrorView, "worker_error.json", []) == out
   end
 

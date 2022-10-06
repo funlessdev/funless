@@ -28,7 +28,7 @@ defmodule CoreWeb.ErrorView do
     %{errors: %{detail: Phoenix.Controller.status_message_from_template(template)}}
   end
 
-  def render("bad_request.json", _assigns) do
+  def render("400.json", _assigns) do
     %{errors: %{detail: "Failed to perform operation: bad request"}}
   end
 
@@ -42,10 +42,10 @@ defmodule CoreWeb.ErrorView do
   end
 
   def render("no_workers.json", _assigns) do
-    %{errors: %{detail: "Failed to perform operation: no worker available"}}
+    %{errors: %{detail: "Failed to invoke function: no worker available"}}
   end
 
   def render("worker_error.json", _assigns) do
-    %{errors: %{detail: "Failed to perform operation: worker error"}}
+    %{errors: %{detail: "Failed to invoke function: worker error"}}
   end
 end

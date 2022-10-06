@@ -41,6 +41,7 @@ defmodule Core.Adapters.Commands.Worker do
     {:invoke, function, args}
   end
 
+  @spec call_worker({:worker, atom()}, any()) :: {:ok, InvokeResult.t()} | {:error, atom}
   defp call_worker(worker_addr, {cmd, payload, _args} = command) do
     Logger.info(
       "sending command #{cmd} to #{inspect(worker_addr)} with payload #{inspect(payload)}"
