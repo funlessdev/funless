@@ -37,10 +37,7 @@ defmodule CoreWeb.FnControllerTest do
 
       conn = post(conn, "/v1/fn/invoke", %{namespace: "_", function: "hello", args: %{}})
 
-      assert body = json_response(conn, 200)
-      expected_keys = ["result"]
-
-      assert_json_has_correct_keys(actual: body, expected: expected_keys)
+      assert %{"result" => "Hello, World!"} = json_response(conn, 200)
     end
 
     test "error: should return 404 when the required function is not found", %{conn: conn} do
@@ -48,18 +45,24 @@ defmodule CoreWeb.FnControllerTest do
       Core.FunctionStorage.Mock |> Mox.expect(:get_function, fn _, _ -> {:error, :not_found} end)
 
       conn = post(conn, "/v1/fn/invoke", %{function: "hello"})
-      assert json_response(conn, 404) |> assert_error_keys
+
+      expected = %{
+        "errors" => %{"detail" => "Failed to invoke function: not found in given namespace"}
+      }
+
+      assert json_response(conn, 404) == expected
     end
 
     test "error: should return 400 bad request when bad parameters", %{conn: conn} do
       conn = post(conn, "/v1/fn/invoke", %{bad: "param"})
-      assert json_response(conn, 400) |> assert_error_keys
+      expected = %{"errors" => %{"detail" => "Failed to perform operation: bad request"}}
+      assert json_response(conn, 400) == expected
     end
 
-    test "error: should returns 400 when missing parameters", %{conn: conn} do
+    test "error: should return 400 when missing parameters", %{conn: conn} do
       conn = post(conn, "/v1/fn/invoke", %{namespace: "a_ns"})
-
-      assert json_response(conn, 400) |> assert_error_keys
+      expected = %{"errors" => %{"detail" => "Failed to perform operation: bad request"}}
+      assert json_response(conn, 400) == expected
     end
 
     test "error: should return 500 when some worker error occurs", %{conn: conn} do
@@ -71,37 +74,34 @@ defmodule CoreWeb.FnControllerTest do
       end)
 
       conn = post(conn, "/v1/fn/invoke", %{function: "test", code: ""})
-
-      assert json_response(conn, 500) |> assert_error_keys
+      expected = %{"errors" => %{"detail" => "Failed to invoke function: worker error"}}
+      assert json_response(conn, 500) == expected
     end
 
     test "error: should return 503 when invocation with no workers available fails", %{conn: conn} do
       conn = post(conn, "/v1/fn/invoke", %{function: "test", code: ""})
-
-      assert json_response(conn, 503) |> assert_error_keys
+      expected = %{"errors" => %{"detail" => "Failed to invoke function: no worker available"}}
+      assert json_response(conn, 503) == expected
     end
   end
 
   describe "POST /v1/fn/create" do
     test "success: should return 200 when the creation is successful", %{conn: conn} do
       conn = post(conn, "/v1/fn/create", %{name: "hello", code: "some code"})
-
-      assert body = json_response(conn, 201)
-      expected_keys = ["result"]
-
-      assert_json_has_correct_keys(actual: body, expected: expected_keys)
+      expected = %{"result" => "hello"}
+      assert json_response(conn, 201) == expected
     end
 
     test "error: should returns 400 when given invalid parameters", %{conn: conn} do
       conn = post(conn, "/v1/fn/create", %{bad: "params"})
-
-      assert json_response(conn, 400) |> assert_error_keys
+      expected = %{"errors" => %{"detail" => "Failed to perform operation: bad request"}}
+      assert json_response(conn, 400) == expected
     end
 
     test "error: should returns 400 when missing parameters", %{conn: conn} do
       conn = post(conn, "/v1/fn/create", %{name: "a_function"})
-
-      assert json_response(conn, 400) |> assert_error_keys
+      expected = %{"errors" => %{"detail" => "Failed to perform operation: bad request"}}
+      assert json_response(conn, 400) == expected
     end
 
     test "error: should return 503 when the underlying storage transaction fails", %{conn: conn} do
@@ -110,7 +110,11 @@ defmodule CoreWeb.FnControllerTest do
 
       conn = post(conn, "/v1/fn/create", %{name: "hello", code: "some code"})
 
-      assert json_response(conn, 503) |> assert_error_keys
+      expected = %{
+        "errors" => %{"detail" => "Failed to create function: database error because some reason"}
+      }
+
+      assert json_response(conn, 503) == expected
     end
   end
 
@@ -118,20 +122,21 @@ defmodule CoreWeb.FnControllerTest do
     test "success: should return 200 when the deletion is successful", %{conn: conn} do
       conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
 
-      assert body = json_response(conn, 204)
-      expected_keys = ["result"]
-      assert_json_has_correct_keys(actual: body, expected: expected_keys)
+      expected = %{"result" => "hello"}
+      assert json_response(conn, 204) == expected
     end
 
     test "error: should return 400 when given bad parameters", %{conn: conn} do
       conn = delete(conn, "/v1/fn/delete", %{bad: "params"})
-      assert json_response(conn, 400) |> assert_error_keys
+      expected = %{"errors" => %{"detail" => "Failed to perform operation: bad request"}}
+      assert json_response(conn, 400) == expected
     end
 
     test "error: should return 400 when missing parameters", %{conn: conn} do
       conn = delete(conn, "/v1/fn/delete", %{namespace: "a_ns"})
+      expected = %{"errors" => %{"detail" => "Failed to perform operation: bad request"}}
 
-      assert json_response(conn, 400) |> assert_error_keys
+      assert json_response(conn, 400) == expected
     end
 
     test "error: should return 503 when the underlying storage transaction fails", %{conn: conn} do
@@ -140,63 +145,40 @@ defmodule CoreWeb.FnControllerTest do
 
       conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
 
-      assert json_response(conn, 503) |> assert_error_keys
+      expected = %{
+        "errors" => %{"detail" => "Failed to delete function: database error because some reason"}
+      }
+
+      assert json_response(conn, 503) == expected
     end
   end
 
   describe "Invalid json handling" do
-    # test "should return a 400 code with a related message" do
-    #   body = %{
-    #     "name" => "hello",
-    #     "namespace" => "ns",
-    #     "code" => "some code"
-    #   }
+    test "should return a 400 code with a related message", %{conn: conn} do
+      body = %{"name" => "hello"}
+      invalid_body = Jason.encode!(body) <> ","
 
-    #   invalid_body = Jason.encode!(body) <> ","
+      assert_error_sent(400, fn ->
+        conn
+        |> put_req_header("content-type", "application/json")
+        |> post("/v1/fn/create", invalid_body)
+      end)
+    end
 
-    #   expected_response =
-    #     Jason.encode!(%{
-    #       "error" => "The provided body was not a valid JSON string"
-    #     })
+    test "internal crashes should return a 500 code with a generic message", %{conn: conn} do
+      Core.FunctionStorage.Mock
+      |> Mox.expect(:insert_function, fn _ ->
+        raise "some error"
+        {:ok, "hello"}
+      end)
 
-    #   conn = post(conn, "/v1/fn/create", invalid_body)
+      response =
+        assert_error_sent(500, fn ->
+          conn
+          |> post("/v1/fn/create", %{name: "hello", namespace: "ns", code: "some code"})
+        end)
 
-    #   # Invoke the plug; should raise an error
-    #   assert_raise Plug.Parsers.ParseError, ~r/^.+$/, fn ->
-    #     _conn = Server.call(conn, @opts)
-    #   end
-
-    #   # checks if the expected response was sent, even after a crash
-    #   assert {400, _headers, ^expected_response} = sent_resp(conn)
-    # end
-
-    # test "internal crashes should return a 500 code with a generic message" do
-    #   Core.FunctionStorage.Mock
-    #   |> Mox.expect(:insert_function, fn _ ->
-    #     raise "some error"
-    #     {:ok, "hello"}
-    #   end)
-
-    #   expected_response =
-    #     Jason.encode!(%{
-    #       "error" => "Something went wrong"
-    #     })
-
-    #   conn =
-    #     conn(:post, "/create", %{
-    #       "name" => "hello",
-    #       "namespace" => "ns",
-    #       "code" => "some code",
-    #       "image" => "nodejs"
-    #     })
-
-    #   # Invoke the plug; should raise an error
-    #   assert_raise Plug.Conn.WrapperError, "** (RuntimeError) some error", fn ->
-    #     _conn = Server.call(conn, @opts)
-    #   end
-
-    #   # checks if the expected response was sent, even after a crash
-    #   assert {500, _headers, ^expected_response} = sent_resp(conn)
-    # end
+      assert {500, [_h | _t], "{\"errors\":{\"detail\":\"Internal Server Error\"}}"} = response
+    end
   end
 end
