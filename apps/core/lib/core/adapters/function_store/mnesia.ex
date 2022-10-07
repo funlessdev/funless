@@ -31,7 +31,7 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
     # namespace_name acts as the primary key, and is the {function_name, function_namespace} tuple,
     # which uniquely identifies each function
     t =
-      :mnesia.create_table(Function,
+      :mnesia.create_table(FunctionStruct,
         attributes: [:namespace_name, :function],
         access_mode: :read_write,
         ram_copies: nodes
@@ -54,7 +54,7 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
   @impl true
   @spec exists?(String.t(), String.t()) :: boolean()
   def exists?(function_name, function_namespace) do
-    :mnesia.all_keys(FunctionStruct)
+    :mnesia.dirty_all_keys(FunctionStruct)
     |> Enum.any?(&match?({^function_name, ^function_namespace}, &1))
   end
 
@@ -63,7 +63,7 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
   def get_function(function_name, function_namespace) do
     case :mnesia.dirty_read(FunctionStruct, {function_name, function_namespace}) do
       [] -> {:error, :not_found}
-      [{Function, _, f} | _] -> {:ok, struct(FunctionStruct, f)}
+      [{FunctionStruct, _, f} | _] -> {:ok, struct(FunctionStruct, f)}
     end
   end
 
