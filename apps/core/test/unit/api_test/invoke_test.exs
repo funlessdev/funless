@@ -30,8 +30,8 @@ defmodule ApiTest.InvokeTest do
       Core.Cluster.Mock
       |> Mox.stub_with(Core.Adapters.Cluster.Test)
 
-      Core.FunctionStorage.Mock
-      |> Mox.stub_with(Core.Adapters.FunctionStorage.Test)
+      Core.FunctionStore.Mock
+      |> Mox.stub_with(Core.Adapters.FunctionStore.Test)
 
       :ok
     end
@@ -80,7 +80,7 @@ defmodule ApiTest.InvokeTest do
     test "invoke on a non-existent function should return {:error, err}" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
-      Core.FunctionStorage.Mock
+      Core.FunctionStore.Mock
       |> Mox.expect(:get_function, fn "hello", "ns" -> {:error, :not_found} end)
 
       assert Api.Invoker.invoke(%{"function" => "hello", "namespace" => "ns"}) ==
