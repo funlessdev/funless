@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.FunctionStorage.Mnesia do
+defmodule Core.Adapters.FunctionStore.Mnesia do
   @moduledoc """
   Adapter to access and insert functions on a Mnesia distributed storage.
   """
   require Logger
   alias Core.Domain.FunctionStruct
-  @behaviour Core.Domain.Ports.FunctionStorage
+  @behaviour Core.Domain.Ports.FunctionStore
 
   @impl true
   @spec init_database(list(atom())) :: :ok | {:error, any}
@@ -31,7 +31,7 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
     # namespace_name acts as the primary key, and is the {function_name, function_namespace} tuple,
     # which uniquely identifies each function
     t =
-      :mnesia.create_table(Function,
+      :mnesia.create_table(FunctionStruct,
         attributes: [:namespace_name, :function],
         access_mode: :read_write,
         ram_copies: nodes
@@ -52,11 +52,18 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
   end
 
   @impl true
+  @spec exists?(String.t(), String.t()) :: boolean()
+  def exists?(function_name, function_namespace) do
+    :mnesia.dirty_all_keys(FunctionStruct)
+    |> Enum.any?(&match?({^function_name, ^function_namespace}, &1))
+  end
+
+  @impl true
   @spec get_function(String.t(), String.t()) :: {:ok, FunctionStruct.t()} | {:error, :not_found}
   def get_function(function_name, function_namespace) do
-    case :mnesia.dirty_read(Function, {function_name, function_namespace}) do
+    case :mnesia.dirty_read(FunctionStruct, {function_name, function_namespace}) do
       [] -> {:error, :not_found}
-      [{Function, _, f} | _] -> {:ok, struct(FunctionStruct, f)}
+      [{FunctionStruct, _, f} | _] -> {:ok, struct(FunctionStruct, f)}
     end
   end
 
@@ -64,7 +71,7 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
   @spec insert_function(FunctionStruct.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
   def insert_function(%FunctionStruct{name: name, namespace: namespace} = function) do
     data = fn ->
-      :mnesia.write({Function, {name, namespace}, Map.from_struct(function)})
+      :mnesia.write({FunctionStruct, {name, namespace}, Map.from_struct(function)})
     end
 
     case :mnesia.transaction(data) do
@@ -77,7 +84,7 @@ defmodule Core.Adapters.FunctionStorage.Mnesia do
   @spec delete_function(String.t(), String.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
   def delete_function(function_name, function_namespace) do
     data = fn ->
-      :mnesia.delete({Function, {function_name, function_namespace}})
+      :mnesia.delete({FunctionStruct, {function_name, function_namespace}})
     end
 
     case :mnesia.transaction(data) do

@@ -14,5 +14,5 @@
 
 Mox.defmock(Core.Commands.Mock, for: Core.Domain.Ports.Commands)
 Mox.defmock(Core.Cluster.Mock, for: Core.Domain.Ports.Cluster)
-Mox.defmock(Core.FunctionStorage.Mock, for: Core.Domain.Ports.FunctionStorage)
+Mox.defmock(Core.FunctionStore.Mock, for: Core.Domain.Ports.FunctionStore)
 Mox.defmock(Core.Telemetry.Api.Mock, for: Core.Domain.Ports.Telemetry.Api)

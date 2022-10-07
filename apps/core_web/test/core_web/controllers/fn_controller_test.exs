@@ -16,8 +16,8 @@ defmodule CoreWeb.FnControllerTest do
   use CoreWeb.ConnCase, async: true
 
   setup do
-    Core.FunctionStorage.Mock
-    |> Mox.stub_with(Core.Adapters.FunctionStorage.Test)
+    Core.FunctionStore.Mock
+    |> Mox.stub_with(Core.Adapters.FunctionStore.Test)
 
     Core.Commands.Mock
     |> Mox.stub_with(Core.Adapters.Commands.Test)
@@ -42,7 +42,7 @@ defmodule CoreWeb.FnControllerTest do
 
     test "error: should return 404 when the required function is not found", %{conn: conn} do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
-      Core.FunctionStorage.Mock |> Mox.expect(:get_function, fn _, _ -> {:error, :not_found} end)
+      Core.FunctionStore.Mock |> Mox.expect(:get_function, fn _, _ -> {:error, :not_found} end)
 
       conn = post(conn, "/v1/fn/invoke", %{function: "hello"})
 
@@ -105,7 +105,7 @@ defmodule CoreWeb.FnControllerTest do
     end
 
     test "error: should return 503 when the underlying storage transaction fails", %{conn: conn} do
-      Core.FunctionStorage.Mock
+      Core.FunctionStore.Mock
       |> Mox.expect(:insert_function, fn _ -> {:error, {:aborted, "some reason"}} end)
 
       conn = post(conn, "/v1/fn/create", %{name: "hello", code: "some code"})
@@ -140,7 +140,7 @@ defmodule CoreWeb.FnControllerTest do
     end
 
     test "error: should return 503 when the underlying storage transaction fails", %{conn: conn} do
-      Core.FunctionStorage.Mock
+      Core.FunctionStore.Mock
       |> Mox.expect(:delete_function, fn _, _ -> {:error, {:aborted, "some reason"}} end)
 
       conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
@@ -166,7 +166,7 @@ defmodule CoreWeb.FnControllerTest do
     end
 
     test "internal crashes should return a 500 code with a generic message", %{conn: conn} do
-      Core.FunctionStorage.Mock
+      Core.FunctionStore.Mock
       |> Mox.expect(:insert_function, fn _ ->
         raise "some error"
         {:ok, "hello"}

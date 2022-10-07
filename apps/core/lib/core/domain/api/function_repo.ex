@@ -14,15 +14,15 @@
 
 defmodule Core.Domain.Api.FunctionRepo do
   @moduledoc """
-  Provides functions to interact with creation and deletion of FunctionStruct on FunctionStorage.
+  Provides functions to interact with creation and deletion of FunctionStruct on FunctionStore.
   """
 
   require Logger
   alias Core.Domain.FunctionStruct
-  alias Core.Domain.Ports.FunctionStorage
+  alias Core.Domain.Ports.FunctionStore
 
   @doc """
-  Stores a new function in the FunctionStorage.
+  Stores a new function in the FunctionStore.
 
   ## Parameters
   - `function`: FunctionStruct to be stored.
@@ -45,14 +45,14 @@ defmodule Core.Domain.Api.FunctionRepo do
     Logger.info("API: create request for function #{name} in namespace #{function.namespace}")
 
     function
-    |> FunctionStorage.insert_function()
+    |> FunctionStore.insert_function()
     |> parse_create_result(name)
   end
 
   def new(_), do: {:error, :bad_params}
 
   @doc """
-  Deletes a function from the FunctionStorage.
+  Deletes a function from the FunctionStore.
 
   ## Parameters
   - function: The function struct with the name and namespace of the function to delete.
@@ -67,7 +67,7 @@ defmodule Core.Domain.Api.FunctionRepo do
   def delete(%{"name" => name, "namespace" => namespace}) do
     Logger.info("API: delete request for function #{name} in namespace #{namespace}")
 
-    FunctionStorage.delete_function(name, namespace)
+    FunctionStore.delete_function(name, namespace)
     |> parse_delete_result(name)
   end
 
