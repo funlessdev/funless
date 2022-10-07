@@ -21,7 +21,7 @@ defmodule Core.Domain.Api.Invoker do
   alias Core.Domain.InvokeResult
   alias Core.Domain.Nodes
   alias Core.Domain.Ports.Commands
-  alias Core.Domain.Ports.FunctionStorage
+  alias Core.Domain.Ports.FunctionStore
   alias Core.Domain.Scheduler
 
   @doc """
@@ -75,7 +75,7 @@ defmodule Core.Domain.Api.Invoker do
 
   defp invoke_on_chosen(worker, ivk_params) do
     Logger.info("API: found worker #{worker} for invocation")
-    f = FunctionStorage.get_function(ivk_params.function, ivk_params.namespace)
+    f = FunctionStore.get_function(ivk_params.function, ivk_params.namespace)
 
     case f do
       {:ok, function} ->

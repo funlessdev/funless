@@ -25,8 +25,8 @@ defmodule ApiTest.FunctionTest do
 
   describe "API functions" do
     setup do
-      Core.FunctionStorage.Mock
-      |> Mox.stub_with(Core.Adapters.FunctionStorage.Test)
+      Core.FunctionStore.Mock
+      |> Mox.stub_with(Core.Adapters.FunctionStore.Test)
 
       :ok
     end
@@ -55,7 +55,7 @@ defmodule ApiTest.FunctionTest do
         "namespace" => "ns"
       }
 
-      Core.FunctionStorage.Mock
+      Core.FunctionStore.Mock
       |> Mox.expect(:insert_function, 1, fn %FunctionStruct{
                                               name: "hello",
                                               code: "some code",

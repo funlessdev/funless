@@ -18,7 +18,7 @@ defmodule Core.Application do
   @moduledoc false
 
   alias Core.Domain.Nodes
-  alias Core.Domain.Ports.FunctionStorage
+  alias Core.Domain.Ports.FunctionStore
 
   use Application
 
@@ -46,7 +46,7 @@ defmodule Core.Application do
   def start_phase(:init_db, _phase_type, _env) do
     res =
       Nodes.core_nodes()
-      |> FunctionStorage.init_database()
+      |> FunctionStore.init_database()
 
     case res do
       :ok -> :ok

@@ -12,15 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.FunctionStorage.Test do
+defmodule Core.Adapters.FunctionStore.Test do
   @moduledoc false
 
   alias Core.Domain.FunctionStruct
-  @behaviour Core.Domain.Ports.FunctionStorage
+  @behaviour Core.Domain.Ports.FunctionStore
 
   @impl true
   def init_database(_nodes) do
     :ok
+  end
+
+  @impl true
+  def exists?(_name, _ns) do
+    true
   end
 
   @impl true

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Domain.Ports.FunctionStorage do
+defmodule Core.Domain.Ports.FunctionStore do
   @moduledoc """
   Port for accessing and inserting functions in permanent storage.
   """
@@ -21,6 +21,8 @@ defmodule Core.Domain.Ports.FunctionStorage do
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @callback init_database(list(atom())) :: :ok | {:error, any}
+
+  @callback exists?(String.t(), String.t()) :: boolean
   @callback get_function(String.t(), String.t()) ::
               {:ok, FunctionStruct.t()} | {:error, :not_found}
   @callback insert_function(FunctionStruct.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
@@ -36,6 +38,18 @@ defmodule Core.Domain.Ports.FunctionStorage do
   """
   @spec init_database(list(atom())) :: :ok | {:error, any}
   defdelegate init_database(nodes), to: @adapter
+
+  @doc """
+  Checks if a function exists in the database.
+  ## Parameters
+    - name: name of the function
+    - namespace: namespace of the function
+
+  ## Returns
+  Either true or false.
+  """
+  @spec exists?(String.t(), String.t()) :: boolean
+  defdelegate exists?(name, namespace), to: @adapter
 
   @doc """
   Gets a function from the function storage.
