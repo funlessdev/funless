@@ -17,22 +17,32 @@ defmodule Core.Domain.Ports.Commands do
   Port for sending commands to workers.
   """
 
+  alias Core.Domain.FunctionStruct
   alias Core.Domain.InvokeResult
-
-  @type worker :: atom()
-  @type fl_function :: Core.Domain.FunctionStruct.t()
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback send_invocation_command(worker, fl_function, map()) ::
-              {:ok, InvokeResult.t()} | {:error, atom}
+  @callback send_invoke(atom(), String.t(), String.t(), map()) ::
+              {:ok, InvokeResult.t()} | {:warn, :code_not_found} | {:error, :worker_error}
+  @callback send_invoke_with_code(atom(), FunctionStruct.t(), map()) ::
+              {:ok, InvokeResult.t()} | {:error, :worker_error}
 
   @doc """
-  Sends an invocation command to a worker.
+  Sends an invoke command to a worker passing only the name and namespace of the function, and args.
   It requires a worker (a fully qualified name of another node with the :worker actor on), a function struct and
   (optionally empty) function arguments.
   """
-  @spec send_invocation_command(worker, fl_function, map()) ::
-          {:ok, InvokeResult.t()} | {:error, atom}
-  defdelegate send_invocation_command(worker, function, args), to: @adapter
+  @spec send_invoke(atom(), String.t(), String.t(), map()) ::
+          {:ok, InvokeResult.t()} | {:warn, :code_not_found} | {:error, :worker_error}
+  defdelegate send_invoke(worker, f_name, ns, args), to: @adapter
+
+  @doc """
+  Sends an invoke command to a worker passing the name, namespace of the function and the code (either wasm file or code string).
+  After this send, the worker will store the wasm file in its cache, so subsequent invokes can be done without passing the code.
+  It requires a worker (a fully qualified name of another node with the :worker actor on), a function struct and
+  (optionally empty) function arguments.
+  """
+  @spec send_invoke_with_code(atom(), FunctionStruct.t(), map()) ::
+          {:ok, InvokeResult.t()} | {:error, :worker_error}
+  defdelegate send_invoke_with_code(worker, function, args), to: @adapter
 end

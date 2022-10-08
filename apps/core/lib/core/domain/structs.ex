@@ -28,7 +28,7 @@ defmodule Core.Domain.FunctionStruct do
           code: String.t() | binary(),
           image: String.t()
         }
-  @enforce_keys [:name, :namespace, :code]
+  @enforce_keys [:name, :namespace]
   defstruct [:name, :namespace, :code, :image]
 end
 
