@@ -47,60 +47,65 @@ defmodule Core.Domain.Api.Invoker do
           | {:error, :no_workers}
           | {:error, :worker_error}
   def invoke(%{"function" => f} = raw_params) do
-    # not pretty, but we avoid calling Map.keys() on each invocation
-    keys = ["function", "namespace", "args"]
+    ivk_params = %InvokeParams{
+      function: f,
+      namespace: Map.get(raw_params, "namespace", "_"),
+      args: Map.get(raw_params, "args", %{})
+    }
 
-    parsed_params =
-      raw_params |> Map.take(keys) |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
+    Logger.info("API: invocation for #{f} in #{ivk_params.namespace} requested")
 
-    ivk_params = struct(InvokeParams, parsed_params)
-    Logger.info("API: received invocation for function #{f} with params #{inspect(ivk_params)}")
+    # could be :no_workers
+    worker = Nodes.worker_nodes() |> Scheduler.select()
 
-    Nodes.worker_nodes()
-    |> Scheduler.select()
-    |> invoke_on_chosen(ivk_params)
+    invoke_without_code(worker, ivk_params)
+    |> case do
+      {:warn, :code_not_found} -> invoke_with_code(worker, ivk_params)
+      res -> res
+    end
+    |> handle_result(ivk_params.function)
   end
 
   def invoke(_), do: {:error, :bad_params}
 
-  @spec invoke_on_chosen(atom(), InvokeParams.t()) ::
+  @spec invoke_without_code(atom(), InvokeParams.t()) ::
           {:ok, InvokeResult.t()}
+          | {:warn, :code_not_found}
           | {:error, :not_found}
           | {:error, :no_workers}
           | {:error, :worker_error}
-  defp invoke_on_chosen(:no_workers, _) do
-    Logger.warn("API: no workers found")
-    {:error, :no_workers}
-  end
+  defp invoke_without_code(:no_workers, _), do: {:error, :no_workers}
 
-  defp invoke_on_chosen(worker, ivk_params) do
-    Logger.info("API: found worker #{worker} for invocation")
-    f = FunctionStore.get_function(ivk_params.function, ivk_params.namespace)
+  defp invoke_without_code(worker, ivk_params) do
+    name = ivk_params.function
+    ns = ivk_params.namespace
 
-    case f do
-      {:ok, function} ->
-        Commands.send_invocation_command(worker, function, ivk_params.args)
-        |> parse_wrk_reply
-
-      {:error, :not_found} ->
-        fun = ivk_params.function
-        ns = ivk_params.namespace
-        Logger.error("API: function #{fun} in namespace #{ns} not found")
-
-        {:error, :not_found}
+    if FunctionStore.exists?(name, ns) do
+      # function found in store, send invocation without code
+      args = ivk_params.args
+      Commands.send_invoke(worker, name, ns, args)
+    else
+      {:error, :not_found}
     end
   end
 
-  @spec parse_wrk_reply({:ok, InvokeResult.t()} | {:error, any}) ::
-          {:ok, InvokeResult.t()} | {:error, :worker_error}
-  defp parse_wrk_reply({:ok, _} = reply) do
-    Logger.info("API: received success reply from worker")
+  @spec invoke_with_code(atom(), InvokeParams.t()) ::
+          {:ok, InvokeResult.t()} | {:error, :not_found} | {:error, :worker_error}
+  defp invoke_with_code(worker, ivk_params) do
+    Logger.warn("API: function not available in worker, re-sending invoke with code")
+
+    with {:ok, f} <- FunctionStore.get_function(ivk_params.function, ivk_params.namespace) do
+      Commands.send_invoke_with_code(worker, f, ivk_params.args)
+    end
+  end
+
+  defp handle_result({:ok, _} = reply, name) do
+    Logger.info("API: #{name} invoked successfully")
     reply
   end
 
-  defp parse_wrk_reply({:error, err}) do
-    err_msg = err["error"] || "Unknown error"
-    Logger.error("API: received error reply from worker #{inspect(err_msg)}")
-    {:error, :worker_error}
+  defp handle_result({:error, reason}, name) do
+    Logger.error("API: failed to invoke #{name}: #{inspect(reason)}")
+    {:error, reason}
   end
 end

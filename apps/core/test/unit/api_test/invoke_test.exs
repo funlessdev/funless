@@ -13,7 +13,8 @@
 # limitations under the License.
 
 defmodule ApiTest.InvokeTest do
-  alias Core.Domain.Api
+  alias Core.Domain.Api.Invoker
+  alias Core.Domain.FunctionStruct
   alias Core.Domain.InvokeResult
 
   use ExUnit.Case, async: true
@@ -22,7 +23,7 @@ defmodule ApiTest.InvokeTest do
 
   setup :verify_on_exit!
 
-  describe "API invoke" do
+  describe "API.Invoker" do
     setup do
       Core.Commands.Mock
       |> Mox.stub_with(Core.Adapters.Commands.Test)
@@ -39,71 +40,86 @@ defmodule ApiTest.InvokeTest do
     test "invoke should return {:ok, result} when there is at least a worker and no error occurs" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
-      assert Api.Invoker.invoke(%{"function" => "test"}) == {:ok, %InvokeResult{result: "test"}}
+      assert Invoker.invoke(%{"function" => "test"}) == {:ok, %InvokeResult{result: "test"}}
     end
 
     test "invoke should return {:error, err} when the invocation on worker encounter errors" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn _, _, _ ->
-        {:error, %{}}
-      end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, :worker_error} end)
 
-      assert Api.Invoker.invoke(%{"function" => "f"}) == {:error, :worker_error}
+      assert Invoker.invoke(%{"function" => "f"}) == {:error, :worker_error}
     end
 
-    test "invoke should return {:error, no workers} when no workers are found" do
-      assert Api.Invoker.invoke(%{"namespace" => "_", "function" => "test"}) ==
-               {:error, :no_workers}
+    test "invoke should return {:error, :no_workers} when no workers are found" do
+      expected = {:error, :no_workers}
+      assert Invoker.invoke(%{"namespace" => "_", "function" => "test"}) == expected
     end
 
     test "invoke on node list with nodes other than workers should only use workers" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere, :worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn worker, _, _ -> {:ok, worker} end)
+      |> Mox.expect(:send_invoke, fn worker, _, _, _ -> {:ok, worker} end)
 
-      assert Api.Invoker.invoke(%{"function" => "test"}) == {:ok, :worker@localhost}
+      assert Invoker.invoke(%{"function" => "test"}) == {:ok, :worker@localhost}
     end
 
     test "invoke on node list without workers should return {:error, no workers}" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere] end)
 
-      assert Api.Invoker.invoke(%{"function" => "test"}) == {:error, :no_workers}
+      assert Invoker.invoke(%{"function" => "test"}) == {:error, :no_workers}
     end
 
     test "invoke with bad parameters should return {:error, :bad_params}" do
-      assert Api.Invoker.invoke(%{"bad" => "arg"}) == {:error, :bad_params}
+      assert Invoker.invoke(%{"bad" => "arg"}) == {:error, :bad_params}
     end
 
-    test "invoke on a non-existent function should return {:error, err}" do
+    test "invoke on a non-existent function should return {:error, :not_found}" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+      Core.FunctionStore.Mock |> Mox.expect(:exists?, fn _, _ -> false end)
 
-      Core.FunctionStore.Mock
-      |> Mox.expect(:get_function, fn "hello", "ns" -> {:error, :not_found} end)
-
-      assert Api.Invoker.invoke(%{"function" => "hello", "namespace" => "ns"}) ==
+      assert Invoker.invoke(%{"function" => "hello", "namespace" => "ns"}) ==
                {:error, :not_found}
     end
 
-    test "invoke on an existent function should send the invocation command using said function" do
+    test "invoke with an existent function should send the invocation command using said function" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn _worker, function, _args ->
-        {:ok, %{result: Map.from_struct(function)}}
+      |> Mox.expect(:send_invoke, fn _, function, _, _ -> {:ok, %{result: function}} end)
+
+      expected = "hello"
+
+      assert {:ok, %{result: result}} =
+               Invoker.invoke(%{"function" => "hello", "namespace" => "ns"})
+
+      assert result == expected
+    end
+
+    test "invoke should retry the invocation with the code if the worker returns :no_code_found" do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:warn, :code_not_found} end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invoke_with_code, fn _worker, function, _args ->
+        {:ok, %{result: function}}
       end)
 
-      f = %{
+      # From FunctionStore Test
+      f_in = %{"function" => "hello", "namespace" => "ns"}
+
+      f_out = %FunctionStruct{
         name: "hello",
         namespace: "ns",
         code: "console.log(\"hello\")",
         image: "nodejs"
       }
 
-      assert Api.Invoker.invoke(%{"function" => "hello", "namespace" => "ns"}) ==
-               {:ok, %{result: f}}
+      assert Invoker.invoke(f_in) == {:ok, %{result: f_out}}
     end
   end
 end
