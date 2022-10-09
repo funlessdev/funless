@@ -12,31 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The directory Mix will write compiled artifacts to.
-_build/
-
-# If you run "mix test --cover", coverage assets end up here.
-cover/
-
-# The directory Mix downloads your dependencies sources to.
-deps/
-
-# Where 3rd-party dependencies like ExDoc output generated docs.
-doc/
-
 # Ignore .fetch files in case you like to edit your project deps locally.
 .fetch
-
-# If the VM crashes, it generates a dump, let's ignore it too.
-erl_crash.dump
-
-# Also ignore archive artifacts (built via "mix archive.build").
-*.ez
-
-# Developer tools
-.git
-.tool-versions
-.gitignore
 
 # Umbrella
 apps/**/config/*.secret.exs
@@ -53,11 +30,49 @@ apps/*/priv/secrets/*
 !apps/*/priv/secrets/.keep
 
 # File types
-tmp
-erl_crash.dump
+*.md
+Taskfile.yml
+
+# This file excludes paths from the Docker build context.
+#
+# By default, Docker's build context includes all files (and folders) in the
+# current directory. Even if a file isn't copied into the container it is still sent to
+# the Docker daemon.
+#
+# There are multiple reasons to exclude files from the build context:
+#
+# 1. Prevent nested folders from being copied into the container (ex: exclude
+#    /assets/node_modules when copying /assets)
+# 2. Reduce the size of the build context and improve build time (ex. /build, /deps, /doc)
+# 3. Avoid sending files containing sensitive information
+#
+# More information on using .dockerignore is available here:
+# https://docs.docker.com/engine/reference/builder/#dockerignore-file
+
+# Ignore git, but keep git HEAD and refs to access current commit hash if needed:
+#
+# $ cat .git/HEAD | awk '{print ".git/"$2}' | xargs cat
+# d0b8727759e1e0e7aa3d41707d12376e373d5ecc
+.git
+!.git/HEAD
+!.git/refs
+
+# Common development/test artifacts
+/cover/
+/doc/
+/test/
+/tmp/
+.elixir_ls
+
+# Mix artifacts
+/_build/
+/deps/
 *.ez
 
-Taskfile.yml
-README*
-test/
-priv/static/
+# Generated on crash by the VM
+erl_crash.dump
+
+# Static artifacts - These should be fetched and built inside the Docker image
+/assets/node_modules/
+/priv/static/assets/
+/priv/static/cache_manifest.json
