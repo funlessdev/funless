@@ -20,33 +20,39 @@ defmodule Core.Adapters.Commands.Worker do
   require Logger
   alias Core.Domain.FunctionStruct
   alias Core.Domain.InvokeResult
+
   @behaviour Core.Domain.Ports.Commands
 
+  # Possible replies:
+  # {:ok, result}
+  # :code_not_found in this case re-do the invocation passing the code
+  # {:error, atom()} mainly from the worker nifs
+  # {:error, %{"error" => msg}} a map with the reason
+
+  # Handle the second type of error by logging and transforming it in :worker_error for the api
+  # Handle the third type of error by logging the message and transforming it in :worker_error for the api
   @impl true
-  @spec send_invocation_command(atom(), FunctionStruct.t(), map()) ::
-          {:ok, InvokeResult.t()} | {:error, atom}
-  def send_invocation_command(worker, %FunctionStruct{} = function, args) do
-    worker_addr = worker_address(worker)
-    cmd = invoke_command(function, args)
+  def send_invoke(worker, name, ns, args) do
+    worker_addr = {:worker, worker}
+    cmd = {:invoke, %{name: name, namespace: ns}, args}
+    Logger.info("sending invoke for #{name} to #{inspect(worker_addr)}")
 
-    call_worker(worker_addr, cmd)
+    case GenServer.call(worker_addr, cmd, 30_000) do
+      {:ok, result} -> {:ok, %InvokeResult{result: result}}
+      {:warn, :code_not_found} -> {:warn, :code_not_found}
+      {:error, err} -> {:error, err}
+    end
   end
 
-  @doc false
-  @spec worker_address(atom()) :: {:worker, atom()}
-  def worker_address(worker), do: {:worker, worker}
+  @impl true
+  def send_invoke_with_code(worker, %FunctionStruct{} = function, args) do
+    worker_addr = {:worker, worker}
+    cmd = {:invoke, function, args}
+    Logger.info("sending invoke with code for #{function.name} to #{inspect(worker_addr)}")
 
-  @spec invoke_command(FunctionStruct.t(), map()) :: {:invoke, FunctionStruct.t(), map()}
-  def invoke_command(%FunctionStruct{} = function, args) do
-    {:invoke, function, args}
-  end
-
-  @spec call_worker({:worker, atom()}, any()) :: {:ok, InvokeResult.t()} | {:error, atom}
-  defp call_worker(worker_addr, {cmd, payload, _args} = command) do
-    Logger.info(
-      "sending command #{cmd} to #{inspect(worker_addr)} with payload #{inspect(payload)}"
-    )
-
-    GenServer.call(worker_addr, command, 30_000)
+    case GenServer.call(worker_addr, cmd, 30_000) do
+      {:ok, result} -> {:ok, %InvokeResult{result: result}}
+      {:error, err} -> {:error, err}
+    end
   end
 end

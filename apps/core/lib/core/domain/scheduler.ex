@@ -20,10 +20,12 @@ defmodule Core.Domain.Scheduler do
   alias Core.Domain.Ports.Telemetry.Api
   require Logger
 
+  @type worker_atom :: atom()
+
   @doc """
   Receives a list of workers and chooses one which can be used for invocation.
   """
-  @spec select(list()) :: atom()
+  @spec select(list()) :: worker_atom() | :no_workers
   def select([]) do
     Logger.warn("Scheduler: tried selection with NO workers")
     :no_workers

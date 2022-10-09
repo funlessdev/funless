@@ -33,7 +33,7 @@ defmodule CoreWeb.FnControllerTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
 
       conn = post(conn, "/v1/fn/invoke", %{namespace: "_", function: "hello", args: %{}})
 
@@ -42,7 +42,7 @@ defmodule CoreWeb.FnControllerTest do
 
     test "error: should return 404 when the required function is not found", %{conn: conn} do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
-      Core.FunctionStore.Mock |> Mox.expect(:get_function, fn _, _ -> {:error, :not_found} end)
+      Core.FunctionStore.Mock |> Mox.expect(:exists?, fn _, _ -> false end)
 
       conn = post(conn, "/v1/fn/invoke", %{function: "hello"})
 
@@ -69,9 +69,7 @@ defmodule CoreWeb.FnControllerTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invocation_command, fn _, _, _ ->
-        {:error, %{"error" => "some worker error dude"}}
-      end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, :worker_error} end)
 
       conn = post(conn, "/v1/fn/invoke", %{function: "test", code: ""})
       expected = %{"errors" => %{"detail" => "Failed to invoke function: worker error"}}

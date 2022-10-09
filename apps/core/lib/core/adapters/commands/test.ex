@@ -19,7 +19,12 @@ defmodule Core.Adapters.Commands.Test do
   alias Core.Domain.InvokeResult
 
   @impl true
-  def send_invocation_command(_worker, function, _args) do
+  def send_invoke(_worker, name, _ns, _args) do
+    {:ok, %InvokeResult{result: name}}
+  end
+
+  @impl true
+  def send_invoke_with_code(_worker, function, _args) do
     {:ok, %InvokeResult{result: function.name}}
   end
 end
