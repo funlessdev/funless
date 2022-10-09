@@ -17,7 +17,7 @@ name: Core CI
 on:
   push:
     paths:
-    - 'core-api.yaml'
+      - "core-api.yaml"
   workflow_dispatch:
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
       - name: OpenAPI Generator Action
         uses: kpurdon/openapi-generator-action@v0.0.3
         with:
-          args: "generate -i core-api.yaml -g go -o ./generated-sdk"
+          args: "generate -i core-api.yaml --git-user-id funlessdev --git-repo-id fl-client-sdk-go -g go -o ./generated-sdk"
       - name: Pushes to fl-client-sdk-go
         id: push_directory
         uses: cpina/github-action-push-to-another-repository@main
@@ -36,7 +36,7 @@ jobs:
           SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
         with:
           source-directory: generated-sdk/
-          destination-github-username: 'funlessdev'
-          destination-repository-name: 'fl-client-sdk-go'
+          destination-github-username: "funlessdev"
+          destination-repository-name: "fl-client-sdk-go"
       - name: Test get variable exported by push-to-another-repository
         run: echo $DESTINATION_CLONED_DIRECTORY
