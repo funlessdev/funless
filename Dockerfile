@@ -16,7 +16,7 @@
 # This should match the version of Alpine that the `elixir:1.13.4-alpine` image uses
 ARG ALPINE_VERSION=3.16
 
-FROM elixir:1.13.4-alpine AS builder
+FROM elixir:1.14-alpine AS builder
 
 # The following are build arguments used to change variable parts of the image.
 # The name of your application/release (required)
@@ -39,15 +39,14 @@ RUN apk update && \
 # This copies our app source code into the build container
 COPY . .
 
-RUN mix do deps.get, deps.compile, compile
-
+RUN mix deps.get --only $MIX_ENV, deps.compile
 RUN mix release 
 
 # From this line onwards, we're in a new image, which will be the image used in production
 FROM alpine:${ALPINE_VERSION}
 
 ARG MIX_ENV=prod
-ARG PORT=4001
+ARG PORT=4000
 
 # # The name of your application/release (required)
 RUN apk update && \

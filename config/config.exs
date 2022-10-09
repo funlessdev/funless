@@ -38,9 +38,9 @@ config :libcluster,
 config :core_web,
   generators: [context_app: :core]
 
-# Configures the endpoint
+# Configures the endpoint, we need to listen to 0.0.0.0 because it's in a container
 config :core_web, CoreWeb.Endpoint,
-  url: [host: "localhost"],
+  url: [host: "0.0.0.0"],
   render_errors: [view: CoreWeb.ErrorView, accepts: ~w(json), layout: false],
   live_view: [signing_salt: "sRzweIOe"],
   adapter: Bandit.PhoenixAdapter

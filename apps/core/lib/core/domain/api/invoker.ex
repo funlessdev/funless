@@ -24,6 +24,8 @@ defmodule Core.Domain.Api.Invoker do
   alias Core.Domain.Ports.FunctionStore
   alias Core.Domain.Scheduler
 
+  @type invoke_errors :: {:error, :not_found} | {:error, :no_workers} | {:error, :worker_error}
+
   @doc """
   Sends an invocation request for the `name` function in the `ns` namespace,
   specified in the invocation parameters.
@@ -41,11 +43,7 @@ defmodule Core.Domain.Api.Invoker do
   - {:error, :worker_error} if the worker returned an error.
   """
   @spec invoke(InvokeParams.t()) ::
-          {:ok, InvokeResult.t()}
-          | {:error, :bad_params}
-          | {:error, :not_found}
-          | {:error, :no_workers}
-          | {:error, :worker_error}
+          {:ok, InvokeResult.t()} | {:error, :bad_params} | invoke_errors()
   def invoke(%{"function" => f} = raw_params) do
     ivk_params = %InvokeParams{
       function: f,
@@ -69,11 +67,7 @@ defmodule Core.Domain.Api.Invoker do
   def invoke(_), do: {:error, :bad_params}
 
   @spec invoke_without_code(atom(), InvokeParams.t()) ::
-          {:ok, InvokeResult.t()}
-          | {:warn, :code_not_found}
-          | {:error, :not_found}
-          | {:error, :no_workers}
-          | {:error, :worker_error}
+          {:ok, InvokeResult.t()} | {:warn, :code_not_found} | invoke_errors()
   defp invoke_without_code(:no_workers, _), do: {:error, :no_workers}
 
   defp invoke_without_code(worker, ivk_params) do
