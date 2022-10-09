@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.RuntimeTracker.ETS.WriteServer do
+defmodule Worker.Adapters.RuntimeCache.ETS.WriteServer do
   @moduledoc """
     Implements GenServer behaviour; represents a process having exclusive writing rights on an underlying ETS table.
 

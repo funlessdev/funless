@@ -18,10 +18,8 @@ config :worker, Worker.Domain.Ports.Runtime.Provisioner,
   adapter: Worker.Adapters.Runtime.Wasm.Provisioner
 
 config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Adapters.Runtime.Wasm.Runner
-
 config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Adapters.Runtime.Wasm.Cleaner
-
-config :worker, Worker.Domain.Ports.RuntimeTracker, adapter: Worker.Adapters.RuntimeTracker.ETS
+config :worker, Worker.Domain.Ports.RuntimeCache, adapter: Worker.Adapters.RuntimeCache.ETS
 
 config :logger, :console,
   format: "\n#####[$level] $time $metadata $message\n",

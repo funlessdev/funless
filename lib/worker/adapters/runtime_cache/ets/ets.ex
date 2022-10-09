@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.RuntimeTracker.ETS do
+defmodule Worker.Adapters.RuntimeCache.ETS do
   @moduledoc """
   ETS adapter for storage of {function, runtime} tuples.
   """
-  @behaviour Worker.Domain.Ports.RuntimeTracker
+  @behaviour Worker.Domain.Ports.RuntimeCache
 
   @doc """
     Returns a list of runtimes associated with the given `function_name`.

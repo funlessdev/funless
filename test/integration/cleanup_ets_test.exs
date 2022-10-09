@@ -15,7 +15,7 @@
 defmodule Integration.CleanupEtsTest do
   use ExUnit.Case
 
-  alias Worker.Adapters.RuntimeTracker.ETS
+  alias Worker.Adapters.RuntimeCache.ETS
   alias Worker.Domain.CleanupRuntime
   alias Worker.Domain.RuntimeStruct
 
@@ -23,10 +23,10 @@ defmodule Integration.CleanupEtsTest do
 
   setup :verify_on_exit!
 
-  describe "Cleanup requests and ETS RuntimeTracker" do
+  describe "Cleanup requests and ETS RuntimeCache" do
     setup do
       Worker.Cleaner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Cleaner.Test)
-      Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.ETS)
+      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.ETS)
       :ok
     end
 

@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.RuntimeTracker.Test do
+defmodule Worker.Adapters.RuntimeCache.Test do
   @moduledoc false
-  @behaviour Worker.Domain.Ports.RuntimeTracker
+  @behaviour Worker.Domain.Ports.RuntimeCache
   alias Worker.Domain.RuntimeStruct
 
   @impl true

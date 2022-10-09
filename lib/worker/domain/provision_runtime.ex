@@ -18,7 +18,7 @@ defmodule Worker.Domain.ProvisionRuntime do
   """
 
   alias Worker.Domain.Ports.Runtime.Provisioner
-  alias Worker.Domain.Ports.RuntimeTracker
+  alias Worker.Domain.Ports.RuntimeCache
 
   alias Worker.Domain.CleanupRuntime
   alias Worker.Domain.FunctionStruct
@@ -52,13 +52,13 @@ defmodule Worker.Domain.ProvisionRuntime do
   @spec store_prepared_runtime({atom(), any}, String.t()) ::
           {:ok, RuntimeStruct.t()} | {:error, any}
   defp store_prepared_runtime({:ok, runtime}, function_name) do
-    case RuntimeTracker.insert_runtime(function_name, runtime) do
+    case RuntimeCache.insert_runtime(function_name, runtime) do
       {:ok, _} ->
         Logger.info("API: Runtime #{runtime.name} ready and tracked")
         {:ok, runtime}
 
       {:error, err} ->
-        Logger.error("API: Failed to store runtime #{runtime.name} in Tracker after creation")
+        Logger.error("API: Failed to store runtime #{runtime.name} in cache after creation")
         CleanupRuntime.cleanup(runtime)
         {:error, err}
     end

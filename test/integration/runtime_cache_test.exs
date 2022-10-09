@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Integration.RuntimeTrackerTest do
+defmodule Integration.RuntimeCacheTest do
   use ExUnit.Case
-  alias Worker.Adapters.RuntimeTracker.ETS
+  alias Worker.Adapters.RuntimeCache.ETS
   alias Worker.Domain.RuntimeStruct
   import Mox, only: [verify_on_exit!: 1]
 

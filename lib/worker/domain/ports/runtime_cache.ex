@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Domain.Ports.RuntimeTracker do
+defmodule Worker.Domain.Ports.RuntimeCache do
   @moduledoc """
   Port for keeping track of {function, runtime} tuples in storage.
   """

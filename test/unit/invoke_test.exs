@@ -35,7 +35,7 @@ defmodule InvokeTest do
     setup do
       Worker.Runner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Runner.Test)
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
-      Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.Test)
+      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.Test)
       :ok
     end
 
@@ -56,7 +56,7 @@ defmodule InvokeTest do
 
     test "invoke should call prepare when no runtime is found for the given function",
          %{function: function} do
-      Worker.RuntimeTracker.Mock
+      Worker.RuntimeCache.Mock
       |> Mox.expect(:get_runtimes, fn _ -> [] end)
 
       Worker.Provisioner.Mock |> Mox.expect(:prepare, fn _, _ -> {:ok, %{}} end)
@@ -66,7 +66,7 @@ defmodule InvokeTest do
 
     test "invoke_function should return {:error, err} when no runtime available and its creation fails",
          %{function: function} do
-      Worker.RuntimeTracker.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
+      Worker.RuntimeCache.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
 
       Worker.Provisioner.Mock
       |> Mox.expect(:prepare, fn _, _ -> {:error, "creation error"} end)

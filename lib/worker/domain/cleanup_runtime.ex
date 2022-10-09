@@ -19,7 +19,7 @@ defmodule Worker.Domain.CleanupRuntime do
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.Ports.Runtime.Cleaner
 
-  import Worker.Domain.Ports.RuntimeTracker, only: [get_runtimes: 1, delete_runtime: 2]
+  import Worker.Domain.Ports.RuntimeCache, only: [get_runtimes: 1, delete_runtime: 2]
 
   require Elixir.Logger
 

@@ -15,7 +15,7 @@
 defmodule Integration.ProvisionEtsTest do
   use ExUnit.Case
 
-  alias Worker.Adapters.RuntimeTracker.ETS
+  alias Worker.Adapters.RuntimeCache.ETS
   alias Worker.Domain.ProvisionRuntime
   alias Worker.Domain.RuntimeStruct
 
@@ -23,10 +23,10 @@ defmodule Integration.ProvisionEtsTest do
 
   setup :verify_on_exit!
 
-  describe "Provisioning requests and ETS RuntimeTracker" do
+  describe "Provisioning requests and ETS RuntimeCache" do
     setup do
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
-      Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.ETS)
+      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.ETS)
 
       Worker.Provisioner.Mock
       |> Mox.stub(:prepare, fn _function, _runtime ->
