@@ -18,17 +18,17 @@ defmodule Worker.Adapters.RuntimeCache.Test do
   alias Worker.Domain.RuntimeStruct
 
   @impl true
-  def get_runtimes(_function_name) do
-    [%RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"}]
+  def get(_function_name, _namespace) do
+    %RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"}
   end
 
   @impl true
-  def insert_runtime(function_name, runtime) do
-    {:ok, {function_name, runtime}}
+  def insert(_name, _ns, _runtime) do
+    :ok
   end
 
   @impl true
-  def delete_runtime(function_name, runtime) do
-    {:ok, {function_name, runtime}}
+  def delete(_name, _ns) do
+    :ok
   end
 end

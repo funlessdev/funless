@@ -18,56 +18,52 @@ defmodule Worker.Domain.Ports.RuntimeCache do
   """
   alias Worker.Domain.RuntimeStruct
 
-  @type fn_name :: String.t()
-  @type runtime :: RuntimeStruct.t()
-
-  @callback get_runtimes(fn_name) :: [runtime]
-
-  @callback insert_runtime(fn_name, runtime) ::
-              {:ok, {fn_name, runtime}} | {:error, any}
-
-  @callback delete_runtime(fn_name, runtime) ::
-              {:ok, {fn_name, runtime}} | {:error, any}
+  @callback get(String.t(), String.t()) :: RuntimeStruct.t() | :runtime_not_found
+  @callback insert(String.t(), String.t(), RuntimeStruct.t()) :: :ok | {:error, any}
+  @callback delete(String.t(), String.t()) :: :ok | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @doc """
-  Returns a list of runtimes for a given function name.
+  Retrieve the runtime associated to the given function name and namespace.
 
   ### Parameters
-  - `function_name` - The name of the function to get runtimes for.
+  - `function_name` - The name of the function.
+  - `namespace` - The namespace of the function.
 
   ### Returns
-  - `runtimes` - A list of runtimes for the given function name.
+  - `RuntimeStruct.t()` - The runtime of the given function name if found.
+  - `:runtime_not_found` - If the runtime is not found.
   """
-  @spec get_runtimes(fn_name) :: [runtime]
-  defdelegate get_runtimes(function_name), to: @adapter
+  @spec get(String.t(), String.t()) :: RuntimeStruct.t() | :runtime_not_found
+  defdelegate get(function_name, namespace), to: @adapter
 
   @doc """
-  Inserts a runtime into the RuntimeTracker associated with a function.
+  Inserts a runtime into the RuntimeCache associated to a function.
 
   ### Parameters
   - `function_name` - The name of the function to associate the runtime with.
+  - `namespace` - The namespace of the function.
   - `runtime` - The RuntimeStruct of the runtime to be inserted.
 
   ### Returns
-  - `{:ok, {function_name, runtime}}` - The function name and RuntimeStruct of the runtime that was inserted.
-  - `{:error, err}` - An error message if the runtime could not be inserted.
+  - `:ok` - If the runtime was inserted.
+  - `{:error, err}` - If an error occurred and the runtime could not be inserted.
   """
-  @spec insert_runtime(fn_name, runtime) :: {:ok, {fn_name, runtime}} | {:error, any}
-  defdelegate insert_runtime(function_name, runtime), to: @adapter
+  @spec insert(String.t(), String.t(), RuntimeStruct.t()) :: :ok | {:error, any}
+  defdelegate insert(function_name, namespace, runtime), to: @adapter
 
   @doc """
-  Removes a runtime associated with a function from the RuntimeTracker.
+  Removes the runtime associated with a function from the RuntimeCache.
 
   ### Parameters
   - `function_name` - The name of the function that the runtime is associated with.
-  - `runtime` - The RuntimeStruct of the runtime to be removed.
+  - `namespace` - The namespace of the function.
 
   ### Returns
-  - `{:ok, {function_name, runtime}}` - The function name and RuntimeStruct that was removed.
-  - `{:error, err}` - An error message if the runtime could not be removed.
+  - `:ok` - If the runtime was removed.
+  - `{:error, err}` - If an error occurred and the runtime could not be removed.
   """
-  @spec delete_runtime(fn_name, runtime) :: {:ok, {fn_name, runtime}} | {:error, any}
-  defdelegate delete_runtime(function_name, runtime), to: @adapter
+  @spec delete(String.t(), String.t()) :: :ok | {:error, any}
+  defdelegate delete(function_name, namespace), to: @adapter
 end

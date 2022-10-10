@@ -18,45 +18,21 @@ defmodule Worker.Adapters.RuntimeCache.ETS do
   """
   @behaviour Worker.Domain.Ports.RuntimeCache
 
-  @doc """
-    Returns a list of runtimes associated with the given `function_name`.
-    The list is empty if no runtime is found.
-
-    ## Parameters
-      - function_name: name of the function, used as key in the ETS table entries
-  """
   @impl true
-  def get_runtimes(function_name) do
-    :ets.lookup(:functions_runtimes, function_name) |> Enum.map(fn {_f, c} -> c end)
+  def get(function_name, namespace) do
+    case :ets.lookup(:function_runtime, {function_name, namespace}) do
+      [{{^function_name, ^namespace}, runtime}] -> runtime
+      _ -> :runtime_not_found
+    end
   end
 
-  @doc """
-    Inserts the  {`function_name`, `runtime`} couple in the ETS table.
-    Calls the :write_server process to alter the table, does not modify it directly.
-
-    Returns {:ok, {function_name, runtime}}.
-
-    ## Parameters
-      - function_name: name of the function, used as key in the ETS table entries
-      - runtime: struct identifying the runtime
-  """
   @impl true
-  def insert_runtime(function_name, runtime) do
-    GenServer.call(:write_server, {:insert, function_name, runtime})
+  def insert(function_name, namespace, runtime) do
+    GenServer.call(:write_server, {:insert, function_name, namespace, runtime})
   end
 
-  @doc """
-    Removes the  {`function_name`, `runtime`} couple from the ETS table.
-    Calls the :write_server process to alter the table, does not modify it directly.
-
-    Returns {:ok, {function_name, runtime}}.
-
-    ## Parameters
-      - function_name: name of the function, used as key in the ETS table entries
-      - runtime: struct identifying the runtime
-  """
   @impl true
-  def delete_runtime(function_name, runtime) do
-    GenServer.call(:write_server, {:delete, function_name, runtime})
+  def delete(function_name, namespace) do
+    GenServer.call(:write_server, {:delete, function_name, namespace})
   end
 end
