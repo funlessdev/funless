@@ -37,23 +37,23 @@ defmodule Worker.Domain.ProvisionRuntime do
   @spec prepare_runtime(map()) :: {:ok, RuntimeStruct.t()} | {:error, any}
   def prepare_runtime(%{__struct__: _s} = f), do: prepare_runtime(Map.from_struct(f))
 
-  def prepare_runtime(%{name: fname, namespace: _namespace} = f) do
+  def prepare_runtime(%{name: fname, namespace: ns} = f) do
     # Conversion needed to pass it to the rustler prepare_runtime function, perhaps move the conversion in cluster.ex?
     function = struct(FunctionStruct, f)
 
     runtime_name = fname <> "-funless"
 
-    Provisioner.prepare(function, runtime_name) |> store_prepared_runtime(fname)
+    Provisioner.prepare(function, runtime_name) |> store_prepared_runtime(fname, ns)
   end
 
   def prepare_runtime(_), do: {:error, :bad_params}
 
-  @dialyzer {:nowarn_function, [store_prepared_runtime: 2]}
-  @spec store_prepared_runtime({atom(), any}, String.t()) ::
+  # @dialyzer {:nowarn_function, [store_prepared_runtime: 3]}
+  @spec store_prepared_runtime({atom(), any}, String.t(), String.t()) ::
           {:ok, RuntimeStruct.t()} | {:error, any}
-  defp store_prepared_runtime({:ok, runtime}, function_name) do
-    case RuntimeCache.insert_runtime(function_name, runtime) do
-      {:ok, _} ->
+  defp store_prepared_runtime({:ok, runtime}, function_name, namespace) do
+    case RuntimeCache.insert(function_name, namespace, runtime) do
+      :ok ->
         Logger.info("API: Runtime #{runtime.name} ready and tracked")
         {:ok, runtime}
 
@@ -64,7 +64,7 @@ defmodule Worker.Domain.ProvisionRuntime do
     end
   end
 
-  defp store_prepared_runtime({:error, err}, _) do
+  defp store_prepared_runtime({:error, err}, _, _) do
     Logger.error("API: Runtime preparation failed: #{inspect(err)}")
     {:error, err}
   end

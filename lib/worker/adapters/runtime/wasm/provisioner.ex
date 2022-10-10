@@ -29,6 +29,6 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   end
 
   def prepare(_function, _runtime_name) do
-    {:error, :no_code_provided}
+    {:error, :code_not_found}
   end
 end

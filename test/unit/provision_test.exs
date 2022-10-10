@@ -57,7 +57,7 @@ defmodule ProvisionTest do
       end)
 
       Worker.RuntimeCache.Mock
-      |> Mox.expect(:insert_runtime, 0, &Worker.Adapters.RuntimeCache.Test.insert_runtime/2)
+      |> Mox.expect(:insert, 0, &Worker.Adapters.RuntimeCache.Test.insert/3)
 
       assert ProvisionRuntime.prepare_runtime(function) == {:error, "error"}
     end
@@ -65,7 +65,7 @@ defmodule ProvisionTest do
     test "prepare_runtime should call the storage when sucessfull runtime creation",
          %{function: function} do
       Worker.RuntimeCache.Mock
-      |> Mox.expect(:insert_runtime, 1, &Worker.Adapters.RuntimeCache.Test.insert_runtime/2)
+      |> Mox.expect(:insert, 1, &Worker.Adapters.RuntimeCache.Test.insert/3)
 
       rt_from_test = %Worker.Domain.RuntimeStruct{
         host: "localhost",
@@ -80,9 +80,7 @@ defmodule ProvisionTest do
     test "prepare_runtime should return storage error when storing fails",
          %{function: function} do
       Worker.RuntimeCache.Mock
-      |> Mox.stub(:insert_runtime, fn _function, _runtime ->
-        {:error, "insert error"}
-      end)
+      |> Mox.expect(:insert, fn _function, _ns, _runtime -> {:error, "insert error"} end)
 
       assert ProvisionRuntime.prepare_runtime(function) == {:error, "insert error"}
     end
