@@ -79,7 +79,7 @@ defmodule RequestTest do
       function: function
     } do
       Worker.RuntimeCache.Mock
-      |> Mox.expect(:get_runtimes, fn _ -> [] end)
+      |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
 
       Worker.Provisioner.Mock
       |> Mox.expect(:prepare, fn _, _ ->
@@ -116,10 +116,7 @@ defmodule RequestTest do
       pid: pid,
       function: function
     } do
-      expected = {:ok, %RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"}}
-
-      reply = GenServer.call(pid, {:cleanup, function})
-      assert expected == reply
+      assert :ok = GenServer.call(pid, {:cleanup, function})
     end
 
     test "cleanup call should return back an error when it occurs during cleanup", %{

@@ -21,56 +21,38 @@ defmodule Integration.RuntimeCacheTest do
   setup :verify_on_exit!
 
   test "get_function_runtimes returns an empty list when no runtimes stored" do
-    result = ETS.get_runtimes("test-no-runtime")
-    assert result == []
+    result = ETS.get("test-no-runtime", "fake-ns")
+    assert result == :runtime_not_found
   end
 
-  test "insert_runtime adds {function_name, runtime} couple to the storage" do
+  test "insert adds {function_name, namespace} => runtime to the cache" do
     runtime = %RuntimeStruct{
       host: "127.0.0.1",
       port: "8080",
       name: "test-runtime"
     }
 
-    ETS.insert_runtime("test", runtime)
+    ETS.insert("test", "ns", runtime)
 
-    assert ETS.get_runtimes("test") == [runtime]
+    assert ETS.get("test", "ns") == runtime
 
-    ETS.delete_runtime("test", runtime)
+    ETS.delete("test", "ns")
   end
 
-  test "multiple insert_runtime with the same function name adds the runtime to the list" do
-    runtime1 = %RuntimeStruct{name: "test-runtime"}
-    runtime2 = %RuntimeStruct{name: "test-runtime-2"}
-
-    ETS.insert_runtime("test", runtime1)
-    ETS.insert_runtime("test", runtime2)
-
-    [rt, rt2] = ETS.get_runtimes("test")
-    assert rt.name == "test-runtime"
-    assert rt2.name == "test-runtime-2"
-
-    ETS.delete_runtime("test", rt)
-    ETS.delete_runtime("test", rt2)
-  end
-
-  test "delete_runtime removes a {function_name, runtime} couple from the storage" do
+  test "delete removes a {function_name, ns} =>, runtime couple from the storage" do
     runtime = %RuntimeStruct{
       host: "127.0.0.1",
       port: "8080",
       name: "test-runtime"
     }
 
-    ETS.insert_runtime("test-delete", runtime)
-
-    ETS.delete_runtime("test-delete", runtime)
-
-    assert ETS.get_runtimes("test-delete") == []
+    ETS.insert("test-delete", "ns", runtime)
+    ETS.delete("test-delete", "ns")
+    assert ETS.get("test-delete", "ns") == :runtime_not_found
   end
 
-  test "delete_runtime on empty storage works" do
-    rt = %RuntimeStruct{name: "name"}
-    result = ETS.delete_runtime("test", rt)
-    assert result == {:ok, {"test", rt}}
+  test "delete on empty storage does nothing" do
+    result = ETS.delete("test", "ns")
+    assert result == :ok
   end
 end
