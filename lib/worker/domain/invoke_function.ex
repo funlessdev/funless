@@ -60,7 +60,7 @@ defmodule Worker.Domain.InvokeFunction do
   @spec run_function(RuntimeStruct.t(), FunctionStruct.t(), map()) ::
           {:ok, any} | {:error, any}
 
-  # @dialyzer {:nowarn_function, run_function: 3}
+  @dialyzer {:nowarn_function, run_function: 3}
   defp run_function(:runtime_not_found, %FunctionStruct{} = function, args) do
     Logger.warn("API: no runtime found to run function #{function.name}, creating one...")
 

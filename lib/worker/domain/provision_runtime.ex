@@ -48,7 +48,7 @@ defmodule Worker.Domain.ProvisionRuntime do
 
   def prepare_runtime(_), do: {:error, :bad_params}
 
-  # @dialyzer {:nowarn_function, [store_prepared_runtime: 3]}
+  @dialyzer {:nowarn_function, [store_prepared_runtime: 3]}
   @spec store_prepared_runtime({atom(), any}, String.t(), String.t()) ::
           {:ok, RuntimeStruct.t()} | {:error, any}
   defp store_prepared_runtime({:ok, runtime}, function_name, namespace) do

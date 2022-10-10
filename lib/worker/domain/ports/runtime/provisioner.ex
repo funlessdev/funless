@@ -25,15 +25,18 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
   @callback prepare(FunctionStruct.t(), String.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
 
   @doc """
-  Creates a runtime for the given function and names it `runtime_name`.
+  Provisions a runtime for the given function and namespace.
+  It first tries to retrieve it from the cache, if missing it can either create a new one or return :runtime_not_found,
+  depending on the adapter.
 
-  ### Parameters
-    - function: a struct with all the fields required by Worker.Domain.Function
-    - runtime_name: the name of the runtime to be prepared
+  ## Parameters
+  - function: a struct with all the fields required by Worker.Domain.Function
+  - runtime_name: the name of the runtime to be prepared
 
-  ### Returns
-    - {:ok, runtime} if the runtime is successfully prepared
-    - {:error, err} if any error is encountered
+  ## Returns
+  - `{:ok, runtime}` if the runtime is found or created.any()
+  - `{:error, :runtime_not_found} if the runtime was not in the cache and it won't attempt to create one.
+  - `{:error, err}` if any error is encountered
   """
   @spec prepare(FunctionStruct.t(), String.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
   defdelegate prepare(fl_function, runtime_name), to: @adapter
