@@ -41,7 +41,7 @@ defmodule InvokeTest do
 
     test "invoke should return {:ok, result map} from the called function when no error is present",
          %{function: function} do
-      assert {:ok, %{"result" => "test-output"}} == InvokeFunction.invoke(function)
+      assert InvokeFunction.invoke(function) == {:ok, %{"result" => "test-output"}}
     end
 
     test "invoke should return {:error, err} when running the given function raises an error",
@@ -51,27 +51,27 @@ defmodule InvokeTest do
         {:error, "generic error"}
       end)
 
-      assert {:error, "generic error"} == InvokeFunction.invoke(function)
+      assert InvokeFunction.invoke(function) == {:error, "generic error"}
     end
 
     test "invoke should call prepare when no runtime is found for the given function",
          %{function: function} do
       Worker.RuntimeCache.Mock
-      |> Mox.expect(:get_runtimes, fn _ -> [] end)
+      |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
 
       Worker.Provisioner.Mock |> Mox.expect(:prepare, fn _, _ -> {:ok, %{}} end)
 
-      assert {:ok, %{"result" => "test-output"}} == InvokeFunction.invoke(function)
+      assert InvokeFunction.invoke(function) == {:ok, %{"result" => "test-output"}}
     end
 
     test "invoke_function should return {:error, err} when no runtime available and its creation fails",
          %{function: function} do
-      Worker.RuntimeCache.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
+      Worker.RuntimeCache.Mock |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
 
       Worker.Provisioner.Mock
       |> Mox.expect(:prepare, fn _, _ -> {:error, "creation error"} end)
 
-      assert {:error, "creation error"} == InvokeFunction.invoke(function)
+      assert InvokeFunction.invoke(function) == {:error, "creation error"}
     end
   end
 end
