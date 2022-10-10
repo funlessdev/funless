@@ -12,12 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import Config
+defmodule Worker.Adapters.RuntimeCache.Test do
+  @moduledoc false
+  @behaviour Worker.Domain.Ports.RuntimeCache
+  alias Worker.Domain.RuntimeStruct
 
-config :worker, Worker.Domain.Ports.RuntimeCache, adapter: Worker.RuntimeCache.Mock
-config :worker, Worker.Domain.Ports.Runtime.Provisioner, adapter: Worker.Provisioner.Mock
-config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Runner.Mock
-config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Cleaner.Mock
+  @impl true
+  def get(_function_name, _namespace) do
+    %RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"}
+  end
 
-# Logs turned off without backends (use :console to see them)
-config :logger, level: :warn, backends: []
+  @impl true
+  def insert(_name, _ns, _runtime) do
+    :ok
+  end
+
+  @impl true
+  def delete(_name, _ns) do
+    :ok
+  end
+end

@@ -23,7 +23,7 @@ defmodule Worker.Application do
 
     children = [
       {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
-      {Adapters.RuntimeTracker.ETS.WriteServer, []},
+      {Adapters.RuntimeCache.ETS.WriteServer, []},
       {Adapters.Requests.Cluster.Server, []},
       {Adapters.Telemetry.Supervisor, []}
     ]

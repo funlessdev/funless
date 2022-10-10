@@ -37,7 +37,7 @@ defmodule RequestTest do
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
       Worker.Runner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Runner.Test)
       Worker.Cleaner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Cleaner.Test)
-      Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.Test)
+      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.Test)
 
       Application.stop(Cluster.Server)
       {:ok, pid} = GenServer.start(Cluster.Server, [])
@@ -58,13 +58,11 @@ defmodule RequestTest do
       pid: pid,
       function: function
     } do
-      expected = {:error, %{"error" => "error"}}
+      Worker.Provisioner.Mock |> Mox.stub(:prepare, fn _, _ -> {:error, "error"} end)
 
-      Worker.Provisioner.Mock
-      |> Mox.stub(:prepare, fn _, _ -> {:error, "error"} end)
-
+      expected = {:error, "error"}
       reply = GenServer.call(pid, {:prepare, function})
-      assert expected == reply
+      assert reply == expected
     end
 
     test "invoke call should return {:ok, %{result => ..}} when no errors occur", %{
@@ -80,8 +78,8 @@ defmodule RequestTest do
       pid: pid,
       function: function
     } do
-      Worker.RuntimeTracker.Mock
-      |> Mox.expect(:get_runtimes, fn _ -> [] end)
+      Worker.RuntimeCache.Mock
+      |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
 
       Worker.Provisioner.Mock
       |> Mox.expect(:prepare, fn _, _ ->
@@ -101,8 +99,8 @@ defmodule RequestTest do
       |> Mox.expect(:run_function, fn _, _, _ -> {:error, "runtime error during invocation"} end)
 
       reply = GenServer.call(pid, {:invoke, function})
-
-      assert {:error, %{"error" => "runtime error during invocation"}} == reply
+      expected = {:error, "runtime error during invocation"}
+      assert reply == expected
     end
 
     test "invoke with args should return {:ok, %{result => ..}} when no errors occur", %{
@@ -118,23 +116,20 @@ defmodule RequestTest do
       pid: pid,
       function: function
     } do
-      expected = {:ok, %RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"}}
-
-      reply = GenServer.call(pid, {:cleanup, function})
-      assert expected == reply
+      assert :ok = GenServer.call(pid, {:cleanup, function})
     end
 
     test "cleanup call should return back an error when it occurs during cleanup", %{
       pid: pid,
       function: function
     } do
-      expected = {:error, %{"error" => "cleanup error"}}
+      expected = {:error, "cleanup error"}
 
       Worker.Cleaner.Mock
       |> Mox.expect(:cleanup, fn _ -> {:error, "cleanup error"} end)
 
       reply = GenServer.call(pid, {:cleanup, function})
-      assert expected == reply
+      assert reply == expected
     end
   end
 end

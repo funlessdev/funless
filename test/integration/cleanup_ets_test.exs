@@ -15,7 +15,7 @@
 defmodule Integration.CleanupEtsTest do
   use ExUnit.Case
 
-  alias Worker.Adapters.RuntimeTracker.ETS
+  alias Worker.Adapters.RuntimeCache.ETS
   alias Worker.Domain.CleanupRuntime
   alias Worker.Domain.RuntimeStruct
 
@@ -23,15 +23,15 @@ defmodule Integration.CleanupEtsTest do
 
   setup :verify_on_exit!
 
-  describe "Cleanup requests and ETS RuntimeTracker" do
+  describe "Cleanup requests and ETS RuntimeCache:" do
     setup do
       Worker.Cleaner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Cleaner.Test)
-      Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.ETS)
+      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.ETS)
       :ok
     end
 
     test "cleanup should remove runtime from storage when successfull" do
-      function = %{name: "fn", namespace: "_", image: "", code: ""}
+      function = %{name: "fn", namespace: "ns", image: "", code: ""}
 
       runtime = %RuntimeStruct{
         host: "127.0.0.1",
@@ -39,51 +39,18 @@ defmodule Integration.CleanupEtsTest do
         name: "test-runtime"
       }
 
-      ETS.insert_runtime("fn", runtime)
-      assert ETS.get_runtimes("fn") == [runtime]
+      ETS.insert("fn", "ns", runtime)
+      assert ETS.get("fn", "ns") == runtime
 
-      {atom, res} = CleanupRuntime.cleanup(function)
-
-      assert atom == :ok
-      assert res == runtime
-      assert ETS.get_runtimes("fn") == []
+      assert CleanupRuntime.cleanup(function) == :ok
+      assert ETS.get("fn", "ns") == :runtime_not_found
     end
 
-    test "cleanup should fail when no runtime found" do
-      function = %{name: "fn", namespace: "_", image: "", code: ""}
+    test "cleanup should return runtime_not_found when no runtime found" do
+      function = %{name: "fn", namespace: "ns", image: "", code: ""}
 
-      assert ETS.get_runtimes("fn") == []
-      reply = CleanupRuntime.cleanup(function)
-
-      assert reply == {:error, "no runtime found to cleanup"}
-    end
-
-    # test cleanup all runtimes
-
-    test "cleanup_all should remove all runtimes from storage when successfull" do
-      function = %{name: "fn-test", namespace: "_", image: "", code: ""}
-
-      runtime = %RuntimeStruct{
-        host: "127.0.0.1",
-        port: "8080",
-        name: "test-runtime-1"
-      }
-
-      runtime2 = %RuntimeStruct{
-        host: "127.0.0.1",
-        port: "8080",
-        name: "test-runtime-2"
-      }
-
-      ETS.insert_runtime("fn-test", runtime)
-      ETS.insert_runtime("fn-test", runtime2)
-      assert ETS.get_runtimes("fn-test") == [runtime, runtime2]
-
-      {atom, res} = CleanupRuntime.cleanup_all(function)
-
-      assert atom == :ok
-      assert res == []
-      assert ETS.get_runtimes("fn-test") == []
+      assert ETS.get("fn", "ns") == :runtime_not_found
+      assert CleanupRuntime.cleanup(function) == {:error, :runtime_not_found}
     end
   end
 end

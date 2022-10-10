@@ -58,18 +58,6 @@ defmodule Worker.Adapters.Requests.Cluster do
     CleanupRuntime.cleanup(function) |> reply_to_core(from)
   end
 
-  @doc """
-    Deletes the all runtimes wrapping `function`, calling the underlying Api.cleanup_all(). The result is forwarded to the original sender.
-
-    ## Parameters
-      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.FunctionStruct
-      - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
-  """
-  def cleanup_all(function, from) do
-    CleanupRuntime.cleanup_all(function) |> reply_to_core(from)
-  end
-
-  @doc false
-  defp reply_to_core({:error, msg}, from), do: GenServer.reply(from, {:error, %{"error" => msg}})
-  defp reply_to_core({:ok, result}, from), do: GenServer.reply(from, {:ok, result})
+  # reply should be either {:ok, result} or {:error, reason}
+  defp reply_to_core(reply, from), do: GenServer.reply(from, reply)
 end

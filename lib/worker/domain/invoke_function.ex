@@ -19,7 +19,7 @@ defmodule Worker.Domain.InvokeFunction do
 
   alias Worker.Domain.Ports.Runtime.Runner
   alias Worker.Domain.ProvisionRuntime
-  import Worker.Domain.Ports.RuntimeTracker, only: [get_runtimes: 1]
+  import Worker.Domain.Ports.RuntimeCache, only: [get: 2]
 
   alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
@@ -27,17 +27,17 @@ defmodule Worker.Domain.InvokeFunction do
   require Elixir.Logger
 
   @doc """
-    Invokes the given function if an associated runtime exists, using the RuntimeTracker and Runtime callbacks.
-
-    Returns {:ok, result} if a runtime exists and the function runs successfully;
-    returns {:error, {:noruntime, err}} if no runtime is found;
-    returns {:error, err} if a runtime is found, but an error is encountered when running the function.
-
+    Invokes the given function if an associated runtime exists, using the RuntimeCache and Runtime callbacks.
 
     ## Parameters
       - the list of available runtimes to use
       - %{...}: struct with all the fields required by Worker.Domain.Function
       - args: arguments passed to the function
+
+    ## Returns
+      - {:ok, result} if a runtime exists and the function runs successfully;
+      - {:error, {:noruntime, err}} if no runtime is found;
+      - {:error, err} if a runtime is found, but an error is encountered when running the function.
   """
   @spec invoke(map(), map()) :: {:ok, any} | {:error, any}
   def invoke(_, args \\ %{})
@@ -51,27 +51,26 @@ defmodule Worker.Domain.InvokeFunction do
     f = struct(FunctionStruct, function)
     Logger.info("API: Invoking function #{f.name}")
 
-    f.name
-    |> get_runtimes
+    get(f.name, f.namespace)
     |> run_function(f, args)
   end
 
   def invoke(_, _), do: {:error, :bad_params}
 
-  @spec run_function([RuntimeStruct.t()], FunctionStruct.t(), map()) ::
+  @spec run_function(RuntimeStruct.t(), FunctionStruct.t(), map()) ::
           {:ok, any} | {:error, any}
-  defp run_function([runtime | _], %FunctionStruct{} = function, args) do
-    Logger.info("API: Found runtime: #{runtime.name} for function #{function.name}")
-    Runner.run_function(function, args, runtime)
-  end
 
   @dialyzer {:nowarn_function, run_function: 3}
-  defp run_function([], %FunctionStruct{} = function, args) do
+  defp run_function(:runtime_not_found, %FunctionStruct{} = function, args) do
     Logger.warn("API: no runtime found to run function #{function.name}, creating one...")
 
-    case ProvisionRuntime.prepare_runtime(function) do
-      {:ok, runtime} -> run_function([runtime], function, args)
-      {:error, err} -> {:error, err}
+    with {:ok, runtime} <- ProvisionRuntime.prepare_runtime(function) do
+      run_function(runtime, function, args)
     end
+  end
+
+  defp run_function(runtime, %FunctionStruct{} = function, args) do
+    Logger.info("API: Found runtime: #{runtime.name} for function #{function.name}")
+    Runner.run_function(function, args, runtime)
   end
 end

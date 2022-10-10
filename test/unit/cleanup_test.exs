@@ -23,7 +23,7 @@ defmodule CleanupTest do
   setup_all do
     function = %{
       name: "test-cleanup-fn",
-      namespace: "_",
+      namespace: "ns",
       image: "nodejs",
       code: "console.log(\"hello\")"
     }
@@ -34,74 +34,27 @@ defmodule CleanupTest do
   describe "Cleanup runtime requests" do
     setup do
       Worker.Cleaner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Cleaner.Test)
-      Worker.RuntimeTracker.Mock |> Mox.stub_with(Worker.Adapters.RuntimeTracker.Test)
+      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.Test)
       :ok
     end
 
-    test "cleanup should return {:ok, runtime} when a runtime is found and deleted for the given function",
+    test "cleanup should return :ok when a runtime is found and deleted for the given function",
          %{function: function} do
-      [runtime | _] = Worker.RuntimeTracker.Mock.get_runtimes(function.name)
-
-      assert CleanupRuntime.cleanup(function) == {:ok, runtime}
+      assert CleanupRuntime.cleanup(function) == :ok
     end
 
     test "cleanup should return {:error, err} when no runtime is found for the given function",
          %{function: function} do
-      Worker.RuntimeTracker.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
+      Worker.RuntimeCache.Mock |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
 
-      assert CleanupRuntime.cleanup(function) == {:error, "no runtime found to cleanup"}
+      assert CleanupRuntime.cleanup(function) == {:error, :runtime_not_found}
     end
 
-    test "cleanup should return error when RuntimeTracker fails to delete", %{function: function} do
-      Worker.RuntimeTracker.Mock
-      |> Mox.expect(:delete_runtime, fn _, _ -> {:error, "tracker error"} end)
+    test "cleanup should return error when RuntimeCache fails to delete", %{function: function} do
+      Worker.RuntimeCache.Mock
+      |> Mox.expect(:delete, fn _, _ -> {:error, "tracker error"} end)
 
       assert CleanupRuntime.cleanup(function) == {:error, "tracker error"}
-    end
-
-    test "cleanup_all should return {:ok, []} when all runtimes are deleted without errors for the given function",
-         %{function: function} do
-      Worker.RuntimeTracker.Mock
-      |> Mox.expect(:get_runtimes, fn _ ->
-        [
-          %Worker.Domain.RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"},
-          %Worker.Domain.RuntimeStruct{name: "runtime2", host: "localhost", port: "8081"}
-        ]
-      end)
-
-      assert CleanupRuntime.cleanup_all(function) == {:ok, []}
-    end
-
-    test "cleanup_all should return {:error, err} when no runtime is found for the given function",
-         %{function: function} do
-      Worker.RuntimeTracker.Mock |> Mox.expect(:get_runtimes, fn _ -> [] end)
-
-      assert CleanupRuntime.cleanup_all(function) == {:error, "no runtimes found to cleanup"}
-    end
-
-    test "cleanup_all should return {:error, [{runtime, err}, ... ]} when errors are encountered while deleting the runtimes",
-         %{function: function} do
-      Worker.RuntimeTracker.Mock
-      |> Mox.expect(:get_runtimes, fn _ ->
-        [
-          %Worker.Domain.RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"},
-          %Worker.Domain.RuntimeStruct{name: "runtime2", host: "localhost", port: "8081"}
-        ]
-      end)
-
-      Worker.Cleaner.Mock
-      |> Mox.expect(:cleanup, 2, fn r ->
-        case r do
-          %Worker.Domain.RuntimeStruct{name: "runtime1"} ->
-            {:error, "first runtime cleanup is an error"}
-
-          _ ->
-            {:ok, r}
-        end
-      end)
-
-      assert CleanupRuntime.cleanup_all(function) ==
-               {:error, [error: "first runtime cleanup is an error"]}
     end
   end
 end

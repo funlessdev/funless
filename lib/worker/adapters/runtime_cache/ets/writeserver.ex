@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.RuntimeTracker.ETS.WriteServer do
+defmodule Worker.Adapters.RuntimeCache.ETS.WriteServer do
   @moduledoc """
     Implements GenServer behaviour; represents a process having exclusive writing rights on an underlying ETS table.
 
@@ -28,22 +28,22 @@ defmodule Worker.Adapters.RuntimeTracker.ETS.WriteServer do
 
   @impl true
   def init(_args) do
-    table = :ets.new(:functions_runtimes, [:bag, :named_table, :protected])
-    Logger.info("Function Storage Server: started")
+    table = :ets.new(:function_runtime, [:set, :named_table, :protected])
+    Logger.info("Runtime Cache: started")
     {:ok, table}
   end
 
   @impl true
-  def handle_call({:insert, function_name, runtime}, _from, table) do
-    :ets.insert(table, {function_name, runtime})
-    Logger.info("Function Storage Server: added #{function_name} => #{runtime.name}")
-    {:reply, {:ok, {function_name, runtime}}, table}
+  def handle_call({:insert, function_name, namespace, runtime}, _from, table) do
+    :ets.insert(table, {{function_name, namespace}, runtime})
+    Logger.info("Runtime Cache: added #{function_name} => #{runtime.name}")
+    {:reply, :ok, table}
   end
 
   @impl true
-  def handle_call({:delete, function_name, runtime}, _from, table) do
-    :ets.delete_object(table, {function_name, runtime})
-    Logger.info("Function Storage Server: deleted #{function_name} => #{runtime.name}")
-    {:reply, {:ok, {function_name, runtime}}, table}
+  def handle_call({:delete, function_name, namespace}, _from, table) do
+    :ets.delete(table, {function_name, namespace})
+    Logger.info("Runtime Cache: deleted runtime of #{function_name} in #{namespace}")
+    {:reply, :ok, table}
   end
 end

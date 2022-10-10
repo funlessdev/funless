@@ -12,23 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.RuntimeTracker.Test do
-  @moduledoc false
-  @behaviour Worker.Domain.Ports.RuntimeTracker
-  alias Worker.Domain.RuntimeStruct
+defmodule Worker.Adapters.RuntimeCache.ETS do
+  @moduledoc """
+  ETS adapter for storage of {function, runtime} tuples.
+  """
+  @behaviour Worker.Domain.Ports.RuntimeCache
 
   @impl true
-  def get_runtimes(_function_name) do
-    [%RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"}]
+  def get(function_name, namespace) do
+    case :ets.lookup(:function_runtime, {function_name, namespace}) do
+      [{{^function_name, ^namespace}, runtime}] -> runtime
+      _ -> :runtime_not_found
+    end
   end
 
   @impl true
-  def insert_runtime(function_name, runtime) do
-    {:ok, {function_name, runtime}}
+  def insert(function_name, namespace, runtime) do
+    GenServer.call(:write_server, {:insert, function_name, namespace, runtime})
   end
 
   @impl true
-  def delete_runtime(function_name, runtime) do
-    {:ok, {function_name, runtime}}
+  def delete(function_name, namespace) do
+    GenServer.call(:write_server, {:delete, function_name, namespace})
   end
 end
