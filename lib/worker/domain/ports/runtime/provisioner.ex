@@ -22,7 +22,7 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback prepare(FunctionStruct.t(), String.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
+  @callback provision(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
 
   @doc """
   Provisions a runtime for the given function and namespace.
@@ -31,13 +31,12 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
 
   ## Parameters
   - function: a struct with all the fields required by Worker.Domain.Function
-  - runtime_name: the name of the runtime to be prepared
 
   ## Returns
   - `{:ok, runtime}` if the runtime is found or created.any()
   - `{:error, :runtime_not_found} if the runtime was not in the cache and it won't attempt to create one.
   - `{:error, err}` if any error is encountered
   """
-  @spec prepare(FunctionStruct.t(), String.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
-  defdelegate prepare(fl_function, runtime_name), to: @adapter
+  @spec provision(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
+  defdelegate provision(fl_function), to: @adapter
 end

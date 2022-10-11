@@ -18,7 +18,7 @@ defmodule Worker.Adapters.Runtime.Provisioner.Test do
   alias Worker.Domain.RuntimeStruct
 
   @impl true
-  def prepare(_, _) do
+  def provision(_) do
     {:ok, %RuntimeStruct{name: "test-runtime", host: "localhost", port: "8080"}}
   end
 end

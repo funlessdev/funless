@@ -21,32 +21,32 @@ defmodule Worker.Domain.ProvisionRuntime do
   alias Worker.Domain.Ports.RuntimeCache
 
   alias Worker.Domain.CleanupRuntime
-  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 
   require Elixir.Logger
 
   @doc """
-  Creates a runtime for the given function; in case of successful creation, the {function, runtime} couple is inserted in the function storage.
+  Provisions a runtime for the given function.
 
-  Returns {:ok, runtime} if the runtime is created, otherwise forwards {:error, err} from the Runtime implementation.
+  It uses the Provisioner adapter to get the runtime from the cache or, depending on the
+  adapter, it creates one and returns it after inserting it in the cache.
+
 
   ## Parameters
   - %{...}: generic struct with all the fields required by Worker.Domain.Function
+
+  ## Returns
+  - `{:ok, runtime}` if the runtime is found or created.
+  - `{:error, :runtime_not_found} if the runtime was not in the cache and it won't attempt to create one.
+  - `{:error, err}` if any error is encountered
   """
-  @spec prepare_runtime(map()) :: {:ok, RuntimeStruct.t()} | {:error, any}
-  def prepare_runtime(%{__struct__: _s} = f), do: prepare_runtime(Map.from_struct(f))
+  @spec provision(map()) :: {:ok, RuntimeStruct.t()} | {:error, any}
 
-  def prepare_runtime(%{name: fname, namespace: ns} = f) do
-    # Conversion needed to pass it to the rustler prepare_runtime function, perhaps move the conversion in cluster.ex?
-    function = struct(FunctionStruct, f)
-
-    runtime_name = fname <> "-funless"
-
-    Provisioner.prepare(function, runtime_name) |> store_prepared_runtime(fname, ns)
+  def provision(%{name: fname, namespace: ns} = f) do
+    Provisioner.provision(f) |> store_prepared_runtime(fname, ns)
   end
 
-  def prepare_runtime(_), do: {:error, :bad_params}
+  def provision(_), do: {:error, :bad_params}
 
   @dialyzer {:nowarn_function, [store_prepared_runtime: 3]}
   @spec store_prepared_runtime({atom(), any}, String.t(), String.t()) ::

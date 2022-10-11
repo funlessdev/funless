@@ -64,7 +64,7 @@ defmodule Worker.Domain.InvokeFunction do
   defp run_function(:runtime_not_found, %FunctionStruct{} = function, args) do
     Logger.warn("API: no runtime found to run function #{function.name}, creating one...")
 
-    with {:ok, runtime} <- ProvisionRuntime.prepare_runtime(function) do
+    with {:ok, runtime} <- ProvisionRuntime.provision(function) do
       run_function(runtime, function, args)
     end
   end
