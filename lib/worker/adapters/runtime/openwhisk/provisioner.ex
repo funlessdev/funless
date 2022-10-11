@@ -48,7 +48,8 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
     end
   end
 
-  @spec init(FunctionStruct.t(), RuntimeStruct.t(), integer()) :: :ok | {:error, any}
+  @spec init(FunctionStruct.t(), RuntimeStruct.t(), integer()) ::
+          {:ok, RuntimeStruct.t()} | {:error, any}
   defp init(_function, runtime, 0 = _retries_left) do
     Logger.error("OpenWhisk: runtime initialization failed.")
 

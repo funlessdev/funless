@@ -42,9 +42,9 @@ defmodule Worker.Domain.InvokeFunction do
 
   def invoke(%{__struct__: _s} = f, args), do: invoke(Map.from_struct(f), args)
 
-  def invoke(%{name: _n, namespace: _ns} = function, args) do
+  def invoke(%{name: _fname, image: _image, namespace: _namespace, code: _code} = function, args) do
     f = struct(FunctionStruct, function)
-    Logger.info("API: Invoking function #{f.name}")
+    Logger.info("API: Invoking function #{f.name} in namespace #{f.namespace}")
 
     with {:ok, runtime} <- ProvisionRuntime.provision(f) do
       Runner.run_function(function, args, runtime)

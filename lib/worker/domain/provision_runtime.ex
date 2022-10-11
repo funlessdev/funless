@@ -20,6 +20,7 @@ defmodule Worker.Domain.ProvisionRuntime do
   alias Worker.Domain.Ports.Runtime.Cleaner
   alias Worker.Domain.Ports.Runtime.Provisioner
   alias Worker.Domain.Ports.RuntimeCache
+  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 
   require Elixir.Logger
@@ -39,9 +40,8 @@ defmodule Worker.Domain.ProvisionRuntime do
   - `{:error, :runtime_not_found} if the runtime was not in the cache and it won't attempt to create one.
   - `{:error, err}` if any error is encountered
   """
-  @spec provision(map()) :: {:ok, RuntimeStruct.t()} | {:error, any}
-
-  def provision(%{name: name, namespace: ns} = f) do
+  @spec provision(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
+  def provision(%FunctionStruct{name: name, namespace: ns, image: _i, code: _c} = f) do
     Logger.info("Provisioning runtime for #{name} in namespace #{ns}")
 
     case RuntimeCache.get(name, ns) do
@@ -57,13 +57,15 @@ defmodule Worker.Domain.ProvisionRuntime do
 
   def provision(_), do: {:error, :bad_params}
 
-  # @dialyzer {:nowarn_function, [store_prepared_runtime: 3]}
-  @spec store_runtime({atom(), any()}, String.t(), String.t()) ::
+  @dialyzer {:nowarn_function, [store_runtime: 3]}
+  @spec store_runtime({:ok, RuntimeStruct.t()} | {:error, any()}, String.t(), String.t()) ::
           {:ok, RuntimeStruct.t()} | {:error, any}
+  defp store_runtime({:error, err}, _, _), do: {:error, err}
+
   defp store_runtime({:ok, runtime}, fname, ns) do
     case RuntimeCache.insert(fname, ns, runtime) do
       :ok ->
-        Logger.info("Runtime #{runtime.name} added to cache")
+        Logger.info("Runtime #{runtime.name} for {#{fname},#{ns}} added to cache")
         {:ok, runtime}
 
       err ->
@@ -72,6 +74,4 @@ defmodule Worker.Domain.ProvisionRuntime do
         err
     end
   end
-
-  defp store_runtime({:error, err}, _, _), do: {:error, err}
 end
