@@ -87,7 +87,7 @@ defmodule Core.Domain.Api.Invoker do
   @spec invoke_with_code(atom(), InvokeParams.t()) ::
           {:ok, InvokeResult.t()} | {:error, :not_found} | {:error, :worker_error}
   defp invoke_with_code(worker, ivk_params) do
-    Logger.warn("API: function not available in worker, re-sending invoke with code")
+    Logger.warn("API: function not available in worker, re-invoking with code")
 
     with {:ok, f} <- FunctionStore.get_function(ivk_params.function, ivk_params.namespace) do
       Commands.send_invoke_with_code(worker, f, ivk_params.args)
