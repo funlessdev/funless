@@ -18,19 +18,17 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   """
   @behaviour Worker.Domain.Ports.Runtime.Provisioner
 
-  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 
   require Logger
 
   @impl true
+  @spec provision(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any()}
   def provision(function) do
-    f = struct(FunctionStruct, function)
-
-    if f.code == nil or not is_binary(f.code) do
+    if function.code == nil or not is_binary(function.code) do
       {:error, :code_not_found}
     else
-      {:ok, %RuntimeStruct{name: "wasm runtime", wasm: f.code}}
+      {:ok, %RuntimeStruct{name: "#{function.name} wasm file", wasm: function.code}}
     end
   end
 end
