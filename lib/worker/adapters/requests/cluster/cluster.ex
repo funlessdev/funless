@@ -16,25 +16,16 @@ defmodule Worker.Adapters.Requests.Cluster do
   @moduledoc """
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
-  alias Worker.Domain.CleanupRuntime
   alias Worker.Domain.InvokeFunction
-  alias Worker.Domain.ProvisionRuntime
 
   require Logger
 
   @doc """
-    Creates a runtime for the given `function`, using the underlying Api.prepare(). The result is forwarded to the original sender.
+    Runs the given `function` using the underlying InvokeFunction.invoke() from the domain.
+    It uses the runtime associated with the function from the cache, if it exists.
+    If the runtime does not exist, it is provisioned and then run.
 
-    ## Parameters
-      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.FunctionStruct
-      - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
-  """
-  def prepare(function, from) do
-    ProvisionRuntime.prepare_runtime(function) |> reply_to_core(from)
-  end
-
-  @doc """
-    Runs the given `function` using the underlying Api.run_function(), if an associated runtime exists;
+    The provisioner might request the runtime from the core
     if no runtime is found, creates the required runtime and runs the function.
     Any error encountered by the API calls is forwarded to the sender.
 
@@ -45,17 +36,6 @@ defmodule Worker.Adapters.Requests.Cluster do
   """
   def invoke(function, args, from) do
     InvokeFunction.invoke(function, args) |> reply_to_core(from)
-  end
-
-  @doc """
-    Deletes the first runtime wrapping `function`, calling the underlying Api.cleanup(). The result is forwarded to the original sender.
-
-    ## Parameters
-      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.FunctionStruct
-      - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
-  """
-  def cleanup(function, from) do
-    CleanupRuntime.cleanup(function) |> reply_to_core(from)
   end
 
   # reply should be either {:ok, result} or {:error, reason}
