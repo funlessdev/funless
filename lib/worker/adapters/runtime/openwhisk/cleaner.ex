@@ -32,14 +32,11 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Cleaner do
 
     receive do
       :ok ->
-        Logger.info("Runtime #{inspect(runtime)} removed")
-        {:ok, runtime}
+        Logger.info("OpenWhisk: Runtime #{inspect(runtime)} removed")
+        :ok
 
       {:error, err} ->
-        Logger.error(
-          "OpenWhisk: Error while removing runtime #{inspect(runtime)}: #{inspect(err)}"
-        )
-
+        Logger.error("OpenWhisk: Error removing runtime #{inspect(runtime)}: #{inspect(err)}")
         {:error, err}
     end
   end

@@ -21,7 +21,5 @@ defmodule Worker.Adapters.Runtime.Wasm.Cleaner do
   @behaviour Worker.Domain.Ports.Runtime.Cleaner
 
   @impl true
-  def cleanup(runtime) do
-    {:ok, runtime}
-  end
+  def cleanup(_runtime), do: :ok
 end

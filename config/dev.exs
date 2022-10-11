@@ -14,4 +14,4 @@
 
 import Config
 
-config :libcluster, debug: true
+config :libcluster, debug: false
