@@ -51,7 +51,7 @@ defmodule Core.Domain.Api.Invoker do
       args: Map.get(raw_params, "args", %{})
     }
 
-    Logger.info("API: invocation for #{f} in #{ivk_params.namespace} requested")
+    Logger.info("API: invocation for #{ivk_params.function} in #{ivk_params.namespace} requested")
 
     # could be :no_workers
     worker = Nodes.worker_nodes() |> Scheduler.select()
