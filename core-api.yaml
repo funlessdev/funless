@@ -33,7 +33,7 @@ components:
       type: object
       properties:
         result:
-          type: object
+          type: {}
           description: The function invocation result
     function_invocation_error:
       type: object
@@ -51,6 +51,7 @@ components:
           type: string
         code:
           type: string
+          format: binary
     function_creation_success:
       type: object
       properties:
@@ -151,9 +152,12 @@ paths:
         description: >-
           Object containing the function to create, with name, optional namespace, code and runtime image identifier
         content:
-          application/json:
+          multipart/form-data:
             schema:
               $ref: "#/components/schemas/function_creation"
+            encoding:
+              code:
+                contentType: application/octet-stream
       responses:
         "201":
           description: The function was created successfully
