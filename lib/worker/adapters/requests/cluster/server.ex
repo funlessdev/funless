@@ -35,13 +35,6 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
   end
 
   @impl true
-  def handle_call({:prepare, function}, from, _state) do
-    Logger.info("Received prepare request for #{function.name}.")
-    spawn(Cluster, :prepare, [function, from])
-    {:noreply, nil}
-  end
-
-  @impl true
   def handle_call({:invoke, function}, from, _state) do
     Logger.info("Received invocation request for #{function.name}.")
     spawn(Cluster, :invoke, [function, %{}, from])
@@ -52,13 +45,6 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
   def handle_call({:invoke, function, args}, from, _state) do
     Logger.info("Received invocation request for #{function.name} with args.")
     spawn(Cluster, :invoke, [function, args, from])
-    {:noreply, nil}
-  end
-
-  @impl true
-  def handle_call({:cleanup, function}, from, _state) do
-    Logger.info("Received cleanup request for #{function.name}.")
-    spawn(Cluster, :cleanup, [function, from])
     {:noreply, nil}
   end
 end

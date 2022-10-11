@@ -24,11 +24,11 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   require Logger
 
   @impl true
-  def prepare(%FunctionStruct{code: code} = _function, runtime_name) when code != nil do
-    {:ok, %RuntimeStruct{name: runtime_name, wasm: code}}
+  def provision(%FunctionStruct{code: code} = _function) when code != nil do
+    {:ok, %RuntimeStruct{name: "runtime_name", wasm: code}}
   end
 
-  def prepare(_function, _runtime_name) do
+  def provision(_function) do
     {:error, :code_not_found}
   end
 end

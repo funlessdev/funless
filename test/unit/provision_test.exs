@@ -31,38 +31,33 @@ defmodule ProvisionTest do
     %{function: function}
   end
 
-  describe "Provisioning requests" do
+  describe "ProvisionRuntime" do
     setup do
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
       Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.Test)
       :ok
     end
 
-    test "prepare_runtime should return {:error, err} when the underlying functions encounter errors",
+    test "should return {:error, err} when the underlying functions encounter errors",
          %{function: function} do
       Worker.Provisioner.Mock
-      |> Mox.stub(
-        :prepare,
-        fn _function, _runtime -> {:error, "generic error"} end
-      )
+      |> Mox.expect(:provision, fn _function -> {:error, "generic error"} end)
 
-      assert ProvisionRuntime.prepare_runtime(function) == {:error, "generic error"}
+      assert ProvisionRuntime.provision(function) == {:error, "generic error"}
     end
 
-    test "prepare_runtime should not call the function storage when successfull runtime creation",
+    test "should not call the function storage when successfull runtime creation",
          %{function: function} do
       Worker.Provisioner.Mock
-      |> Mox.stub(:prepare, fn _function, _runtime ->
-        {:error, "error"}
-      end)
+      |> Mox.stub(:provision, fn _function -> {:error, "error"} end)
 
       Worker.RuntimeCache.Mock
       |> Mox.expect(:insert, 0, &Worker.Adapters.RuntimeCache.Test.insert/3)
 
-      assert ProvisionRuntime.prepare_runtime(function) == {:error, "error"}
+      assert ProvisionRuntime.provision(function) == {:error, "error"}
     end
 
-    test "prepare_runtime should call the storage when sucessfull runtime creation",
+    test "should call the storage when sucessfull runtime creation",
          %{function: function} do
       Worker.RuntimeCache.Mock
       |> Mox.expect(:insert, 1, &Worker.Adapters.RuntimeCache.Test.insert/3)
@@ -73,16 +68,16 @@ defmodule ProvisionTest do
         port: "8080"
       }
 
-      assert ProvisionRuntime.prepare_runtime(function) ==
+      assert ProvisionRuntime.provision(function) ==
                {:ok, rt_from_test}
     end
 
-    test "prepare_runtime should return storage error when storing fails",
+    test "should return error when caching fails",
          %{function: function} do
       Worker.RuntimeCache.Mock
       |> Mox.expect(:insert, fn _function, _ns, _runtime -> {:error, "insert error"} end)
 
-      assert ProvisionRuntime.prepare_runtime(function) == {:error, "insert error"}
+      assert ProvisionRuntime.provision(function) == {:error, "insert error"}
     end
   end
 end
