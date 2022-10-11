@@ -51,23 +51,24 @@ defmodule Core.Domain.Api.Invoker do
       args: Map.get(raw_params, "args", %{})
     }
 
-    Logger.info("API: invocation for #{f} in #{ivk_params.namespace} requested")
+    Logger.info("API: invocation for #{ivk_params.function} in #{ivk_params.namespace} requested")
 
     # could be :no_workers
     worker = Nodes.worker_nodes() |> Scheduler.select()
 
-    invoke_without_code(worker, ivk_params)
-    |> case do
-      {:warn, :code_not_found} -> invoke_with_code(worker, ivk_params)
-      res -> res
-    end
-    |> handle_result(ivk_params.function)
+    res =
+      case invoke_without_code(worker, ivk_params) do
+        {:error, :code_not_found} -> invoke_with_code(worker, ivk_params)
+        res -> res
+      end
+
+    handle_result(res, ivk_params.function)
   end
 
   def invoke(_), do: {:error, :bad_params}
 
   @spec invoke_without_code(atom(), InvokeParams.t()) ::
-          {:ok, InvokeResult.t()} | {:warn, :code_not_found} | invoke_errors()
+          {:ok, InvokeResult.t()} | {:error, :code_not_found} | invoke_errors()
   defp invoke_without_code(:no_workers, _), do: {:error, :no_workers}
 
   defp invoke_without_code(worker, ivk_params) do

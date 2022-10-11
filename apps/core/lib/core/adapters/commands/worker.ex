@@ -25,7 +25,7 @@ defmodule Core.Adapters.Commands.Worker do
 
   # Possible replies:
   # {:ok, result}
-  # :code_not_found in this case re-do the invocation passing the code
+  # {:error, :code_not_found} in this case re-do the invocation passing the code
   # {:error, atom()} mainly from the worker nifs
   # {:error, %{"error" => msg}} a map with the reason
 
@@ -39,7 +39,6 @@ defmodule Core.Adapters.Commands.Worker do
 
     case GenServer.call(worker_addr, cmd, 30_000) do
       {:ok, result} -> {:ok, %InvokeResult{result: result}}
-      {:warn, :code_not_found} -> {:warn, :code_not_found}
       {:error, err} -> {:error, err}
     end
   end

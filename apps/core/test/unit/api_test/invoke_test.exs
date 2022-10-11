@@ -102,7 +102,7 @@ defmodule ApiTest.InvokeTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:warn, :code_not_found} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, :code_not_found} end)
 
       Core.Commands.Mock
       |> Mox.expect(:send_invoke_with_code, fn _worker, function, _args ->
