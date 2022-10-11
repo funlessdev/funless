@@ -40,7 +40,7 @@ defmodule Integration.ProvisionEtsTest do
       Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.ETS)
 
       Worker.Provisioner.Mock
-      |> Mox.stub(:prepare, fn _function, _runtime ->
+      |> Mox.stub(:provision, fn _function ->
         {:ok,
          %RuntimeStruct{
            host: "127.0.0.1",
@@ -52,12 +52,12 @@ defmodule Integration.ProvisionEtsTest do
       :ok
     end
 
-    test "prepare_runtime should insert runtime in storage when successfull", %{
+    test "provision should insert runtime in cache when successfull", %{
       function: function
     } do
       assert ETS.get(function.name, function.namespace) == :runtime_not_found
 
-      {atom, runtime} = ProvisionRuntime.prepare_runtime(function)
+      {atom, runtime} = ProvisionRuntime.provision(function)
       assert atom == :ok
 
       assert ETS.get(function.name, function.namespace) == runtime
@@ -65,17 +65,17 @@ defmodule Integration.ProvisionEtsTest do
       ETS.delete(function.name, function.namespace)
     end
 
-    test "multiple prepare_runtime should overwrite runtime in cache", %{
+    test "multiple provision should overwrite runtime in cache", %{
       function: function
     } do
       assert ETS.get(function.name, function.namespace) == :runtime_not_found
 
-      assert {:ok, runtime1} = ProvisionRuntime.prepare_runtime(function)
+      assert {:ok, runtime1} = ProvisionRuntime.provision(function)
 
       assert ETS.get(function.name, function.namespace) == runtime1
 
       Worker.Provisioner.Mock
-      |> Mox.stub(:prepare, fn _function, _runtime ->
+      |> Mox.stub(:provision, fn _function ->
         {:ok,
          %RuntimeStruct{
            host: "127.0.0.1",
@@ -84,22 +84,22 @@ defmodule Integration.ProvisionEtsTest do
          }}
       end)
 
-      assert {:ok, runtime2} = ProvisionRuntime.prepare_runtime(function)
+      assert {:ok, runtime2} = ProvisionRuntime.provision(function)
 
       assert ETS.get(function.name, function.namespace) == runtime2
 
       ETS.delete(function.name, function.namespace)
     end
 
-    test "prepare_runtime should return error when provisioner fails", %{
+    test "provision should return error when provisioner fails", %{
       function: function
     } do
       Worker.Provisioner.Mock
-      |> Mox.stub(:prepare, fn _function, _runtime ->
+      |> Mox.stub(:provision, fn _function ->
         {:error, "error"}
       end)
 
-      assert {:error, _} = ProvisionRuntime.prepare_runtime(function)
+      assert {:error, _} = ProvisionRuntime.provision(function)
 
       assert ETS.get(function.name, function.namespace) == :runtime_not_found
     end
