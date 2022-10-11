@@ -17,10 +17,10 @@ defmodule Worker.Domain.ProvisionRuntime do
   Contains functions used to create function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
+  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.Ports.Runtime.Cleaner
   alias Worker.Domain.Ports.Runtime.Provisioner
   alias Worker.Domain.Ports.RuntimeCache
-  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.RuntimeStruct
 
   require Elixir.Logger
