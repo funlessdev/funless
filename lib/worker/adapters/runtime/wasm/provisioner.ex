@@ -24,11 +24,13 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   require Logger
 
   @impl true
-  def provision(%FunctionStruct{} = function) do
-    if function.code == nil or not is_binary(function.code) do
+  def provision(function) do
+    f = struct(FunctionStruct, function)
+
+    if f.code == nil or not is_binary(f.code) do
       {:error, :code_not_found}
     else
-      {:ok, %RuntimeStruct{name: "wasm runtime", wasm: function.code}}
+      {:ok, %RuntimeStruct{name: "wasm runtime", wasm: f.code}}
     end
   end
 end

@@ -41,7 +41,7 @@ defmodule Worker.Domain.ProvisionRuntime do
   - `{:error, err}` if any error is encountered
   """
   @spec provision(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
-  def provision(%FunctionStruct{name: name, namespace: ns, image: _i, code: _c} = f) do
+  def provision(%{name: name, namespace: ns} = f) do
     Logger.info("Provisioning runtime for #{name} in namespace #{ns}")
 
     case RuntimeCache.get(name, ns) do
