@@ -65,7 +65,7 @@ defmodule Worker.Domain.ProvisionRuntime do
   defp store_runtime({:ok, runtime}, fname, ns) do
     case RuntimeCache.insert(fname, ns, runtime) do
       :ok ->
-        Logger.info("Runtime #{runtime.name} for {#{fname},#{ns}} added to cache")
+        Logger.info("Runtime #{runtime.name} for {#{fname}, #{ns}} added to cache")
         {:ok, runtime}
 
       err ->
