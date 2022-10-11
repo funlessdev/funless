@@ -17,10 +17,9 @@ defmodule Worker.Domain.ProvisionRuntime do
   Contains functions used to create function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
+  alias Worker.Domain.Ports.Runtime.Cleaner
   alias Worker.Domain.Ports.Runtime.Provisioner
   alias Worker.Domain.Ports.RuntimeCache
-
-  alias Worker.Domain.CleanupRuntime
   alias Worker.Domain.RuntimeStruct
 
   require Elixir.Logger
@@ -42,30 +41,37 @@ defmodule Worker.Domain.ProvisionRuntime do
   """
   @spec provision(map()) :: {:ok, RuntimeStruct.t()} | {:error, any}
 
-  def provision(%{name: fname, namespace: ns} = f) do
-    Provisioner.provision(f) |> store_prepared_runtime(fname, ns)
+  def provision(%{name: name, namespace: ns} = f) do
+    Logger.info("Provisioning runtime for #{name} in namespace #{ns}")
+
+    case RuntimeCache.get(name, ns) do
+      :runtime_not_found ->
+        Logger.warn("Runtime not found in cache")
+        Provisioner.provision(f) |> store_runtime(name, ns)
+
+      runtime ->
+        Logger.info("Runtime found in cache")
+        {:ok, runtime}
+    end
   end
 
   def provision(_), do: {:error, :bad_params}
 
-  @dialyzer {:nowarn_function, [store_prepared_runtime: 3]}
-  @spec store_prepared_runtime({atom(), any}, String.t(), String.t()) ::
+  # @dialyzer {:nowarn_function, [store_prepared_runtime: 3]}
+  @spec store_runtime({atom(), any()}, String.t(), String.t()) ::
           {:ok, RuntimeStruct.t()} | {:error, any}
-  defp store_prepared_runtime({:ok, runtime}, function_name, namespace) do
-    case RuntimeCache.insert(function_name, namespace, runtime) do
+  defp store_runtime({:ok, runtime}, fname, ns) do
+    case RuntimeCache.insert(fname, ns, runtime) do
       :ok ->
-        Logger.info("API: Runtime #{runtime.name} ready and tracked")
+        Logger.info("Runtime #{runtime.name} added to cache")
         {:ok, runtime}
 
-      {:error, err} ->
-        Logger.error("API: Failed to store runtime #{runtime.name} in cache after creation")
-        CleanupRuntime.cleanup(runtime)
-        {:error, err}
+      err ->
+        Logger.error("Failed to cache runtime #{runtime.name}")
+        Cleaner.cleanup(runtime)
+        err
     end
   end
 
-  defp store_prepared_runtime({:error, err}, _, _) do
-    Logger.error("API: Runtime preparation failed: #{inspect(err)}")
-    {:error, err}
-  end
+  defp store_runtime({:error, err}, _, _), do: {:error, err}
 end

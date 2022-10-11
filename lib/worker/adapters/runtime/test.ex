@@ -19,7 +19,7 @@ defmodule Worker.Adapters.Runtime.Provisioner.Test do
 
   @impl true
   def provision(_) do
-    {:ok, %RuntimeStruct{name: "test-runtime", host: "localhost", port: "8080"}}
+    {:ok, %RuntimeStruct{name: "runtime", host: "localhost", port: "8080"}}
   end
 end
 
@@ -38,7 +38,7 @@ defmodule Worker.Adapters.Runtime.Cleaner.Test do
   @behaviour Worker.Domain.Ports.Runtime.Cleaner
 
   @impl true
-  def cleanup(runtime) do
-    {:ok, runtime}
+  def cleanup(_runtime) do
+    :ok
   end
 end

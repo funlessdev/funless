@@ -19,10 +19,8 @@ defmodule Worker.Domain.InvokeFunction do
 
   alias Worker.Domain.Ports.Runtime.Runner
   alias Worker.Domain.ProvisionRuntime
-  import Worker.Domain.Ports.RuntimeCache, only: [get: 2]
 
   alias Worker.Domain.FunctionStruct
-  alias Worker.Domain.RuntimeStruct
 
   require Elixir.Logger
 
@@ -44,33 +42,14 @@ defmodule Worker.Domain.InvokeFunction do
 
   def invoke(%{__struct__: _s} = f, args), do: invoke(Map.from_struct(f), args)
 
-  def invoke(
-        %{name: _fname, namespace: _namespace} = function,
-        args
-      ) do
+  def invoke(%{name: _n, namespace: _ns} = function, args) do
     f = struct(FunctionStruct, function)
     Logger.info("API: Invoking function #{f.name}")
 
-    get(f.name, f.namespace)
-    |> run_function(f, args)
-  end
-
-  def invoke(_, _), do: {:error, :bad_params}
-
-  @spec run_function(RuntimeStruct.t(), FunctionStruct.t(), map()) ::
-          {:ok, any} | {:error, any}
-
-  @dialyzer {:nowarn_function, run_function: 3}
-  defp run_function(:runtime_not_found, %FunctionStruct{} = function, args) do
-    Logger.warn("API: no runtime found to run function #{function.name}, creating one...")
-
-    with {:ok, runtime} <- ProvisionRuntime.provision(function) do
-      run_function(runtime, function, args)
+    with {:ok, runtime} <- ProvisionRuntime.provision(f) do
+      Runner.run_function(function, args, runtime)
     end
   end
 
-  defp run_function(runtime, %FunctionStruct{} = function, args) do
-    Logger.info("API: Found runtime: #{runtime.name} for function #{function.name}")
-    Runner.run_function(function, args, runtime)
-  end
+  def invoke(_, _), do: {:error, :bad_params}
 end

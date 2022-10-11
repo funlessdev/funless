@@ -43,7 +43,7 @@ defmodule CleanupTest do
       assert CleanupRuntime.cleanup(function) == :ok
     end
 
-    test "cleanup should return {:error, err} when no runtime is found for the given function",
+    test "cleanup should return {:error, :runtime_not_found} when no runtime is found for the given function",
          %{function: function} do
       Worker.RuntimeCache.Mock |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
 
@@ -52,9 +52,9 @@ defmodule CleanupTest do
 
     test "cleanup should return error when RuntimeCache fails to delete", %{function: function} do
       Worker.RuntimeCache.Mock
-      |> Mox.expect(:delete, fn _, _ -> {:error, "tracker error"} end)
+      |> Mox.expect(:delete, fn _, _ -> {:error, "error"} end)
 
-      assert CleanupRuntime.cleanup(function) == {:error, "tracker error"}
+      assert CleanupRuntime.cleanup(function) == {:error, "error"}
     end
   end
 end

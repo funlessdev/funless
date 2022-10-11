@@ -53,7 +53,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
     Logger.error("OpenWhisk: runtime initialization failed.")
 
     case Cleaner.cleanup(runtime) do
-      {:ok, _} -> {:error, :max_init_retries_reached}
+      :ok -> {:error, :max_init_retries_reached}
       {:error, err} -> {:error, {:max_init_retries_reached, {:error, err}}}
     end
   end
@@ -75,7 +75,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
 
       {:error, err} ->
         case Cleaner.cleanup(runtime) do
-          {:ok, _} -> reply_from_init({:error, err})
+          :ok -> reply_from_init({:error, err})
           {:error, cleanup_err} -> reply_from_init({:error, {err, {:error, cleanup_err}}})
         end
     end

@@ -17,8 +17,7 @@ defmodule Worker.Domain.CleanupRuntime do
   Contains functions used to remove function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
   alias Worker.Domain.Ports.Runtime.Cleaner
-
-  import Worker.Domain.Ports.RuntimeCache, only: [get: 2, delete: 2]
+  alias Worker.Domain.Ports.RuntimeCache
 
   require Elixir.Logger
 
@@ -36,27 +35,14 @@ defmodule Worker.Domain.CleanupRuntime do
   def cleanup(%{__struct__: _s} = function), do: cleanup(Map.from_struct(function))
 
   def cleanup(%{name: fname, namespace: ns} = _function) do
-    get(fname, ns)
-    |> run_cleaner
-    |> remove_runtime_from_cache(fname, ns)
+    with runtime when runtime != :runtime_not_found <- RuntimeCache.get(fname, ns),
+         :ok <- Cleaner.cleanup(runtime),
+         :ok <- RuntimeCache.delete(fname, ns) do
+      Logger.info("API: Runtime for function #{fname} in namespace #{ns} deleted")
+      :ok
+    else
+      :runtime_not_found -> {:error, :runtime_not_found}
+      err -> err
+    end
   end
-
-  def cleanup(_), do: {:error, :bad_params}
-
-  defp run_cleaner(:runtime_not_found) do
-    Logger.warn("API: Error cleaning up runtime: no runtime found to cleanup")
-    {:error, :runtime_not_found}
-  end
-
-  defp run_cleaner(runtime) do
-    Logger.info("API: Cleaning up runtime: #{runtime.name}")
-    Cleaner.cleanup(runtime)
-  end
-
-  defp remove_runtime_from_cache({:ok, _}, fname, ns) do
-    Logger.info("API: Runtime of #{fname} successfully cleaned up")
-    delete(fname, ns)
-  end
-
-  defp remove_runtime_from_cache(err, _, _), do: err
 end

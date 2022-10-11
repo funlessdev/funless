@@ -19,7 +19,7 @@ defmodule Worker.Adapters.RuntimeCache.Test do
 
   @impl true
   def get(_function_name, _namespace) do
-    %RuntimeStruct{name: "runtime1", host: "localhost", port: "8080"}
+    %RuntimeStruct{name: "runtime", host: "localhost", port: "8080"}
   end
 
   @impl true
