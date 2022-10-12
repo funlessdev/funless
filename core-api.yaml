@@ -33,7 +33,6 @@ components:
       type: object
       properties:
         result:
-          type: {}
           description: The function invocation result
     function_invocation_error:
       type: object
