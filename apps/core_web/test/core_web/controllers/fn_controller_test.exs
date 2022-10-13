@@ -85,7 +85,9 @@ defmodule CoreWeb.FnControllerTest do
 
   describe "POST /v1/fn/create" do
     test "success: should return 200 when the creation is successful", %{conn: conn} do
-      conn = post(conn, "/v1/fn/create", %{name: "hello", code: "some code"})
+      upload = %Plug.Upload{path: "test/fixtures/test_code.txt", filename: "test_code.txt"}
+      conn = post(conn, "/v1/fn/create", %{name: "hello", code: upload})
+
       expected = %{"result" => "hello"}
       assert json_response(conn, 201) == expected
     end
@@ -106,7 +108,8 @@ defmodule CoreWeb.FnControllerTest do
       Core.FunctionStore.Mock
       |> Mox.expect(:insert_function, fn _ -> {:error, {:aborted, "some reason"}} end)
 
-      conn = post(conn, "/v1/fn/create", %{name: "hello", code: "some code"})
+      upload = %Plug.Upload{path: "test/fixtures/test_code.txt", filename: "test_code.txt"}
+      conn = post(conn, "/v1/fn/create", %{name: "hello", code: upload})
 
       expected = %{
         "errors" => %{"detail" => "Failed to create function: database error because some reason"}
@@ -172,8 +175,10 @@ defmodule CoreWeb.FnControllerTest do
 
       response =
         assert_error_sent(500, fn ->
+          upload = %Plug.Upload{path: "test/fixtures/test_code.txt", filename: "test_code.txt"}
+
           conn
-          |> post("/v1/fn/create", %{name: "hello", namespace: "ns", code: "some code"})
+          |> post("/v1/fn/create", %{name: "hello", namespace: "ns", code: upload})
         end)
 
       assert {500, [_h | _t], "{\"errors\":{\"detail\":\"Internal Server Error\"}}"} = response
