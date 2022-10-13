@@ -27,7 +27,9 @@ defmodule CoreWeb.FnController do
   end
 
   def create(conn, params) do
-    with {:ok, function_name} <- FunctionRepo.new(params) do
+    func = params |> Map.put("code", File.read!(params["code"].path))
+
+    with {:ok, function_name} <- FunctionRepo.new(func) do
       conn
       |> put_status(:created)
       |> render("create.json", function_name: function_name)
