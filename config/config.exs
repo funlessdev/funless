@@ -30,7 +30,7 @@ config :libcluster,
       # The selected clustering strategy. Required.
       strategy: Cluster.Strategy.Gossip,
       config: [
-        port: 45891
+        port: String.to_integer(System.get_env("FL_LIBCLUSTER_PORT") || "45892")
       ]
     ]
   ]
