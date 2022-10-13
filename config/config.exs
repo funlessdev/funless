@@ -30,7 +30,7 @@ config :libcluster,
       # The selected clustering strategy. Required.
       strategy: Cluster.Strategy.Gossip,
       config: [
-        port: 45891
+        port: String.to_integer(System.get_env("FL_LIBCLUSTER_PORT") || "45892")
       ]
     ]
   ]
@@ -42,8 +42,7 @@ config :core_web,
 config :core_web, CoreWeb.Endpoint,
   url: [host: "0.0.0.0"],
   render_errors: [view: CoreWeb.ErrorView, accepts: ~w(json), layout: false],
-  live_view: [signing_salt: "sRzweIOe"],
-  adapter: Bandit.PhoenixAdapter
+  live_view: [signing_salt: "sRzweIOe"]
 
 # pubsub_server: Core.PubSub,
 
