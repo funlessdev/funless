@@ -16,7 +16,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Nif do
   @moduledoc """
   NIFs used to interact with WebAssembly runtimes.
   """
-  use Rustler, otp_app: :worker, crate: :fn_wasm
+  use Rustler, otp_app: :worker, crate: :fn_wasm, mode: :release
 
   #   Runs the function with the given code, using the underlying WebAssembly runtime.
   #   ## Parameters
