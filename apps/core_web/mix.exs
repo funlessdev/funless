@@ -57,7 +57,8 @@ defmodule CoreWeb.MixProject do
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
-      {:bandit, ">= 0.5.6"}
+      {:cowboy, "~> 2.9.0"},
+      {:plug_cowboy, "~> 2.5.2"}
     ]
   end
 

@@ -54,7 +54,6 @@ defmodule Core.MixProject do
   defp deps do
     [
       {:plug, "~> 1.13"},
-      {:bandit, "~> 0.5.0"},
       {:jason, "~> 1.3"},
       {:libcluster, "~> 3.3"},
       {:logger_file_backend, "~> 0.0.13"},
