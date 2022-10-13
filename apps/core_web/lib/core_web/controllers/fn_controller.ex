@@ -26,14 +26,18 @@ defmodule CoreWeb.FnController do
     end
   end
 
-  def create(conn, params) do
-    func = params |> Map.put("code", File.read!(params["code"].path))
+  def create(conn, %{"code" => %Plug.Upload{path: tmp_code_path}} = params) do
+    func = params |> Map.put("code", File.read!(tmp_code_path))
 
     with {:ok, function_name} <- FunctionRepo.new(func) do
       conn
       |> put_status(:created)
       |> render("create.json", function_name: function_name)
     end
+  end
+
+  def create(_conn, _params) do
+    {:error, :bad_params}
   end
 
   def delete(conn, params) do
