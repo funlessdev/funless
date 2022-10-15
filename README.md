@@ -105,9 +105,3 @@ docker container start <CONTAINER_NAME>
 
 (containers have to be first connected to multiple networks, and then started, as stated here https://github.com/moby/moby/issues/17750).
 ___
-
-## Code structure
-
-The code has been structured following hexagonal architecture principles; the main components are shown in the picture, divided in ports (blue circles), adapters (green circles) and core domain (inner hexagon).
-
-![](docs/Worker_hexagonal.svg)
