@@ -12,11 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use rustler::{Env, Term};
+
+mod engine;
 mod atoms;
 mod nif;
 pub mod utils;
 
+pub fn load(env: Env, _: Term) -> bool {    
+    engine::load(env);
+    true
+}
+
 rustler::init!(
     "Elixir.Worker.Adapters.Runtime.Wasm.Nif",
-    [nif::run_function]
+    [
+        nif::run_function,
+        engine::init,
+    ],
+    load=load
 );
