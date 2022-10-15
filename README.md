@@ -14,7 +14,16 @@
   ~ limitations under the License.
 -->
 
-# Funless Worker
+# Worker
+
+This is the repository for the Worker component of the Funless (FL) platform, a new generation research-driven serverless platform.
+
+The Worker is written in Elixir and makes use of Rust NIFs to run user-defined functions.
+
+It uses the [rustler](https://github.com/rusterlium/rustler) crate to compile Rust functions into NIFs, and receives function invocation requests from the [Core](https://github.com/funlessdev/fl-core) 
+component of the FL platform.
+
+To run functions it either uses [OpenWhisk](https://github.com/apache/openwhisk) runtimes via Docker, or the [wasmtime](https://github.com/bytecodealliance/wasmtime) WebAssembly runtime.
 
 ## Running in an interactive session
 
