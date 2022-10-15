@@ -14,9 +14,20 @@
   ~ limitations under the License.
 -->
 
-# Funless Worker
+# Worker
 
-## Running in an interactive session
+This is the repository for the Worker component of the Funless (FL) platform, a new generation research-driven serverless platform.
+
+The Worker is written in Elixir and makes use of Rust NIFs to run user-defined functions.
+
+It uses the [rustler](https://github.com/rusterlium/rustler) crate to compile Rust functions into NIFs, and receives function invocation requests from the [Core](https://github.com/funlessdev/fl-core) 
+component of the FL platform.
+
+To run functions it either uses [OpenWhisk](https://github.com/apache/openwhisk) runtimes via Docker, or the [wasmtime](https://github.com/bytecodealliance/wasmtime) WebAssembly runtime.
+
+## Running the Worker
+
+### Running in an interactive session
 
 The project can be run in an interactive session by running:
 ```
@@ -35,12 +46,20 @@ GenServer.call(:worker, {:prepare, function})
 GenServer.call(:worker, {:invoke, function})
 GenServer.call(:worker, {:cleanup, function})
 ```
-
 The `:prepare` call is optional, as `:invoke` creates the container if none is found.
 
+#### Using WebAssembly
+
+When using the WebAssembly runtime, `fcode` must contain the binary string corresponding to a compiled WebAssembly module, preferably created using [fl-runtimes](https://github.com/funlessdev/fl-runtimes):
+```
+fcode = File.read!("code.wasm")
+...
+```
+
+In that instance, the `image` field is not necessary.
 ___
 
-## Running in different nodes
+### Running in different nodes
 
 The project can also be compiled as a release, and run like this:
 ```
@@ -64,9 +83,10 @@ GenServer.call({:worker, :"worker@127.0.0.1"}, {:invoke, function})
 
 The `--cookie` and `--name` parameters can vary; the `--cookie` must be the same used in compiling the release, defined in `rel/env.sh.eex`.
 
+See [Using WebAssembly](#using-webassembly) for the content of `fcode` when using WebAssembly runtimes.
 ___
 
-## Running with Docker
+### Running with Docker
 
 To run with Docker, the image can be built from source:
 ```
@@ -80,6 +100,7 @@ docker network create <NETWORK_NAME> --internal
 
 The network should be internal, to as the worker gets its name and address from the external, worker-to-core network, and this avoids conflicts.
 
+**The internal network is not necessary if using the WebAssembly module, as no containers are launched in that instance**.
 
 Then, the container can be created using:
 ```
@@ -104,10 +125,15 @@ docker container start <CONTAINER_NAME>
 ```
 
 (containers have to be first connected to multiple networks, and then started, as stated here https://github.com/moby/moby/issues/17750).
-___
 
-## Code structure
+## Contributing
+Anyone is welcome to contribute to this project or any other Funless project. 
 
-The code has been structured following hexagonal architecture principles; the main components are shown in the picture, divided in ports (blue circles), adapters (green circles) and core domain (inner hexagon).
+You can contribute by testing the projects, opening tickets, writing documentation, sharing new ideas for future works and, of course, by contributing code. 
 
-![](docs/Worker_hexagonal.svg)
+You can pick an issue or create a new one, comment on it that you will take priority and then fork the repo so you're free to work on it.
+Once you feel ready open a Pull Request to send your code to us.
+
+## License
+
+This project is under the Apache 2.0 license.
