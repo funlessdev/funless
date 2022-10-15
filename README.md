@@ -25,7 +25,9 @@ component of the FL platform.
 
 To run functions it either uses [OpenWhisk](https://github.com/apache/openwhisk) runtimes via Docker, or the [wasmtime](https://github.com/bytecodealliance/wasmtime) WebAssembly runtime.
 
-## Running in an interactive session
+## Running the Worker
+
+### Running in an interactive session
 
 The project can be run in an interactive session by running:
 ```
@@ -44,12 +46,20 @@ GenServer.call(:worker, {:prepare, function})
 GenServer.call(:worker, {:invoke, function})
 GenServer.call(:worker, {:cleanup, function})
 ```
-
 The `:prepare` call is optional, as `:invoke` creates the container if none is found.
 
+#### Using WebAssembly
+
+When using the WebAssembly runtime, `fcode` must contain the binary string corresponding to a compiled WebAssembly module, preferably created using [fl-runtimes](https://github.com/funlessdev/fl-runtimes):
+```
+fcode = File.read!("code.wasm")
+...
+```
+
+In that instance, the `image` field is not necessary.
 ___
 
-## Running in different nodes
+### Running in different nodes
 
 The project can also be compiled as a release, and run like this:
 ```
@@ -73,9 +83,10 @@ GenServer.call({:worker, :"worker@127.0.0.1"}, {:invoke, function})
 
 The `--cookie` and `--name` parameters can vary; the `--cookie` must be the same used in compiling the release, defined in `rel/env.sh.eex`.
 
+See [Using WebAssembly](#using-webassembly) for the content of `fcode` when using WebAssembly runtimes.
 ___
 
-## Running with Docker
+### Running with Docker
 
 To run with Docker, the image can be built from source:
 ```
@@ -89,6 +100,7 @@ docker network create <NETWORK_NAME> --internal
 
 The network should be internal, to as the worker gets its name and address from the external, worker-to-core network, and this avoids conflicts.
 
+**The internal network is not necessary if using the WebAssembly module, as no containers are launched in that instance**.
 
 Then, the container can be created using:
 ```
