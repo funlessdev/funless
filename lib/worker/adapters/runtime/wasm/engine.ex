@@ -24,3 +24,27 @@ defimpl Inspect, for: Worker.Adapters.Runtime.Wasm.Engine do
     concat(["#Wasm.Engine<", to_doc(dict.reference, opts), ">"])
   end
 end
+
+defmodule Worker.Adapters.Runtime.Wasm.Engine.Cache do
+  use GenServer, restart: :permanent
+
+  require Logger
+
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: :wasmtime_engine_cache)
+  end
+
+  @impl true
+  def init(_args) do
+    table = :ets.new(:wasm_engine, [:set, :named_table, :protected])
+    Logger.info("Wasm Engine Cache: started")
+    {:ok, table}
+  end
+
+  @impl true
+  def handle_call({:insert, engine}, _from, table) do
+    :ets.insert(table, {"wamtime_engine", engine})
+    Logger.info("Wasm Engine Cache: added engine handle")
+    {:reply, :ok, table}
+  end
+end
