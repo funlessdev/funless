@@ -1,4 +1,22 @@
+# Copyright 2022 Giuseppe De Palma, Matteo Trentin
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 defmodule Worker.Adapters.Runtime.Wasm.Engine do
+  @engine_key :engine_handle_key
+  @ets_server :wasmtime_engine_server
+  @ets_table :wasmtime_engine_cache
+
   defstruct [
     # The actual NIF Resource.
     resource: nil,
@@ -14,6 +32,26 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine do
       resource: resource,
       reference: make_ref()
     }
+  end
+
+  @doc """
+  Retrieves the handle to of the Wasmtime Engine.
+  It performs a lazy initialization of the engine, if not found in the cache it is creates a new one and stores it.
+  """
+  @spec get_handle :: %__MODULE__{}
+  def get_handle() do
+    case :ets.lookup(@ets_table, @engine_key) do
+      [{_, handle}] -> handle
+      _ -> start_engine()
+    end
+  end
+
+  @spec start_engine :: %__MODULE__{}
+  defp start_engine() do
+    {:ok, engine} = Worker.Adapters.Runtime.Wasm.Nif.init()
+    handle = wrap_resource(engine)
+    GenServer.call(@ets_server, {:insert, @engine_key, handle})
+    handle
   end
 end
 
@@ -31,20 +69,20 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine.Cache do
   require Logger
 
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: :wasmtime_engine_cache)
+    GenServer.start_link(__MODULE__, args, name: :wasmtime_engine_server)
   end
 
   @impl true
   def init(_args) do
-    table = :ets.new(:wasm_engine, [:set, :named_table, :protected])
+    table = :ets.new(:wasmtime_engine_cache, [:set, :named_table, :protected])
     Logger.info("Wasm Engine Cache: started")
     {:ok, table}
   end
 
   @impl true
-  def handle_call({:insert, engine}, _from, table) do
-    :ets.insert(table, {"wamtime_engine", engine})
-    Logger.info("Wasm Engine Cache: added engine handle")
+  def handle_call({:insert, key, engine}, _from, table) do
+    :ets.insert(table, {key, engine})
+    Logger.info("Wasm Engine Cache: added engine handle with key #{key}")
     {:reply, :ok, table}
   end
 end
