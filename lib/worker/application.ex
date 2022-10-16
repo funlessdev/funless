@@ -23,9 +23,9 @@ defmodule Worker.Application do
 
     children = [
       {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
-      {Adapters.RuntimeCache.ETS.WriteServer, []},
+      {Adapters.Telemetry.Supervisor, []},
       {Adapters.Requests.Cluster.Server, []},
-      {Adapters.Telemetry.Supervisor, []}
+      {Worker.Domain.Ports.Runtime.Supervisor, []}
     ]
 
     Supervisor.start_link(children, strategy: :rest_for_one)
