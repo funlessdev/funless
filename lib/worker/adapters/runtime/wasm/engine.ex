@@ -13,6 +13,11 @@
 # limitations under the License.
 
 defmodule Worker.Adapters.Runtime.Wasm.Engine do
+  @moduledoc """
+  The Engine resource for the wasmtime Engine struct.
+  """
+  alias Worker.Adapters.Runtime.Wasm.Nif
+
   @engine_key :engine_handle_key
   @ets_server :wasmtime_engine_server
   @ets_table :wasmtime_engine_cache
@@ -44,7 +49,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine do
   It performs a lazy initialization of the engine, if not found in the cache it is creates a new one and stores it.
   """
   @spec get_handle() :: __MODULE__.t()
-  def get_handle() do
+  def get_handle do
     case :ets.lookup(@ets_table, @engine_key) do
       [{_, handle}] -> handle
       _ -> start_engine()
@@ -52,8 +57,8 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine do
   end
 
   @spec start_engine() :: __MODULE__.t()
-  defp start_engine() do
-    {:ok, resource} = Worker.Adapters.Runtime.Wasm.Nif.init()
+  defp start_engine do
+    {:ok, resource} = Nif.init()
     engine = wrap_resource(resource)
     GenServer.call(@ets_server, {:insert, @engine_key, engine})
     engine
@@ -61,6 +66,9 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine do
 end
 
 defimpl Inspect, for: Worker.Adapters.Runtime.Wasm.Engine do
+  @moduledoc """
+  Implements the Inspect protocol for the Wasmtime Engine.
+  """
   import Inspect.Algebra
 
   def inspect(dict, opts) do
@@ -69,6 +77,9 @@ defimpl Inspect, for: Worker.Adapters.Runtime.Wasm.Engine do
 end
 
 defmodule Worker.Adapters.Runtime.Wasm.Engine.Cache do
+  @moduledoc """
+  The ETS table to store the Wasmtime Engine.
+  """
   use GenServer, restart: :permanent
 
   require Logger

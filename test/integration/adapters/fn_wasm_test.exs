@@ -18,8 +18,8 @@ defmodule Integration.FnWasmTest do
   alias Worker.Adapters.Runtime.Wasm.Engine
   alias Worker.Adapters.Runtime.Wasm.Module
   alias Worker.Adapters.Runtime.Wasm.Provisioner
-  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.ExecutionResource
+  alias Worker.Domain.FunctionStruct
 
   @engine_key :engine_handle_key
   @engine_cache_server :wasmtime_engine_server

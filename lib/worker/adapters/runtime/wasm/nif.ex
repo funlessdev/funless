@@ -20,7 +20,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Nif do
 
   # Engine NIFs
   @doc false
-  def init(), do: error()
+  def init, do: error()
 
   @doc false
   def compile_module(_engine, _code), do: error()
@@ -32,5 +32,5 @@ defmodule Worker.Adapters.Runtime.Wasm.Nif do
   @doc false
   def run_function(_function_code, _args), do: error()
 
-  defp error(), do: :erlang.nif_error(:nif_not_loaded)
+  defp error, do: :erlang.nif_error(:nif_not_loaded)
 end

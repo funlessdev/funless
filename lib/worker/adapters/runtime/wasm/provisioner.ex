@@ -20,8 +20,8 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
 
   alias Worker.Adapters.Runtime.Wasm.Engine
   alias Worker.Adapters.Runtime.Wasm.Module
-  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.ExecutionResource
+  alias Worker.Domain.FunctionStruct
 
   require Logger
 

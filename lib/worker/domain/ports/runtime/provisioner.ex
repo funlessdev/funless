@@ -17,8 +17,8 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
   Port for runtime creation.
   """
 
-  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.ExecutionResource
+  alias Worker.Domain.FunctionStruct
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
