@@ -56,9 +56,12 @@ defmodule Worker.Adapters.Runtime.Wasm.Module.Cache do
   require Logger
   alias Worker.Adapters.Runtime.Wasm.Module
 
+  @cache_server :wasmtime_module_cache_server
+  @ets_table :wasmtime_module_cache
+
   @spec get(String.t(), String.t()) :: Module.t() | :not_found
   def get(function_name, namespace) do
-    case :ets.lookup(:wasmtime_module_cache, {function_name, namespace}) do
+    case :ets.lookup(@ets_table, {function_name, namespace}) do
       [{{^function_name, ^namespace}, module}] -> module
       _ -> :not_found
     end
@@ -66,22 +69,22 @@ defmodule Worker.Adapters.Runtime.Wasm.Module.Cache do
 
   @spec insert(String.t(), String.t(), Module.t()) :: :ok
   def insert(function_name, namespace, module) do
-    GenServer.call(:wasmtime_module_cache_server, {:insert, function_name, namespace, module})
+    GenServer.call(@cache_server, {:insert, function_name, namespace, module})
   end
 
   @spec delete(String.t(), String.t()) :: :ok
   def delete(function_name, namespace) do
-    GenServer.call(:wasmtime_module_cache_server, {:delete, function_name, namespace})
+    GenServer.call(@cache_server, {:delete, function_name, namespace})
   end
 
   # GenServer callbacks
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: :wasmtime_module_cache_server)
+    GenServer.start_link(__MODULE__, args, name: @cache_server)
   end
 
   @impl true
   def init(_args) do
-    table = :ets.new(:wasmtime_module_cache, [:set, :named_table, :protected])
+    table = :ets.new(@ets_table, [:set, :named_table, :protected])
     Logger.info("Module Cache: started")
     {:ok, table}
   end

@@ -29,7 +29,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}
   def provision(function) do
     case Module.Cache.get(function.name, function.namespace) do
-      %{resource: res} ->
+      %Module{resource: res} ->
         {:ok, %ExecutionResource{resource: res}}
 
       :not_found ->
