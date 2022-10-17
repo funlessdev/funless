@@ -22,6 +22,9 @@ defmodule Worker.Adapters.Runtime.Wasm.Nif do
   @doc false
   def init(), do: error()
 
+  @doc false
+  def compile_module(_engine, _code), do: error()
+
   #   Runs the function with the given code, using the underlying WebAssembly runtime.
   #   ## Parameters
   #     - _function_code: wasm code of the function to be run
