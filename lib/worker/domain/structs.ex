@@ -12,6 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+defmodule Worker.Domain.ExecutionResource do
+  @moduledoc """
+  A struct that represents a resource that can be used to execute a function.
+  """
+  @type t :: %__MODULE__{
+          resource: any()
+        }
+  @enforce_keys [:resource]
+  defstruct [:resource]
+end
+
 defmodule Worker.Domain.RuntimeStruct do
   @moduledoc """
     Runtime struct, passed to adapters.
