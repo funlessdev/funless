@@ -18,18 +18,42 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   """
   @behaviour Worker.Domain.Ports.Runtime.Provisioner
 
+  alias Worker.Adapters.Runtime.Wasm.Engine
+  alias Worker.Adapters.Runtime.Wasm.Module
   alias Worker.Domain.FunctionStruct
-  alias Worker.Domain.RuntimeStruct
+  alias Worker.Domain.ExecutionResource
 
   require Logger
 
   @impl true
-  @spec provision(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any()}
+  @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}
   def provision(function) do
+    case Module.Cache.get(function.name, function.namespace) do
+      %{resource: res} ->
+        {:ok, %ExecutionResource{resource: res}}
+
+      :not_found ->
+        function
+        |> compile_module()
+        |> store_module(function.name, function.namespace)
+    end
+  end
+
+  @spec compile_module(FunctionStruct.t()) :: {:ok, Module.t()} | {:error, any()}
+  defp compile_module(function) do
     if function.code == nil or not is_binary(function.code) do
       {:error, :code_not_found}
     else
-      {:ok, %RuntimeStruct{name: "#{function.name} wasm file", wasm: function.code}}
+      Module.compile(Engine.get_handle(), function.code)
     end
   end
+
+  @spec store_module({:ok, Module.t()} | {:error, any()}, String.t(), String.t()) ::
+          {:ok, ExecutionResource.t()} | {:error, any()}
+  defp store_module({:ok, %Module{resource: _} = module}, fname, ns) do
+    Module.Cache.insert(fname, ns, module)
+    {:ok, %ExecutionResource{resource: module}}
+  end
+
+  defp store_module(err, _, _), do: err
 end
