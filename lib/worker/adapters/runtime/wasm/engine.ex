@@ -27,6 +27,11 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine do
     reference: nil
   ]
 
+  @type t :: %__MODULE__{
+          resource: binary(),
+          reference: reference()
+        }
+
   def wrap_resource(resource) do
     %__MODULE__{
       resource: resource,
@@ -38,7 +43,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine do
   Retrieves the handle to of the Wasmtime Engine.
   It performs a lazy initialization of the engine, if not found in the cache it is creates a new one and stores it.
   """
-  @spec get_handle :: %__MODULE__{}
+  @spec get_handle() :: __MODULE__.t()
   def get_handle() do
     case :ets.lookup(@ets_table, @engine_key) do
       [{_, handle}] -> handle
@@ -46,12 +51,12 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine do
     end
   end
 
-  @spec start_engine :: %__MODULE__{}
+  @spec start_engine() :: __MODULE__.t()
   defp start_engine() do
-    {:ok, engine} = Worker.Adapters.Runtime.Wasm.Nif.init()
-    handle = wrap_resource(engine)
-    GenServer.call(@ets_server, {:insert, @engine_key, handle})
-    handle
+    {:ok, resource} = Worker.Adapters.Runtime.Wasm.Nif.init()
+    engine = wrap_resource(resource)
+    GenServer.call(@ets_server, {:insert, @engine_key, engine})
+    engine
   end
 end
 
