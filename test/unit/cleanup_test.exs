@@ -15,7 +15,7 @@
 defmodule CleanupTest do
   use ExUnit.Case, async: true
 
-  alias Worker.Domain.CleanupRuntime
+  alias Worker.Domain.CleanupResource
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!
@@ -31,30 +31,34 @@ defmodule CleanupTest do
     %{function: function}
   end
 
-  describe "Cleanup runtime requests" do
+  describe "CleanupResource" do
     setup do
       Worker.Cleaner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Cleaner.Test)
-      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.Test)
+      Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache.Test)
       :ok
     end
 
-    test "cleanup should return :ok when a runtime is found and deleted for the given function",
+    test "cleanup should call cleaner and resource cache delete when a resource is found for the given function",
          %{function: function} do
-      assert CleanupRuntime.cleanup(function) == :ok
+      Worker.Cleaner.Mock |> Mox.expect(:cleanup, &Worker.Adapters.Runtime.Cleaner.Test.cleanup/1)
+
+      Worker.ResourceCache.Mock
+      |> Mox.expect(:delete, &Worker.Adapters.ResourceCache.Test.delete/2)
+
+      assert CleanupResource.cleanup(function) == :ok
     end
 
-    test "cleanup should return {:error, :runtime_not_found} when no runtime is found for the given function",
+    test "cleanup should return {:error, :resource_not_found} when no resource is found for the given function",
          %{function: function} do
-      Worker.RuntimeCache.Mock |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
 
-      assert CleanupRuntime.cleanup(function) == {:error, :runtime_not_found}
+      assert CleanupResource.cleanup(function) == {:error, :resource_not_found}
     end
 
-    test "cleanup should return error when RuntimeCache fails to delete", %{function: function} do
-      Worker.RuntimeCache.Mock
-      |> Mox.expect(:delete, fn _, _ -> {:error, "error"} end)
+    test "cleanup should return error when ResourceCache fails to delete", %{function: function} do
+      Worker.ResourceCache.Mock |> Mox.expect(:delete, fn _, _ -> {:error, "error"} end)
 
-      assert CleanupRuntime.cleanup(function) == {:error, "error"}
+      assert CleanupResource.cleanup(function) == {:error, "error"}
     end
   end
 end
