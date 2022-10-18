@@ -12,8 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Mox.defmock(Worker.Provisioner.Mock, for: Worker.Domain.Ports.Runtime.Provisioner)
-Mox.defmock(Worker.Runner.Mock, for: Worker.Domain.Ports.Runtime.Runner)
-Mox.defmock(Worker.Cleaner.Mock, for: Worker.Domain.Ports.Runtime.Cleaner)
+defmodule Worker.Adapters.ResourceCache.Test do
+  @moduledoc false
+  @behaviour Worker.Domain.Ports.ResourceCache
+  alias Worker.Domain.ExecutionResource
 
-Mox.defmock(Worker.ResourceCache.Mock, for: Worker.Domain.Ports.ResourceCache)
+  @impl true
+  def get(_function_name, _namespace) do
+    %ExecutionResource{resource: "runtime"}
+  end
+
+  @impl true
+  def insert(_name, _ns, _runtime) do
+    :ok
+  end
+
+  @impl true
+  def delete(_name, _ns) do
+    :ok
+  end
+end

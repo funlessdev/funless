@@ -14,7 +14,8 @@
 
 import Config
 
-config :worker, Worker.Domain.Ports.RuntimeCache, adapter: Worker.RuntimeCache.Mock
+config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.ResourceCache.Mock
+
 config :worker, Worker.Domain.Ports.Runtime.Provisioner, adapter: Worker.Provisioner.Mock
 config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Runner.Mock
 config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Cleaner.Mock
