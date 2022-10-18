@@ -27,19 +27,51 @@ defmodule Worker.Adapters.ResourceCache do
   @resource_cache_server :resource_cache_server
   @resource_cache_table :resource_cache
 
+  @doc """
+  Retrieve a resource from the cache, associated to a function name and a namespace.
+
+  ## Parameters
+  - `function_name`: the name of the function
+  - `namespace`: the namespace of the function
+
+  ## Returns
+  - `resource` if the resource is found;
+  - `:resource_not_found` if the resource is not found.
+  """
   @impl true
   def get(function_name, namespace) do
     case :ets.lookup(@resource_cache_table, {function_name, namespace}) do
-      [{{^function_name, ^namespace}, runtime}] -> runtime
+      [{{^function_name, ^namespace}, resource}] -> resource
       _ -> :resource_not_found
     end
   end
 
+  @doc """
+  Store a resource in the cache, associated to a function name and a namespace.
+
+  ## Parameters
+  - `function_name`: the name of the function
+  - `namespace`: the namespace of the function
+  - `resource`: the resource to store
+
+  ## Returns
+  - `:ok`
+  """
   @impl true
   def insert(function_name, namespace, resource) do
     GenServer.call(@resource_cache_server, {:insert, function_name, namespace, resource})
   end
 
+  @doc """
+  Remove a resource from the cache, associated to a function name and a namespace.
+
+  ## Parameters
+  - `function_name`: the name of the function
+  - `namespace`: the namespace of the function
+
+  ## Returns
+  - `:ok`
+  """
   @impl true
   def delete(function_name, namespace) do
     GenServer.call(@resource_cache_server, {:delete, function_name, namespace})
