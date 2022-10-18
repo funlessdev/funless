@@ -15,9 +15,9 @@
 defmodule Integration.ProvisionEtsTest do
   use ExUnit.Case
 
-  alias Worker.Adapters.RuntimeCache.ETS
-  alias Worker.Domain.ProvisionRuntime
-  alias Worker.Domain.RuntimeStruct
+  alias Worker.Adapters.ResourceCache
+  alias Worker.Domain.ProvisionResource
+  alias Worker.Domain.ExecutionResource
 
   import Mox, only: [verify_on_exit!: 1]
 
@@ -34,74 +34,58 @@ defmodule Integration.ProvisionEtsTest do
     %{function: function}
   end
 
-  describe "Provisioning requests and ETS RuntimeCache" do
+  describe "Provisioning requests" do
     setup do
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
-      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.ETS)
-
-      Worker.Provisioner.Mock
-      |> Mox.stub(:provision, fn _function ->
-        {:ok,
-         %RuntimeStruct{
-           host: "127.0.0.1",
-           port: "8080",
-           name: "test-runtime"
-         }}
-      end)
-
+      Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache)
       :ok
     end
 
-    test "provision should insert runtime in cache when successfull", %{
+    test "provision should insert resource in cache when successfull", %{
       function: function
     } do
-      assert ETS.get(function.name, function.namespace) == :runtime_not_found
+      Worker.Provisioner.Mock
+      |> Mox.expect(:provision, fn _ -> {:ok, %ExecutionResource{resource: "a-resource"}} end)
 
-      {atom, runtime} = ProvisionRuntime.provision(function)
-      assert atom == :ok
+      assert ResourceCache.get(function.name, function.namespace) == :resource_not_found
 
-      assert ETS.get(function.name, function.namespace) == runtime
+      assert {:ok, resource} = ProvisionResource.provision(function)
+      assert ResourceCache.get(function.name, function.namespace) == resource
 
-      ETS.delete(function.name, function.namespace)
+      ResourceCache.delete(function.name, function.namespace)
     end
 
-    test "multiple provision should overwrite runtime in cache", %{
+    test "multiple provision return resource in cache", %{
       function: function
     } do
-      assert ETS.get(function.name, function.namespace) == :runtime_not_found
+      Worker.Provisioner.Mock
+      |> Mox.expect(:provision, fn _ -> {:ok, %ExecutionResource{resource: "a-resource"}} end)
 
-      assert {:ok, runtime1} = ProvisionRuntime.provision(function)
+      assert ResourceCache.get(function.name, function.namespace) == :resource_not_found
 
-      assert ETS.get(function.name, function.namespace) == runtime1
+      assert {:ok, res1} = ProvisionResource.provision(function)
+
+      assert ResourceCache.get(function.name, function.namespace) == res1
 
       Worker.Provisioner.Mock
-      |> Mox.stub(:provision, fn _function ->
-        {:ok,
-         %RuntimeStruct{
-           host: "127.0.0.1",
-           port: "8080",
-           name: "test-runtime-2"
-         }}
-      end)
+      |> Mox.expect(:provision, 0, fn _ -> :ignored end)
 
-      assert {:ok, runtime2} = ProvisionRuntime.provision(function)
+      assert {:ok, res2} = ProvisionResource.provision(function)
+      assert ResourceCache.get(function.name, function.namespace) == res1
+      assert res1 == res2
 
-      assert ETS.get(function.name, function.namespace) == runtime2
-
-      ETS.delete(function.name, function.namespace)
+      ResourceCache.delete(function.name, function.namespace)
     end
 
     test "provision should return error when provisioner fails", %{
       function: function
     } do
       Worker.Provisioner.Mock
-      |> Mox.stub(:provision, fn _function ->
-        {:error, "error"}
-      end)
+      |> Mox.expect(:provision, fn _ -> {:error, "error"} end)
 
-      assert {:error, _} = ProvisionRuntime.provision(function)
+      assert {:error, _} = ProvisionResource.provision(function)
 
-      assert ETS.get(function.name, function.namespace) == :runtime_not_found
+      assert ResourceCache.get(function.name, function.namespace) == :resource_not_found
     end
   end
 end

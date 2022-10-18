@@ -12,65 +12,64 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Domain.ProvisionRuntime do
+defmodule Worker.Domain.ProvisionResource do
   @moduledoc """
   Contains functions used to create function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
+  alias Worker.Domain.ExecutionResource
   alias Worker.Domain.FunctionStruct
+  alias Worker.Domain.Ports.ResourceCache
   alias Worker.Domain.Ports.Runtime.Cleaner
   alias Worker.Domain.Ports.Runtime.Provisioner
-  alias Worker.Domain.Ports.RuntimeCache
-  alias Worker.Domain.RuntimeStruct
 
   require Elixir.Logger
 
   @doc """
-  Provisions a runtime for the given function.
+  Provisions an execution resource for the given function.
 
   It uses the Provisioner adapter to get the runtime from the cache or, depending on the
   adapter, it creates one and returns it after inserting it in the cache.
-
 
   ## Parameters
   - %{...}: generic struct with all the fields required by Worker.Domain.Function
 
   ## Returns
-  - `{:ok, runtime}` if the runtime is found or created.
-  - `{:error, :runtime_not_found} if the runtime was not in the cache and it won't attempt to create one.
+  - `{:ok, resource}` if the resource is found or created.
+  - `{:error, :resource_not_found} if the resrouce was not in the cache and it won't attempt to create one.
   - `{:error, err}` if any error is encountered
   """
-  @spec provision(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any}
+  @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any}
   def provision(%{name: name, namespace: ns} = f) do
     Logger.info("Provisioning runtime for #{name} in namespace #{ns}")
 
-    case RuntimeCache.get(name, ns) do
-      :runtime_not_found ->
-        Logger.warn("Runtime not found in cache")
-        Provisioner.provision(f) |> store_runtime(name, ns)
+    case ResourceCache.get(name, ns) do
+      :resource_not_found ->
+        Logger.warn("Resource not found in cache")
+        Provisioner.provision(f) |> cache_resource(name, ns)
 
-      runtime ->
-        Logger.info("Runtime found in cache")
-        {:ok, runtime}
+      resource ->
+        Logger.info("Resource found in cache")
+        {:ok, resource}
     end
   end
 
   def provision(_), do: {:error, :bad_params}
 
-  @dialyzer {:nowarn_function, [store_runtime: 3]}
-  @spec store_runtime({:ok, RuntimeStruct.t()} | {:error, any()}, String.t(), String.t()) ::
-          {:ok, RuntimeStruct.t()} | {:error, any}
-  defp store_runtime({:error, err}, _, _), do: {:error, err}
+  @dialyzer {:nowarn_function, [cache_resource: 3]}
+  @spec cache_resource({:ok, ExecutionResource.t()} | {:error, any()}, String.t(), String.t()) ::
+          {:ok, ExecutionResource.t()} | {:error, any}
+  defp cache_resource({:error, err}, _, _), do: {:error, err}
 
-  defp store_runtime({:ok, runtime}, fname, ns) do
-    case RuntimeCache.insert(fname, ns, runtime) do
+  defp cache_resource({:ok, resource}, fname, ns) do
+    case ResourceCache.insert(fname, ns, resource) do
       :ok ->
-        Logger.info("Runtime #{runtime.name} for {#{fname}, #{ns}} added to cache")
-        {:ok, runtime}
+        Logger.info("Resource for {#{fname}, #{ns}} added to cache")
+        {:ok, resource}
 
       err ->
-        Logger.error("Failed to cache runtime #{runtime.name}")
-        Cleaner.cleanup(runtime)
+        Logger.error("Failed to cache resource")
+        Cleaner.cleanup(resource)
         err
     end
   end
