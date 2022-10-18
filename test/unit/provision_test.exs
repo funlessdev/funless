@@ -15,8 +15,11 @@
 defmodule ProvisionTest do
   use ExUnit.Case, async: true
 
-  alias Worker.Domain.ProvisionRuntime
-  alias Worker.Domain.RuntimeStruct
+  alias Worker.Domain.ProvisionResource
+  alias Worker.Domain.ExecutionResource
+
+  alias Worker.Adapters.ResourceCache
+  alias Worker.Adapters.Runtime.Provisioner
 
   import Mox, only: [verify_on_exit!: 1]
 
@@ -37,66 +40,58 @@ defmodule ProvisionTest do
     setup do
       Worker.Cleaner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Cleaner.Test)
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
-      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.Test)
       :ok
     end
 
     test "should return {:error, err} when the underlying provisioner encounter errors",
          %{function: function} do
-      Worker.RuntimeCache.Mock |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
 
       Worker.Provisioner.Mock
       |> Mox.expect(:provision, fn _function -> {:error, "generic error"} end)
 
-      assert ProvisionRuntime.provision(function) == {:error, "generic error"}
+      assert ProvisionResource.provision(function) == {:error, "generic error"}
     end
 
-    test "should first call the runtime cache when the runtime is already provisioned",
+    test "should retrieve the resource from the cache when it is already present",
          %{function: function} do
-      Worker.Provisioner.Mock
-      |> Mox.expect(:provision, 0, &Worker.Adapters.Runtime.Provisioner.Test.provision/1)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, &ResourceCache.Test.get/2)
 
-      Worker.RuntimeCache.Mock
-      |> Mox.expect(:get, 1, &Worker.Adapters.RuntimeCache.Test.get/2)
-
-      expected = {:ok, %RuntimeStruct{name: "runtime", host: "localhost", port: "8080"}}
-      assert ProvisionRuntime.provision(function) == expected
-    end
-
-    test "should insert in cache when new runtime is create/received",
-         %{function: function} do
-      Worker.RuntimeCache.Mock |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
-
-      Worker.RuntimeCache.Mock
-      |> Mox.expect(:insert, 1, &Worker.Adapters.RuntimeCache.Test.insert/3)
+      # The provisioner should not be called: note the 0
+      Worker.Provisioner.Mock |> Mox.expect(:provision, 0, &Provisioner.Test.provision/1)
 
       # defined in Test adapter
-      expected = %Worker.Domain.RuntimeStruct{name: "runtime", host: "localhost", port: "8080"}
+      expected = {:ok, %ExecutionResource{resource: "runtime"}}
+      assert ProvisionResource.provision(function) == expected
+    end
 
-      assert ProvisionRuntime.provision(function) == {:ok, expected}
+    test "should call cache insert when new resource is provisioner",
+         %{function: function} do
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:insert, &ResourceCache.Test.insert/3)
+
+      # defined in Test adapter
+      expected = {:ok, %ExecutionResource{resource: "runtime"}}
+
+      assert ProvisionResource.provision(function) == expected
     end
 
     test "should return error when caching fails",
          %{function: function} do
-      Worker.RuntimeCache.Mock |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:insert, fn _, _, _ -> {:error, "insert error"} end)
 
-      Worker.RuntimeCache.Mock
-      |> Mox.expect(:insert, fn _function, _ns, _runtime -> {:error, "insert error"} end)
-
-      assert ProvisionRuntime.provision(function) == {:error, "insert error"}
+      assert ProvisionResource.provision(function) == {:error, "insert error"}
     end
 
     test "should run cleaner when caching fails",
          %{function: function} do
-      Worker.RuntimeCache.Mock |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:insert, fn _, _, _ -> {:error, "insert error"} end)
 
-      Worker.RuntimeCache.Mock
-      |> Mox.expect(:insert, fn _function, _ns, _runtime -> {:error, "insert error"} end)
+      Worker.Cleaner.Mock |> Mox.expect(:cleanup, fn _ -> :ok end)
 
-      Worker.Cleaner.Mock
-      |> Mox.expect(:cleanup, fn _rt -> :ok end)
-
-      assert ProvisionRuntime.provision(function) == {:error, "insert error"}
+      assert ProvisionResource.provision(function) == {:error, "insert error"}
     end
   end
 end
