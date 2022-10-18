@@ -15,42 +15,38 @@
 defmodule Integration.CleanupEtsTest do
   use ExUnit.Case
 
-  alias Worker.Adapters.RuntimeCache.ETS
-  alias Worker.Domain.CleanupRuntime
-  alias Worker.Domain.RuntimeStruct
+  alias Worker.Adapters.ResourceCache
+  alias Worker.Domain.CleanupResource
+  alias Worker.Domain.ExecutionResource
 
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!
 
-  describe "Cleanup requests and ETS RuntimeCache:" do
+  describe "Cleanup requests" do
     setup do
       Worker.Cleaner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Cleaner.Test)
-      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.ETS)
+      Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache)
       :ok
     end
 
-    test "cleanup should remove runtime from storage when successfull" do
+    test "cleanup should remove resource from cache when successfull" do
       function = %{name: "fn", namespace: "ns", image: "", code: ""}
 
-      runtime = %RuntimeStruct{
-        host: "127.0.0.1",
-        port: "8080",
-        name: "test-runtime"
-      }
+      resource = %ExecutionResource{resource: "a-resource"}
 
-      ETS.insert("fn", "ns", runtime)
-      assert ETS.get("fn", "ns") == runtime
+      ResourceCache.insert("fn", "ns", resource)
+      assert ResourceCache.get("fn", "ns") == resource
 
-      assert CleanupRuntime.cleanup(function) == :ok
-      assert ETS.get("fn", "ns") == :runtime_not_found
+      assert CleanupResource.cleanup(function) == :ok
+      assert ResourceCache.get("fn", "ns") == :resource_not_found
     end
 
-    test "cleanup should return runtime_not_found when no runtime found" do
+    test "cleanup should return resource_not_found when not found" do
       function = %{name: "fn", namespace: "ns", image: "", code: ""}
 
-      assert ETS.get("fn", "ns") == :runtime_not_found
-      assert CleanupRuntime.cleanup(function) == {:error, :runtime_not_found}
+      assert ResourceCache.get("fn", "ns") == :resource_not_found
+      assert CleanupResource.cleanup(function) == {:error, :resource_not_found}
     end
   end
 end
