@@ -20,12 +20,12 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Cleaner do
   @behaviour Worker.Domain.Ports.Runtime.Cleaner
 
   alias Worker.Adapters.Runtime.OpenWhisk.Nif
+  alias Worker.Domain.ExecutionResource
 
   require Logger
 
   @impl true
-  def cleanup(resource) do
-    container = resource.resource
+  def cleanup(%ExecutionResource{resource: container}) do
     {:ok, socket} = Application.fetch_env(:worker, :docker_host)
 
     Logger.info("OpenWhisk: Removing runtime '#{container.name}'")

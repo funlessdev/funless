@@ -18,10 +18,12 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Runner do
   """
   @behaviour Worker.Domain.Ports.Runtime.Runner
 
+  alias Worker.Domain.ExecutionResource
+
   require Logger
 
   @impl true
-  def run_function(_fl_function, args, runtime) do
+  def run_function(_fl_function, args, %ExecutionResource{resource: runtime}) do
     Logger.info("OpenWhisk: Running function on runtime '#{runtime.name}'")
     body = Jason.encode!(%{"value" => args})
 
