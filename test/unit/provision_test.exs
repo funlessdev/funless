@@ -65,7 +65,7 @@ defmodule ProvisionTest do
       assert ProvisionResource.provision(function) == expected
     end
 
-    test "should call cache insert when new resource is provisioner",
+    test "should call cache insert when new resource is provisioned",
          %{function: function} do
       Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
       Worker.ResourceCache.Mock |> Mox.expect(:insert, &ResourceCache.Test.insert/3)

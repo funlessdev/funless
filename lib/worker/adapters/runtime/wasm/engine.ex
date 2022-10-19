@@ -45,8 +45,8 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine do
   end
 
   @doc """
-  Retrieves the handle to of the Wasmtime Engine.
-  It performs a lazy initialization of the engine, if not found in the cache it is creates a new one and stores it.
+  Retrieves the handle of the Wasmtime Engine.
+  It performs a lazy initialization of the engine, if not found in the cache it creates a new one and stores it.
   """
   @spec get_handle() :: __MODULE__.t()
   def get_handle do

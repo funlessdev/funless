@@ -36,7 +36,7 @@ defmodule Worker.Domain.ProvisionResource do
 
   ## Returns
   - `{:ok, resource}` if the resource is found or created.
-  - `{:error, :resource_not_found} if the resrouce was not in the cache and it won't attempt to create one.
+  - `{:error, :resource_not_found} if the resource was not in the cache and it won't attempt to create one.
   - `{:error, err}` if any error is encountered
   """
   @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any}

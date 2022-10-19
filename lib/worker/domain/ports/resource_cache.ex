@@ -14,7 +14,7 @@
 
 defmodule Worker.Domain.Ports.ResourceCache do
   @moduledoc """
-  Port for keeping track of executin resources associated with a function, namespace tuple.
+  Port for keeping track of execution resources associated with a function, namespace tuple.
   """
   alias Worker.Domain.ExecutionResource
 
