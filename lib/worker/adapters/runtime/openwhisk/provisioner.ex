@@ -21,8 +21,8 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
   alias Worker.Adapters.Runtime.OpenWhisk.Cleaner
   alias Worker.Adapters.Runtime.OpenWhisk.Container
   alias Worker.Adapters.Runtime.OpenWhisk.Nif
-  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.ExecutionResource
+  alias Worker.Domain.FunctionStruct
 
   require Logger
 

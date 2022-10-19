@@ -16,8 +16,8 @@ defmodule Worker.Domain.Ports.Runtime.Runner do
   @moduledoc """
   Port to run functions in runtimes.
   """
-  alias Worker.Domain.FunctionStruct
   alias Worker.Domain.ExecutionResource
+  alias Worker.Domain.FunctionStruct
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 

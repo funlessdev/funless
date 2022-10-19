@@ -15,8 +15,8 @@
 defmodule ProvisionTest do
   use ExUnit.Case, async: true
 
-  alias Worker.Domain.ProvisionResource
   alias Worker.Domain.ExecutionResource
+  alias Worker.Domain.ProvisionResource
 
   alias Worker.Adapters.ResourceCache
   alias Worker.Adapters.Runtime.Provisioner
