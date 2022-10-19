@@ -49,9 +49,11 @@ fn run_function(
             run_module_function(engine_resource, module_resource, args);
         match res {
             Ok((atom, output)) => thread_env.send_and_clear(&pid, |env| (atom, output).encode(env)),
+
             Err(rustler::Error::Term(rustler_error)) => thread_env.send_and_clear(&pid, |env| {
                 (atoms::error(), rustler_error.encode(env)).encode(env)
             }),
+
             _ => {
                 thread_env.send_and_clear(&pid, |env| (atoms::error(), "Unknown error").encode(env))
             }

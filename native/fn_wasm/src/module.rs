@@ -13,10 +13,12 @@
 // limitations under the License.
 
 use crate::atoms;
-use rustler::{resource::ResourceArc, types::Binary, NifResult};
+use rustler::{
+    resource::ResourceArc, types::Binary, Encoder, Env, LocalPid, NifResult, OwnedBinary, OwnedEnv,
+};
 use wasmtime::{Engine, Module};
 
-use std::sync::Mutex;
+use std::{sync::Mutex, thread};
 
 use crate::engine::EngineResource;
 
@@ -31,7 +33,6 @@ pub struct ModuleResourceResponse {
 }
 
 impl ModuleResource {
-    // TODO: do it in another thread cause compilation (from_binary) is slow
     fn new(engine: &Engine, binary: &[u8]) -> NifResult<ModuleResourceResponse> {
         match Module::from_binary(engine, binary) {
             Ok(module) => {
@@ -52,9 +53,34 @@ impl ModuleResource {
 }
 
 #[rustler::nif]
-fn compile_module(
+fn compile_module(env: Env, engine_resource: ResourceArc<EngineResource>, code: Binary) {
+    let pid = env.pid();
+    if let Some(owned_code) = code.to_owned() {
+        thread::spawn(move || {
+            let mut thread_env = OwnedEnv::new();
+            let res = compile_in_thread(engine_resource, owned_code);
+            match res {
+                Ok(module_response) => {
+                    thread_env.send_and_clear(&pid, |env| module_response.encode(env))
+                }
+
+                Err(rustler::Error::Term(rustler_error)) => thread_env
+                    .send_and_clear(&pid, |env| {
+                        (atoms::error(), rustler_error.encode(env)).encode(env)
+                    }),
+
+                _ => thread_env
+                    .send_and_clear(&pid, |env| (atoms::error(), "Unknown error").encode(env)),
+            }
+        });
+    } else {
+        send_back_error(env, pid)
+    }
+}
+
+fn compile_in_thread(
     engine_resource: ResourceArc<EngineResource>,
-    code: Binary,
+    code: OwnedBinary,
 ) -> NifResult<ModuleResourceResponse> {
     let binary = code.as_slice();
 
@@ -63,4 +89,17 @@ fn compile_module(
     })?);
 
     ModuleResource::new(engine, binary)
+}
+
+/// Sends back the `{:error, msg}` to the original Elixir process.
+/// Called when `compile_module` fails to allocate an owned copy of the code.
+///
+/// # Arguments
+///
+/// * `env` - NIF parameter, passed from `run_function`
+/// * `pid` - PID of the calling Elixir process
+///
+fn send_back_error(env: Env, pid: LocalPid) {
+    let e = "Couldn't allocate code for separate thread";
+    env.send(&pid, (atoms::error(), e).encode(env))
 }

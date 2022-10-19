@@ -7,6 +7,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Module do
       {:ok, module} = Wasm.Module.compile(bytes)
   """
   alias Worker.Adapters.Runtime.Wasm
+  require Logger
 
   @type t :: %__MODULE__{
           resource: binary(),
@@ -26,9 +27,16 @@ defmodule Worker.Adapters.Runtime.Wasm.Module do
   """
   @spec compile(Wasm.Engine.t(), binary()) :: {:ok, __MODULE__.t()} | {:error, any()}
   def compile(%Wasm.Engine{resource: engine_resource}, code) when is_binary(code) do
-    case Wasm.Nif.compile_module(engine_resource, code) do
-      {:ok, resource} -> {:ok, wrap_resource(resource)}
-      {:error, err} -> {:error, err}
+    Wasm.Nif.compile_module(engine_resource, code)
+
+    receive do
+      {:ok, resource} ->
+        Logger.info("Wasm module compiled successfully #{inspect(resource)}")
+        {:ok, wrap_resource(resource)}
+
+      {:error, err} ->
+        Logger.warn("Wasm module compilation failed: #{inspect(err)}")
+        {:error, err}
     end
   end
 

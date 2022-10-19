@@ -15,8 +15,7 @@
 defmodule Integration.FnWasmTest do
   use ExUnit.Case
 
-  alias Worker.Adapters.Runtime.Wasm.Engine
-  alias Worker.Adapters.Runtime.Wasm.Module
+  alias Worker.Adapters.Runtime.Wasm
 
   @engine_key :engine_handle_key
   @engine_cache_server :wasmtime_engine_server
@@ -39,22 +38,22 @@ defmodule Integration.FnWasmTest do
       GenServer.call(@engine_cache_server, {:insert, @engine_key, handle})
       assert :ets.lookup(@ets_engine_table, @engine_key) == [{@engine_key, handle}]
 
-      assert Engine.get_handle() == handle
+      assert Wasm.Engine.get_handle() == handle
       GenServer.call(@engine_cache_server, {:delete, @engine_key})
     end
 
     test "get_handle should create and return a new engine handle when not found in the cache" do
       assert :ets.lookup(@ets_engine_table, @engine_key) == []
-      handle = Engine.get_handle()
+      handle = Wasm.Engine.get_handle()
 
       assert :ets.lookup(@ets_engine_table, @engine_key) == [{@engine_key, handle}]
       GenServer.call(@engine_cache_server, {:delete, @engine_key})
     end
 
     test "get_handle should not overwrite handle after first invocation" do
-      handle = Engine.get_handle()
+      handle = Wasm.Engine.get_handle()
       assert :ets.lookup(@ets_engine_table, @engine_key) == [{@engine_key, handle}]
-      handle2 = Engine.get_handle()
+      handle2 = Wasm.Engine.get_handle()
       assert :ets.lookup(@ets_engine_table, @engine_key) == [{@engine_key, handle2}]
       assert handle == handle2
       GenServer.call(@engine_cache_server, {:delete, @engine_key})
@@ -63,8 +62,8 @@ defmodule Integration.FnWasmTest do
 
   describe "Wasmtime Runtime Provisioner" do
     test "compile actually works with a sample code.wasm", %{code: code} do
-      engine = Engine.get_handle()
-      assert {:ok, %Module{resource: _}} = Module.compile(engine, code)
+      engine = Wasm.Engine.get_handle()
+      assert {:ok, %Wasm.Module{resource: _}} = Wasm.Module.compile(engine, code)
       GenServer.call(@engine_cache_server, {:delete, @engine_key})
     end
   end
