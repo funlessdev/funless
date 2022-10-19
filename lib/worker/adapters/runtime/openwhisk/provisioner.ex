@@ -19,9 +19,10 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
   @behaviour Worker.Domain.Ports.Runtime.Provisioner
 
   alias Worker.Adapters.Runtime.OpenWhisk.Cleaner
+  alias Worker.Adapters.Runtime.OpenWhisk.Container
   alias Worker.Adapters.Runtime.OpenWhisk.Nif
   alias Worker.Domain.FunctionStruct
-  alias Worker.Domain.RuntimeStruct
+  alias Worker.Domain.ExecutionResource
 
   require Logger
 
@@ -42,7 +43,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
     Nif.prepare_runtime(function, runtime_name, network_name, socket)
 
     receive do
-      {:ok, %RuntimeStruct{} = rt} -> init(function, rt, max_retries)
+      {:ok, %Container{} = rt} -> init(function, rt, max_retries)
       {:error, err} -> {:error, err}
       err -> {:error, "unexpected response: #{inspect(err)}"}
     end
@@ -92,7 +93,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
 
   defp reply_from_init({:ok, runtime}) do
     Logger.info("OpenWhisk: Runtime #{runtime.name} initialized")
-    {:ok, runtime}
+    {:ok, %ExecutionResource{resource: runtime}}
   end
 
   defp reply_from_init({:error, err}) do
