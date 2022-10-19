@@ -22,7 +22,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Supervisor do
   def children do
     [
       {Worker.Adapters.Runtime.Wasm.Engine.Cache, []},
-      {Worker.Adapters.Runtime.Wasm.Module.Cache, []}
+      {Worker.Adapters.ResourceCache, []}
     ]
   end
 end

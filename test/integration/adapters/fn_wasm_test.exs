@@ -17,16 +17,10 @@ defmodule Integration.FnWasmTest do
 
   alias Worker.Adapters.Runtime.Wasm.Engine
   alias Worker.Adapters.Runtime.Wasm.Module
-  alias Worker.Adapters.Runtime.Wasm.Provisioner
-  alias Worker.Domain.ExecutionResource
-  alias Worker.Domain.FunctionStruct
 
   @engine_key :engine_handle_key
   @engine_cache_server :wasmtime_engine_server
   @ets_engine_table :wasmtime_engine_cache
-
-  @module_cache_server :wasmtime_module_cache_server
-  @ets_module_table :wasmtime_module_cache
 
   setup_all do
     code = File.read!("test/fixtures/code.wasm")
@@ -34,7 +28,7 @@ defmodule Integration.FnWasmTest do
     %{code: code}
   end
 
-  describe "Wasmtime Runtime Engine" do
+  describe "Wasmtime Runtime" do
     setup do
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Wasm.Provisioner)
       :ok
@@ -67,39 +61,11 @@ defmodule Integration.FnWasmTest do
     end
   end
 
-  describe "Wasmtime Runtime Module" do
+  describe "Wasmtime Runtime Provisioner" do
     test "compile actually works with a sample code.wasm", %{code: code} do
       engine = Engine.get_handle()
       assert {:ok, %Module{resource: _}} = Module.compile(engine, code)
       GenServer.call(@engine_cache_server, {:delete, @engine_key})
-    end
-
-    test "provisioner compiles and caches when not found in cache", %{code: code} do
-      fun = %FunctionStruct{code: code, name: "test", namespace: "ns"}
-
-      assert Module.Cache.get(fun.name, fun.namespace) == :not_found
-
-      assert {:ok, %ExecutionResource{resource: mod}} = Provisioner.provision(fun)
-
-      cached_mod = Module.Cache.get(fun.name, fun.namespace)
-
-      assert cached_mod == mod
-      assert cached_mod.resource == mod.resource
-
-      GenServer.call(@module_cache_server, {:delete, fun.name, fun.namespace})
-    end
-
-    test "provisioner does not compile new module when found in cache" do
-      fun = %FunctionStruct{name: "test", namespace: "ns"}
-      module = %{resource: "test-resource"}
-      key = {fun.name, fun.namespace}
-      GenServer.call(@module_cache_server, {:insert, fun.name, fun.namespace, module})
-
-      assert :ets.lookup(@ets_module_table, key) == [{key, module}]
-
-      assert {:ok, %ExecutionResource{resource: res}} = Provisioner.provision(fun)
-      assert res == module.resource
-      GenServer.call(@module_cache_server, {:delete, fun.name, fun.namespace})
     end
   end
 end

@@ -28,15 +28,9 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   @impl true
   @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}
   def provision(function) do
-    case Module.Cache.get(function.name, function.namespace) do
-      %Module{resource: res} ->
-        {:ok, %ExecutionResource{resource: res}}
-
-      :not_found ->
-        function
-        |> compile_module()
-        |> store_module(function.name, function.namespace)
-    end
+    function
+    |> compile_module()
+    |> wrap_in_execution_resource()
   end
 
   @spec compile_module(FunctionStruct.t()) :: {:ok, Module.t()} | {:error, any()}
@@ -48,12 +42,8 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
     end
   end
 
-  @spec store_module({:ok, Module.t()} | {:error, any()}, String.t(), String.t()) ::
+  @spec wrap_in_execution_resource({:ok, Module.t()} | {:error, any()}) ::
           {:ok, ExecutionResource.t()} | {:error, any()}
-  defp store_module({:ok, %Module{resource: _} = module}, fname, ns) do
-    Module.Cache.insert(fname, ns, module)
-    {:ok, %ExecutionResource{resource: module}}
-  end
-
-  defp store_module(err, _, _), do: err
+  defp wrap_in_execution_resource({:ok, module}), do: {:ok, %ExecutionResource{resource: module}}
+  defp wrap_in_execution_resource(error), do: error
 end
