@@ -16,4 +16,4 @@ Mox.defmock(Worker.Provisioner.Mock, for: Worker.Domain.Ports.Runtime.Provisione
 Mox.defmock(Worker.Runner.Mock, for: Worker.Domain.Ports.Runtime.Runner)
 Mox.defmock(Worker.Cleaner.Mock, for: Worker.Domain.Ports.Runtime.Cleaner)
 
-Mox.defmock(Worker.RuntimeCache.Mock, for: Worker.Domain.Ports.RuntimeCache)
+Mox.defmock(Worker.ResourceCache.Mock, for: Worker.Domain.Ports.ResourceCache)

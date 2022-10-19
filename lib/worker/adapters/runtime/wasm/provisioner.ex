@@ -18,18 +18,34 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   """
   @behaviour Worker.Domain.Ports.Runtime.Provisioner
 
+  alias Worker.Adapters.Runtime.Wasm.Engine
+  alias Worker.Adapters.Runtime.Wasm.Module
+  alias Worker.Domain.ExecutionResource
   alias Worker.Domain.FunctionStruct
-  alias Worker.Domain.RuntimeStruct
 
   require Logger
 
   @impl true
-  @spec provision(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any()}
+  @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}
   def provision(function) do
+    Logger.info("Wasm Provisioner: compiling module for function #{function.name}")
+
+    function
+    |> compile_module()
+    |> wrap_in_execution_resource()
+  end
+
+  @spec compile_module(FunctionStruct.t()) :: {:ok, Module.t()} | {:error, any()}
+  defp compile_module(function) do
     if function.code == nil or not is_binary(function.code) do
       {:error, :code_not_found}
     else
-      {:ok, %RuntimeStruct{name: "#{function.name} wasm file", wasm: function.code}}
+      Module.compile(Engine.get_handle(), function.code)
     end
   end
+
+  @spec wrap_in_execution_resource({:ok, Module.t()} | {:error, any()}) ::
+          {:ok, ExecutionResource.t()} | {:error, any()}
+  defp wrap_in_execution_resource({:ok, module}), do: {:ok, %ExecutionResource{resource: module}}
+  defp wrap_in_execution_resource(error), do: error
 end

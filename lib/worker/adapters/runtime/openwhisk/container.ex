@@ -12,5 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0)
-ExUnit.start()
+defmodule Worker.Adapters.Runtime.OpenWhisk.Container do
+  @moduledoc """
+    Container struct, passed to the openwhisk nif.
+
+    ## Fields
+      - name: runtime name, used with Docker runtimes
+      - host: runtime IP address, used with Docker runtimes
+      - port: runtime port, used with Docker runtimes
+  """
+  @type t :: %__MODULE__{
+          name: String.t(),
+          host: String.t(),
+          port: String.t()
+        }
+  @enforce_keys [:name]
+  defstruct [:name, :host, :port]
+end

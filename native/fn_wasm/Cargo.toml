@@ -19,7 +19,7 @@ edition = "2021"
 
 [lib]
 name = "fn_wasm"
-path = "src/init.rs"
+path = "src/lib.rs"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]

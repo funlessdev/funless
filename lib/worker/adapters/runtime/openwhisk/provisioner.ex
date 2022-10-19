@@ -19,9 +19,10 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
   @behaviour Worker.Domain.Ports.Runtime.Provisioner
 
   alias Worker.Adapters.Runtime.OpenWhisk.Cleaner
+  alias Worker.Adapters.Runtime.OpenWhisk.Container
   alias Worker.Adapters.Runtime.OpenWhisk.Nif
+  alias Worker.Domain.ExecutionResource
   alias Worker.Domain.FunctionStruct
-  alias Worker.Domain.RuntimeStruct
 
   require Logger
 
@@ -42,18 +43,18 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
     Nif.prepare_runtime(function, runtime_name, network_name, socket)
 
     receive do
-      {:ok, %RuntimeStruct{} = rt} -> init(function, rt, max_retries)
+      {:ok, %Container{} = rt} -> init(function, rt, max_retries)
       {:error, err} -> {:error, err}
       err -> {:error, "unexpected response: #{inspect(err)}"}
     end
   end
 
-  @spec init(FunctionStruct.t(), RuntimeStruct.t(), integer()) ::
-          {:ok, RuntimeStruct.t()} | {:error, any}
+  @spec init(FunctionStruct.t(), Container.t(), integer()) ::
+          {:ok, ExecutionResource.t()} | {:error, any}
   defp init(_function, runtime, 0 = _retries_left) do
     Logger.error("OpenWhisk: runtime initialization failed.")
 
-    case Cleaner.cleanup(runtime) do
+    case Cleaner.cleanup(%ExecutionResource{resource: runtime}) do
       :ok -> {:error, :max_init_retries_reached}
       {:error, err} -> {:error, {:max_init_retries_reached, {:error, err}}}
     end
@@ -69,13 +70,15 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
         reply_from_init({:ok, runtime})
 
       {:error, :socket_closed_remotely} ->
+        Logger.warn("OpenWhisk: runtime not ready yet, socket closed...")
         retry_init(function, runtime, retries_left)
 
       {:error, {:failed_connect, [{:to_address, _}, {_, _, :econnrefused}]}} ->
+        Logger.warn("OpenWhisk: runtime not ready yet, failed to connect...")
         retry_init(function, runtime, retries_left)
 
       {:error, err} ->
-        case Cleaner.cleanup(runtime) do
+        case Cleaner.cleanup(%ExecutionResource{resource: runtime}) do
           :ok -> reply_from_init({:error, err})
           {:error, cleanup_err} -> reply_from_init({:error, {err, {:error, cleanup_err}}})
         end
@@ -92,7 +95,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
 
   defp reply_from_init({:ok, runtime}) do
     Logger.info("OpenWhisk: Runtime #{runtime.name} initialized")
-    {:ok, runtime}
+    {:ok, %ExecutionResource{resource: runtime}}
   end
 
   defp reply_from_init({:error, err}) do
@@ -101,8 +104,7 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Provisioner do
   end
 
   defp retry_init(function, runtime, retries_left) do
-    Logger.warn("OpenWhisk: failed to initialize runtime, retrying...")
-    :timer.sleep(10)
+    :timer.sleep(100)
     init(function, runtime, retries_left - 1)
   end
 end

@@ -18,7 +18,7 @@ defmodule Worker.Domain.InvokeFunction do
   """
 
   alias Worker.Domain.Ports.Runtime.Runner
-  alias Worker.Domain.ProvisionRuntime
+  alias Worker.Domain.ProvisionResource
 
   alias Worker.Domain.FunctionStruct
 
@@ -46,8 +46,8 @@ defmodule Worker.Domain.InvokeFunction do
     f = struct(FunctionStruct, function)
     Logger.info("API: Invoking function #{f.name} in namespace #{f.namespace}")
 
-    with {:ok, runtime} <- ProvisionRuntime.provision(f) do
-      Runner.run_function(function, args, runtime)
+    with {:ok, resource} <- ProvisionResource.provision(f) do
+      Runner.run_function(function, args, resource)
     end
   end
 

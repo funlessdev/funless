@@ -50,10 +50,10 @@ struct Function {
 
 /// A struct representing containers.
 ///
-/// It's the Rust equivalent of the `Worker.Domain.Runtime` Elixir struct.
+/// It's the Rust equivalent of the `OpenWhisk.Container` Elixir struct.
 ///
 #[derive(NifStruct)]
-#[module = "Worker.Domain.RuntimeStruct"]
+#[module = "Worker.Adapters.Runtime.OpenWhisk.Container"]
 struct RuntimeContainer {
     name: String,
     host: String,

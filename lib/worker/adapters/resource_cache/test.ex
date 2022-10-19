@@ -12,27 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.RuntimeCache.ETS do
-  @moduledoc """
-  ETS adapter for storage of {function, runtime} tuples.
-  """
-  @behaviour Worker.Domain.Ports.RuntimeCache
+defmodule Worker.Adapters.ResourceCache.Test do
+  @moduledoc false
+  @behaviour Worker.Domain.Ports.ResourceCache
+  alias Worker.Domain.ExecutionResource
 
   @impl true
-  def get(function_name, namespace) do
-    case :ets.lookup(:function_runtime, {function_name, namespace}) do
-      [{{^function_name, ^namespace}, runtime}] -> runtime
-      _ -> :runtime_not_found
-    end
+  def get(_function_name, _namespace) do
+    %ExecutionResource{resource: "runtime"}
   end
 
   @impl true
-  def insert(function_name, namespace, runtime) do
-    GenServer.call(:write_server, {:insert, function_name, namespace, runtime})
+  def insert(_name, _ns, _runtime) do
+    :ok
   end
 
   @impl true
-  def delete(function_name, namespace) do
-    GenServer.call(:write_server, {:delete, function_name, namespace})
+  def delete(_name, _ns) do
+    :ok
   end
 end

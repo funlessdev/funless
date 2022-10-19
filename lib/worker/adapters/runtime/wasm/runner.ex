@@ -18,15 +18,21 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
   """
   @behaviour Worker.Domain.Ports.Runtime.Runner
 
-  alias Worker.Adapters.Runtime.Wasm.Nif
+  alias Worker.Adapters.Runtime.Wasm
+  alias Worker.Domain.ExecutionResource
 
   require Logger
 
   @impl true
-  def run_function(_fl_function, args, %{wasm: wasm} = _runtime) do
-    Logger.info("Wasm: Running function on WebAssembly runtime")
+  def run_function(%{name: name, namespace: ns}, args, %ExecutionResource{resource: module}) do
+    Logger.info(
+      "Wasm: Running #{name} of #{ns} with WebAssembly runtime with args #{inspect(args)}"
+    )
+
     string_args = Jason.encode!(args)
-    Nif.run_function(wasm, string_args)
+
+    engine = Wasm.Engine.get_handle()
+    Wasm.Nif.run_function(engine.resource, module.resource, string_args)
 
     receive do
       {:ok, payload} ->

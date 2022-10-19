@@ -12,5 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0)
-ExUnit.start()
+defmodule Worker.Adapters.Runtime.OpenWhisk.Supervisor do
+  @moduledoc """
+  Supervisor for the openwhisk runtime. It implements the behaviour of Ports.Runtime.Supervisor to define the children to supervise.
+  """
+  @behaviour Worker.Domain.Ports.Runtime.Supervisor
+
+  @impl true
+  def children do
+    [
+      {Worker.Adapters.ResourceCache, []}
+    ]
+  end
+end

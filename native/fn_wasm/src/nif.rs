@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{atoms, utils};
-
-use rustler::{types::Binary, Encoder, Env, LocalPid, OwnedBinary, OwnedEnv};
 use std::thread;
 
+use crate::{atoms, engine::EngineResource, module::ModuleResource, utils};
+use rustler::{resource::ResourceArc, Encoder, Env, NifResult, OwnedEnv};
 use wasi_common::pipe::ReadPipe;
-use wasmtime::*;
 
-/// Runs the given function's code with the given args using the wasmtime runtime.
+/// Runs the function in the given module with the given args using the wasmtime runtime,
+/// inside another thread and sends back the result to the caller.
 ///
 /// Sends the `{:ok, result}` or `{:error, err}` response to the calling Elixir process.
 ///
@@ -29,101 +28,81 @@ use wasmtime::*;
 /// # Arguments
 ///
 /// * `env` - NIF parameter, represents the calling process
-/// * `code` - Binary string holding the function's WebAssembly code
+/// * `engine_resource` - The reference to the wasmtime engine
+/// * `module_resource` - The reference to the compiled module
 /// * `args` - JSON-encoded function arguments
 ///
-/// Further information on the returned messages listed in `run_in_thread` and `send_back_error`.
 ///
 #[rustler::nif]
-fn run_function(env: Env, code: Binary, args: String) {
+fn run_function(
+    env: Env,
+    engine_resource: ResourceArc<EngineResource>,
+    module_resource: ResourceArc<ModuleResource>,
+    args: String,
+) {
     let pid = env.pid();
-    if let Some(owned_code) = code.to_owned() {
-        thread::spawn(move || run_in_thread(pid, owned_code, args));
-    } else {
-        send_back_error(env, pid)
-    }
+
+    thread::spawn(move || {
+        let mut thread_env = OwnedEnv::new();
+
+        let res: NifResult<(rustler::Atom, String)> =
+            run_module_function(engine_resource, module_resource, args);
+        match res {
+            Ok((atom, output)) => thread_env.send_and_clear(&pid, |env| (atom, output).encode(env)),
+
+            Err(rustler::Error::Term(rustler_error)) => thread_env.send_and_clear(&pid, |env| {
+                (atoms::error(), rustler_error.encode(env)).encode(env)
+            }),
+
+            _ => {
+                thread_env.send_and_clear(&pid, |env| (atoms::error(), "Unknown error").encode(env))
+            }
+        }
+    });
 }
 
-/// Runs the main computation of `run_function`.
-/// Instantiates the wasmtime engine and simulates stdin, stdout and stderr to be fed to the runtime.
-///
-/// This function is run in a separate thread and sends errors and results back to the original Elixir process.
-///
-/// # Arguments
-///
-/// * `pid` - PID of the calling Elixir process
-/// * `owned_code` - WebAssembly code of the function, moved to the thread
-/// * `args` - JSON-encoded function arguments, passed from `run_function`
-///
-/// # Messages
-///
-/// * `{:ok, result}` - Successful response, with `result` being a JSON-encoded string
-/// * `{:error, :extract_from_utf8_error}` - When the function encouters an error converting stdout/stderr to a string
-/// * `{:error, :lock_error}` - When the function encounters an error trying to gain read access to the stdout/stderr lock
-/// * `{:error, {:code_error, any}}` - When the function encounters an error trying to get the main function from the WebAssembly code (this includes linking, code instantiation as a module and creation of the WasiCtx)
-/// * `{:error, msg}` - When the function encounters an error during the actual execution of the given code; `msg` is the content of stderr
-///  
-fn run_in_thread(pid: LocalPid, owned_code: OwnedBinary, args: String) {
-    let mut thread_env = OwnedEnv::new();
-    let engine = Engine::default();
+fn run_module_function(
+    engine_resource: ResourceArc<EngineResource>,
+    module_resource: ResourceArc<ModuleResource>,
+    args: String,
+) -> NifResult<(rustler::Atom, String)> {
+    // 1. Extract engine from resource
+    let engine = &*(engine_resource.inner.lock().map_err(|e| {
+        rustler::Error::Term(Box::new(format!("Could not unlock engine resource: {}", e)))
+    })?);
 
+    // 2. Extract module from resource
+    let module = &*(module_resource.inner.lock().map_err(|e| {
+        rustler::Error::Term(Box::new(format!("Could not unlock module resource: {}", e)))
+    })?);
+
+    // 3. Setup stdin, stdout and stderr pipes
     let (stdout, stdout_lock) = utils::make_write_pipe();
     let (stderr, stderr_lock) = utils::make_write_pipe();
     let stdin = ReadPipe::from(args);
 
-    match utils::get_main_func(&engine, owned_code.as_slice(), stdin, stdout, stderr) {
-        Ok((main_func, mut store)) => {
-            let result = main_func.call(&mut store, ());
+    // 4. Create a new instance of the module function with relative store
+    let (main_func_instance, mut store) =
+        utils::get_main_func(engine, module, stdin, stdout, stderr).map_err(|e| {
+            rustler::Error::Term(Box::new(format!(
+                "Could not get function from module: {}",
+                e
+            )))
+        })?;
 
-            /*
-             if the function completed successfully, we pass the :ok atom and the content of stdout;
-             if the function's result was an error, we pass the :error atom and the content of stderr
-            */
-            let (lock, atom) = match result {
-                Ok(_) => (stdout_lock, atoms::ok()),
-                Err(_) => (stderr_lock, atoms::error()),
-            };
+    /*
+    5. Run the function
+    if the function completed successfully, we pass the :ok atom and the content of stdout;
+    if the function's result was an error, we pass the :error atom and the content of stderr
+    */
+    let result = main_func_instance.call(&mut store, ());
+    let (atom, lock) = match result {
+        Ok(_) => (atoms::ok(), stdout_lock),
+        Err(_) => (atoms::error(), stderr_lock),
+    };
 
-            let extracted = utils::extract_string(lock);
+    // 6. Extract output
+    let output = utils::extract_string(lock)?;
 
-            if let Some(output) = extracted {
-                if let Ok(s) = output {
-                    thread_env.send_and_clear(&pid, |env| (atom, &s).encode(env))
-                } else {
-                    thread_env.send_and_clear(&pid, |env| {
-                        (atoms::error(), atoms::extract_from_utf8_error()).encode(env)
-                    })
-                }
-            } else {
-                thread_env.send_and_clear(&pid, |env| {
-                    (atoms::error(), atoms::lock_error()).encode(env)
-                })
-            }
-        }
-        Err(error) => thread_env.send_and_clear(&pid, |env| {
-            (atoms::error(), (atoms::code_error(), error.to_string())).encode(env)
-        }),
-    }
-}
-
-/// Sends back the `{:error, {:internal_error, msg}}` to the original Elixir process.
-/// Called when `run_function` fails to allocate an owned copy of the code.
-///
-/// # Arguments
-///
-/// * `env` - NIF parameter, passed from `run_function`
-/// * `pid` - PID of the calling Elixir process
-///
-fn send_back_error(env: Env, pid: LocalPid) {
-    env.send(
-        &pid,
-        (
-            atoms::error(),
-            (
-                atoms::internal_error(),
-                "Couldn't allocate code for separate thread",
-            ),
-        )
-            .encode(env),
-    )
+    Ok((atom, output))
 }

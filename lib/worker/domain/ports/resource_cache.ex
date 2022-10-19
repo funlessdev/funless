@@ -12,57 +12,57 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Domain.Ports.RuntimeCache do
+defmodule Worker.Domain.Ports.ResourceCache do
   @moduledoc """
-  Port for keeping track of {function, runtime} tuples in storage.
+  Port for keeping track of execution resources associated with a function, namespace tuple.
   """
-  alias Worker.Domain.RuntimeStruct
+  alias Worker.Domain.ExecutionResource
 
-  @callback get(String.t(), String.t()) :: RuntimeStruct.t() | :runtime_not_found
-  @callback insert(String.t(), String.t(), RuntimeStruct.t()) :: :ok | {:error, any}
+  @callback get(String.t(), String.t()) :: ExecutionResource.t() | :runtime_not_found
+  @callback insert(String.t(), String.t(), ExecutionResource.t()) :: :ok | {:error, any}
   @callback delete(String.t(), String.t()) :: :ok | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @doc """
-  Retrieve the runtime associated to the given function name and namespace.
+  Retrieve the resource associated to the given function name and namespace.
 
   ### Parameters
   - `function_name` - The name of the function.
   - `namespace` - The namespace of the function.
 
   ### Returns
-  - `RuntimeStruct.t()` - The runtime of the given function name if found.
-  - `:runtime_not_found` - If the runtime is not found.
+  - `ExecutionResource.t()` - The resource of the given function name if found.
+  - `:resource_not_found` - If the resource is not found.
   """
-  @spec get(String.t(), String.t()) :: RuntimeStruct.t() | :runtime_not_found
+  @spec get(String.t(), String.t()) :: ExecutionResource.t() | :resource_not_found
   defdelegate get(function_name, namespace), to: @adapter
 
   @doc """
-  Inserts a runtime into the RuntimeCache associated to a function.
+  Inserts a resource into the ResourceCache associated to a function.
 
   ### Parameters
   - `function_name` - The name of the function to associate the runtime with.
   - `namespace` - The namespace of the function.
-  - `runtime` - The RuntimeStruct of the runtime to be inserted.
+  - `resource` - The ExecutionResource of the function to be inserted.
 
   ### Returns
-  - `:ok` - If the runtime was inserted.
-  - `{:error, err}` - If an error occurred and the runtime could not be inserted.
+  - `:ok` - If the resource was inserted.
+  - `{:error, err}` - If an error occurred and the resource could not be inserted.
   """
-  @spec insert(String.t(), String.t(), RuntimeStruct.t()) :: :ok | {:error, any}
+  @spec insert(String.t(), String.t(), ExecutionResource.t()) :: :ok | {:error, any}
   defdelegate insert(function_name, namespace, runtime), to: @adapter
 
   @doc """
-  Removes the runtime associated with a function from the RuntimeCache.
+  Removes the resource associated with a function from the ResourceCache.
 
   ### Parameters
   - `function_name` - The name of the function that the runtime is associated with.
   - `namespace` - The namespace of the function.
 
   ### Returns
-  - `:ok` - If the runtime was removed.
-  - `{:error, err}` - If an error occurred and the runtime could not be removed.
+  - `:ok` - If the resource was removed.
+  - `{:error, err}` - If an error occurred and the resource could not be removed.
   """
   @spec delete(String.t(), String.t()) :: :ok | {:error, any}
   defdelegate delete(function_name, namespace), to: @adapter

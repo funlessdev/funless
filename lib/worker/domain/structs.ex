@@ -12,24 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Domain.RuntimeStruct do
+defmodule Worker.Domain.ExecutionResource do
   @moduledoc """
-    Runtime struct, passed to adapters.
+  A struct that represents a resource that can be used to execute a function.
 
-    ## Fields
-      - name: runtime name, used with Docker runtimes
-      - host: runtime IP address, used with Docker runtimes
-      - port: runtime port, used with Docker runtimes
-      - wasm: WebAssembly code of a function, used with WebAssembly runtimes
+  ## Fields
+  - resource: the resource that can be used to execute a function
   """
   @type t :: %__MODULE__{
-          name: String.t(),
-          host: String.t(),
-          port: String.t(),
-          wasm: binary()
+          resource: any()
         }
-  @enforce_keys [:name]
-  defstruct [:name, :host, :port, wasm: <<>>]
+  @enforce_keys [:resource]
+  defstruct [:resource]
 end
 
 defmodule Worker.Domain.FunctionStruct do

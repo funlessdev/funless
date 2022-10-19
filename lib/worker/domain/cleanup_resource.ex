@@ -12,36 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Domain.CleanupRuntime do
+defmodule Worker.Domain.CleanupResource do
   @moduledoc """
   Contains functions used to remove function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
+  alias Worker.Domain.FunctionStruct
+  alias Worker.Domain.Ports.ResourceCache
   alias Worker.Domain.Ports.Runtime.Cleaner
-  alias Worker.Domain.Ports.RuntimeCache
 
   require Elixir.Logger
 
   @doc """
-    Removes the first runtime associated with the given function.
+    Removes the resource associated with the given function. It is removed from the ResourceCache and
+    the adapter Cleaner is executed.
 
     ## Parameters
-      - %{...}: generic struct with all the fields required by Worker.Domain.Function
+      - function: the FunctionStruct containing the function information (name and namespace)
 
     ## Returns
-      - :ok if a runtime is found and removed successfully;
-      - {:error, err} if a runtime is found, but an error is encountered when removing it.
+      - :ok if the resource is found and removed successfully;
+      - {:error, err} if an error is encountered while removing the resource.
   """
-  @spec cleanup(map()) :: :ok | {:error, any}
+  @spec cleanup(FunctionStruct.t()) :: :ok | {:error, any}
   def cleanup(%{__struct__: _s} = function), do: cleanup(Map.from_struct(function))
 
   def cleanup(%{name: fname, namespace: ns} = _function) do
-    with runtime when runtime != :runtime_not_found <- RuntimeCache.get(fname, ns),
-         :ok <- Cleaner.cleanup(runtime),
-         :ok <- RuntimeCache.delete(fname, ns) do
-      Logger.info("API: Runtime for function #{fname} in namespace #{ns} deleted")
+    with resource when resource != :resource_not_found <- ResourceCache.get(fname, ns),
+         :ok <- Cleaner.cleanup(resource),
+         :ok <- ResourceCache.delete(fname, ns) do
+      Logger.info("API: Resource for function #{fname} in namespace #{ns} deleted")
       :ok
     else
-      :runtime_not_found -> {:error, :runtime_not_found}
+      :resource_not_found -> {:error, :resource_not_found}
       err -> err
     end
   end

@@ -17,12 +17,12 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
   Port for runtime creation.
   """
 
+  alias Worker.Domain.ExecutionResource
   alias Worker.Domain.FunctionStruct
-  alias Worker.Domain.RuntimeStruct
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback provision(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any()}
+  @callback provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}
 
   @doc """
   Provisions a runtime for the given function and namespace.
@@ -37,6 +37,6 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
   - `{:error, :runtime_not_found} if the runtime was not in the cache and it won't attempt to create one.
   - `{:error, err}` if any error is encountered
   """
-  @spec provision(FunctionStruct.t()) :: {:ok, RuntimeStruct.t()} | {:error, any()}
+  @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}
   defdelegate provision(fl_function), to: @adapter
 end

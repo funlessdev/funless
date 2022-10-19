@@ -12,23 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.RuntimeCache.Test do
-  @moduledoc false
-  @behaviour Worker.Domain.Ports.RuntimeCache
-  alias Worker.Domain.RuntimeStruct
+defmodule Worker.Adapters.Runtime.Wasm.Supervisor do
+  @moduledoc """
+  Supervisor for the wasmtime runtime. It implements the behaviour of Ports.Runtime.Supervisor to define the children to supervise.
+  """
+  @behaviour Worker.Domain.Ports.Runtime.Supervisor
 
   @impl true
-  def get(_function_name, _namespace) do
-    %RuntimeStruct{name: "runtime", host: "localhost", port: "8080"}
-  end
-
-  @impl true
-  def insert(_name, _ns, _runtime) do
-    :ok
-  end
-
-  @impl true
-  def delete(_name, _ns) do
-    :ok
+  def children do
+    [
+      {Worker.Adapters.Runtime.Wasm.Engine.Cache, []},
+      {Worker.Adapters.ResourceCache, []}
+    ]
   end
 end

@@ -12,14 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.Runtime.Wasm.Cleaner do
+defmodule Worker.Domain.Ports.Runtime.Supervisor do
   @moduledoc """
-    Adapter for WebAssembly runtime removal.
-    Since we are running no permanent container, and the resource cache cleaning is handled in the domain.
-    There is nothing to do here.
+  Supervisor for the runtime processes. It is mainly used to start the caches used by the runtime.
+  The module that implement this behaviour will define the children() method to set the supervisor children.
   """
-  @behaviour Worker.Domain.Ports.Runtime.Cleaner
+  use Supervisor
+
+  @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
+
+  @callback children() :: list()
+
+  defdelegate children(), to: @adapter
+
+  def start_link(args) do
+    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
+  end
 
   @impl true
-  def cleanup(_resource), do: :ok
+  def init(_args) do
+    Supervisor.init(children(), strategy: :one_for_one)
+  end
 end

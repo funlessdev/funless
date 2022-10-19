@@ -19,7 +19,11 @@ config :worker, Worker.Domain.Ports.Runtime.Provisioner,
 
 config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Adapters.Runtime.Wasm.Runner
 config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Adapters.Runtime.Wasm.Cleaner
-config :worker, Worker.Domain.Ports.RuntimeCache, adapter: Worker.Adapters.RuntimeCache.ETS
+
+config :worker, Worker.Domain.Ports.Runtime.Supervisor,
+  adapter: Worker.Adapters.Runtime.Wasm.Supervisor
+
+config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.Adapters.ResourceCache
 
 config :logger, :console,
   format: "\n#####[$level] $time $metadata $message\n",

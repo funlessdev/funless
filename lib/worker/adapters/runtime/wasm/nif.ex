@@ -18,12 +18,15 @@ defmodule Worker.Adapters.Runtime.Wasm.Nif do
   """
   use Rustler, otp_app: :worker, crate: :fn_wasm, mode: :release
 
-  #   Runs the function with the given code, using the underlying WebAssembly runtime.
-  #   ## Parameters
-  #     - _function_code: wasm code of the function to be run
-  #     - _ args: arguments passed to the function
+  # Engine NIFs
   @doc false
-  def run_function(_function_code, _args) do
-    :erlang.nif_error(:nif_not_loaded)
-  end
+  def init, do: error()
+
+  @doc false
+  def compile_module(_engine, _code), do: error()
+
+  @doc false
+  def run_function(_engine, _module, _args), do: error()
+
+  defp error, do: :erlang.nif_error(:nif_not_loaded)
 end

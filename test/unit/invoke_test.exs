@@ -35,7 +35,7 @@ defmodule InvokeTest do
     setup do
       Worker.Runner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Runner.Test)
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
-      Worker.RuntimeCache.Mock |> Mox.stub_with(Worker.Adapters.RuntimeCache.Test)
+      Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache.Test)
       :ok
     end
 
@@ -46,30 +46,26 @@ defmodule InvokeTest do
 
     test "should return {:error, err} when running the given function raises an error",
          %{function: function} do
-      Worker.Runner.Mock
-      |> Mox.expect(:run_function, fn _function, _args, _runtime ->
-        {:error, "generic error"}
-      end)
+      Worker.Runner.Mock |> Mox.expect(:run_function, fn _, _, _ -> {:error, "generic error"} end)
 
       assert InvokeFunction.invoke(function) == {:error, "generic error"}
     end
 
-    test "should call provision when no runtime is found for the given function",
+    test "should call provision when no resource for execution is found for the given function",
          %{function: function} do
-      Worker.RuntimeCache.Mock
-      |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
 
       Worker.Provisioner.Mock |> Mox.expect(:provision, fn _ -> {:ok, %{}} end)
 
+      # Output from the test default
       assert InvokeFunction.invoke(function) == {:ok, %{"result" => "test-output"}}
     end
 
-    test "should return {:error, err} when no runtime available and its creation fails",
+    test "should return {:error, err} when no resource is available and its creation fails",
          %{function: function} do
-      Worker.RuntimeCache.Mock |> Mox.expect(:get, fn _, _ -> :runtime_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
 
-      Worker.Provisioner.Mock
-      |> Mox.expect(:provision, fn _ -> {:error, "creation error"} end)
+      Worker.Provisioner.Mock |> Mox.expect(:provision, fn _ -> {:error, "creation error"} end)
 
       assert InvokeFunction.invoke(function) == {:error, "creation error"}
     end
