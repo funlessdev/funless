@@ -40,7 +40,7 @@ defmodule Worker.Domain.CleanupResource do
     with resource when resource != :resource_not_found <- ResourceCache.get(fname, ns),
          :ok <- Cleaner.cleanup(resource),
          :ok <- ResourceCache.delete(fname, ns) do
-      Logger.info("Resource for function #{fname} in namespace #{ns} deleted")
+      Logger.info("API: Resource for function #{fname} in namespace #{ns} deleted")
       :ok
     else
       :resource_not_found -> {:error, :resource_not_found}

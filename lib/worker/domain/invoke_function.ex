@@ -46,8 +46,8 @@ defmodule Worker.Domain.InvokeFunction do
     f = struct(FunctionStruct, function)
     Logger.info("API: Invoking function #{f.name} in namespace #{f.namespace}")
 
-    with {:ok, runtime} <- ProvisionResource.provision(f) do
-      Runner.run_function(function, args, runtime)
+    with {:ok, resource} <- ProvisionResource.provision(f) do
+      Runner.run_function(function, args, resource)
     end
   end
 

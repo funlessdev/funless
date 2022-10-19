@@ -28,6 +28,8 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   @impl true
   @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}
   def provision(function) do
+    Logger.info("Wasm Provisioner: compiling module for function #{function.name}")
+
     function
     |> compile_module()
     |> wrap_in_execution_resource()

@@ -41,7 +41,7 @@ defmodule Worker.Domain.ProvisionResource do
   """
   @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any}
   def provision(%{name: name, namespace: ns} = f) do
-    Logger.info("Provisioning runtime for #{name} in namespace #{ns}")
+    Logger.info("API: Provisioning runtime for #{name} in namespace #{ns}")
 
     case ResourceCache.get(name, ns) do
       :resource_not_found ->
@@ -64,11 +64,11 @@ defmodule Worker.Domain.ProvisionResource do
   defp cache_resource({:ok, resource}, fname, ns) do
     case ResourceCache.insert(fname, ns, resource) do
       :ok ->
-        Logger.info("Resource for {#{fname}, #{ns}} added to cache")
+        Logger.info("API: Resource for {#{fname}, #{ns}} added to cache")
         {:ok, resource}
 
       err ->
-        Logger.error("Failed to cache resource")
+        Logger.error("API: Failed to cache resource")
         Cleaner.cleanup(resource)
         err
     end
