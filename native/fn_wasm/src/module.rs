@@ -58,7 +58,7 @@ fn compile_module(
 ) -> NifResult<ModuleResourceResponse> {
     let binary = code.as_slice();
 
-    let engine: &Engine = &*(engine_resource.inner.lock().map_err(|e| {
+    let engine = &*(engine_resource.inner.lock().map_err(|e| {
         rustler::Error::Term(Box::new(format!("Could not unlock engine resource: {}", e)))
     })?);
 

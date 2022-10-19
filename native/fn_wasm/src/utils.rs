@@ -14,10 +14,10 @@
 
 use std::{
     io::Cursor,
-    string::FromUtf8Error,
     sync::{Arc, RwLock},
 };
 
+use rustler::NifResult;
 use wasi_common::{
     pipe::{ReadPipe, WritePipe},
     WasiCtx,
@@ -48,17 +48,17 @@ pub fn make_write_pipe() -> (WritePipe<Vec<u8>>, Arc<RwLock<Vec<u8>>>) {
 /// * `stdout`, `stderr` - WritePipes where the output and errors will be written by the module
 pub fn get_main_func(
     engine: &Engine,
-    code: &[u8],
+    module: &Module,
     stdin: ReadPipe<Cursor<String>>,
     stdout: WritePipe<Vec<u8>>,
     stderr: WritePipe<Vec<u8>>,
 ) -> Result<(TypedFunc<(), ()>, Store<WasiCtx>), wasmtime_wasi::Error> {
-    let module = Module::from_binary(engine, code)?;
     let wasi = WasiCtxBuilder::new()
-        .stdout(Box::new(stdout))
         .stdin(Box::new(stdin))
+        .stdout(Box::new(stdout))
         .stderr(Box::new(stderr))
         .build();
+
     let mut store = Store::new(engine, wasi);
     let mut linker = Linker::new(engine);
     wasmtime_wasi::add_to_linker(&mut linker, |s| s)?;
@@ -82,14 +82,15 @@ pub fn get_main_func(
 /// # Arguments:
 ///
 /// - `lock` - A reader-writer lock over a Vec<u8>, encoding a unicode string
-pub fn extract_string(lock: Arc<RwLock<Vec<u8>>>) -> Option<Result<String, FromUtf8Error>> {
+pub fn extract_string(lock: Arc<RwLock<Vec<u8>>>) -> NifResult<String> {
     let mut buffer: Vec<u8> = Vec::new();
-    let guard = match lock.read() {
-        Ok(g) => Some(g),
-        Err(_e) => None,
-    };
+    let guard = lock.read().map_err(|e| {
+        rustler::Error::Term(Box::new(format!("Could not unlock stdout/err: {}", e)))
+    })?;
 
-    guard?.iter().for_each(|i| buffer.push(*i));
+    guard.iter().for_each(|i| buffer.push(*i));
 
-    Some(String::from_utf8(buffer))
+    let output = String::from_utf8(buffer)
+        .map_err(|e| rustler::Error::Term(Box::new(format!("String extraction failed: {}", e))))?;
+    Ok(output)
 }
