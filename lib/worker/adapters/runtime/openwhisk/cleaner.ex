@@ -24,19 +24,20 @@ defmodule Worker.Adapters.Runtime.OpenWhisk.Cleaner do
   require Logger
 
   @impl true
-  def cleanup(runtime) do
+  def cleanup(resource) do
+    container = resource.resource
     {:ok, socket} = Application.fetch_env(:worker, :docker_host)
 
-    Logger.info("OpenWhisk: Removing runtime '#{runtime.name}'")
-    Nif.cleanup_runtime(runtime.name, socket)
+    Logger.info("OpenWhisk: Removing runtime '#{container.name}'")
+    Nif.cleanup_runtime(container.name, socket)
 
     receive do
       :ok ->
-        Logger.info("OpenWhisk: Runtime #{inspect(runtime)} removed")
+        Logger.info("OpenWhisk: Runtime #{inspect(container)} removed")
         :ok
 
       {:error, err} ->
-        Logger.error("OpenWhisk: Error removing runtime #{inspect(runtime)}: #{inspect(err)}")
+        Logger.error("OpenWhisk: Error removing runtime #{inspect(container)}: #{inspect(err)}")
         {:error, err}
     end
   end

@@ -16,9 +16,9 @@ defmodule Worker.Domain.Ports.Runtime.Cleaner do
   @moduledoc """
   Port for runtime removal.
   """
-  alias Worker.Domain.FunctionStruct
+  alias Worker.Domain.ExecutionResource
 
-  @callback cleanup(FunctionStruct.t()) :: :ok | {:error, any}
+  @callback cleanup(ExecutionResource.t()) :: :ok | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
@@ -26,12 +26,12 @@ defmodule Worker.Domain.Ports.Runtime.Cleaner do
   Cleans up the resources from the host system associated to a particular function.
 
   ### Parameters
-  - `function` - The FunctionStruct related to the resources to be removed.
+  - `resource` - The ExecutionResource.t() to be removed.
 
   ### Returns
   - `:ok` - if removal was successful.
   - `{:error, err}` - An error message if the resources could not be removed.
   """
-  @spec cleanup(FunctionStruct.t()) :: :ok | {:error, any}
-  defdelegate cleanup(function), to: @adapter
+  @spec cleanup(ExecutionResource.t()) :: :ok | {:error, any}
+  defdelegate cleanup(resource), to: @adapter
 end

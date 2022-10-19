@@ -42,6 +42,21 @@ defmodule Integration.CleanupEtsTest do
       assert ResourceCache.get("fn", "ns") == :resource_not_found
     end
 
+    test "cleanup should call cleaner passing it the resource from the cache" do
+      function = %{name: "fn", namespace: "ns", image: "", code: ""}
+
+      resource = %ExecutionResource{resource: "a-resource"}
+
+      ResourceCache.insert("fn", "ns", resource)
+      assert ResourceCache.get("fn", "ns") == resource
+
+      # If we are not passing the resource to the cleaner, this will fail
+      # I don't know how to expect a certain parameter to be passed to a function, so this will do
+      Worker.Cleaner.Mock |> Mox.expect(:cleanup, 1, fn res -> if res == resource, do: :ok end)
+
+      assert CleanupResource.cleanup(function) == :ok
+    end
+
     test "cleanup should return resource_not_found when not found" do
       function = %{name: "fn", namespace: "ns", image: "", code: ""}
 

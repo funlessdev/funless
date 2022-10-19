@@ -36,9 +36,9 @@ defmodule Worker.Domain.CleanupResource do
   @spec cleanup(FunctionStruct.t()) :: :ok | {:error, any}
   def cleanup(%{__struct__: _s} = function), do: cleanup(Map.from_struct(function))
 
-  def cleanup(%{name: fname, namespace: ns} = function) do
+  def cleanup(%{name: fname, namespace: ns} = _function) do
     with resource when resource != :resource_not_found <- ResourceCache.get(fname, ns),
-         :ok <- Cleaner.cleanup(function),
+         :ok <- Cleaner.cleanup(resource),
          :ok <- ResourceCache.delete(fname, ns) do
       Logger.info("Resource for function #{fname} in namespace #{ns} deleted")
       :ok

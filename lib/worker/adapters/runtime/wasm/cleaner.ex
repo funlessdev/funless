@@ -15,11 +15,11 @@
 defmodule Worker.Adapters.Runtime.Wasm.Cleaner do
   @moduledoc """
     Adapter for WebAssembly runtime removal.
-    Since we are running no permanent container, the removal is not necessary; as such, no operation is performed,
-    and the runtime is simply returned to the caller.
+    Since we are running no permanent container, and the resource cache cleaning is handled in the domain.
+    There is nothing to do here.
   """
   @behaviour Worker.Domain.Ports.Runtime.Cleaner
 
   @impl true
-  def cleanup(_runtime), do: :ok
+  def cleanup(_resource), do: :ok
 end
