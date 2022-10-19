@@ -17,11 +17,11 @@ defmodule Worker.Domain.Ports.Runtime.Runner do
   Port to run functions in runtimes.
   """
   alias Worker.Domain.FunctionStruct
-  alias Worker.Domain.RuntimeStruct
+  alias Worker.Domain.ExecutionResource
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback run_function(FunctionStruct.t(), any(), RuntimeStruct.t()) ::
+  @callback run_function(FunctionStruct.t(), any(), ExecutionResource.t()) ::
               {:ok, any} | {:error, any}
 
   @doc """
@@ -30,13 +30,13 @@ defmodule Worker.Domain.Ports.Runtime.Runner do
   ### Parameters
     - function: a struct with all the fields required by Worker.Domain.Function
     - input: the input to be passed to the function
-    - runtime: a struct with all the fields required by Worker.Domain.Runtime
+    - resource: an ExecutionResource.t() required by Worker.Domain.Runtime.Runner
 
   ### Returns
     - {:ok, output} if the function is successfully executed
     - {:error, err} if any error is encountered
   """
-  @spec run_function(FunctionStruct.t(), any(), RuntimeStruct.t()) ::
+  @spec run_function(FunctionStruct.t(), any(), ExecutionResource.t()) ::
           {:ok, any} | {:error, any}
   defdelegate run_function(fl_function, args, runtime), to: @adapter
 end
