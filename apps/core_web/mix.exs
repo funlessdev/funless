@@ -58,7 +58,8 @@ defmodule CoreWeb.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:cowboy, "~> 2.9.0"},
-      {:plug_cowboy, "~> 2.5.2"}
+      {:plug_cowboy, "~> 2.5.2"},
+      {:prom_ex, git: "https://github.com/akoutmos/prom_ex.git"}
     ]
   end
 
