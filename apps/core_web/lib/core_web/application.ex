@@ -22,6 +22,7 @@ defmodule CoreWeb.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      CoreWeb.PromEx,
       # Start the Telemetry supervisor
       CoreWeb.Telemetry,
       # Start the Endpoint (http/https)
