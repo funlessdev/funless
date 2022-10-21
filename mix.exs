@@ -47,6 +47,7 @@ defmodule FunlessWorker.MixProject do
       {:logger_file_backend, "~> 0.0.13"},
       {:telemetry, "~> 1.1.0"},
       {:telemetry_poller, "~> 1.0"},
+      {:prom_ex, git: "https://github.com/akoutmos/prom_ex.git"},
 
       # Dev deps
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},

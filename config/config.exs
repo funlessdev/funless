@@ -44,4 +44,23 @@ config :os_mon,
   start_os_sup: false,
   memsup_system_only: true
 
+config :worker, Worker.PromEx,
+  disabled: false,
+  manual_metrics_start_delay: :no_delay,
+  drop_metrics_groups: [],
+  grafana: :disabled,
+  metrics_server: [
+    port: 4021,
+    # This is an optional setting and will default to `"/metrics"`
+    path: "/metrics",
+    # This is an optional setting and will default to `:http`
+    protocol: :http,
+    # This is an optional setting and will default to `5`
+    pool_size: 5,
+    # This is an optional setting and will default to `[]`
+    cowboy_opts: [],
+    # This is an optional and will default to `:none`
+    auth_strategy: :none
+  ]
+
 import_config "#{Mix.env()}.exs"

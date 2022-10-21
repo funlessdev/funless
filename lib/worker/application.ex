@@ -22,6 +22,7 @@ defmodule Worker.Application do
     topologies = Application.get_env(:libcluster, :topologies)
 
     children = [
+      Worker.PromEx,
       {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
       {Adapters.Telemetry.Supervisor, []},
       {Adapters.Requests.Cluster.Server, []},
