@@ -12,13 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.Telemetry.Native.Monitor do
+defmodule Core.Adapters.Telemetry.Monitor do
   @moduledoc """
     Implements GenServer behaviour.
     Watches the status of nodes in the cluster and retrieves telemetry information from workers.
-    The GenServer state is just the name of the dynamic supervisor used for handling the various Telemetry.Native.Collector processes.
+    The GenServer state is just the name of the dynamic supervisor used for handling the various Telemetry.Collector processes.
+
+    When a worker node comes online, the Monitor starts a Telemetry.Collector process for that node.
+    When a worker node goes offline, the Monitor stops the corresponding Telemetry.Collector process.
   """
   use GenServer, restart: :permanent
+
+  alias Core.Adapters.Telemetry.MetricsServer
   require Logger
 
   def start_link(dynamic_supervisor) do
@@ -28,7 +33,7 @@ defmodule Core.Adapters.Telemetry.Native.Monitor do
   @impl true
   def init(dynamic_supervisor) do
     _ = :net_kernel.monitor_nodes(true)
-    Logger.info("Telemetry Monitor: started")
+    Logger.info("Worker Nodes Monitor: started")
     {:ok, dynamic_supervisor}
   end
 
@@ -39,12 +44,12 @@ defmodule Core.Adapters.Telemetry.Native.Monitor do
     Node.list()
     |> Enum.each(fn node -> terminate_child(node, dynamic_supervisor) end)
 
-    Logger.info("Telemetry Monitor: terminated")
+    Logger.info("Worker Nodes Monitor: terminated")
     :ok
   end
 
   defp terminate_child(node, dynamic_supervisor) do
-    Registry.lookup(Core.Adapters.Telemetry.Native.Registry, "telemetry_#{node}")
+    Registry.lookup(Core.Adapters.Telemetry.Registry, "telemetry_#{node}")
     |> case do
       [{pid, _} | _] -> DynamicSupervisor.terminate_child(dynamic_supervisor, pid)
       _ -> nil
@@ -57,10 +62,10 @@ defmodule Core.Adapters.Telemetry.Native.Monitor do
       _ =
         DynamicSupervisor.start_child(
           dynamic_supervisor,
-          {Core.Adapters.Telemetry.Native.Collector, node}
+          {Core.Adapters.Telemetry.Collector, node}
         )
 
-      Logger.info("Telemetry Monitor: monitoring of node #{node} started")
+      Logger.info("Worker Nodes Monitor: monitoring of #{node} started")
     end
 
     {:noreply, dynamic_supervisor}
@@ -68,7 +73,7 @@ defmodule Core.Adapters.Telemetry.Native.Monitor do
 
   @impl true
   def handle_info({:nodedown, node}, dynamic_supervisor) do
-    Registry.lookup(Core.Adapters.Telemetry.Native.Registry, "telemetry_#{node}")
+    Registry.lookup(Core.Adapters.Telemetry.Registry, "telemetry_#{node}")
     |> case do
       [{pid, _} | _] -> clear_node(node, pid, dynamic_supervisor)
       _ -> nil
@@ -78,9 +83,9 @@ defmodule Core.Adapters.Telemetry.Native.Monitor do
   end
 
   defp clear_node(node, pid, sup) do
-    _ = GenServer.call(:telemetry_ets_server, {:delete, node})
-    _ = DynamicSupervisor.terminate_child(sup, pid)
-    Logger.info("Telemetry Monitor: monitoring of node #{node} stopped")
+    MetricsServer.delete(node)
+    DynamicSupervisor.terminate_child(sup, pid)
+    Logger.info("Worker Nodes Monitor: monitoring of #{node} stopped")
   end
 
   defp is_worker(node) do

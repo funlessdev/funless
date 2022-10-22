@@ -17,10 +17,10 @@ import Config
 config :core, Core.Domain.Ports.Commands, adapter: Core.Commands.Mock
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Cluster.Mock
 config :core, Core.Domain.Ports.FunctionStore, adapter: Core.FunctionStore.Mock
-config :core, Core.Domain.Ports.Telemetry.Api, adapter: Core.Telemetry.Api.Mock
+config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Telemetry.Metrics.Mock
 
 # Print only errors during test
-config :logger, level: :warn
+config :logger, level: :warn, backends: []
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.

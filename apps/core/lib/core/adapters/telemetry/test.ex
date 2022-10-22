@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.Telemetry.Native.Test do
+defmodule Core.Adapters.Telemetry.Test do
   @moduledoc false
-  @behaviour Core.Domain.Ports.Telemetry.Api
+  @behaviour Core.Domain.Ports.Telemetry.Metrics
 
   @impl true
   def resources(_worker) do

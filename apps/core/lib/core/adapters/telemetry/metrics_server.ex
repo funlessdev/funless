@@ -12,23 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.Telemetry.Native.EtsServer do
+defmodule Core.Adapters.Telemetry.MetricsServer do
   @moduledoc """
-    Implements GenServer behaviour; represents a process having exclusive writing rights on an underlying ETS table.
+  The cache for the metrics of each worker node. Implemented using an ETS table.
 
-    The {worker_node, resources} couples are inserted or deleted by using GenServer.call() on this process; the table name is currently hardcoded to
-    :worker_resources.
+  Everytime the metrics of a worker node are retrieved, they are inserted here overwriting the previous value.
+  This way the scheduler has a fast access to the most recent metrics.
   """
   use GenServer, restart: :permanent
   require Logger
 
+  @metrics_ets_server :metrics_ets_server
+  @ets_table :worker_resources
+
+  @spec get(atom()) :: map() | :not_found
+  def get(worker_node) do
+    case :ets.lookup(@ets_table, worker_node) do
+      [{^worker_node, metrics}] -> metrics
+      [] -> :not_found
+    end
+  end
+
+  @spec insert(atom(), map()) :: :ok
+  def insert(worker_node, resources) do
+    GenServer.call(@metrics_ets_server, {:insert, worker_node, resources})
+  end
+
+  @spec delete(atom()) :: :ok
+  def delete(worker_node) do
+    GenServer.call(@metrics_ets_server, {:delete, worker_node})
+  end
+
+  # Genserver callbacks
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: :telemetry_ets_server)
+    GenServer.start_link(__MODULE__, args, name: @metrics_ets_server)
   end
 
   @impl true
   def init(_args) do
-    table = :ets.new(:worker_resources, [:set, :named_table, :protected])
+    table = :ets.new(@ets_table, [:set, :named_table, :protected])
     Logger.info("Telemetry ETS Server: started")
     {:ok, table}
   end
