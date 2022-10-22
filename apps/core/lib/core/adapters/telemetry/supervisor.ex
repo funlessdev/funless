@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.Telemetry.Native.Supervisor do
+defmodule Core.Adapters.Telemetry.Supervisor do
   @moduledoc """
     Implements Supervisor behaviour; starts both the Monitor and the ETS server for handling worker telemetry information.
   """
@@ -28,14 +28,14 @@ defmodule Core.Adapters.Telemetry.Native.Supervisor do
     Logger.info("Telemetry Supervisor: started")
 
     children = [
-      {Core.Adapters.Telemetry.Native.EtsServer, []},
+      {Core.Adapters.Telemetry.MetricsServer, []},
       {DynamicSupervisor,
        strategy: :one_for_one,
        max_restarts: 5,
        max_seconds: 5,
-       name: Core.Adapters.Telemetry.Native.DynamicSupervisor},
-      {Registry, keys: :unique, name: Core.Adapters.Telemetry.Native.Registry},
-      {Core.Adapters.Telemetry.Native.Monitor, Core.Adapters.Telemetry.Native.DynamicSupervisor}
+       name: Core.Adapters.Telemetry.DynamicSupervisor},
+      {Registry, keys: :unique, name: Core.Adapters.Telemetry.Registry},
+      {Core.Adapters.Telemetry.Monitor, Core.Adapters.Telemetry.DynamicSupervisor}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

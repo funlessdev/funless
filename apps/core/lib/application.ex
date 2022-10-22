@@ -28,7 +28,7 @@ defmodule Core.Application do
 
     children = [
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
-      {Core.Adapters.Telemetry.Native.Supervisor, []}
+      {Core.Adapters.Telemetry.Supervisor, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

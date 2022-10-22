@@ -17,7 +17,7 @@ defmodule Core.Domain.Scheduler do
   Scheduler for the funless platform. It is used to choose a worker to run a function.
   """
 
-  alias Core.Domain.Ports.Telemetry.Api
+  alias Core.Domain.Ports.Telemetry.Metrics
   require Logger
 
   @type worker_atom :: atom()
@@ -40,11 +40,11 @@ defmodule Core.Domain.Scheduler do
     Logger.info("Scheduler: selection with #{length(workers)} workers")
 
     # Get the resources
-    resources = Enum.map(workers, &Api.resources/1) |> Enum.filter(&match?({:ok, _}, &1))
+    resources = Enum.map(workers, &Metrics.resources/1) |> Enum.filter(&match?({:ok, _}, &1))
     # Couple worker -> {:ok, resources}
     workers_resources = Enum.zip(workers, resources)
-    # Get the {worker, {:ok, resources} with the lowest cpu utilization
-    Enum.min_by(workers_resources, fn {_w, {:ok, r}} -> r.cpu end)
+    # Get the {worker, {:ok, resources}}, resource is just the allocated_bytes integer as of now
+    Enum.min_by(workers_resources, fn {_w, {:ok, r}} -> r end)
     |> elem(0)
   end
 end

@@ -17,7 +17,7 @@ import Config
 config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
 config :core, Core.Domain.Ports.FunctionStore, adapter: Core.Adapters.FunctionStore.Mnesia
-config :core, Core.Domain.Ports.Telemetry.Api, adapter: Core.Adapters.Telemetry.Native.Api
+config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Adapters.Telemetry.Metrics
 
 # Configures Elixir's Logger
 config :logger, :console,
