@@ -40,6 +40,7 @@ defmodule Core.Adapters.Telemetry.Collector do
     {:noreply, node}
   end
 
+  @spec retrieve(atom()) :: reference()
   @doc """
     Pulls metrics for the given worker node every 5s.
   """
@@ -59,14 +60,18 @@ defmodule Core.Adapters.Telemetry.Collector do
     Process.send_after(self(), :pull, 5_000)
   end
 
+  @spec save_metrics(atom(), map()) :: :ok
   defp save_metrics(worker, metrics) do
     if Map.has_key?(metrics, "worker_prom_ex_beam_memory_allocated_bytes") do
       mem = metrics["worker_prom_ex_beam_memory_allocated_bytes"]
       MetricsServer.insert(worker, %{memory: mem})
       Logger.info("Metrics Collector: saved metrics memory => #{mem} for worker #{worker}")
     end
+
+    :ok
   end
 
+  @spec parse_metrics(map()) :: map()
   defp parse_metrics(%{"data" => %{"result" => result_list}, "status" => "success"}) do
     Enum.reduce(result_list, %{}, fn result, acc ->
       case result do
@@ -82,7 +87,7 @@ defmodule Core.Adapters.Telemetry.Collector do
   defp parse_metrics(_), do: %{}
 
   @spec pull_metrics() :: {:ok, map()} | {:error, any()}
-  defp pull_metrics() do
+  defp pull_metrics do
     prom_url =
       "http://prometheus:9090/api/v1/query?query=worker_prom_ex_beam_memory_allocated_bytes"
 

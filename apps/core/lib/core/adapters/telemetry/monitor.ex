@@ -84,8 +84,11 @@ defmodule Core.Adapters.Telemetry.Monitor do
 
   defp clear_node(node, pid, sup) do
     MetricsServer.delete(node)
-    DynamicSupervisor.terminate_child(sup, pid)
-    Logger.info("Worker Nodes Monitor: monitoring of #{node} stopped")
+
+    case DynamicSupervisor.terminate_child(sup, pid) do
+      :ok -> Logger.info("Worker Nodes Monitor: monitoring of #{node} stopped")
+      {:error, _} -> Logger.warn("Worker Nodes Monitor: monitoring of #{node} already stopped")
+    end
   end
 
   defp is_worker(node) do
