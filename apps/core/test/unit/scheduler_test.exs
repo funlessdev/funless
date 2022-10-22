@@ -23,7 +23,7 @@ defmodule SchedulerTest do
 
   describe "Scheduler" do
     setup do
-      Core.Telemetry.Api.Mock |> Mox.stub_with(Core.Adapters.Telemetry.Native.Test)
+      Core.Telemetry.Metrics.Mock |> Mox.stub_with(Core.Adapters.Telemetry.Test)
       :ok
     end
 
@@ -43,12 +43,12 @@ defmodule SchedulerTest do
       assert workers == expected
     end
 
-    test "select should return worker with fewer cpu utilization" do
-      Core.Telemetry.Api.Mock
+    test "select should return worker with fewer memory utilization" do
+      Core.Telemetry.Metrics.Mock
       |> expect(:resources, 2, fn w ->
         case w do
-          :worker1 -> {:ok, %{cpu: 10}}
-          :worker2 -> {:ok, %{cpu: 5}}
+          :worker1 -> {:ok, 10}
+          :worker2 -> {:ok, 5}
         end
       end)
 
