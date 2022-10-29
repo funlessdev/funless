@@ -65,7 +65,6 @@ defmodule Core.Adapters.Telemetry.Collector do
     if Map.has_key?(metrics, "worker_prom_ex_beam_memory_allocated_bytes") do
       mem = metrics["worker_prom_ex_beam_memory_allocated_bytes"]
       MetricsServer.insert(worker, %{memory: mem})
-      Logger.info("Metrics Collector: saved metrics memory => #{mem} for worker #{worker}")
     end
 
     :ok

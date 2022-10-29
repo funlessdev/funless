@@ -62,15 +62,16 @@ defmodule MnesiaStoreTest do
       assert {:ok, "test-name"} == Mnesia.delete_function("test-name", "ns")
     end
 
+    test "delete_function should return {:error, {:aborted, reason}} when delete on non-existing function" do
+      res = Mnesia.delete_function("test-name-not-in-store", "ns")
+      assert {:error, {:aborted, _}} = res
+    end
+
     test "insert_function should return {:error, {:aborted, reason}} when insert fails", %{f: f} do
       # Test with mnesia stopped so it fails to insert
       :mnesia.stop()
 
       assert {:error, {:aborted, _}} = Mnesia.insert_function(f)
-    end
-
-    test "delete_function should return {:error, {:aborted, reason}} when delete fails" do
-      assert {:error, {:aborted, _}} = Mnesia.delete_function("test-name", "ns")
     end
   end
 end

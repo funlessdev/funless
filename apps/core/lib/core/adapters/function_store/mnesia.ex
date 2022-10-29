@@ -82,14 +82,18 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
 
   @impl true
   @spec delete_function(String.t(), String.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
-  def delete_function(function_name, function_namespace) do
-    data = fn ->
-      :mnesia.delete({FunctionStruct, {function_name, function_namespace}})
-    end
+  def delete_function(f_name, f_namespace) do
+    if exists?(f_name, f_namespace) do
+      data = fn ->
+        :mnesia.delete({FunctionStruct, {f_name, f_namespace}})
+      end
 
-    case :mnesia.transaction(data) do
-      {:aborted, reason} -> {:error, {:aborted, reason}}
-      {_, :ok} -> {:ok, function_name}
+      case :mnesia.transaction(data) do
+        {:aborted, reason} -> {:error, {:aborted, reason}}
+        {_, :ok} -> {:ok, f_name}
+      end
+    else
+      {:error, {:aborted, "function #{f_name} from namespace #{f_namespace} not found"}}
     end
   end
 end

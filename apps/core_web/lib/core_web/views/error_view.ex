@@ -27,25 +27,4 @@ defmodule CoreWeb.ErrorView do
   def template_not_found(template, _assigns) do
     %{errors: %{detail: Phoenix.Controller.status_message_from_template(template)}}
   end
-
-  def render("400.json", _assigns) do
-    %{errors: %{detail: "Failed to perform operation: bad request"}}
-  end
-
-  def render("function_not_found.json", _assigns) do
-    %{errors: %{detail: "Failed to invoke function: not found in given namespace"}}
-  end
-
-  def render("db_aborted.json", %{action: action, reason: reason}) do
-    message = "Failed to #{action} function: database error because #{reason}"
-    %{errors: %{detail: message}}
-  end
-
-  def render("no_workers.json", _assigns) do
-    %{errors: %{detail: "Failed to invoke function: no worker available"}}
-  end
-
-  def render("worker_error.json", _assigns) do
-    %{errors: %{detail: "Failed to invoke function: worker error"}}
-  end
 end
