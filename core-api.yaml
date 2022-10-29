@@ -193,7 +193,7 @@ paths:
             schema:
               $ref: "#/components/schemas/function_deletion"
       responses:
-        "204":
+        "200":
           description: The function was deleted successfully
           content:
             application/json:
