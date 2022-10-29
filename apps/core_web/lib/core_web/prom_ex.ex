@@ -24,9 +24,9 @@ defmodule CoreWeb.PromEx do
   def plugins do
     [
       # PromEx built in plugins
-      {Plugins.Application, otp_app: :core_web},
+      Plugins.Application,
       Plugins.Beam,
-      {Plugins.Phoenix, router: CoreWebWeb.Router, endpoint: CoreWebWeb.Endpoint}
+      {Plugins.Phoenix, router: CoreWeb.Router, endpoint: CoreWeb.Endpoint}
       # Plugins.Ecto,
       # Plugins.Oban,
       # Plugins.PhoenixLiveView,
