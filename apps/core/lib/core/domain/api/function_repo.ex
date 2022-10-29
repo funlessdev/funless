@@ -81,7 +81,7 @@ defmodule Core.Domain.Api.FunctionRepo do
   end
 
   defp parse_create_result(result, f_name) do
-    Logger.info("API: function #{f_name} stored successfully")
+    Logger.info("API: create returned #{inspect(result)} for function #{f_name}")
     result
   end
 
@@ -93,7 +93,7 @@ defmodule Core.Domain.Api.FunctionRepo do
   end
 
   def parse_delete_result(result, f_name) do
-    Logger.info("API: function #{f_name} deleted successfully")
+    Logger.info("API: delete returned #{inspect(result)} for function #{f_name}")
     result
   end
 end
