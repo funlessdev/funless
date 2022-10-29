@@ -24,7 +24,6 @@ defmodule Worker.Application do
     children = [
       Worker.PromEx,
       {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
-      {Adapters.Telemetry.Supervisor, []},
       {Adapters.Requests.Cluster.Server, []},
       {Worker.Domain.Ports.Runtime.Supervisor, []}
     ]
