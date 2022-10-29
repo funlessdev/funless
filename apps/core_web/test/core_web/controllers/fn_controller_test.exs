@@ -124,7 +124,7 @@ defmodule CoreWeb.FnControllerTest do
       conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
 
       expected = %{"result" => "hello"}
-      assert json_response(conn, 204) == expected
+      assert json_response(conn, 200) == expected
     end
 
     test "error: should return 400 when given bad parameters", %{conn: conn} do

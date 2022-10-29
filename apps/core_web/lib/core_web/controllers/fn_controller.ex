@@ -43,7 +43,7 @@ defmodule CoreWeb.FnController do
   def delete(conn, params) do
     with {:ok, function_name} <- FunctionRepo.delete(params) do
       conn
-      |> put_status(:no_content)
+      |> put_status(:ok)
       |> json(%{result: function_name})
     end
   end
