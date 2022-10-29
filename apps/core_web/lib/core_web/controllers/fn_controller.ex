@@ -22,7 +22,7 @@ defmodule CoreWeb.FnController do
 
   def invoke(conn, params) do
     with {:ok, %{result: res}} <- Invoker.invoke(params) do
-      render(conn, "invoke.json", result: res)
+      json(conn, %{result: res})
     end
   end
 
@@ -32,7 +32,7 @@ defmodule CoreWeb.FnController do
     with {:ok, function_name} <- FunctionRepo.new(func) do
       conn
       |> put_status(:created)
-      |> render("create.json", function_name: function_name)
+      |> json(%{result: function_name})
     end
   end
 
@@ -44,7 +44,7 @@ defmodule CoreWeb.FnController do
     with {:ok, function_name} <- FunctionRepo.delete(params) do
       conn
       |> put_status(:no_content)
-      |> render("delete.json", function_name: function_name)
+      |> json(%{result: function_name})
     end
   end
 end
@@ -59,31 +59,35 @@ defmodule CoreWeb.FnFallbackController do
   use Phoenix.Controller
 
   def call(conn, {:error, :bad_params}) do
+    res = %{errors: %{detail: "Failed to perform operation: bad request"}}
+
     conn
     |> put_status(:bad_request)
-    |> put_view(CoreWeb.ErrorView)
-    |> render("400.json")
+    |> json(res)
   end
 
   def call(conn, {:error, :not_found}) do
+    res = %{errors: %{detail: "Failed to invoke function: not found in given namespace"}}
+
     conn
     |> put_status(:not_found)
-    |> put_view(CoreWeb.ErrorView)
-    |> render("function_not_found.json")
+    |> json(res)
   end
 
   def call(conn, {:error, :no_workers}) do
+    res = %{errors: %{detail: "Failed to invoke function: no worker available"}}
+
     conn
     |> put_status(:service_unavailable)
-    |> put_view(CoreWeb.ErrorView)
-    |> render("no_workers.json")
+    |> json(res)
   end
 
   def call(conn, {:error, :worker_error}) do
+    res = %{errors: %{detail: "Failed to invoke function: worker error"}}
+
     conn
     |> put_status(:internal_server_error)
-    |> put_view(CoreWeb.ErrorView)
-    |> render("worker_error.json")
+    |> json(res)
   end
 
   def call(conn, {:error, {kind, reason}}) when kind == :bad_insert or kind == :bad_delete do
@@ -94,9 +98,11 @@ defmodule CoreWeb.FnFallbackController do
         "delete"
       end
 
+    message = "Failed to #{action} function: database error because #{reason}"
+    res = %{errors: %{detail: message}}
+
     conn
     |> put_status(:service_unavailable)
-    |> put_view(CoreWeb.ErrorView)
-    |> render("db_aborted.json", action: action, reason: reason)
+    |> json(res)
   end
 end
