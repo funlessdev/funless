@@ -173,7 +173,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/function_creation_error"
-        "500":
+        "503":
           description: The function creation request failed because the database transaction was aborted
           content:
             application/json:
@@ -208,7 +208,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/function_deletion_error"
-        "500":
+        "503":
           description: The function deletion request failed because the database transaction was aborted
           content:
             application/json:
