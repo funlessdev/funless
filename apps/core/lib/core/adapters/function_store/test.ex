@@ -33,8 +33,7 @@ defmodule Core.Adapters.FunctionStore.Test do
     f = %FunctionStruct{
       name: function_name,
       namespace: function_namespace,
-      code: "console.log(\"hello\")",
-      image: "nodejs"
+      code: "console.log(\"hello\")"
     }
 
     {:ok, f}

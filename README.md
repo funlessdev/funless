@@ -32,21 +32,20 @@ mix compile
 iex -S mix
 ```
 
-Now you can send post requests to `localhost:4001`. The file `core-api.yaml` contains an OpenAPI specification of the possible requests.
+Now you can send post requests to `localhost:4000`. The file `core-api.yaml` contains an OpenAPI specification of the possible requests.
 
-First you should create a function, send a POST request to `localhost:4001/create` with the following body:
+First you should create a function, send a POST request to `localhost:4000/create` with the following body:
 ```json
 {
   "name": "hello",
   "namespace": "_",
-  "code": "function main(params) {\nlet name = params.name || \"World\"\nreturn { payload: `Hello ${name}!` }\n}",
-  "image": "nodejs"
+  "code": <the wasm code file>,
 }
 ```
 
 You should receive as response: `{ "result": "hello" }`.
 
-After that you can send a POST request to `localhost:4001/invoke` with the following body:
+After that you can send a POST request to `localhost:4000/invoke` with the following body:
 ```json
 {
   "namespace": "_",

@@ -38,8 +38,7 @@ defmodule Core.Domain.Api.FunctionRepo do
     function = %FunctionStruct{
       name: name,
       namespace: raw_params["namespace"] || "_",
-      code: code,
-      image: raw_params["image"] || "_"
+      code: code
     }
 
     Logger.info("API: create request for function #{name} in namespace #{function.namespace}")

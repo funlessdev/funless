@@ -45,11 +45,10 @@ defmodule ApiTest.FunctionTest do
       assert Api.FunctionRepo.new(f) == {:error, :bad_params}
     end
 
-    test "new_function should return {:ok, function_name} and ignore unused parameters in the input map when unnecessary keys are given" do
+    test "new_function should return {:ok, function_name} and ignore unused parameters when unnecessary keys are given" do
       f = %{
         "name" => "hello",
         "code" => "some code",
-        "image" => "nodejs",
         "something_else" => "something else",
         "namespace" => "ns"
       }
@@ -58,7 +57,6 @@ defmodule ApiTest.FunctionTest do
       |> Mox.expect(:insert_function, 1, fn %FunctionStruct{
                                               name: "hello",
                                               code: "some code",
-                                              image: "nodejs",
                                               namespace: "ns"
                                             } ->
         {:ok, "hello"}
