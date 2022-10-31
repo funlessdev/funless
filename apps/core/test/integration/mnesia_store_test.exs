@@ -24,8 +24,7 @@ defmodule MnesiaStoreTest do
     f = %FunctionStruct{
       name: "test-name",
       namespace: "ns",
-      code: "console.log(\"hello\")",
-      image: "nodejs"
+      code: "console.log(\"hello\")"
     }
 
     %{f: f}

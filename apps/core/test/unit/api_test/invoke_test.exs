@@ -115,8 +115,7 @@ defmodule ApiTest.InvokeTest do
       f_out = %FunctionStruct{
         name: "hello",
         namespace: "ns",
-        code: "console.log(\"hello\")",
-        image: "nodejs"
+        code: "console.log(\"hello\")"
       }
 
       assert Invoker.invoke(f_in) == {:ok, %{result: f_out}}

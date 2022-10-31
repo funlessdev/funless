@@ -149,7 +149,7 @@ paths:
       requestBody:
         required: true
         description: >-
-          Object containing the function to create, with name, optional namespace, code and runtime image identifier
+          Object containing the function to create, with name, optional namespace, code
         content:
           multipart/form-data:
             schema:
