@@ -90,16 +90,24 @@ defmodule CoreWeb.FnFallbackController do
     |> json(res)
   end
 
-  def call(conn, {:error, {kind, reason}}) when kind == :bad_insert or kind == :bad_delete do
-    action =
-      if kind == :bad_insert do
-        "create"
-      else
-        "delete"
-      end
+  def call(conn, {:error, {:bad_insert, reason}}) do
+    res = %{errors: %{detail: "Failed to create function: #{reason}"}}
 
-    message = "Failed to #{action} function: database error because #{reason}"
-    res = %{errors: %{detail: message}}
+    conn
+    |> put_status(:service_unavailable)
+    |> json(res)
+  end
+
+  def call(conn, {:error, {:bad_delete, :not_found}}) do
+    res = %{errors: %{detail: "Failed to delete function: not found"}}
+
+    conn
+    |> put_status(:not_found)
+    |> json(res)
+  end
+
+  def call(conn, {:error, {:bad_delete, reason}}) do
+    res = %{errors: %{detail: "Failed to delete function: #{reason}"}}
 
     conn
     |> put_status(:service_unavailable)
