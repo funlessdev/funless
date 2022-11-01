@@ -66,8 +66,14 @@ defmodule Core.Domain.Api.FunctionRepo do
   def delete(%{"name" => name, "namespace" => namespace}) do
     Logger.info("API: delete request for function #{name} in namespace #{namespace}")
 
-    FunctionStore.delete_function(name, namespace)
-    |> parse_delete_result(name)
+    case FunctionStore.exists?(name, namespace) do
+      true ->
+        FunctionStore.delete_function(name, namespace)
+        |> parse_delete_result(name)
+
+      false ->
+        {:error, {:bad_delete, :not_found}}
+    end
   end
 
   def delete(_), do: {:error, :bad_params}
