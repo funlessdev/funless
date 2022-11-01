@@ -30,7 +30,7 @@ defmodule ApiTest.FunctionTest do
       :ok
     end
 
-    test "new_function should return {:ok, %{result: function_name}} when no error occurs" do
+    test "new should return {:ok, function_name} when no error occurs" do
       f = %{
         "name" => "hello",
         "namespace" => "ns",
@@ -40,12 +40,12 @@ defmodule ApiTest.FunctionTest do
       assert Api.FunctionRepo.new(f) == {:ok, "hello"}
     end
 
-    test "new_function should return {:error, :bad_params} when the given parameter map lacks the necessary keys" do
+    test "new should return {:error, :bad_params} when the given parameter map lacks the necessary keys" do
       f = %{"name" => "hello"}
       assert Api.FunctionRepo.new(f) == {:error, :bad_params}
     end
 
-    test "new_function should return {:ok, function_name} and ignore unused parameters when unnecessary keys are given" do
+    test "new should return {:ok, function_name} and ignore unused parameters when unnecessary keys are given" do
       f = %{
         "name" => "hello",
         "code" => "some code",
@@ -66,13 +66,43 @@ defmodule ApiTest.FunctionTest do
       assert Api.FunctionRepo.new(f) == {:ok, "hello"}
     end
 
-    test "delete_function should return {:ok, %{result => function_name}} when no error occurs" do
+    test "new should return {:error, {:bad_insert, reason}} when the underlying storage fails" do
+      f = %{
+        "name" => "hello",
+        "namespace" => "ns",
+        "code" => "console.log(\"hello\")"
+      }
+
+      Core.FunctionStore.Mock
+      |> Mox.expect(:insert_function, 1, fn _ -> {:error, {:aborted, "some error"}} end)
+
+      assert Api.FunctionRepo.new(f) == {:error, {:bad_insert, "some error"}}
+    end
+
+    test "delete should return {:ok, function_name} when no error occurs" do
       assert Api.FunctionRepo.delete(%{"name" => "hello", "namespace" => "ns"}) ==
                {:ok, "hello"}
     end
 
-    test "delete_function should return {:error, :bad_params}  when the given parameter map lacks the necessary keys" do
+    test "delete should return {:error, :bad_params} when the given parameter map lacks the necessary keys" do
       assert Api.FunctionRepo.delete(%{"namespace" => "ns"}) == {:error, :bad_params}
+    end
+
+    test "delte shoulr return {:error, {:bad_delete, reason}} when the underlying store returns an error" do
+      Core.FunctionStore.Mock
+      |> Mox.expect(:delete_function, 1, fn "hello", "ns" ->
+        {:error, {:aborted, "for some reason"}}
+      end)
+
+      assert Api.FunctionRepo.delete(%{"name" => "hello", "namespace" => "ns"}) ==
+               {:error, {:bad_delete, "for some reason"}}
+    end
+
+    test "delete should return {:error, :not_found} when the function is not found" do
+      Core.FunctionStore.Mock |> Mox.expect(:exists?, 1, fn _, _ -> false end)
+
+      assert Api.FunctionRepo.delete(%{"name" => "not here", "namespace" => "ns"}) ==
+               {:error, {:bad_delete, :not_found}}
     end
   end
 end

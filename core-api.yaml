@@ -208,6 +208,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/function_deletion_error"
+        "404":
+          description: The function to delete was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/function_deletion_error"
         "503":
           description: The function deletion request failed because the database transaction was aborted
           content:

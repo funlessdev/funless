@@ -112,7 +112,7 @@ defmodule CoreWeb.FnControllerTest do
       conn = post(conn, "/v1/fn/create", %{name: "hello", code: upload})
 
       expected = %{
-        "errors" => %{"detail" => "Failed to create function: database error because some reason"}
+        "errors" => %{"detail" => "Failed to create function: some reason"}
       }
 
       assert json_response(conn, 503) == expected
@@ -140,6 +140,19 @@ defmodule CoreWeb.FnControllerTest do
       assert json_response(conn, 400) == expected
     end
 
+    test "error: should return 404 when the function is not found in the storage", %{conn: conn} do
+      Core.FunctionStore.Mock
+      |> Mox.expect(:delete_function, fn _, _ -> {:error, {:bad_delete, :not_found}} end)
+
+      conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
+
+      expected = %{
+        "errors" => %{"detail" => "Failed to delete function: not found"}
+      }
+
+      assert json_response(conn, 404) == expected
+    end
+
     test "error: should return 503 when the underlying storage transaction fails", %{conn: conn} do
       Core.FunctionStore.Mock
       |> Mox.expect(:delete_function, fn _, _ -> {:error, {:aborted, "some reason"}} end)
@@ -147,7 +160,7 @@ defmodule CoreWeb.FnControllerTest do
       conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
 
       expected = %{
-        "errors" => %{"detail" => "Failed to delete function: database error because some reason"}
+        "errors" => %{"detail" => "Failed to delete function: some reason"}
       }
 
       assert json_response(conn, 503) == expected
