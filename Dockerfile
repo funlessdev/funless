@@ -64,8 +64,4 @@ USER funless
 
 COPY --chown=funless --from=builder /opt/app/_build/${MIX_ENV}/rel/worker ./worker
 
-COPY --chown=funless init_container.sh .
-
-RUN chmod +x init_container.sh
-
-CMD ["bash", "init_container.sh"]
+CMD worker/bin/worker start
