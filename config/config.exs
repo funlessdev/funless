@@ -24,17 +24,6 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id, :file, :line]
 
-config :libcluster,
-  topologies: [
-    funless_core: [
-      # The selected clustering strategy. Required.
-      strategy: Cluster.Strategy.Gossip,
-      config: [
-        port: String.to_integer(System.get_env("FL_LIBCLUSTER_PORT") || "45892")
-      ]
-    ]
-  ]
-
 config :core_web,
   generators: [context_app: :core]
 

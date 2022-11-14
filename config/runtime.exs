@@ -54,3 +54,32 @@ if config_env() == :prod do
   # Then you can assemble a release by calling `mix release`.
   # See `mix help release` for more information.
 end
+
+case System.get_env("DEPLOY_ENV") do
+  "kubernetes" ->
+    config :libcluster,
+      topologies: [
+        funless_core: [
+          # The selected clustering strategy. Required.
+          strategy: Cluster.Strategy.Kubernetes,
+          config: [
+            kubernetes_ip_lookup_mode: :pods,
+            kubernetes_node_basename: "worker",
+            kubernetes_selector: "app=fl-worker",
+            kubernetes_namespace: "fl"
+          ]
+        ]
+      ]
+
+  _ ->
+    config :libcluster,
+      topologies: [
+        funless_core: [
+          # The selected clustering strategy. Required.
+          strategy: Cluster.Strategy.Gossip,
+          config: [
+            port: String.to_integer(System.get_env("FL_LIBCLUSTER_PORT") || "45892")
+          ]
+        ]
+      ]
+end
