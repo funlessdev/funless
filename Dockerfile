@@ -47,6 +47,8 @@ RUN mix release
 FROM alpine:${ALPINE_VERSION}
 
 ARG MIX_ENV=prod
+ARG NODE_IP=""
+ARG DEPLOY_ENV=""
 
 # # The name of your application/release (required)
 RUN apk update && \
@@ -54,7 +56,10 @@ RUN apk update && \
     apk add --no-cache libstdc++ libgcc ncurses-libs socat sudo bash
 
 ENV REPLACE_OS_VARS=true \
-    MIX_ENV=${MIX_ENV} 
+    MIX_ENV=${MIX_ENV} \
+    NODE_IP=${NODE_IP} \
+    DEPLOY_ENV=${DEPLOY_ENV}
+
 
 WORKDIR /home/funless
 RUN adduser --disabled-password --home "$(pwd)" funless &&\
@@ -64,4 +69,7 @@ USER funless
 
 COPY --chown=funless --from=builder /opt/app/_build/${MIX_ENV}/rel/worker ./worker
 
-CMD worker/bin/worker start
+CMD if [[ -z "$NODE_IP" ]] ; \
+    then DEPLOY_ENV=${DEPLOY_ENV} worker/bin/worker start ; \
+    else RELEASE_NODE=worker@${NODE_IP} DEPLOY_ENV=${DEPLOY_ENV} worker/bin/worker start ; \
+    fi

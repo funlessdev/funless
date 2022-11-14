@@ -17,3 +17,34 @@ import Config
 config :worker, docker_host: Worker.Application.docker_socket()
 config :worker, max_runtime_init_retries: 20
 config :worker, runtime_network_name: System.get_env("RUNTIME_NETWORK", "bridge")
+
+case System.get_env("DEPLOY_ENV") do
+  "kubernetes" ->
+    config :libcluster,
+      topologies: [
+        funless_worker: [
+          # The selected clustering strategy. Required.
+          strategy: Cluster.Strategy.Kubernetes,
+          config: [
+            kubernetes_ip_lookup_mode: :pods,
+            # port: String.to_integer(System.get_env("FL_LIBCLUSTER_PORT") || "45892")
+            # application_name: "worker",
+            kubernetes_node_basename: "core",
+            kubernetes_selector: "app=fl-core",
+            kubernetes_namespace: "fl"
+          ]
+        ]
+      ]
+
+  _ ->
+    config :libcluster,
+      topologies: [
+        funless_worker: [
+          # The selected clustering strategy. Required.
+          strategy: Cluster.Strategy.Gossip,
+          config: [
+            port: String.to_integer(System.get_env("FL_LIBCLUSTER_PORT") || "45892")
+          ]
+        ]
+      ]
+end
