@@ -48,6 +48,7 @@ FROM alpine:${ALPINE_VERSION}
 ARG MIX_ENV=prod
 ARG PORT=4000
 ARG NODE_IP=""
+ARG DEPLOY_ENV=""
 
 # # The name of your application/release (required)
 RUN apk update && \
@@ -57,7 +58,8 @@ RUN apk update && \
 ENV REPLACE_OS_VARS=true \
     MIX_ENV=${MIX_ENV} \ 
     PORT=${PORT} \
-    NODE_IP=${NODE_IP}
+    NODE_IP=${NODE_IP} \
+    DEPLOY_ENV=${DEPLOY_ENV}
 
 WORKDIR /home/funless
 RUN adduser --disabled-password --home "$(pwd)" funless &&\
@@ -67,4 +69,7 @@ USER funless
 
 COPY --chown=funless --from=builder /opt/app/_build/${MIX_ENV}/rel/core ./core
 
-CMD if [[ -z "$NODE_IP" ]] ; then PORT=${PORT} core/bin/core start ; else RELEASE_NODE=core@${NODE_IP} PORT=${PORT} core/bin/core start ; fi
+CMD if [[ -z "$NODE_IP" ]] ; \
+    then PORT=${PORT} DEPLOY_ENV=${DEPLOY_ENV} core/bin/core start ; \
+    else RELEASE_NODE=core@${NODE_IP} PORT=${PORT} DEPLOY_ENV=${DEPLOY_ENV} core/bin/core start ; \
+    fi
