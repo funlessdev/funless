@@ -48,6 +48,7 @@ FROM alpine:${ALPINE_VERSION}
 
 ARG MIX_ENV=prod
 ARG NODE_IP=""
+ARG DEPLOY_ENV=""
 
 # # The name of your application/release (required)
 RUN apk update && \
@@ -56,7 +57,8 @@ RUN apk update && \
 
 ENV REPLACE_OS_VARS=true \
     MIX_ENV=${MIX_ENV} \
-    NODE_IP=${NODE_IP}
+    NODE_IP=${NODE_IP} \
+    DEPLOY_ENV=${DEPLOY_ENV}
 
 
 WORKDIR /home/funless
@@ -67,4 +69,7 @@ USER funless
 
 COPY --chown=funless --from=builder /opt/app/_build/${MIX_ENV}/rel/worker ./worker
 
-CMD if [[ -z "$NODE_IP" ]] ; then worker/bin/worker start ; else RELEASE_NODE=worker@${NODE_IP} worker/bin/worker start ; fi
+CMD if [[ -z "$NODE_IP" ]] ; \
+    then DEPLOY_ENV=${DEPLOY_ENV} worker/bin/worker start ; \
+    else RELEASE_NODE=worker@${NODE_IP} DEPLOY_ENV=${DEPLOY_ENV} worker/bin/worker start ; \
+    fi

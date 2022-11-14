@@ -29,14 +29,6 @@ config :logger, :console,
   format: "\n#####[$level] $time $metadata $message\n",
   metadata: [:file, :line]
 
-config :libcluster,
-  topologies: [
-    funless: [
-      # The selected clustering strategy. Required.
-      strategy: Cluster.Strategy.Gossip
-    ]
-  ]
-
 config :os_mon,
   start_cpu_sup: true,
   start_memsup: true,
