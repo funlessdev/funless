@@ -28,6 +28,8 @@ defmodule Core.Domain.Ports.FunctionStore do
   @callback insert_function(FunctionStruct.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
   @callback delete_function(String.t(), String.t()) ::
               {:ok, String.t()} | {:error, {:aborted, any}}
+  @callback list_functions(String.t()) ::
+              {:ok, [String.t()]} | {:error, {:aborted, any}}
 
   @doc """
   Creates the Function database.
@@ -94,4 +96,18 @@ defmodule Core.Domain.Ports.FunctionStore do
   """
   @spec delete_function(String.t(), String.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
   defdelegate delete_function(function_name, function_namespace), to: @adapter
+
+  @doc """
+  Lists all functions in the given namespace.
+  Returns the list of functions or an {:error, err} tuple.
+
+  ## Parameters
+    - namespace: Namespace of the functions to be returned
+
+  ## Returns
+    - {:ok, functions}: if the functions were successfully retrieved from the database. The list can be empty.
+    - {:error, {:aborted, reason}}: if the functions could not be retrieved.
+  """
+  @spec list_functions(String.t()) :: {:ok, [String.t()]} | {:error, {:aborted, any}}
+  defdelegate list_functions(namespace), to: @adapter
 end

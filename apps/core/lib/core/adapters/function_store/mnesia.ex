@@ -92,4 +92,15 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
       {_, :ok} -> {:ok, f_name}
     end
   end
+
+  @impl true
+  @spec list_functions(String.t()) :: {:ok, [String.t()]} | {:error, {:aborted, any}}
+  def list_functions(namespace) do
+    functions =
+      :mnesia.dirty_all_keys(FunctionStruct)
+      |> Enum.filter(&match?({_, ^namespace}, &1))
+      |> Enum.map(fn {n, _ns} -> n end)
+
+    {:ok, functions}
+  end
 end
