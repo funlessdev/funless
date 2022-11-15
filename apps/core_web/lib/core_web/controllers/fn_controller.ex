@@ -47,6 +47,18 @@ defmodule CoreWeb.FnController do
       |> json(%{result: function_name})
     end
   end
+
+  def list(conn, %{"namespace" => _namespace} = params) do
+    with {:ok, functions} <- FunctionRepo.list(params) do
+      conn
+      |> put_status(:ok)
+      |> json(%{result: functions})
+    end
+  end
+
+  def list(_conn, _params) do
+    {:error, {:bad_list, :no_namespace}}
+  end
 end
 
 defmodule CoreWeb.FnFallbackController do
@@ -111,6 +123,14 @@ defmodule CoreWeb.FnFallbackController do
 
     conn
     |> put_status(:service_unavailable)
+    |> json(res)
+  end
+
+  def call(conn, {:error, {:bad_list, :no_namespace}}) do
+    res = %{errors: %{detail: "Failed to list functions: no namespace provided"}}
+
+    conn
+    |> put_status(:bad_request)
     |> json(res)
   end
 end

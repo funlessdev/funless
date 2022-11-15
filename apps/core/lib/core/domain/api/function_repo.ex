@@ -101,4 +101,9 @@ defmodule Core.Domain.Api.FunctionRepo do
     Logger.info("API: delete returned #{inspect(result)} for function #{f_name}")
     result
   end
+
+  def list(%{"namespace" => namespace}) do
+    namespace
+    |> FunctionStore.list_functions()
+  end
 end
