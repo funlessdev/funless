@@ -256,12 +256,6 @@ paths:
               examples:
                 Listing a namespace with the "hellojs" function:
                   value: '{"result": ["hellojs"]}'
-        "404":
-          description: The given namespace was not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/function_list_error"
         "503":
           description: The request failed because the database transaction was aborted
           content:
