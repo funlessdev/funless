@@ -102,7 +102,7 @@ defmodule Core.Domain.Api.FunctionRepo do
     result
   end
 
-  @spec list(map) :: {:ok, [String.t()]} | {:error, {:aborted, any}}
+  @spec list(map) :: {:ok, [String.t()]} | {:error, {:bad_list, any}} | {:error, :bad_params}
   def list(%{"namespace" => namespace}) do
     namespace
     |> FunctionStore.list_functions()
@@ -113,11 +113,13 @@ defmodule Core.Domain.Api.FunctionRepo do
     {:error, :bad_params}
   end
 
-  defp parse_list_result({:ok, l}) do
+  @spec parse_list_result({:ok, [String.t()]} | {:error, {:aborted, any}}) ::
+          {:ok, [String.t()]} | {:error, {:bad_list, any}}
+  def parse_list_result({:ok, l}) do
     {:ok, l}
   end
 
-  defp parse_list_result({:error, {:aborted, reason}}) do
+  def parse_list_result({:error, {:aborted, reason}}) do
     {:error, {:bad_list, reason}}
   end
 end
