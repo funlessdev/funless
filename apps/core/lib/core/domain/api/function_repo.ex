@@ -109,6 +109,10 @@ defmodule Core.Domain.Api.FunctionRepo do
     |> parse_list_result
   end
 
+  def list(_) do
+    {:error, :bad_params}
+  end
+
   defp parse_list_result({:ok, l}) do
     {:ok, l}
   end
