@@ -167,6 +167,34 @@ defmodule CoreWeb.FnControllerTest do
     end
   end
 
+  describe "GET /v1/fn/list/:namespace" do
+    test "success: should return 200 when the list is returned successfully", %{conn: conn} do
+      conn = get(conn, "/v1/fn/list/ns")
+
+      expected = %{"result" => []}
+      assert json_response(conn, 200) == expected
+    end
+
+    test "error: should raise an error when no namespace is given", %{conn: conn} do
+      assert_raise Phoenix.Router.NoRouteError, fn ->
+        _conn = get(conn, "/v1/fn/list/")
+      end
+    end
+
+    test "error: should return 503 when the underlying storage transaction fails", %{conn: conn} do
+      Core.FunctionStore.Mock
+      |> Mox.expect(:list_functions, fn _ -> {:error, {:aborted, "some reason"}} end)
+
+      conn = get(conn, "/v1/fn/list/ns")
+
+      expected = %{
+        "errors" => %{"detail" => "Failed to list functions: some reason"}
+      }
+
+      assert json_response(conn, 503) == expected
+    end
+  end
+
   describe "Invalid json handling" do
     test "should return a 400 code with a related message", %{conn: conn} do
       body = %{"name" => "hello"}
