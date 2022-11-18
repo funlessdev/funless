@@ -83,6 +83,20 @@ components:
         error:
           type: string
           description: The error message
+    function_list_success:
+      type: object
+      properties:
+        result:
+          type: array
+          items:
+            type: integer
+          description: The names of the functions in the namespace
+    function_list_error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: The error message
 
 paths:
   /v1/fn/invoke:
@@ -220,7 +234,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/function_deletion_error"
-
+  /v1/fn/list/{fnNamespace}:
+    get:
+      summary: List functions
+      parameters:
+      - in: path
+        name: fnNamespace
+        schema:
+          type: integer
+        required: true
+        description: Namespace of the listed functions
+      description: >-
+        List all functions in the given namespace
+      responses:
+        "200":
+          description: The required functions have been returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/function_list_success"
+              examples:
+                Listing a namespace with the "hellojs" function:
+                  value: '{"result": ["hellojs"]}'
+        "503":
+          description: The request failed because the database transaction was aborted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/function_list_error"
 servers:
   - url: http://localhost:4000
     variables: {}

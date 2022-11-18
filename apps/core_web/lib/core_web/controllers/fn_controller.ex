@@ -47,6 +47,14 @@ defmodule CoreWeb.FnController do
       |> json(%{result: function_name})
     end
   end
+
+  def list(conn, %{"namespace" => _namespace} = params) do
+    with {:ok, functions} <- FunctionRepo.list(params) do
+      conn
+      |> put_status(:ok)
+      |> json(%{result: functions})
+    end
+  end
 end
 
 defmodule CoreWeb.FnFallbackController do
@@ -108,6 +116,14 @@ defmodule CoreWeb.FnFallbackController do
 
   def call(conn, {:error, {:bad_delete, reason}}) do
     res = %{errors: %{detail: "Failed to delete function: #{reason}"}}
+
+    conn
+    |> put_status(:service_unavailable)
+    |> json(res)
+  end
+
+  def call(conn, {:error, {:bad_list, reason}}) do
+    res = %{errors: %{detail: "Failed to list functions: #{reason}"}}
 
     conn
     |> put_status(:service_unavailable)

@@ -88,7 +88,7 @@ defmodule ApiTest.FunctionTest do
       assert Api.FunctionRepo.delete(%{"namespace" => "ns"}) == {:error, :bad_params}
     end
 
-    test "delte shoulr return {:error, {:bad_delete, reason}} when the underlying store returns an error" do
+    test "delete should return {:error, {:bad_delete, reason}} when the underlying store returns an error" do
       Core.FunctionStore.Mock
       |> Mox.expect(:delete_function, 1, fn "hello", "ns" ->
         {:error, {:aborted, "for some reason"}}
@@ -103,6 +103,32 @@ defmodule ApiTest.FunctionTest do
 
       assert Api.FunctionRepo.delete(%{"name" => "not here", "namespace" => "ns"}) ==
                {:error, {:bad_delete, :not_found}}
+    end
+
+    test "list should return {:ok, functions} when no error occurs" do
+      assert Api.FunctionRepo.list(%{"namespace" => "ns"}) ==
+               {:ok, []}
+
+      Core.FunctionStore.Mock
+      |> Mox.expect(:list_functions, 1, fn "ns" -> {:ok, ["f1", "f2"]} end)
+
+      assert Api.FunctionRepo.list(%{"namespace" => "ns"}) ==
+               {:ok, ["f1", "f2"]}
+    end
+
+    test "list should return {:error, {:bad_list, reason}} when the underlying store returns an error" do
+      Core.FunctionStore.Mock
+      |> Mox.expect(:list_functions, 1, fn "ns" ->
+        {:error, {:aborted, "for some reason"}}
+      end)
+
+      assert Api.FunctionRepo.list(%{"namespace" => "ns"}) ==
+               {:error, {:bad_list, "for some reason"}}
+    end
+
+    test "list should return {:error, :bad_params} when the namespace is missing" do
+      assert Api.FunctionRepo.list(%{}) ==
+               {:error, :bad_params}
     end
   end
 end

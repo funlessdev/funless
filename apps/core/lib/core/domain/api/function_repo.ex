@@ -101,4 +101,25 @@ defmodule Core.Domain.Api.FunctionRepo do
     Logger.info("API: delete returned #{inspect(result)} for function #{f_name}")
     result
   end
+
+  @spec list(map) :: {:ok, [String.t()]} | {:error, {:bad_list, any}} | {:error, :bad_params}
+  def list(%{"namespace" => namespace}) do
+    namespace
+    |> FunctionStore.list_functions()
+    |> parse_list_result
+  end
+
+  def list(_) do
+    {:error, :bad_params}
+  end
+
+  @spec parse_list_result({:ok, [String.t()]} | {:error, {:aborted, any}}) ::
+          {:ok, [String.t()]} | {:error, {:bad_list, any}}
+  def parse_list_result({:ok, l}) do
+    {:ok, l}
+  end
+
+  def parse_list_result({:error, {:aborted, reason}}) do
+    {:error, {:bad_list, reason}}
+  end
 end

@@ -48,4 +48,9 @@ defmodule Core.Adapters.FunctionStore.Test do
   def delete_function(function_name, _function_namespace) do
     {:ok, function_name}
   end
+
+  @impl true
+  def list_functions(_namespace) do
+    {:ok, []}
+  end
 end
