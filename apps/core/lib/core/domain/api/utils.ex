@@ -12,34 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Core CI - Elixir Linter and Formatter
+defmodule Core.Domain.Api.Utils do
+  @moduledoc false
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  @doc """
+  Checks the given namespace string and returns the validated version of it.
 
-jobs:
-  linter:
-    name: Linter and formatting
-    runs-on: ubuntu-latest
+  ## Parameters
+  - ns: the namespace string to validate
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  ## Returns
+  - "_": if the string is nil, empty or blank (all whitespace), the default "_"
+  - String.trim(ns): otherwise, the trimmed version of the string is returned
+  """
+  @spec validate_namespace(String.t()) :: String.t()
+  def validate_namespace(ns) do
+    namespace = ns |> to_string |> String.trim()
 
-      - name: Setup elixir
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: 1.13
-          otp-version: 24.0
-
-      - name: Install Dependencies
-        run: mix deps.get
-
-      - name: Check formatting
-        run: mix format --check-formatted
-
-      - name: Run Mix Credo
-        run: mix credo --strict
+    if namespace == "" do
+      "_"
+    else
+      namespace
+    end
+  end
+end

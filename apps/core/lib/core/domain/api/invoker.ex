@@ -17,6 +17,7 @@ defmodule Core.Domain.Api.Invoker do
   Provides functions to request function invocaiton.
   """
   require Logger
+  alias Core.Domain.Api.Utils
   alias Core.Domain.InvokeParams
   alias Core.Domain.InvokeResult
   alias Core.Domain.Nodes
@@ -45,9 +46,11 @@ defmodule Core.Domain.Api.Invoker do
   @spec invoke(InvokeParams.t()) ::
           {:ok, InvokeResult.t()} | {:error, :bad_params} | invoke_errors()
   def invoke(%{"function" => f} = raw_params) do
+    namespace = Map.get(raw_params, "namespace") |> Utils.validate_namespace()
+
     ivk_params = %InvokeParams{
       function: f,
-      namespace: Map.get(raw_params, "namespace", "_"),
+      namespace: namespace,
       args: Map.get(raw_params, "args", %{})
     }
 

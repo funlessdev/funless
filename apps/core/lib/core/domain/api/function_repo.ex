@@ -18,6 +18,7 @@ defmodule Core.Domain.Api.FunctionRepo do
   """
 
   require Logger
+  alias Core.Domain.Api.Utils
   alias Core.Domain.FunctionStruct
   alias Core.Domain.Ports.FunctionStore
 
@@ -35,9 +36,11 @@ defmodule Core.Domain.Api.FunctionRepo do
   @spec new(FunctionStruct.t()) ::
           {:ok, String.t()} | {:error, :bad_params} | {:error, {:bad_insert, any}}
   def new(%{"name" => name, "code" => code} = raw_params) do
+    namespace = Map.get(raw_params, "namespace") |> Utils.validate_namespace()
+
     function = %FunctionStruct{
       name: name,
-      namespace: raw_params["namespace"] || "_",
+      namespace: namespace,
       code: code
     }
 
@@ -63,7 +66,9 @@ defmodule Core.Domain.Api.FunctionRepo do
   """
   @spec delete(FunctionStruct.t()) ::
           {:ok, String.t()} | {:error, :bad_params} | {:error, {:bad_delete, any}}
-  def delete(%{"name" => name, "namespace" => namespace}) do
+  def delete(%{"name" => name} = raw_params) do
+    namespace = Map.get(raw_params, "namespace") |> Utils.validate_namespace()
+
     Logger.info("API: delete request for function #{name} in namespace #{namespace}")
 
     case FunctionStore.exists?(name, namespace) do
