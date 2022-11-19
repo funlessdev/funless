@@ -51,3 +51,4 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/funlessdev/fl-core:latest,ghcr.io/funlessdev/fl-core:${{ env.VERSION }}
+          platforms: linux/amd64,linux/arm64
