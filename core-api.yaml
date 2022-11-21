@@ -89,7 +89,7 @@ components:
         result:
           type: array
           items:
-            type: integer
+            type: string
           description: The names of the functions in the namespace
     function_list_error:
       type: object
