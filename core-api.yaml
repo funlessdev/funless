@@ -241,7 +241,7 @@ paths:
       - in: path
         name: fnNamespace
         schema:
-          type: integer
+          type: string
         required: true
         description: Namespace of the listed functions
       description: >-
