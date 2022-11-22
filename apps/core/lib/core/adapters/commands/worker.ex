@@ -27,10 +27,8 @@ defmodule Core.Adapters.Commands.Worker do
   # {:ok, result}
   # {:error, :code_not_found} in this case re-do the invocation passing the code
   # {:error, atom()} mainly from the worker nifs
-  # {:error, %{"error" => msg}} a map with the reason
+  # {:error, {:exec_error, msg}} an error occurred during the execution of the function
 
-  # Handle the second type of error by logging and transforming it in :worker_error for the api
-  # Handle the third type of error by logging the message and transforming it in :worker_error for the api
   @impl true
   def send_invoke(worker, name, ns, args) do
     worker_addr = {:worker, worker}

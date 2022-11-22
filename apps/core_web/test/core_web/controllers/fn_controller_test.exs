@@ -69,10 +69,10 @@ defmodule CoreWeb.FnControllerTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, :worker_error} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, {:exec_error, "some error"}} end)
 
       conn = post(conn, "/v1/fn/invoke", %{function: "test", code: ""})
-      expected = %{"errors" => %{"detail" => "Failed to invoke function: worker error"}}
+      expected = %{"errors" => %{"detail" => "Failed to invoke function: some error"}}
       assert json_response(conn, 500) == expected
     end
 

@@ -90,8 +90,8 @@ defmodule CoreWeb.FnFallbackController do
     |> json(res)
   end
 
-  def call(conn, {:error, :worker_error}) do
-    res = %{errors: %{detail: "Failed to invoke function: worker error"}}
+  def call(conn, {:error, {:exec_error, msg}}) do
+    res = %{errors: %{detail: "Failed to invoke function: #{msg}"}}
 
     conn
     |> put_status(:internal_server_error)

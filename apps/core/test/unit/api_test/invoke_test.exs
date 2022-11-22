@@ -47,9 +47,9 @@ defmodule ApiTest.InvokeTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, :worker_error} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, {:exec_error, "some error"}} end)
 
-      assert Invoker.invoke(%{"function" => "f"}) == {:error, :worker_error}
+      assert Invoker.invoke(%{"function" => "f"}) == {:error, {:exec_error, "some error"}}
     end
 
     test "invoke should return {:error, :no_workers} when no workers are found" do
