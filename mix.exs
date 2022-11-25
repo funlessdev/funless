@@ -28,9 +28,16 @@ defmodule Core.Umbrella.MixProject do
       aliases: aliases(),
       releases: [
         core: [
+          runtime_config_path: "config/runtime_core.exs",
           applications: [
             core: :permanent,
             core_web: :permanent
+          ]
+        ],
+        worker: [
+          runtime_config_path: "config/runtime_worker.exs",
+          applications: [
+            worker: :permanent
           ]
         ]
       ]

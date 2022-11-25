@@ -24,7 +24,7 @@ defmodule Core.Application do
 
   @impl true
   def start(_type, _args) do
-    topologies = Application.get_env(:libcluster, :topologies)
+    topologies = Application.fetch_env!(:libcluster, :topologies)
 
     children = [
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
@@ -53,5 +53,35 @@ defmodule Core.Application do
       {:error, {:aborted, {:already_exists, _}}} -> :ok
       err -> err
     end
+  end
+
+  def libcluster_config() do
+    libcluster_config = Application.fetch_env!(:libcluster, :deploy_type)
+
+    strat =
+      case libcluster_config do
+        "kubernetes" ->
+          [
+            # The selected clustering strategy. Required.
+            strategy: Cluster.Strategy.Kubernetes,
+            config: [
+              kubernetes_ip_lookup_mode: :pods,
+              kubernetes_node_basename: "worker",
+              kubernetes_selector: "app=fl-worker",
+              kubernetes_namespace: "fl"
+            ]
+          ]
+
+        "gossip" ->
+          [
+            # The selected clustering strategy. Required.
+            strategy: Cluster.Strategy.Gossip,
+            config: [
+              port: String.to_integer(Application.fetch_env!(:libcluster, :libcluster_port))
+            ]
+          ]
+      end
+
+    [topologies: [funless_core: strat]]
   end
 end

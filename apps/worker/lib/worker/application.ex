@@ -12,10 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[tool]
-[tool.commitizen]
-name = "cz_conventional_commits"
-version = "0.4.0"
-tag_format = "v$version"
-annotated_tag = true
-version_files = ["mix.exs"]
+defmodule Worker.Application do
+  @moduledoc false
+  alias Worker.Adapters
+
+  use Application
+
+  @impl true
+  def start(_type, _args) do
+    topologies = Application.fetch_env!(:libcluster, :topologies)
+
+    children = [
+      Worker.PromEx,
+      {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
+      {Adapters.Requests.Cluster.Server, []},
+      {Worker.Domain.Ports.Runtime.Supervisor, []}
+    ]
+
+    Supervisor.start_link(children, strategy: :rest_for_one)
+  end
+end

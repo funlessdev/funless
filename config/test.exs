@@ -14,6 +14,7 @@
 
 import Config
 
+# --- Core Configs ---
 config :core, Core.Domain.Ports.Commands, adapter: Core.Commands.Mock
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Cluster.Mock
 config :core, Core.Domain.Ports.FunctionStore, adapter: Core.FunctionStore.Mock
@@ -22,6 +23,13 @@ config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Telemetry.Metri
 # Print only errors during test
 config :logger, level: :warn, backends: []
 
+# --- Worker Configs ---
+config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.ResourceCache.Mock
+config :worker, Worker.Domain.Ports.Runtime.Provisioner, adapter: Worker.Provisioner.Mock
+config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Runner.Mock
+config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Cleaner.Mock
+
+# --- Core Web Configs ---
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :core_web, CoreWeb.Endpoint,
