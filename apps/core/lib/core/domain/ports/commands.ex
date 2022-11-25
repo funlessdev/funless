@@ -23,9 +23,9 @@ defmodule Core.Domain.Ports.Commands do
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @callback send_invoke(atom(), String.t(), String.t(), map()) ::
-              {:ok, InvokeResult.t()} | {:error, :code_not_found} | {:error, :worker_error}
+              {:ok, InvokeResult.t()} | {:error, :code_not_found} | {:error, any()}
   @callback send_invoke_with_code(atom(), FunctionStruct.t(), map()) ::
-              {:ok, InvokeResult.t()} | {:error, :worker_error}
+              {:ok, InvokeResult.t()} | {:error, any()}
 
   @doc """
   Sends an invoke command to a worker passing only the name and namespace of the function, and args.
@@ -33,7 +33,7 @@ defmodule Core.Domain.Ports.Commands do
   (optionally empty) function arguments.
   """
   @spec send_invoke(atom(), String.t(), String.t(), map()) ::
-          {:ok, InvokeResult.t()} | {:error, :code_not_found} | {:error, :worker_error}
+          {:ok, InvokeResult.t()} | {:error, :code_not_found} | {:error, String.t()}
   defdelegate send_invoke(worker, f_name, ns, args), to: @adapter
 
   @doc """
@@ -43,6 +43,6 @@ defmodule Core.Domain.Ports.Commands do
   (optionally empty) function arguments.
   """
   @spec send_invoke_with_code(atom(), FunctionStruct.t(), map()) ::
-          {:ok, InvokeResult.t()} | {:error, :worker_error}
+          {:ok, InvokeResult.t()} | {:error, String.t()}
   defdelegate send_invoke_with_code(worker, function, args), to: @adapter
 end

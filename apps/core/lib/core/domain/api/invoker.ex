@@ -25,7 +25,7 @@ defmodule Core.Domain.Api.Invoker do
   alias Core.Domain.Ports.FunctionStore
   alias Core.Domain.Scheduler
 
-  @type invoke_errors :: {:error, :not_found} | {:error, :no_workers} | {:error, :worker_error}
+  @type invoke_errors :: {:error, :not_found} | {:error, :no_workers} | {:error, String.t()}
 
   @doc """
   Sends an invocation request for the `name` function in the `ns` namespace,
@@ -41,7 +41,7 @@ defmodule Core.Domain.Api.Invoker do
   - {:error, :bad_params} if the invocation was requested with invalid invocation parameters.
   - {:error, :not_found} if the function was not found.
   - {:error, :no_workers} if no workers are available.
-  - {:error, :worker_error} if the worker returned an error.
+  - {:error, {:exec_error, msg}} if the worker returned an error.
   """
   @spec invoke(InvokeParams.t()) ::
           {:ok, InvokeResult.t()} | {:error, :bad_params} | invoke_errors()
@@ -54,7 +54,7 @@ defmodule Core.Domain.Api.Invoker do
       args: Map.get(raw_params, "args", %{})
     }
 
-    Logger.info("API: invocation for #{ivk_params.function} in #{ivk_params.namespace} requested")
+    Logger.info("API: invocation for #{ivk_params.namespace}/#{ivk_params.function} requested")
 
     # could be :no_workers
     worker = Nodes.worker_nodes() |> Scheduler.select()
@@ -88,7 +88,7 @@ defmodule Core.Domain.Api.Invoker do
   end
 
   @spec invoke_with_code(atom(), InvokeParams.t()) ::
-          {:ok, InvokeResult.t()} | {:error, :not_found} | {:error, :worker_error}
+          {:ok, InvokeResult.t()} | {:error, :not_found} | {:error, any()}
   defp invoke_with_code(worker, ivk_params) do
     Logger.warn("API: function not available in worker, re-invoking with code")
 
