@@ -25,9 +25,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
 
   @impl true
   def run_function(%{name: name, namespace: ns}, args, %ExecutionResource{resource: module}) do
-    Logger.info(
-      "Wasm: Running #{name} of #{ns} with WebAssembly runtime with args #{inspect(args)}"
-    )
+    Logger.info("Wasm: Running #{ns}/#{name} with args #{inspect(args)}")
 
     string_args = Jason.encode!(args)
 
@@ -39,8 +37,12 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
         Logger.info("Wasm: Function executed successfully")
         {:ok, Jason.decode!(payload)}
 
+      {:exec_error, err} ->
+        Logger.error("Wasm: Error during function execution: #{inspect(err)}")
+        {:error, {:exec_error, err}}
+
       {:error, err} ->
-        Logger.error("Wasm: Error while running function: #{inspect(err)}")
+        Logger.error("Wasm: unexpected error: #{inspect(err)}")
         {:error, err}
     end
   end

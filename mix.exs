@@ -19,12 +19,17 @@ defmodule FunlessWorker.MixProject do
     [
       app: :worker,
       version: "0.4.0",
-      elixir: "~> 1.13",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
         plt_add_apps: [:ex_unit, :mix]
+      ],
+      rustler_crates: [
+        fn_wasm: [
+          mode: if(Mix.env() == :dev, do: :debug, else: :release)
+        ]
       ],
       deps: deps()
     ]

@@ -44,7 +44,6 @@ fn run_function(
 
     thread::spawn(move || {
         let mut thread_env = OwnedEnv::new();
-
         let res: NifResult<(rustler::Atom, String)> =
             run_module_function(engine_resource, module_resource, args);
         match res {
@@ -90,15 +89,13 @@ fn run_module_function(
             )))
         })?;
 
-    /*
-    5. Run the function
-    if the function completed successfully, we pass the :ok atom and the content of stdout;
-    if the function's result was an error, we pass the :error atom and the content of stderr
-    */
+    // 5. Run the function
+    // if the function completed successfully, we pass the :ok atom and the content of stdout;
+    // if the function's result was an error, we pass the :error atom and the content of stderr
     let result = main_func_instance.call(&mut store, ());
     let (atom, lock) = match result {
         Ok(_) => (atoms::ok(), stdout_lock),
-        Err(_) => (atoms::error(), stderr_lock),
+        Err(_) => (atoms::exec_error(), stderr_lock),
     };
 
     // 6. Extract output
