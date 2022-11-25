@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Core CI - Elixir Dialyzer
+name: Elixir Dialyzer
 
 on:
   push:
@@ -31,8 +31,8 @@ jobs:
         id: beam
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: 1.13
-          otp-version: 24
+          elixir-version: 1.14
+          otp-version: 25
 
       - name: Install Dependencies
         run: mix deps.get

@@ -65,7 +65,9 @@ defmodule Core.Umbrella.MixProject do
   defp aliases do
     [
       # run `mix setup` in all child apps
-      setup: ["cmd mix setup"]
+      setup: "cmd mix setup",
+      core_test: "cmd --app core mix test --color",
+      worker_test: "cmd --app worker mix test --color"
     ]
   end
 end

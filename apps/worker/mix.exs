@@ -56,9 +56,7 @@ defmodule FunlessWorker.MixProject do
       {:prom_ex, git: "https://github.com/akoutmos/prom_ex.git"},
 
       # Dev deps
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:mox, "~> 1.0", only: :test},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 

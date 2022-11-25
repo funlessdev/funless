@@ -39,3 +39,15 @@ config :core_web, CoreWeb.Endpoint,
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+# --- Test
+config :libcluster,
+  topologies: [
+    funless_test: [
+      # The selected clustering strategy. Required.
+      strategy: Cluster.Strategy.Gossip,
+      config: [
+        port: String.to_integer(System.get_env("LIBCLUSTER_PORT") || "45892")
+      ]
+    ]
+  ]

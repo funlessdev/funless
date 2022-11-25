@@ -31,33 +31,35 @@ WORKDIR /opt/app
 # This step installs all the build tools we'll need
 RUN apk update && \
     apk upgrade --no-cache && \
-    apk add --no-cache git build-base && \
+    apk add --no-cache git build-base bash curl openssl ncurses-libs libgcc && \
     mix local.rebar --force && \
     mix local.hex --force
 
+# Get Rust
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+ENV RUSTFLAGS='--codegen target-feature=-crt-static'
 
 # This copies our app source code into the build container
 COPY . .
 
-RUN mix deps.get --only $MIX_ENV, deps.compile
-RUN mix release 
+RUN mix deps.get --only $MIX_ENV
+RUN mix release worker
 
 # From this line onwards, we're in a new image, which will be the image used in production
 FROM alpine:${ALPINE_VERSION}
 
 ARG MIX_ENV=prod
-ARG PORT=4000
 ARG NODE_IP=""
 ARG DEPLOY_ENV=""
 
-# # The name of your application/release (required)
+# The name of your application/release (required)
 RUN apk update && \
     apk upgrade && \
     apk add --no-cache libstdc++ libgcc ncurses-libs
 
 ENV REPLACE_OS_VARS=true \
-    MIX_ENV=${MIX_ENV} \ 
-    PORT=${PORT} \
+    MIX_ENV=${MIX_ENV} \
     NODE_IP=${NODE_IP} \
     DEPLOY_ENV=${DEPLOY_ENV}
 
@@ -65,11 +67,11 @@ WORKDIR /home/funless
 RUN adduser --disabled-password --home "$(pwd)" funless &&\
     echo "funless ALL=(ALL:ALL) NOPASSWD: ALL" >>/etc/sudoers
 
-USER funless
+USER funless 
 
-COPY --chown=funless --from=builder /opt/app/_build/${MIX_ENV}/rel/core ./core
+COPY --chown=funless --from=builder /opt/app/_build/${MIX_ENV}/rel/worker ./worker
 
 CMD if [[ -z "$NODE_IP" ]] ; \
-    then PORT=${PORT} DEPLOY_ENV=${DEPLOY_ENV} core/bin/core start ; \
-    else RELEASE_NODE=core@${NODE_IP} PORT=${PORT} DEPLOY_ENV=${DEPLOY_ENV} core/bin/core start ; \
+    then DEPLOY_ENV=${DEPLOY_ENV} worker/bin/worker start ; \
+    else RELEASE_NODE=worker@${NODE_IP} DEPLOY_ENV=${DEPLOY_ENV} worker/bin/worker start ; \
     fi

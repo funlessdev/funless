@@ -12,31 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Worker CI - Elixir Tests
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    name: Elixir tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup elixir
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: 1.14
-          otp-version: 24.0
-
-      - name: Install Dependencies
-        run: mix deps.get
-
-      - name: Run Elixir Tests
-        run: mix test
+defmodule Worker do
+  @moduledoc """
+  Worker namespace declaration.
+  """
+end

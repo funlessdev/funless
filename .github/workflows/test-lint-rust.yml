@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Worker CI - Rust Linter and Tests
+name: Rust Linter and Tests
 
 on:
   push:
@@ -31,12 +31,12 @@ jobs:
 
       - name: Build FN rust module
         run: cargo build --verbose
-        working-directory: native/fn_wasm
+        working-directory: apps/worker/native/fn_wasm
 
       - name: Run cargo clippy on FN
         run: cargo clippy --verbose
-        working-directory: native/fn_wasm
+        working-directory: apps/worker/native/fn_wasm
 
       - name: Run FN tests
         run: cargo test --verbose
-        working-directory: native/fn_wasm
+        working-directory: apps/worker/native/fn_wasm
