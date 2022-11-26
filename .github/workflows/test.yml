@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Core CI - Elixir Tests
+name: Elixir Tests
 
 on:
   push:
@@ -32,11 +32,17 @@ jobs:
       - name: Setup elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: 1.13
-          otp-version: 24.0
+          elixir-version: 1.14
+          otp-version: 25.0
+
+      - name: Setup apps
+        run: mix setup
 
       - name: Install Dependencies
         run: mix deps.get
 
-      - name: Run Elixir Tests
-        run: mix test
+      - name: Run Core Tests
+        run: mix core_test
+
+      - name: Run Worker Tests
+        run: mix worker_test

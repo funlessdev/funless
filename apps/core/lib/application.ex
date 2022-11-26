@@ -13,8 +13,6 @@
 # limitations under the License.
 
 defmodule Core.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
   @moduledoc false
 
   alias Core.Domain.Nodes
@@ -24,7 +22,7 @@ defmodule Core.Application do
 
   @impl true
   def start(_type, _args) do
-    topologies = Application.get_env(:libcluster, :topologies)
+    topologies = Application.fetch_env!(:libcluster, :topologies)
 
     children = [
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},

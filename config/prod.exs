@@ -20,12 +20,8 @@ config :core, Core.Domain.Ports.FunctionStore, adapter: Core.Adapters.FunctionSt
 
 # tell logger to load a LoggerFileBackend processes
 config :logger,
-  backends: [:console, {LoggerFileBackend, :info_log}]
-
-# configuration for the {LoggerFileBackend, :info_log} backend
-config :logger, :info_log,
-  path: "/tmp/funless/fl-core.log",
-  level: :info
+  backends: [:console, {LoggerFileBackend, :info_log}],
+  format: "\n#####[$level] $time $metadata $message\n"
 
 # For production, don't forget to configure the url host
 # to something meaningful, Phoenix uses this information

@@ -12,26 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: "3"
+defmodule Worker.Adapters.Runtime.Wasm.Supervisor do
+  @moduledoc """
+  Supervisor for the wasmtime runtime. It implements the behaviour of Ports.Runtime.Supervisor to define the children to supervise.
+  """
+  @behaviour Worker.Domain.Ports.Runtime.Supervisor
 
-vars:
-  APP_NAME:
-    sh: grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'
-  APP_VSN:
-    sh: grep 'version:' mix.exs | cut -d '"' -f2
-  BUILD:
-    sh: git rev-parse --short HEAD
-
-tasks:
-  default:
-    cmds:
-      - echo "{{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}}"
-      - task --list-all
-    silent: true
-  build:
-    cmds:
-      - docker build --build-arg APP_NAME={{.APP_NAME}} -t {{.APP_NAME}}:{{.APP_VSN}}-{{.BUILD}} -t {{.APP_NAME}}:latest .
-
-  run:
-    cmds:
-      - docker run --expose 4001 -p 4001:4001 --rm -it {{.APP_NAME}}:latest
+  @impl true
+  def children do
+    [
+      {Worker.Adapters.Runtime.Wasm.Engine.Cache, []},
+      {Worker.Adapters.ResourceCache, []}
+    ]
+  end
+end

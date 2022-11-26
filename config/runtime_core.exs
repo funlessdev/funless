@@ -53,6 +53,11 @@ if config_env() == :prod do
   #
   # Then you can assemble a release by calling `mix release`.
   # See `mix help release` for more information.
+
+  # configuration for the {LoggerFileBackend, :info_log} backend
+  config :logger, :info_log,
+    path: "/tmp/funless/fl-core.log",
+    level: :info
 end
 
 case System.get_env("DEPLOY_ENV") do
@@ -78,7 +83,7 @@ case System.get_env("DEPLOY_ENV") do
           # The selected clustering strategy. Required.
           strategy: Cluster.Strategy.Gossip,
           config: [
-            port: String.to_integer(System.get_env("FL_LIBCLUSTER_PORT") || "45892")
+            port: String.to_integer(System.get_env("LIBCLUSTER_PORT") || "45892")
           ]
         ]
       ]

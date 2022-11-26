@@ -32,7 +32,8 @@ header:
     - '.gitmodules'
     - '**/aliases'
     - '**/native/scheduler/.cargo/**'
-    - 'mix.lock'
+    - "**/*.lock"
+    - "**/*.svg"
     - '.formatter.exs'
 
   comment: on-failure

@@ -14,16 +14,56 @@
 
 import Config
 
-config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
-config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
-config :core, Core.Domain.Ports.FunctionStore, adapter: Core.Adapters.FunctionStore.Mnesia
-config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Adapters.Telemetry.Metrics
-
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id, :file, :line]
 
+# --- Core Configs ---
+config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
+config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
+config :core, Core.Domain.Ports.FunctionStore, adapter: Core.Adapters.FunctionStore.Mnesia
+config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Adapters.Telemetry.Metrics
+
+# --- Worker Configs ---
+config :worker, Worker.Domain.Ports.Runtime.Provisioner,
+  adapter: Worker.Adapters.Runtime.Wasm.Provisioner
+
+config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Adapters.Runtime.Wasm.Runner
+config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Adapters.Runtime.Wasm.Cleaner
+
+config :worker, Worker.Domain.Ports.Runtime.Supervisor,
+  adapter: Worker.Adapters.Runtime.Wasm.Supervisor
+
+config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.Adapters.ResourceCache
+
+config :os_mon,
+  start_cpu_sup: true,
+  start_memsup: true,
+  start_disksup: false,
+  start_os_sup: false,
+  memsup_system_only: true
+
+config :worker, Worker.PromEx,
+  disabled: false,
+  manual_metrics_start_delay: :no_delay,
+  drop_metrics_groups: [],
+  grafana: :disabled,
+  metrics_server: [
+    port: 4021,
+    # This is an optional setting and will default to `"/metrics"`
+    path: "/metrics",
+    # This is an optional setting and will default to `:http`
+    protocol: :http,
+    # This is an optional setting and will default to `5`
+    pool_size: 5,
+    # This is an optional setting and will default to `[]`
+    cowboy_opts: [],
+    # This is an optional and will default to `:none`
+    auth_strategy: :none
+  ]
+
+# --- Core Web Configs ---
 config :core_web,
   generators: [context_app: :core]
 
