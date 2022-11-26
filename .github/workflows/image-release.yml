@@ -51,15 +51,17 @@ jobs:
       - name: Build and push Core
         uses: docker/build-push-action@v3.0.0
         with:
-          context: Dockerfile.core
+          context: .
+          file: Dockerfile.core
           push: true
-          tags: ghcr.io/funlessdev/fl-core:latest,ghcr.io/funlessdev/fl-core:${{ env.VERSION }}
+          tags: ghcr.io/funlessdev/core:latest,ghcr.io/funlessdev/core:${{ env.VERSION }}
           platforms: linux/amd64
 
       - name: Build and push Worker
         uses: docker/build-push-action@v3.0.0
         with:
-          context: Dockerfile.worker
+          context: .
+          file: Dockerfile.worker
           push: true
-          tags: ghcr.io/funlessdev/fl-worker:latest,ghcr.io/funlessdev/fl-worker:${{ env.VERSION }}
+          tags: ghcr.io/funlessdev/worker:latest,ghcr.io/funlessdev/worker:${{ env.VERSION }}
           platforms: linux/amd64
