@@ -20,7 +20,7 @@ defmodule Worker.Application do
 
   @impl true
   def start(_type, _args) do
-    topologies = Application.fetch_env!(:libcluster, :topologies)
+    topologies = Application.fetch_env!(:worker, :topologies)
 
     children = [
       Worker.PromEx,

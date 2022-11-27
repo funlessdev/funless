@@ -22,7 +22,7 @@ defmodule Core.Application do
 
   @impl true
   def start(_type, _args) do
-    topologies = Application.fetch_env!(:libcluster, :topologies)
+    topologies = Application.fetch_env!(:core, :topologies)
 
     children = [
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
