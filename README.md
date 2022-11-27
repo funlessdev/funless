@@ -14,32 +14,68 @@
   ~ limitations under the License.
 -->
 
-# Core
-[![Funless CI](https://github.com/funlessdev/funless-core/actions/workflows/check.yml/badge.svg)](https://github.com/funlessdev/funless-core/actions/workflows/check.yml)
 
-This is the repository for the Core component of the Funless (FL) platform, a new generation research-driven serverless platform. 
+[![documentation site](https://img.shields.io/website?label=Documentation&url=https%3A%2F%2Ffunless.dev)](https://funless.dev)
+[![Tests](https://github.com/funlessdev/funless/actions/workflows/test.yml/badge.svg)](https://github.com/funlessdev/funless/actions/workflows/test.yml)
+[![Docker Release](https://github.com/funlessdev/funless/actions/workflows/image-release.yml/badge.svg)](https://github.com/funlessdev/funless/packages)
+![Powered by WebAssembly](https://img.shields.io/badge/powered%20by-WebAssembly-orange.svg)<br />
 
-The Core is written in Elixir and (as of now) handles http requests to upload, invoke and delete Javascript functions. 
-It does so through the [Bandit](https://github.com/mtrudel/bandit) http server, 
-it saves functions using Mnesia and launches them by sending a message to our [Worker](https://github.com/funlessdev/funless-worker) component, 
-which takes care of executing functions and returning their results.
+# FunLess
+The Funless (FL) platform is a new generation, research-driven serverless platform built with with the scalability of the BEAM and the speed 
+and security of WebAssembly. 
+
+It is composed of two main parts: the Core and the Worker components.
+
+## Core
+
+The Core is the orchestrator of the platform. It handles http requests to upload, invoke and delete functions. It is composed of the apps/core (the actual orchestrator of the platform) and apps/core_web projects (Phoenix web application that exposes the json REST API).
+
+When an invocation requests arrives, the Phoenix application forwards it to the Core, which then picks one of the available Workers 
+and runs the function on it.
+
+## Worker 
+
+The Worker is the actual executor of the functions. It makes use of Rust NIFs to run user-defined functions. It implements
+a simple WebAssembly runtime using [wasmtime](https://wasmtime.dev/) which executes wasm binaries given by the Core, with 0 cold-start time.
+
+## CLI
+
+It is recommended to use our [Funless CLI](https://github.com/funlessdev/fl-cli) to interact with the platform, as it makes it easy to
+do a local deployment and to upload, invoke and delete functions.
+
 ### Running in an interactive session
-The project can be run in an interactive session by running:
 
-```sh
+Both the Core and the Workers can be run in an interactive session by running:
+
+
+First of all you need to install the dependencies:
+
+```bash
 mix deps.get
-mix compile
-iex -S mix
+```
+
+For the Core: 
+
+```bash
+cd apps/core_web && iex --name core@127.0.0.1 --cookie default_secret -S mix phx.server
+```
+
+For the Worker:
+
+```bash
+cd apps/worker && iex --name worker@127.0.0.1 --cookie default_secret -S mix
 ```
 
 Now you can send post requests to `localhost:4000`. The file `core-api.yaml` contains an OpenAPI specification of the possible requests.
 
-First you should create a function, send a POST request to `localhost:4000/create` with the following body:
+The cli has the `fn create/invoke/delete` commands, but if you want to use the API directly: 
+
+- Create a new function by sending a POST request to `localhost:4000/create` with the following body:
 ```json
 {
   "name": "hello",
   "namespace": "_",
-  "code": <the wasm code file>,
+  "code": <-the wasm file->,
 }
 ```
 
@@ -54,24 +90,49 @@ After that you can send a POST request to `localhost:4000/invoke` with the follo
 }
 ```
 
-You have no connected worker to use, so you will receive the error:
+If you have no connected worker to use, you will receive the error:
 ```json
 {
   "error": "Failed to invoke function: no worker available"
 }
 ```
 
-Re-run the project with `iex --name <a-name>@<something> -S mix` and run the [Worker](https://github.com/funlessdev/funless-worker) project as well. 
-Then connect the Core with the Worker using `Node.connect`. Now you have a worker to use for that function.
+Otherwise, you should receive as response the result of your function.
 
 ### Mix Release
 
-
 The project can also be compiled as a release, and run like this:
 
+For the Core: 
 ```
-mix release
+mix release core
 ./_build/dev/rel/core/bin/core start (or daemon to run it in the background) and stop 
+```
+
+For the Worker:
+```
+mix release worker
+./_build/dev/rel/worker/bin/worker start (or daemon to run it in the background) and stop 
+```
+
+### Run Tests
+
+To run the tests, you can use the following command:
+
+```bash
+mix test
+```
+
+Or, to run just the tests of the core:
+
+```bash
+mix core_test
+```
+
+Or, for the worker:
+
+```bash
+mix worker_test
 ```
 
 ## Contributing

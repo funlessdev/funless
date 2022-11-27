@@ -62,7 +62,7 @@ end
 
 case System.get_env("DEPLOY_ENV") do
   "kubernetes" ->
-    config :libcluster,
+    config :core,
       topologies: [
         funless_core: [
           # The selected clustering strategy. Required.
@@ -77,7 +77,7 @@ case System.get_env("DEPLOY_ENV") do
       ]
 
   _ ->
-    config :libcluster,
+    config :core,
       topologies: [
         funless_core: [
           # The selected clustering strategy. Required.

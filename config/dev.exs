@@ -65,3 +65,26 @@ config :phoenix, :plug_init_mode, :runtime
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
+
+# --- For libcluster ---
+config :core,
+  topologies: [
+    funless_test: [
+      # The selected clustering strategy. Required.
+      strategy: Cluster.Strategy.Gossip,
+      config: [
+        port: String.to_integer(System.get_env("LIBCLUSTER_PORT") || "45892")
+      ]
+    ]
+  ]
+
+config :worker,
+  topologies: [
+    funless_test: [
+      # The selected clustering strategy. Required.
+      strategy: Cluster.Strategy.Gossip,
+      config: [
+        port: String.to_integer(System.get_env("LIBCLUSTER_PORT") || "45893")
+      ]
+    ]
+  ]
