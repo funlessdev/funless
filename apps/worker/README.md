@@ -16,14 +16,13 @@
 
 # Worker
 
-This is the repository for the Worker component of the Funless (FL) platform, a new generation research-driven serverless platform.
+**TODO: add description**
+
+This is the Worker component app of the Funless (FL) platform.
 
 The Worker is written in Elixir and makes use of Rust NIFs to run user-defined functions.
 
-It uses the [rustler](https://github.com/rusterlium/rustler) crate to compile Rust functions into NIFs, and receives function invocation requests from the [Core](https://github.com/funlessdev/fl-core) 
-component of the FL platform.
-
-To run functions it either uses [OpenWhisk](https://github.com/apache/openwhisk) runtimes via Docker, or the [wasmtime](https://github.com/bytecodealliance/wasmtime) WebAssembly runtime.
+To run functions it uses the [wasmtime](https://github.com/bytecodealliance/wasmtime) WebAssembly runtime.
 
 ## Running the Worker
 
@@ -35,19 +34,6 @@ mix deps.get
 mix compile
 iex -S mix
 ```
-
-To test the main worker behaviour, run:
-```
-fcode = "function main(params) {\nlet name = params.name || \"World\"\nreturn { payload: `Hello ${name}!` }\n}"
-
-function = %{name: "hellojs", image: "nodejs", code: fcode, namespace: "_"}
-
-GenServer.call(:worker, {:prepare, function})
-GenServer.call(:worker, {:invoke, function})
-GenServer.call(:worker, {:cleanup, function})
-```
-The `:prepare` call is optional, as `:invoke` creates the container if none is found.
-
 #### Using WebAssembly
 
 When using the WebAssembly runtime, `fcode` must contain the binary string corresponding to a compiled WebAssembly module, preferably created using [fl-runtimes](https://github.com/funlessdev/fl-runtimes):
@@ -55,85 +41,3 @@ When using the WebAssembly runtime, `fcode` must contain the binary string corre
 fcode = File.read!("code.wasm")
 ...
 ```
-
-In that instance, the `image` field is not necessary.
-___
-
-### Running in different nodes
-
-The project can also be compiled as a release, and run like this:
-```
-mix release
-./_build/dev/rel/worker/bin/worker start (or daemon to run it in the background) and stop 
-```
-
-And on a different terminal session, start the interactive session like this:
-```
-iex --name n1@127.0.0.1 --cookie default_secret -S mix
-```
-
-And run:
-```
-fcode = "function main(params) {\nlet name = params.name || \"World\"\nreturn { payload: `Hello ${name}!` }\n}"
-
-function = %{name: "hellojs", image: "nodejs", code: fcode, namespace: "_"}
-
-GenServer.call({:worker, :"worker@127.0.0.1"}, {:invoke, function})
-```
-
-The `--cookie` and `--name` parameters can vary; the `--cookie` must be the same used in compiling the release, defined in `rel/env.sh.eex`.
-
-See [Using WebAssembly](#using-webassembly) for the content of `fcode` when using WebAssembly runtimes.
-___
-
-### Running with Docker
-
-To run with Docker, the image can be built from source:
-```
-docker build -t <IMAGE_NAME> .
-```
-
-Afterwards, a network should be created to allow containers to communicate with each other (and therefore, to allow the Worker to communicate with runtimes):
-```
-docker network create <NETWORK_NAME> --internal
-```
-
-The network should be internal, to as the worker gets its name and address from the external, worker-to-core network, and this avoids conflicts.
-
-**The internal network is not necessary if using the WebAssembly module, as no containers are launched in that instance**.
-
-Then, the container can be created using:
-```
-docker create -v /var/run/docker.sock:/var/run/docker-host.sock --network=<NETWORK_NAME> --env RUNTIME_NETWORK=<NETWORK_NAME> <IMAGE_NAME>
-```
-
-Or, in a rootless installation:
-```
-docker create -v /run/user/1001/docker.sock:/var/run/docker-host.sock --network=<NETWORK_NAME> --env RUNTIME_NETWORK=<NETWORK_NAME> <IMAGE_NAME>
-```
-
-Where `/run/user/1001/docker.sock` must be set to the value of the `$DOCKER_HOST` environment variable, minus the protocol (e.g. `unix:///run/user/1001/docker.sock` -> `/run/user/1001/docker.sock`).
-
-Finally, the container can be attached to a second network (to which the `fl-core` container is also attached):
-```
-docker network connect <SECOND_NETWORK_NAME> <CONTAINER_NAME>
-```
-
-And then started:
-```
-docker container start <CONTAINER_NAME>
-```
-
-(containers have to be first connected to multiple networks, and then started, as stated here https://github.com/moby/moby/issues/17750).
-
-## Contributing
-Anyone is welcome to contribute to this project or any other Funless project. 
-
-You can contribute by testing the projects, opening tickets, writing documentation, sharing new ideas for future works and, of course, by contributing code. 
-
-You can pick an issue or create a new one, comment on it that you will take priority and then fork the repo so you're free to work on it.
-Once you feel ready open a Pull Request to send your code to us.
-
-## License
-
-This project is under the Apache 2.0 license.
