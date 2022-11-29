@@ -14,10 +14,6 @@
 
 import Config
 
-config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
-config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
-config :core, Core.Domain.Ports.FunctionStore, adapter: Core.Adapters.FunctionStore.Mnesia
-
 # tell logger to load a LoggerFileBackend processes
 config :logger,
   backends: [:console, {LoggerFileBackend, :info_log}],
