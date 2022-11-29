@@ -26,6 +26,7 @@ defmodule Core.MixProject do
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
+      compilers: Mix.compilers(),
       aliases: aliases(),
       deps: deps()
     ]
@@ -57,6 +58,13 @@ defmodule Core.MixProject do
       {:jason, "~> 1.3"},
       {:libcluster, "~> 3.3"},
       {:logger_file_backend, "~> 0.0.13"},
+      {:phoenix, "~> 1.6.15"},
+      {:phoenix_live_dashboard, "~> 0.6"},
+      {:telemetry_metrics, "~> 0.6"},
+      {:telemetry_poller, "~> 1.0"},
+      {:cowboy, "~> 2.9.0"},
+      {:plug_cowboy, "~> 2.5.2"},
+      {:prom_ex, git: "https://github.com/akoutmos/prom_ex.git"},
 
       # dev deps
       {:mox, "~> 1.0", only: :test}

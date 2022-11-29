@@ -64,11 +64,11 @@ config :worker, Worker.PromEx,
   ]
 
 # --- Core Web Configs ---
-config :core_web,
+config :core,
   generators: [context_app: :core]
 
 # Configures the endpoint, we need to listen to 0.0.0.0 because it's in a container
-config :core_web, CoreWeb.Endpoint,
+config :core, CoreWeb.Endpoint,
   url: [host: "0.0.0.0"],
   render_errors: [view: CoreWeb.ErrorView, accepts: ~w(json), layout: false],
   live_view: [signing_salt: "sRzweIOe"]
@@ -78,7 +78,7 @@ config :core_web, CoreWeb.Endpoint,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-config :core_web, CoreWeb.PromEx,
+config :core, CoreWeb.PromEx,
   disabled: false,
   manual_metrics_start_delay: :no_delay,
   drop_metrics_groups: [],
