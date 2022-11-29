@@ -28,7 +28,8 @@ It is composed of two main parts: the Core and the Worker components.
 
 ## Core
 
-The Core is the orchestrator of the platform. It handles http requests to upload, invoke and delete functions. It is composed of the apps/core (the actual orchestrator of the platform) and apps/core_web projects (Phoenix web application that exposes the json REST API).
+The Core is the orchestrator of the platform. It handles http requests to upload, invoke and delete functions and resides in the apps/core folder. It is 
+a Phoenix web application to expose the json REST API.
 
 When an invocation requests arrives, the Phoenix application forwards it to the Core, which then picks one of the available Workers 
 and runs the function on it.
@@ -57,7 +58,7 @@ mix deps.get
 For the Core: 
 
 ```bash
-cd apps/core_web && iex --name core@127.0.0.1 --cookie default_secret -S mix phx.server
+cd apps/core && iex --name core@127.0.0.1 --cookie default_secret -S mix phx.server
 ```
 
 For the Worker:

@@ -13,14 +13,14 @@
 # limitations under the License.
 
 defmodule CoreWeb.Endpoint do
-  use Phoenix.Endpoint, otp_app: :core_web
+  use Phoenix.Endpoint, otp_app: :core
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
   @session_options [
     store: :cookie,
-    key: "_core_web_key",
+    key: "_core_key",
     signing_salt: "8P0asjT/"
   ]
 
@@ -32,7 +32,7 @@ defmodule CoreWeb.Endpoint do
   # when deploying your static files in production.
   plug(Plug.Static,
     at: "/",
-    from: :core_web,
+    from: :core,
     gzip: false,
     only: ~w(assets fonts images favicon.ico robots.txt)
   )

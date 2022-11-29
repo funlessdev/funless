@@ -30,8 +30,7 @@ defmodule Core.Umbrella.MixProject do
         core: [
           runtime_config_path: "config/runtime_core.exs",
           applications: [
-            core: :permanent,
-            core_web: :permanent
+            core: :permanent
           ]
         ],
         worker: [

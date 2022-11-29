@@ -16,7 +16,7 @@ defmodule CoreWeb.PromEx do
   @moduledoc """
   PromEx module for CoreWeb.
   """
-  use PromEx, otp_app: :core_web
+  use PromEx, otp_app: :core
 
   alias PromEx.Plugins
 
@@ -50,9 +50,9 @@ defmodule CoreWeb.PromEx do
   def dashboards do
     [
       # PromEx built in Grafana dashboards
-      {:prom_ex, "application.json"},
-      {:prom_ex, "beam.json"},
-      {:prom_ex, "phoenix.json"}
+      # {:prom_ex, "application.json"},
+      # {:prom_ex, "beam.json"},
+      # {:prom_ex, "phoenix.json"}
       # {:prom_ex, "ecto.json"},
       # {:prom_ex, "oban.json"},
       # {:prom_ex, "phoenix_live_view.json"},
@@ -60,7 +60,7 @@ defmodule CoreWeb.PromEx do
       # {:prom_ex, "broadway.json"},
 
       # Add your dashboard definitions here with the format: {:otp_app, "path_in_priv"}
-      # {:core_web, "/grafana_dashboards/user_metrics.json"}
+      # {:core, "/grafana_dashboards/user_metrics.json"}
     ]
   end
 end

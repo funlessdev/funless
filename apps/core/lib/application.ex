@@ -25,6 +25,16 @@ defmodule Core.Application do
     topologies = Application.fetch_env!(:core, :topologies)
 
     children = [
+      ## CoreWeb Children
+      CoreWeb.PromEx,
+      # Start the Telemetry supervisor
+      CoreWeb.Telemetry,
+      # Start the Endpoint (http/https)
+      CoreWeb.Endpoint,
+      # Start a worker by calling: CoreWeb.Worker.start_link(arg)
+      # {CoreWeb.Worker, arg}
+
+      ## Core Children
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
       {Core.Adapters.Telemetry.Supervisor, []}
     ]
@@ -51,5 +61,13 @@ defmodule Core.Application do
       {:error, {:aborted, {:already_exists, _}}} -> :ok
       err -> err
     end
+  end
+
+  # Tell Phoenix to update the endpoint configuration
+  # whenever the application is updated.
+  @impl true
+  def config_change(changed, _new, removed) do
+    CoreWeb.Endpoint.config_change(changed, removed)
+    :ok
   end
 end
