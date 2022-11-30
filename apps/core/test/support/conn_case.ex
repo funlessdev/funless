@@ -49,6 +49,7 @@ defmodule CoreWeb.ConnCase do
   end
 
   setup _tags do
+    # Core.DataCase.setup_sandbox(tags)
     Mox.verify_on_exit!()
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end

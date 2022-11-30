@@ -29,6 +29,8 @@ defmodule Core.Application do
       CoreWeb.PromEx,
       # Start the Telemetry supervisor
       CoreWeb.Telemetry,
+      # Start the Ecto repository
+      Core.Repo,
       # Start the Endpoint (http/https)
       CoreWeb.Endpoint,
       # Start a worker by calling: CoreWeb.Worker.start_link(arg)

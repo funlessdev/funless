@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0)
-ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :manual)
+defmodule Core.Repo do
+  use Ecto.Repo,
+    otp_app: :core,
+    adapter: Ecto.Adapters.Postgres
+end
