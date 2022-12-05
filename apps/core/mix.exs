@@ -79,7 +79,12 @@ defmodule Core.MixProject do
     [
       setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
-      "ecto.reset": ["ecto.drop", "ecto.setup"]
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "test.integration": [
+        "ecto.create --quiet",
+        "ecto.migrate --quiet",
+        "test --only integration_test"
+      ]
     ]
   end
 end
