@@ -26,7 +26,7 @@ defmodule Integration.ProvisionEtsTest do
   setup_all do
     function = %{
       name: "hellojs",
-      namespace: "_",
+      module: "_",
       image: "nodejs",
       code: "console.log(\"hello\")"
     }
@@ -47,12 +47,12 @@ defmodule Integration.ProvisionEtsTest do
       Worker.Provisioner.Mock
       |> Mox.expect(:provision, fn _ -> {:ok, %ExecutionResource{resource: "a-resource"}} end)
 
-      assert ResourceCache.get(function.name, function.namespace) == :resource_not_found
+      assert ResourceCache.get(function.name, function.module) == :resource_not_found
 
       assert {:ok, resource} = ProvisionResource.provision(function)
-      assert ResourceCache.get(function.name, function.namespace) == resource
+      assert ResourceCache.get(function.name, function.module) == resource
 
-      ResourceCache.delete(function.name, function.namespace)
+      ResourceCache.delete(function.name, function.module)
     end
 
     test "multiple provision return resource in cache", %{
@@ -61,20 +61,20 @@ defmodule Integration.ProvisionEtsTest do
       Worker.Provisioner.Mock
       |> Mox.expect(:provision, fn _ -> {:ok, %ExecutionResource{resource: "a-resource"}} end)
 
-      assert ResourceCache.get(function.name, function.namespace) == :resource_not_found
+      assert ResourceCache.get(function.name, function.module) == :resource_not_found
 
       assert {:ok, res1} = ProvisionResource.provision(function)
 
-      assert ResourceCache.get(function.name, function.namespace) == res1
+      assert ResourceCache.get(function.name, function.module) == res1
 
       Worker.Provisioner.Mock
       |> Mox.expect(:provision, 0, fn _ -> :ignored end)
 
       assert {:ok, res2} = ProvisionResource.provision(function)
-      assert ResourceCache.get(function.name, function.namespace) == res1
+      assert ResourceCache.get(function.name, function.module) == res1
       assert res1 == res2
 
-      ResourceCache.delete(function.name, function.namespace)
+      ResourceCache.delete(function.name, function.module)
     end
 
     test "provision should return error when provisioner fails", %{
@@ -85,7 +85,7 @@ defmodule Integration.ProvisionEtsTest do
 
       assert {:error, _} = ProvisionResource.provision(function)
 
-      assert ResourceCache.get(function.name, function.namespace) == :resource_not_found
+      assert ResourceCache.get(function.name, function.module) == :resource_not_found
     end
   end
 end

@@ -31,7 +31,7 @@ defmodule Integration.CleanupEtsTest do
     end
 
     test "cleanup should remove resource from cache when successfull" do
-      function = %{name: "fn", namespace: "ns", image: "", code: ""}
+      function = %{name: "fn", module: "ns", image: "", code: ""}
 
       resource = %ExecutionResource{resource: "a-resource"}
 
@@ -43,7 +43,7 @@ defmodule Integration.CleanupEtsTest do
     end
 
     test "cleanup should call cleaner passing it the resource from the cache" do
-      function = %{name: "fn", namespace: "ns", image: "", code: ""}
+      function = %{name: "fn", module: "ns", image: "", code: ""}
 
       resource = %ExecutionResource{resource: "a-resource"}
 
@@ -58,7 +58,7 @@ defmodule Integration.CleanupEtsTest do
     end
 
     test "cleanup should return resource_not_found when not found" do
-      function = %{name: "fn", namespace: "ns", image: "", code: ""}
+      function = %{name: "fn", module: "ns", image: "", code: ""}
 
       assert ResourceCache.get("fn", "ns") == :resource_not_found
       assert CleanupResource.cleanup(function) == {:error, :resource_not_found}

@@ -25,7 +25,7 @@ defmodule Integration.ResourceCacheTest do
     assert result == :resource_not_found
   end
 
-  test "insert adds {function_name, namespace} => runtime to the cache" do
+  test "insert adds {function_name, module} => runtime to the cache" do
     runtime = %ExecutionResource{resource: "runtime"}
 
     ResourceCache.insert("test", "ns", runtime)

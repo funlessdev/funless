@@ -24,7 +24,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
   require Logger
 
   @impl true
-  def run_function(%{name: name, namespace: ns}, args, %ExecutionResource{resource: module}) do
+  def run_function(%{name: name, module: ns}, args, %ExecutionResource{resource: module}) do
     Logger.info("Wasm: Running #{ns}/#{name} with args #{inspect(args)}")
 
     string_args = Jason.encode!(args)

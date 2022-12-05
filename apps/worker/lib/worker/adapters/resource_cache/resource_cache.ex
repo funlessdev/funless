@@ -17,7 +17,7 @@ defmodule Worker.Adapters.ResourceCache do
     Implements the ResourceCache behaviour.
     It uses a GenServer process having exclusive writing rights on an underlying ETS table.
 
-    The {function_name, namespace} couples are the keys that point to ExecutionResources.
+    The {function_name, module} couples are the keys that point to ExecutionResources.
   """
   @behaviour Worker.Domain.Ports.ResourceCache
 
@@ -28,53 +28,53 @@ defmodule Worker.Adapters.ResourceCache do
   @resource_cache_table :resource_cache
 
   @doc """
-  Retrieve a resource from the cache, associated to a function name and a namespace.
+  Retrieve a resource from the cache, associated to a function name and a module.
 
   ## Parameters
   - `function_name`: the name of the function
-  - `namespace`: the namespace of the function
+  - `module`: the module of the function
 
   ## Returns
   - `resource` if the resource is found;
   - `:resource_not_found` if the resource is not found.
   """
   @impl true
-  def get(function_name, namespace) do
-    case :ets.lookup(@resource_cache_table, {function_name, namespace}) do
-      [{{^function_name, ^namespace}, resource}] -> resource
+  def get(function_name, module) do
+    case :ets.lookup(@resource_cache_table, {function_name, module}) do
+      [{{^function_name, ^module}, resource}] -> resource
       _ -> :resource_not_found
     end
   end
 
   @doc """
-  Store a resource in the cache, associated to a function name and a namespace.
+  Store a resource in the cache, associated to a function name and a module.
 
   ## Parameters
   - `function_name`: the name of the function
-  - `namespace`: the namespace of the function
+  - `module`: the module of the function
   - `resource`: the resource to store
 
   ## Returns
   - `:ok`
   """
   @impl true
-  def insert(function_name, namespace, resource) do
-    GenServer.call(@resource_cache_server, {:insert, function_name, namespace, resource})
+  def insert(function_name, module, resource) do
+    GenServer.call(@resource_cache_server, {:insert, function_name, module, resource})
   end
 
   @doc """
-  Remove a resource from the cache, associated to a function name and a namespace.
+  Remove a resource from the cache, associated to a function name and a module.
 
   ## Parameters
   - `function_name`: the name of the function
-  - `namespace`: the namespace of the function
+  - `module`: the module of the function
 
   ## Returns
   - `:ok`
   """
   @impl true
-  def delete(function_name, namespace) do
-    GenServer.call(@resource_cache_server, {:delete, function_name, namespace})
+  def delete(function_name, module) do
+    GenServer.call(@resource_cache_server, {:delete, function_name, module})
   end
 
   # GenServer callbacks
@@ -90,16 +90,16 @@ defmodule Worker.Adapters.ResourceCache do
   end
 
   @impl true
-  def handle_call({:insert, function_name, namespace, runtime}, _from, table) do
-    :ets.insert(table, {{function_name, namespace}, runtime})
-    Logger.info("Resource Cache: added resource for #{function_name} in #{namespace}")
+  def handle_call({:insert, function_name, module, runtime}, _from, table) do
+    :ets.insert(table, {{function_name, module}, runtime})
+    Logger.info("Resource Cache: added resource for #{function_name} in #{module}")
     {:reply, :ok, table}
   end
 
   @impl true
-  def handle_call({:delete, function_name, namespace}, _from, table) do
-    :ets.delete(table, {function_name, namespace})
-    Logger.info("Resource Cache: deleted resource of #{function_name} in #{namespace}")
+  def handle_call({:delete, function_name, module}, _from, table) do
+    :ets.delete(table, {function_name, module})
+    Logger.info("Resource Cache: deleted resource of #{function_name} in #{module}")
     {:reply, :ok, table}
   end
 end

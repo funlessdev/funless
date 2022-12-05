@@ -35,7 +35,7 @@ defmodule CoreWeb.FnControllerTest do
       Core.Commands.Mock
       |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
 
-      conn = post(conn, "/v1/fn/invoke", %{namespace: "_", function: "hello", args: %{}})
+      conn = post(conn, "/v1/fn/invoke", %{module: "_", function: "hello", args: %{}})
 
       assert %{"result" => "Hello, World!"} = json_response(conn, 200)
     end
@@ -47,7 +47,7 @@ defmodule CoreWeb.FnControllerTest do
       conn = post(conn, "/v1/fn/invoke", %{function: "hello"})
 
       expected = %{
-        "errors" => %{"detail" => "Failed to invoke function: not found in given namespace"}
+        "errors" => %{"detail" => "Failed to invoke function: not found in given module"}
       }
 
       assert json_response(conn, 404) == expected
@@ -60,7 +60,7 @@ defmodule CoreWeb.FnControllerTest do
     end
 
     test "error: should return 400 when missing parameters", %{conn: conn} do
-      conn = post(conn, "/v1/fn/invoke", %{namespace: "a_ns"})
+      conn = post(conn, "/v1/fn/invoke", %{module: "a_ns"})
       expected = %{"errors" => %{"detail" => "Failed to perform operation: bad request"}}
       assert json_response(conn, 400) == expected
     end
@@ -121,7 +121,7 @@ defmodule CoreWeb.FnControllerTest do
 
   describe "DELETE /v1/fn/delete" do
     test "success: should return 200 when the deletion is successful", %{conn: conn} do
-      conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
+      conn = delete(conn, "/v1/fn/delete", %{name: "hello", module: "ns"})
 
       expected = %{"result" => "hello"}
       assert json_response(conn, 200) == expected
@@ -134,7 +134,7 @@ defmodule CoreWeb.FnControllerTest do
     end
 
     test "error: should return 400 when missing parameters", %{conn: conn} do
-      conn = delete(conn, "/v1/fn/delete", %{namespace: "a_ns"})
+      conn = delete(conn, "/v1/fn/delete", %{module: "a_ns"})
       expected = %{"errors" => %{"detail" => "Failed to perform operation: bad request"}}
 
       assert json_response(conn, 400) == expected
@@ -144,7 +144,7 @@ defmodule CoreWeb.FnControllerTest do
       Core.FunctionStore.Mock
       |> Mox.expect(:delete_function, fn _, _ -> {:error, {:bad_delete, :not_found}} end)
 
-      conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
+      conn = delete(conn, "/v1/fn/delete", %{name: "hello", module: "ns"})
 
       expected = %{
         "errors" => %{"detail" => "Failed to delete function: not found"}
@@ -157,7 +157,7 @@ defmodule CoreWeb.FnControllerTest do
       Core.FunctionStore.Mock
       |> Mox.expect(:delete_function, fn _, _ -> {:error, {:aborted, "some reason"}} end)
 
-      conn = delete(conn, "/v1/fn/delete", %{name: "hello", namespace: "ns"})
+      conn = delete(conn, "/v1/fn/delete", %{name: "hello", module: "ns"})
 
       expected = %{
         "errors" => %{"detail" => "Failed to delete function: some reason"}
@@ -167,7 +167,7 @@ defmodule CoreWeb.FnControllerTest do
     end
   end
 
-  describe "GET /v1/fn/list/:namespace" do
+  describe "GET /v1/fn/list/:module" do
     test "success: should return 200 when the list is returned successfully", %{conn: conn} do
       conn = get(conn, "/v1/fn/list/ns")
 
@@ -175,7 +175,7 @@ defmodule CoreWeb.FnControllerTest do
       assert json_response(conn, 200) == expected
     end
 
-    test "error: should raise an error when no namespace is given", %{conn: conn} do
+    test "error: should raise an error when no module is given", %{conn: conn} do
       assert_raise Phoenix.Router.NoRouteError, fn ->
         _conn = get(conn, "/v1/fn/list/")
       end
@@ -219,7 +219,7 @@ defmodule CoreWeb.FnControllerTest do
           upload = %Plug.Upload{path: "test/fixtures/test_code.txt", filename: "test_code.txt"}
 
           conn
-          |> post("/v1/fn/create", %{name: "hello", namespace: "ns", code: upload})
+          |> post("/v1/fn/create", %{name: "hello", module: "ns", code: upload})
         end)
 
       assert {500, [_h | _t], "{\"errors\":{\"detail\":\"Internal Server Error\"}}"} = response

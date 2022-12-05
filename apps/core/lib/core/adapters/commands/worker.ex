@@ -32,8 +32,8 @@ defmodule Core.Adapters.Commands.Worker do
   @impl true
   def send_invoke(worker, name, ns, args) do
     worker_addr = {:worker, worker}
-    cmd = {:invoke, %{name: name, namespace: ns}, args}
-    Logger.info("Sending invoke for #{name} in namespace #{ns} to #{inspect(worker_addr)}")
+    cmd = {:invoke, %{name: name, module: ns}, args}
+    Logger.info("Sending invoke for #{name} in module #{ns} to #{inspect(worker_addr)}")
 
     case GenServer.call(worker_addr, cmd, 30_000) do
       {:ok, result} -> {:ok, %InvokeResult{result: result}}
@@ -47,7 +47,7 @@ defmodule Core.Adapters.Commands.Worker do
     cmd = {:invoke, function, args}
 
     Logger.info(
-      "Sending invoke with code for #{function.name} in namespace #{function.namespace} to #{inspect(worker_addr)}"
+      "Sending invoke with code for #{function.name} in module #{function.module} to #{inspect(worker_addr)}"
     )
 
     case GenServer.call(worker_addr, cmd, 30_000) do

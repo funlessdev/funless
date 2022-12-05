@@ -54,7 +54,7 @@ defmodule ApiTest.InvokeTest do
 
     test "invoke should return {:error, :no_workers} when no workers are found" do
       expected = {:error, :no_workers}
-      assert Invoker.invoke(%{"namespace" => "_", "function" => "test"}) == expected
+      assert Invoker.invoke(%{"module" => "_", "function" => "test"}) == expected
     end
 
     test "invoke on node list with nodes other than workers should only use workers" do
@@ -80,7 +80,7 @@ defmodule ApiTest.InvokeTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
       Core.FunctionStore.Mock |> Mox.expect(:exists?, fn _, _ -> false end)
 
-      assert Invoker.invoke(%{"function" => "hello", "namespace" => "ns"}) ==
+      assert Invoker.invoke(%{"function" => "hello", "module" => "ns"}) ==
                {:error, :not_found}
     end
 
@@ -92,8 +92,7 @@ defmodule ApiTest.InvokeTest do
 
       expected = "hello"
 
-      assert {:ok, %{result: result}} =
-               Invoker.invoke(%{"function" => "hello", "namespace" => "ns"})
+      assert {:ok, %{result: result}} = Invoker.invoke(%{"function" => "hello", "module" => "ns"})
 
       assert result == expected
     end
@@ -110,11 +109,11 @@ defmodule ApiTest.InvokeTest do
       end)
 
       # From FunctionStore Test
-      f_in = %{"function" => "hello", "namespace" => "ns"}
+      f_in = %{"function" => "hello", "module" => "ns"}
 
       f_out = %FunctionStruct{
         name: "hello",
-        namespace: "ns",
+        module: "ns",
         code: "console.log(\"hello\")"
       }
 

@@ -45,28 +45,28 @@ defmodule Core.Domain.Ports.FunctionStore do
   Checks if a function exists in the database.
   ## Parameters
     - name: name of the function
-    - namespace: namespace of the function
+    - module: module of the function
 
   ## Returns
   Either true or false.
   """
   @spec exists?(String.t(), String.t()) :: boolean
-  defdelegate exists?(name, namespace), to: @adapter
+  defdelegate exists?(name, module), to: @adapter
 
   @doc """
   Gets a function from the function storage.
   Returns the function itself as a FunctionStruct or an {:error, err} tuple.
 
   ## Parameters
-    - function_name: Name of the function, unique in a namespace
-    - function_namespace: Namespace the function is in
+    - function_name: Name of the function, unique in a module
+    - function_module: the module of the function
 
   ## Returns
     - {:ok, function}: if the function was found
     - {:error, :not_found}: if the function was not found
   """
   @spec get_function(String.t(), String.t()) :: {:ok, FunctionStruct.t()} | {:error, :not_found}
-  defdelegate get_function(function_name, function_namespace), to: @adapter
+  defdelegate get_function(function_name, function_module), to: @adapter
 
   @doc """
   Inserts a function in the function storage.
@@ -87,27 +87,27 @@ defmodule Core.Domain.Ports.FunctionStore do
   Returns the deleted function's name or an {:error, err} tuple.
 
   ## Parameters
-    - function_name: Name of the function, unique in a namespace
-    - function_namespace: Namespace the function is in
+    - function_name: Name of the function, unique in a module
+    - function_module: the module of the function
 
   ## Returns
     - {:ok, function_name}: if the function was successfully deleted.
     - {:error, {:aborted, reason}}: if the function could not be deleted.
   """
   @spec delete_function(String.t(), String.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
-  defdelegate delete_function(function_name, function_namespace), to: @adapter
+  defdelegate delete_function(function_name, function_module), to: @adapter
 
   @doc """
-  Lists all functions in the given namespace.
+  Lists all functions in the given module.
   Returns the list of functions or an {:error, err} tuple.
 
   ## Parameters
-    - namespace: Namespace of the functions to be returned
+    - module: module of the functions to be returned
 
   ## Returns
     - {:ok, functions}: if the functions were successfully retrieved from the database. The list can be empty.
     - {:error, {:aborted, reason}}: if the functions could not be retrieved.
   """
   @spec list_functions(String.t()) :: {:ok, [String.t()]} | {:error, {:aborted, any}}
-  defdelegate list_functions(namespace), to: @adapter
+  defdelegate list_functions(module), to: @adapter
 end

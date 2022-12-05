@@ -29,10 +29,10 @@ defmodule Core.Adapters.FunctionStore.Test do
   end
 
   @impl true
-  def get_function(function_name, function_namespace) do
+  def get_function(function_name, function_module) do
     f = %FunctionStruct{
       name: function_name,
-      namespace: function_namespace,
+      module: function_module,
       code: "console.log(\"hello\")"
     }
 
@@ -45,12 +45,12 @@ defmodule Core.Adapters.FunctionStore.Test do
   end
 
   @impl true
-  def delete_function(function_name, _function_namespace) do
+  def delete_function(function_name, _function_mod) do
     {:ok, function_name}
   end
 
   @impl true
-  def list_functions(_namespace) do
+  def list_functions(_mod) do
     {:ok, []}
   end
 end

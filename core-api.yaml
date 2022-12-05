@@ -23,7 +23,7 @@ components:
     function_invocation:
       type: object
       properties:
-        namespace:
+        module:
           type: string
         function:
           type: string
@@ -46,7 +46,7 @@ components:
       properties:
         name:
           type: string
-        namespace:
+        module:
           type: string
         code:
           type: string
@@ -69,7 +69,7 @@ components:
       properties:
         name:
           type: string
-        namespace:
+        module:
           type: string
     function_deletion_success:
       type: object
@@ -90,7 +90,7 @@ components:
           type: array
           items:
             type: string
-          description: The names of the functions in the namespace
+          description: The names of the functions in the module
     function_list_error:
       type: object
       properties:
@@ -103,12 +103,12 @@ paths:
     post:
       summary: Invoke a function
       description: >-
-        Invokes the specified function from the given namespace with optional
+        Invokes the specified function from the given module with optional
         parameters from the POST body
       requestBody:
         required: true
         description: >-
-          Object containing the function to invoke, the namespace and optional
+          Object containing the function to invoke, the module and optional
           parameters
         content:
           application/json:
@@ -163,7 +163,7 @@ paths:
       requestBody:
         required: true
         description: >-
-          Object containing the function to create, with name, optional namespace, code
+          Object containing the function to create, with name, optional module, code
         content:
           multipart/form-data:
             schema:
@@ -197,11 +197,11 @@ paths:
     delete:
       summary: Delete a function
       description: >-
-        Deletes the function with the given name and namespace in the request body
+        Deletes the function with the given name and module in the request body
       requestBody:
         required: true
         description: >-
-          Object containing the function's name and namespace to delete
+          Object containing the function's name and module to delete
         content:
           application/json:
             schema:
@@ -234,18 +234,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/function_deletion_error"
-  /v1/fn/list/{fnNamespace}:
+  /v1/fn/list/{fnModule}:
     get:
       summary: List functions
       parameters:
       - in: path
-        name: fnNamespace
+        name: fnModule
         schema:
           type: string
         required: true
-        description: Namespace of the listed functions
+        description: Module of the listed functions
       description: >-
-        List all functions in the given namespace
+        List all functions in the given module
       responses:
         "200":
           description: The required functions have been returned successfully
@@ -254,7 +254,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/function_list_success"
               examples:
-                Listing a namespace with the "hellojs" function:
+                Listing a module with the "hellojs" function:
                   value: '{"result": ["hellojs"]}'
         "503":
           description: The request failed because the database transaction was aborted

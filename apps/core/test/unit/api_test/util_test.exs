@@ -18,41 +18,41 @@ defmodule ApiTest.UtilTest do
   use Plug.Test
 
   describe "API.Utils" do
-    test "validate_namespace should return _ if the given namespace is nil" do
+    test "validate_module should return _ if the given module is nil" do
       expected = "_"
-      assert Utils.validate_namespace(nil) == expected
+      assert Utils.validate_module(nil) == expected
     end
 
-    test "validate_namespace should return _ if the given namespace is empty" do
+    test "validate_module should return _ if the given module is empty" do
       expected = "_"
-      assert Utils.validate_namespace("") == expected
+      assert Utils.validate_module("") == expected
     end
 
-    test "validate_namespace should return _ if the given namespace is only whitespace" do
+    test "validate_module should return _ if the given module is only whitespace" do
       expected = "_"
-      assert Utils.validate_namespace("    ") == expected
-      assert Utils.validate_namespace("\n\n\n\n") == expected
-      assert Utils.validate_namespace(" \t\n \n\t ") == expected
+      assert Utils.validate_module("    ") == expected
+      assert Utils.validate_module("\n\n\n\n") == expected
+      assert Utils.validate_module(" \t\n \n\t ") == expected
     end
 
-    test "validate_namespace should return the trimmed input if it is not empty, blank nor nil" do
+    test "validate_module should return the trimmed input if it is not empty, blank nor nil" do
       expected = "ns"
 
       input = "\n\nns\n\n"
-      assert Utils.validate_namespace(input) == expected
+      assert Utils.validate_module(input) == expected
 
       input = "\n\nns  "
-      assert Utils.validate_namespace(input) == expected
+      assert Utils.validate_module(input) == expected
 
       input = "\tns\r\n"
-      assert Utils.validate_namespace(input) == expected
+      assert Utils.validate_module(input) == expected
 
       input = "ns"
-      assert Utils.validate_namespace(input) == expected
+      assert Utils.validate_module(input) == expected
 
       input = "n s"
       expected = "n s"
-      assert Utils.validate_namespace(input) == expected
+      assert Utils.validate_module(input) == expected
     end
   end
 end

@@ -28,11 +28,11 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
   end
 
   defp create_table(:ok, nodes) do
-    # namespace_name acts as the primary key, and is the {function_name, function_namespace} tuple,
+    # module_name acts as the primary key, and is the {function_name, function_module} tuple,
     # which uniquely identifies each function
     t =
       :mnesia.create_table(FunctionStruct,
-        attributes: [:namespace_name, :function],
+        attributes: [:module_name, :function],
         access_mode: :read_write,
         ram_copies: nodes
       )
@@ -53,15 +53,15 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
 
   @impl true
   @spec exists?(String.t(), String.t()) :: boolean()
-  def exists?(function_name, function_namespace) do
+  def exists?(function_name, function_module) do
     :mnesia.dirty_all_keys(FunctionStruct)
-    |> Enum.any?(&match?({^function_name, ^function_namespace}, &1))
+    |> Enum.any?(&match?({^function_name, ^function_module}, &1))
   end
 
   @impl true
   @spec get_function(String.t(), String.t()) :: {:ok, FunctionStruct.t()} | {:error, :not_found}
-  def get_function(function_name, function_namespace) do
-    case :mnesia.dirty_read(FunctionStruct, {function_name, function_namespace}) do
+  def get_function(function_name, function_module) do
+    case :mnesia.dirty_read(FunctionStruct, {function_name, function_module}) do
       [] -> {:error, :not_found}
       [{FunctionStruct, _, f} | _] -> {:ok, struct(FunctionStruct, f)}
     end
@@ -69,9 +69,9 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
 
   @impl true
   @spec insert_function(FunctionStruct.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
-  def insert_function(%FunctionStruct{name: name, namespace: namespace} = function) do
+  def insert_function(%FunctionStruct{name: name, module: module} = function) do
     data = fn ->
-      :mnesia.write({FunctionStruct, {name, namespace}, Map.from_struct(function)})
+      :mnesia.write({FunctionStruct, {name, module}, Map.from_struct(function)})
     end
 
     case :mnesia.transaction(data) do
@@ -82,9 +82,9 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
 
   @impl true
   @spec delete_function(String.t(), String.t()) :: {:ok, String.t()} | {:error, {:aborted, any}}
-  def delete_function(f_name, f_namespace) do
+  def delete_function(f_name, f_module) do
     data = fn ->
-      :mnesia.delete({FunctionStruct, {f_name, f_namespace}})
+      :mnesia.delete({FunctionStruct, {f_name, f_module}})
     end
 
     case :mnesia.transaction(data) do
@@ -95,10 +95,10 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
 
   @impl true
   @spec list_functions(String.t()) :: {:ok, [String.t()]} | {:error, {:aborted, any}}
-  def list_functions(namespace) do
+  def list_functions(module) do
     functions =
       :mnesia.dirty_all_keys(FunctionStruct)
-      |> Enum.filter(&match?({_, ^namespace}, &1))
+      |> Enum.filter(&match?({_, ^module}, &1))
       |> Enum.map(fn {n, _ns} -> n end)
 
     {:ok, functions}

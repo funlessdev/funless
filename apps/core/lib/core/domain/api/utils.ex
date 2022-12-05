@@ -16,23 +16,23 @@ defmodule Core.Domain.Api.Utils do
   @moduledoc false
 
   @doc """
-  Checks the given namespace string and returns the validated version of it.
+  Checks the given module string and returns the validated version of it.
 
   ## Parameters
-  - ns: the namespace string to validate
+  - ns: the module string to validate
 
   ## Returns
   - "_": if the string is nil, empty or blank (all whitespace), the default "_"
   - String.trim(ns): otherwise, the trimmed version of the string is returned
   """
-  @spec validate_namespace(String.t()) :: String.t()
-  def validate_namespace(ns) do
-    namespace = ns |> to_string |> String.trim()
+  @spec validate_module(String.t()) :: String.t()
+  def validate_module(mod) do
+    module = mod |> to_string |> String.trim()
 
-    if namespace == "" do
+    if module == "" do
       "_"
     else
-      namespace
+      module
     end
   end
 end

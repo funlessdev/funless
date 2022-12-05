@@ -32,7 +32,7 @@ defmodule Worker.Domain.FunctionStruct do
 
     ## Fields
       - name: function name
-      - namespace: function namespace, identifies the function along with the name
+      - module: function module, identifies the function along with the name
       - image: base image for the function's runtime
       - code: function code, used to initialize the runtime
   """
@@ -40,8 +40,8 @@ defmodule Worker.Domain.FunctionStruct do
           name: String.t(),
           image: String.t(),
           code: String.t(),
-          namespace: String.t()
+          module: String.t()
         }
-  @enforce_keys [:name, :namespace]
-  defstruct [:name, :image, :code, :namespace]
+  @enforce_keys [:name, :module]
+  defstruct [:name, :image, :code, :module]
 end
