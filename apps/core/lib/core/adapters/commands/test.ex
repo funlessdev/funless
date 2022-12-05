@@ -16,7 +16,7 @@ defmodule Core.Adapters.Commands.Test do
   @moduledoc false
   @behaviour Core.Domain.Ports.Commands
 
-  alias Core.Domain.InvokeResult
+  alias Data.InvokeResult
 
   @impl true
   def send_invoke(_worker, name, _ns, _args) do

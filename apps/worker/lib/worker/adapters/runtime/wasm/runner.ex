@@ -18,8 +18,8 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
   """
   @behaviour Worker.Domain.Ports.Runtime.Runner
 
+  alias Data.ExecutionResource
   alias Worker.Adapters.Runtime.Wasm
-  alias Worker.Domain.ExecutionResource
 
   require Logger
 

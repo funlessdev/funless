@@ -16,7 +16,7 @@ defmodule Worker.Domain.Ports.Runtime.Cleaner do
   @moduledoc """
   Port for runtime removal.
   """
-  alias Worker.Domain.ExecutionResource
+  alias Data.ExecutionResource
 
   @callback cleanup(ExecutionResource.t()) :: :ok | {:error, any}
 

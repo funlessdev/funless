@@ -14,8 +14,8 @@
 
 defmodule Integration.ResourceCacheTest do
   use ExUnit.Case
+  alias Data.ExecutionResource
   alias Worker.Adapters.ResourceCache
-  alias Worker.Domain.ExecutionResource
   import Mox, only: [verify_on_exit!: 1]
 
   setup :verify_on_exit!

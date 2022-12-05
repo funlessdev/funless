@@ -17,8 +17,8 @@ defmodule Worker.Domain.ProvisionResource do
   Contains functions used to create function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
-  alias Worker.Domain.ExecutionResource
-  alias Worker.Domain.FunctionStruct
+  alias Data.ExecutionResource
+  alias Data.FunctionStruct
   alias Worker.Domain.Ports.ResourceCache
   alias Worker.Domain.Ports.Runtime.Cleaner
   alias Worker.Domain.Ports.Runtime.Provisioner
@@ -32,7 +32,7 @@ defmodule Worker.Domain.ProvisionResource do
   adapter, it creates one and returns it after inserting it in the cache.
 
   ## Parameters
-  - %{...}: generic struct with all the fields required by Worker.Domain.Function
+  - %{...}: generic struct with all the fields required by Data.Function
 
   ## Returns
   - `{:ok, resource}` if the resource is found or created.

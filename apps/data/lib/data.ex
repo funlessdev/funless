@@ -12,23 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.ResourceCache.Test do
-  @moduledoc false
-  @behaviour Worker.Domain.Ports.ResourceCache
-  alias Data.ExecutionResource
-
-  @impl true
-  def get(_function_name, _module) do
-    %ExecutionResource{resource: "runtime"}
-  end
-
-  @impl true
-  def insert(_name, _ns, _runtime) do
-    :ok
-  end
-
-  @impl true
-  def delete(_name, _ns) do
-    :ok
-  end
+defmodule Data do
+  @moduledoc """
+  Data namespace that will contain the common data-layer for the core and worker components.
+  """
 end

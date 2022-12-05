@@ -18,12 +18,12 @@ defmodule Core.Domain.Api.Invoker do
   """
   require Logger
   alias Core.Domain.Api.Utils
-  alias Core.Domain.InvokeParams
-  alias Core.Domain.InvokeResult
   alias Core.Domain.Nodes
   alias Core.Domain.Ports.Commands
   alias Core.Domain.Ports.FunctionStore
   alias Core.Domain.Scheduler
+  alias Data.InvokeParams
+  alias Data.InvokeResult
 
   @type invoke_errors :: {:error, :not_found} | {:error, :no_workers} | {:error, String.t()}
 

@@ -14,7 +14,7 @@
 
 defmodule ApiTest.FunctionTest do
   alias Core.Domain.Api
-  alias Core.Domain.FunctionStruct
+  alias Data.FunctionStruct
 
   use ExUnit.Case, async: true
   import Mox, only: [verify_on_exit!: 1]

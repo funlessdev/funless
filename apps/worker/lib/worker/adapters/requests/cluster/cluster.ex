@@ -30,7 +30,7 @@ defmodule Worker.Adapters.Requests.Cluster do
     Any error encountered by the API calls is forwarded to the sender.
 
     ## Parameters
-      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Worker.Domain.FunctionStruct
+      - function: struct containing function information; no specific struct is required, but it should contain all fields defined in Data.FunctionStruct
       - args: arguments passed to the function
       - from: (sender, ref) couple, generally obtained in GenServer.call(), where this function is normally spawned
   """

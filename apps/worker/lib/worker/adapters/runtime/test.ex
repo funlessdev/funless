@@ -15,7 +15,7 @@
 defmodule Worker.Adapters.Runtime.Provisioner.Test do
   @moduledoc false
   @behaviour Worker.Domain.Ports.Runtime.Provisioner
-  alias Worker.Domain.ExecutionResource
+  alias Data.ExecutionResource
 
   @impl true
   def provision(_) do

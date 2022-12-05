@@ -16,7 +16,7 @@ defmodule Worker.Domain.Ports.ResourceCache do
   @moduledoc """
   Port for keeping track of execution resources associated with a function, module tuple.
   """
-  alias Worker.Domain.ExecutionResource
+  alias Data.ExecutionResource
 
   @callback get(String.t(), String.t()) :: ExecutionResource.t() | :runtime_not_found
   @callback insert(String.t(), String.t(), ExecutionResource.t()) :: :ok | {:error, any}

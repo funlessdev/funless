@@ -20,7 +20,7 @@ defmodule Worker.Domain.InvokeFunction do
   alias Worker.Domain.Ports.Runtime.Runner
   alias Worker.Domain.ProvisionResource
 
-  alias Worker.Domain.FunctionStruct
+  alias Data.FunctionStruct
 
   require Elixir.Logger
 
@@ -29,7 +29,7 @@ defmodule Worker.Domain.InvokeFunction do
 
     ## Parameters
       - the list of available runtimes to use
-      - %{...}: struct with all the fields required by Worker.Domain.Function
+      - %{...}: struct with all the fields required by Data.FunctionStruct
       - args: arguments passed to the function
 
     ## Returns

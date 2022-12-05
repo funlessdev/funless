@@ -18,10 +18,10 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   """
   @behaviour Worker.Domain.Ports.Runtime.Provisioner
 
+  alias Data.ExecutionResource
+  alias Data.FunctionStruct
   alias Worker.Adapters.Runtime.Wasm.Engine
   alias Worker.Adapters.Runtime.Wasm.Module
-  alias Worker.Domain.ExecutionResource
-  alias Worker.Domain.FunctionStruct
 
   require Logger
 
