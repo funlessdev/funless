@@ -25,6 +25,30 @@ config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
 config :core, Core.Domain.Ports.FunctionStore, adapter: Core.Adapters.FunctionStore.Mnesia
 config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Adapters.Telemetry.Metrics
 
+config :core,
+  ecto_repos: [Core.Repo]
+
+config :core,
+  generators: [context_app: :core]
+
+# Configures the endpoint, we need to listen to 0.0.0.0 because it's in a container
+config :core, CoreWeb.Endpoint,
+  url: [host: "0.0.0.0"],
+  render_errors: [view: CoreWeb.ErrorView, accepts: ~w(json), layout: false],
+  live_view: [signing_salt: "sRzweIOe"]
+
+# pubsub_server: Core.PubSub,
+
+# Use Jason for JSON parsing in Phoenix
+config :phoenix, :json_library, Jason
+
+config :core, CoreWeb.PromEx,
+  disabled: false,
+  manual_metrics_start_delay: :no_delay,
+  drop_metrics_groups: [],
+  metrics_server: :disabled,
+  grafana: :disabled
+
 # --- Worker Configs ---
 config :worker, Worker.Domain.Ports.Runtime.Provisioner,
   adapter: Worker.Adapters.Runtime.Wasm.Provisioner
@@ -62,28 +86,6 @@ config :worker, Worker.PromEx,
     # This is an optional and will default to `:none`
     auth_strategy: :none
   ]
-
-# --- Core Web Configs ---
-config :core,
-  generators: [context_app: :core]
-
-# Configures the endpoint, we need to listen to 0.0.0.0 because it's in a container
-config :core, CoreWeb.Endpoint,
-  url: [host: "0.0.0.0"],
-  render_errors: [view: CoreWeb.ErrorView, accepts: ~w(json), layout: false],
-  live_view: [signing_salt: "sRzweIOe"]
-
-# pubsub_server: Core.PubSub,
-
-# Use Jason for JSON parsing in Phoenix
-config :phoenix, :json_library, Jason
-
-config :core, CoreWeb.PromEx,
-  disabled: false,
-  manual_metrics_start_delay: :no_delay,
-  drop_metrics_groups: [],
-  metrics_server: :disabled,
-  grafana: :disabled
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

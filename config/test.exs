@@ -14,22 +14,28 @@
 
 import Config
 
+# Print only errors during test
+config :logger, level: :warn, backends: []
+
 # --- Core Configs ---
 config :core, Core.Domain.Ports.Commands, adapter: Core.Commands.Mock
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Cluster.Mock
 config :core, Core.Domain.Ports.FunctionStore, adapter: Core.FunctionStore.Mock
 config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Telemetry.Metrics.Mock
 
-# Print only errors during test
-config :logger, level: :warn, backends: []
+# Configure your database
 
-# --- Worker Configs ---
-config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.ResourceCache.Mock
-config :worker, Worker.Domain.Ports.Runtime.Provisioner, adapter: Worker.Provisioner.Mock
-config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Runner.Mock
-config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Cleaner.Mock
+# The MIX_TEST_PARTITION environment variable can be used
+# to provide built-in test partitioning in CI environment.
+# Run `mix help test` for more information.
+config :core, Core.Repo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "core_test#{System.get_env("MIX_TEST_PARTITION")}",
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: 10
 
-# --- Core Web Configs ---
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :core, CoreWeb.Endpoint,
@@ -39,6 +45,12 @@ config :core, CoreWeb.Endpoint,
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+# --- Worker Configs ---
+config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.ResourceCache.Mock
+config :worker, Worker.Domain.Ports.Runtime.Provisioner, adapter: Worker.Provisioner.Mock
+config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Runner.Mock
+config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Cleaner.Mock
 
 # --- Libcluster Configs ---
 config :core,

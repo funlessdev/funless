@@ -22,6 +22,13 @@ defmodule Core.Application do
 
   @impl true
   def start(_type, _args) do
+    # See https://hexdocs.pm/elixir/Supervisor.html
+    # for other strategies and supported options
+    opts = [strategy: :one_for_one, name: Core.Supervisor]
+    Supervisor.start_link(children(), opts)
+  end
+
+  defp children do
     topologies = Application.fetch_env!(:core, :topologies)
 
     children = [
@@ -33,16 +40,16 @@ defmodule Core.Application do
       CoreWeb.Endpoint,
       # Start a worker by calling: CoreWeb.Worker.start_link(arg)
       # {CoreWeb.Worker, arg}
-
       ## Core Children
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
       {Core.Adapters.Telemetry.Supervisor, []}
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Core.Supervisor]
-    Supervisor.start_link(children, opts)
+    case Mix.env() do
+      :test -> children
+      # Start the Ecto repository
+      _ -> children ++ [Core.Repo]
+    end
   end
 
   @impl true
