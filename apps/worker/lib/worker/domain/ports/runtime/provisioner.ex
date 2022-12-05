@@ -25,7 +25,7 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
   @callback provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}
 
   @doc """
-  Provisions a runtime for the given function and namespace.
+  Provisions a runtime for the given function and module.
   It first tries to retrieve it from the cache, if missing it can either create a new one or return :runtime_not_found,
   depending on the adapter.
 

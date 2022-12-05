@@ -27,7 +27,7 @@ defmodule Worker.Domain.CleanupResource do
     the adapter Cleaner is executed.
 
     ## Parameters
-      - function: the FunctionStruct containing the function information (name and namespace)
+      - function: the FunctionStruct containing the function information (name and module)
 
     ## Returns
       - :ok if the resource is found and removed successfully;
@@ -36,11 +36,11 @@ defmodule Worker.Domain.CleanupResource do
   @spec cleanup(FunctionStruct.t()) :: :ok | {:error, any}
   def cleanup(%{__struct__: _s} = function), do: cleanup(Map.from_struct(function))
 
-  def cleanup(%{name: fname, namespace: ns} = _function) do
+  def cleanup(%{name: fname, module: ns} = _function) do
     with resource when resource != :resource_not_found <- ResourceCache.get(fname, ns),
          :ok <- Cleaner.cleanup(resource),
          :ok <- ResourceCache.delete(fname, ns) do
-      Logger.info("API: Resource for function #{fname} in namespace #{ns} deleted")
+      Logger.info("API: Resource for function #{fname} in module #{ns} deleted")
       :ok
     else
       :resource_not_found -> {:error, :resource_not_found}

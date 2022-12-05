@@ -36,15 +36,15 @@ defmodule Core.Domain.Api.FunctionRepo do
   @spec new(FunctionStruct.t()) ::
           {:ok, String.t()} | {:error, :bad_params} | {:error, {:bad_insert, any}}
   def new(%{"name" => name, "code" => code} = raw_params) do
-    namespace = Map.get(raw_params, "namespace") |> Utils.validate_namespace()
+    module = Map.get(raw_params, "module") |> Utils.validate_module()
 
     function = %FunctionStruct{
       name: name,
-      namespace: namespace,
+      module: module,
       code: code
     }
 
-    Logger.info("API: create request for function #{name} in namespace #{function.namespace}")
+    Logger.info("API: create request for function #{name} in module #{function.module}")
 
     function
     |> FunctionStore.insert_function()
@@ -57,7 +57,7 @@ defmodule Core.Domain.Api.FunctionRepo do
   Deletes a function from the FunctionStore.
 
   ## Parameters
-  - function: The function struct with the name and namespace of the function to delete.
+  - function: The function struct with the name and module of the function to delete.
 
   ## Returns
   - `{:ok, function_name}`: if the function was successfully deleted.
@@ -67,13 +67,13 @@ defmodule Core.Domain.Api.FunctionRepo do
   @spec delete(FunctionStruct.t()) ::
           {:ok, String.t()} | {:error, :bad_params} | {:error, {:bad_delete, any}}
   def delete(%{"name" => name} = raw_params) do
-    namespace = Map.get(raw_params, "namespace") |> Utils.validate_namespace()
+    module = Map.get(raw_params, "module") |> Utils.validate_module()
 
-    Logger.info("API: delete request for function #{name} in namespace #{namespace}")
+    Logger.info("API: delete request for function #{name} in module #{module}")
 
-    case FunctionStore.exists?(name, namespace) do
+    case FunctionStore.exists?(name, module) do
       true ->
-        FunctionStore.delete_function(name, namespace)
+        FunctionStore.delete_function(name, module)
         |> parse_delete_result(name)
 
       false ->
@@ -108,8 +108,8 @@ defmodule Core.Domain.Api.FunctionRepo do
   end
 
   @spec list(map) :: {:ok, [String.t()]} | {:error, {:bad_list, any}} | {:error, :bad_params}
-  def list(%{"namespace" => namespace}) do
-    namespace
+  def list(%{"module" => module}) do
+    module
     |> FunctionStore.list_functions()
     |> parse_list_result
   end

@@ -23,7 +23,7 @@ defmodule InvokeTest do
   setup_all do
     function = %{
       name: "test-ivk-fn",
-      namespace: "_",
+      module: "_",
       image: "nodejs",
       code: "console.log(\"hello\")"
     }

@@ -18,16 +18,16 @@ defmodule Core.Domain.FunctionStruct do
 
     ## Fields
       - name: function name
-      - namespace: function namespace
+      - module: function module
       - code: function code as a string or binary
   """
   @type t :: %__MODULE__{
-          namespace: String.t(),
+          module: String.t(),
           name: String.t(),
           code: String.t() | binary()
         }
-  @enforce_keys [:name, :namespace]
-  defstruct [:name, :namespace, :code]
+  @enforce_keys [:name, :module]
+  defstruct [:name, :module, :code]
 end
 
 defmodule Core.Domain.InvokeParams do
@@ -35,17 +35,17 @@ defmodule Core.Domain.InvokeParams do
     Invocation parameters struct, used for parameter validation.
 
     ## Fields
-      - namespace: function namespace
+      - module: function module
       - function: function name
       - args: function arguments
   """
   @type t :: %__MODULE__{
-          namespace: String.t(),
+          module: String.t(),
           function: String.t(),
           args: map()
         }
   @enforce_keys [:function]
-  defstruct [:function, namespace: "_", args: %{}]
+  defstruct [:function, module: "_", args: %{}]
 end
 
 defmodule Core.Domain.InvokeResult do

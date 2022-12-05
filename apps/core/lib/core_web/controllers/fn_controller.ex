@@ -48,7 +48,7 @@ defmodule CoreWeb.FnController do
     end
   end
 
-  def list(conn, %{"namespace" => _namespace} = params) do
+  def list(conn, %{"module" => _module} = params) do
     with {:ok, functions} <- FunctionRepo.list(params) do
       conn
       |> put_status(:ok)
@@ -75,7 +75,7 @@ defmodule CoreWeb.FnFallbackController do
   end
 
   def call(conn, {:error, :not_found}) do
-    res = %{errors: %{detail: "Failed to invoke function: not found in given namespace"}}
+    res = %{errors: %{detail: "Failed to invoke function: not found in given module"}}
 
     conn
     |> put_status(:not_found)

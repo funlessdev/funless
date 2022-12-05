@@ -28,7 +28,7 @@ defmodule ProvisionTest do
   setup_all do
     function = %{
       name: "hellojs",
-      namespace: "_",
+      module: "_",
       image: "nodejs",
       code: "console.log(\"hello\")"
     }

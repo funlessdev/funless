@@ -26,7 +26,7 @@ defmodule CoreWeb.Router do
       post("/create", FnController, :create)
       delete("/delete", FnController, :delete)
       post("/invoke", FnController, :invoke)
-      get("/list/:namespace", FnController, :list)
+      get("/list/:module", FnController, :list)
     end
   end
 

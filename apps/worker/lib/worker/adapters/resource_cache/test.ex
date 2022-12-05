@@ -18,7 +18,7 @@ defmodule Worker.Adapters.ResourceCache.Test do
   alias Worker.Domain.ExecutionResource
 
   @impl true
-  def get(_function_name, _namespace) do
+  def get(_function_name, _module) do
     %ExecutionResource{resource: "runtime"}
   end
 

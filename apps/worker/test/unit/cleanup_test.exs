@@ -23,7 +23,7 @@ defmodule CleanupTest do
   setup_all do
     function = %{
       name: "test-cleanup-fn",
-      namespace: "ns",
+      module: "mod",
       image: "nodejs",
       code: "console.log(\"hello\")"
     }

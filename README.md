@@ -75,7 +75,7 @@ The cli has the `fn create/invoke/delete` commands, but if you want to use the A
 ```json
 {
   "name": "hello",
-  "namespace": "_",
+  "module": "_",
   "code": <-the wasm file->,
 }
 ```
@@ -85,7 +85,7 @@ You should receive as response: `{ "result": "hello" }`.
 After that you can send a POST request to `localhost:4000/invoke` with the following body:
 ```json
 {
-  "namespace": "_",
+  "module": "_",
   "function": "hello",
   "args": {}
 }

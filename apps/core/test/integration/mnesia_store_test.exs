@@ -25,7 +25,7 @@ defmodule MnesiaStoreTest do
   setup_all do
     f = %FunctionStruct{
       name: "test-name",
-      namespace: "ns",
+      module: "ns",
       code: "console.log(\"hello\")"
     }
 
@@ -40,7 +40,7 @@ defmodule MnesiaStoreTest do
 
   describe "Mnesia function storage" do
     test "exists? should return false if the function is not in the store", %{f: f} do
-      refute Mnesia.exists?(f.name, f.namespace)
+      refute Mnesia.exists?(f.name, f.module)
     end
 
     test "get_function should return {:error, :not_found} if the function is not found" do
@@ -52,7 +52,7 @@ defmodule MnesiaStoreTest do
     end
 
     test "exists? should return true if the function exists", %{f: f} do
-      assert Mnesia.exists?(f.name, f.namespace)
+      assert Mnesia.exists?(f.name, f.module)
     end
 
     test "get_function should return {:ok, FunctionStruct} if the function is found", %{f: f} do

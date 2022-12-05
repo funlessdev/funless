@@ -28,13 +28,13 @@ defmodule Core.Domain.Api.Invoker do
   @type invoke_errors :: {:error, :not_found} | {:error, :no_workers} | {:error, String.t()}
 
   @doc """
-  Sends an invocation request for the `name` function in the `ns` namespace,
+  Sends an invocation request for the `name` function in the `mod` module,
   specified in the invocation parameters.
 
   The request is sent with the worker adapter to a worker chosen from the `worker_nodes`, if any.
 
   ## Parameters
-  - ivk_params: a map with namespace name, function name and a map of args.
+  - ivk_params: a map with module name, function name and a map of args.
 
   ## Returns
   - {:ok, result} if the invocation was successful, where result is the function result.
@@ -46,15 +46,15 @@ defmodule Core.Domain.Api.Invoker do
   @spec invoke(InvokeParams.t()) ::
           {:ok, InvokeResult.t()} | {:error, :bad_params} | invoke_errors()
   def invoke(%{"function" => f} = raw_params) do
-    namespace = Map.get(raw_params, "namespace") |> Utils.validate_namespace()
+    module = Map.get(raw_params, "module") |> Utils.validate_module()
 
     ivk_params = %InvokeParams{
       function: f,
-      namespace: namespace,
+      module: module,
       args: Map.get(raw_params, "args", %{})
     }
 
-    Logger.info("API: invocation for #{ivk_params.namespace}/#{ivk_params.function} requested")
+    Logger.info("API: invocation for #{ivk_params.module}/#{ivk_params.function} requested")
 
     # could be :no_workers
     worker = Nodes.worker_nodes() |> Scheduler.select()
@@ -76,7 +76,7 @@ defmodule Core.Domain.Api.Invoker do
 
   defp invoke_without_code(worker, ivk_params) do
     name = ivk_params.function
-    ns = ivk_params.namespace
+    ns = ivk_params.module
 
     if FunctionStore.exists?(name, ns) do
       # function found in store, send invocation without code
@@ -92,7 +92,7 @@ defmodule Core.Domain.Api.Invoker do
   defp invoke_with_code(worker, ivk_params) do
     Logger.warn("API: function not available in worker, re-invoking with code")
 
-    with {:ok, f} <- FunctionStore.get_function(ivk_params.function, ivk_params.namespace) do
+    with {:ok, f} <- FunctionStore.get_function(ivk_params.function, ivk_params.module) do
       Commands.send_invoke_with_code(worker, f, ivk_params.args)
     end
   end
