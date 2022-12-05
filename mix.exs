@@ -65,8 +65,9 @@ defmodule Core.Umbrella.MixProject do
     [
       # run `mix setup` in all child apps
       setup: "cmd mix setup",
-      core_test: "cmd --app core mix test --color",
-      worker_test: "cmd --app worker mix test --color"
+      "core.test": "cmd --app core mix test --color",
+      "core.integration_test": "cmd --app core mix test.integration --color",
+      "worker.test": "cmd --app worker mix test --color"
     ]
   end
 end
