@@ -14,4 +14,4 @@
 
 ExUnit.configure(seed: 0, exclude: [integration_test: true])
 ExUnit.start()
-# Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :manual)

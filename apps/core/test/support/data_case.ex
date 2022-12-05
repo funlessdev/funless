@@ -31,6 +31,7 @@ defmodule Core.DataCase do
   use ExUnit.CaseTemplate
 
   alias Ecto.Adapters.SQL.Sandbox
+  @tag integration_test: true
 
   using do
     quote do
