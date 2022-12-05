@@ -15,8 +15,8 @@
 defmodule Integration.ProvisionEtsTest do
   use ExUnit.Case
 
+  alias Data.ExecutionResource
   alias Worker.Adapters.ResourceCache
-  alias Worker.Domain.ExecutionResource
   alias Worker.Domain.ProvisionResource
 
   import Mox, only: [verify_on_exit!: 1]

@@ -16,7 +16,7 @@ defmodule Core.Domain.Ports.FunctionStore do
   @moduledoc """
   Port for accessing and inserting functions in permanent storage.
   """
-  alias Core.Domain.FunctionStruct
+  alias Data.FunctionStruct
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 

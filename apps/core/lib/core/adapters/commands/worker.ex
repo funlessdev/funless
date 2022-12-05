@@ -18,8 +18,8 @@ defmodule Core.Adapters.Commands.Worker do
   Currently implemented commands: invocation.
   """
   require Logger
-  alias Core.Domain.FunctionStruct
-  alias Core.Domain.InvokeResult
+  alias Data.FunctionStruct
+  alias Data.InvokeResult
 
   @behaviour Core.Domain.Ports.Commands
 

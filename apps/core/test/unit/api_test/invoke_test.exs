@@ -14,8 +14,8 @@
 
 defmodule ApiTest.InvokeTest do
   alias Core.Domain.Api.Invoker
-  alias Core.Domain.FunctionStruct
-  alias Core.Domain.InvokeResult
+  alias Data.FunctionStruct
+  alias Data.InvokeResult
 
   use ExUnit.Case, async: true
   import Mox, only: [verify_on_exit!: 1]

@@ -17,8 +17,8 @@ defmodule Core.Domain.Ports.Commands do
   Port for sending commands to workers.
   """
 
-  alias Core.Domain.FunctionStruct
-  alias Core.Domain.InvokeResult
+  alias Data.FunctionStruct
+  alias Data.InvokeResult
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 

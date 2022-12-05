@@ -15,11 +15,11 @@
 defmodule ProvisionTest do
   use ExUnit.Case, async: true
 
-  alias Worker.Domain.ExecutionResource
-  alias Worker.Domain.ProvisionResource
+  alias Data.ExecutionResource
 
   alias Worker.Adapters.ResourceCache
   alias Worker.Adapters.Runtime.Provisioner
+  alias Worker.Domain.ProvisionResource
 
   import Mox, only: [verify_on_exit!: 1]
 

@@ -15,7 +15,7 @@
 defmodule Core.Adapters.FunctionStore.Test do
   @moduledoc false
 
-  alias Core.Domain.FunctionStruct
+  alias Data.FunctionStruct
   @behaviour Core.Domain.Ports.FunctionStore
 
   @impl true

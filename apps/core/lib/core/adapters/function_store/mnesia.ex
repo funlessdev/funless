@@ -17,7 +17,8 @@ defmodule Core.Adapters.FunctionStore.Mnesia do
   Adapter to access and insert functions on a Mnesia distributed storage.
   """
   require Logger
-  alias Core.Domain.FunctionStruct
+  alias Data.FunctionStruct
+
   @behaviour Core.Domain.Ports.FunctionStore
 
   @impl true

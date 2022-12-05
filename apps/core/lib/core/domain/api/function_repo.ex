@@ -19,8 +19,8 @@ defmodule Core.Domain.Api.FunctionRepo do
 
   require Logger
   alias Core.Domain.Api.Utils
-  alias Core.Domain.FunctionStruct
   alias Core.Domain.Ports.FunctionStore
+  alias Data.FunctionStruct
 
   @doc """
   Stores a new function in the FunctionStore.

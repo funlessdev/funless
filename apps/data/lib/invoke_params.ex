@@ -12,27 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Domain.FunctionStruct do
+defmodule Data.InvokeParams do
   @moduledoc """
-    Function struct, used for insertion in permanent storage.
-
-    ## Fields
-      - name: function name
-      - module: function module
-      - code: function code as a string or binary
-  """
-  @type t :: %__MODULE__{
-          module: String.t(),
-          name: String.t(),
-          code: String.t() | binary()
-        }
-  @enforce_keys [:name, :module]
-  defstruct [:name, :module, :code]
-end
-
-defmodule Core.Domain.InvokeParams do
-  @moduledoc """
-    Invocation parameters struct, used for parameter validation.
+    Struct representing the input parameteres when invoking a function.
 
     ## Fields
       - module: function module
@@ -46,13 +28,4 @@ defmodule Core.Domain.InvokeParams do
         }
   @enforce_keys [:function]
   defstruct [:function, module: "_", args: %{}]
-end
-
-defmodule Core.Domain.InvokeResult do
-  @moduledoc """
-  Struct used for invocation results.
-  """
-  @type t :: %__MODULE__{result: any()}
-  @enforce_keys [:result]
-  defstruct [:result]
 end

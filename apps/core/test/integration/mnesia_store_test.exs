@@ -18,7 +18,7 @@ defmodule MnesiaStoreTest do
   @tag integration_test: true
 
   alias Core.Adapters.FunctionStore.Mnesia
-  alias Core.Domain.FunctionStruct
+  alias Data.FunctionStruct
 
   setup_all :mnesia_test_setup
 

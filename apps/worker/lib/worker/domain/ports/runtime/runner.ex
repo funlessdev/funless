@@ -16,8 +16,8 @@ defmodule Worker.Domain.Ports.Runtime.Runner do
   @moduledoc """
   Port to run functions in runtimes.
   """
-  alias Worker.Domain.ExecutionResource
-  alias Worker.Domain.FunctionStruct
+  alias Data.ExecutionResource
+  alias Data.FunctionStruct
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
@@ -28,7 +28,7 @@ defmodule Worker.Domain.Ports.Runtime.Runner do
   Runs a function in the given runtime.
 
   ### Parameters
-    - function: a struct with all the fields required by Worker.Domain.Function
+    - function: a struct with all the fields required by Data.FunctionStruct
     - input: the input to be passed to the function
     - resource: an ExecutionResource.t() required by Worker.Domain.Runtime.Runner
 

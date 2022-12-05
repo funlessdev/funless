@@ -15,9 +15,9 @@
 defmodule Integration.CleanupEtsTest do
   use ExUnit.Case
 
+  alias Data.ExecutionResource
   alias Worker.Adapters.ResourceCache
   alias Worker.Domain.CleanupResource
-  alias Worker.Domain.ExecutionResource
 
   import Mox, only: [verify_on_exit!: 1]
 

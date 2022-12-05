@@ -17,8 +17,8 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
   Port for runtime creation.
   """
 
-  alias Worker.Domain.ExecutionResource
-  alias Worker.Domain.FunctionStruct
+  alias Data.ExecutionResource
+  alias Data.FunctionStruct
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
@@ -30,7 +30,7 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
   depending on the adapter.
 
   ## Parameters
-  - function: a struct with all the fields required by Worker.Domain.Function
+  - function: a struct with all the fields required by Data.FunctionStruct
 
   ## Returns
   - `{:ok, runtime}` if the runtime is found or created.any()

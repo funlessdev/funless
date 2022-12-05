@@ -12,23 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.ResourceCache.Test do
-  @moduledoc false
-  @behaviour Worker.Domain.Ports.ResourceCache
-  alias Data.ExecutionResource
+defmodule Data.ExecutionResource do
+  @moduledoc """
+  A struct that represents a resource that can be used to execute a function.
 
-  @impl true
-  def get(_function_name, _module) do
-    %ExecutionResource{resource: "runtime"}
-  end
-
-  @impl true
-  def insert(_name, _ns, _runtime) do
-    :ok
-  end
-
-  @impl true
-  def delete(_name, _ns) do
-    :ok
-  end
+  ## Fields
+  - resource: the resource that can be used to execute a function
+  """
+  @type t :: %__MODULE__{
+          resource: any()
+        }
+  @enforce_keys [:resource]
+  defstruct [:resource]
 end

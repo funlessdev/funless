@@ -12,36 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Domain.ExecutionResource do
+defmodule Data.FunctionStruct do
   @moduledoc """
-  A struct that represents a resource that can be used to execute a function.
-
-  ## Fields
-  - resource: the resource that can be used to execute a function
-  """
-  @type t :: %__MODULE__{
-          resource: any()
-        }
-  @enforce_keys [:resource]
-  defstruct [:resource]
-end
-
-defmodule Worker.Domain.FunctionStruct do
-  @moduledoc """
-    Function struct, passed to adapters.
+    Function struct that represents a function in the platform. It has
+    the suffix `Struct` to avoid name collision with the `Function` module.
 
     ## Fields
       - name: function name
-      - module: function module, identifies the function along with the name
-      - image: base image for the function's runtime
-      - code: function code, used to initialize the runtime
+      - module: function module
+      - code: function code as a string or binary
   """
   @type t :: %__MODULE__{
+          module: String.t(),
           name: String.t(),
-          image: String.t(),
-          code: String.t(),
-          module: String.t()
+          code: String.t() | binary()
         }
   @enforce_keys [:name, :module]
-  defstruct [:name, :image, :code, :module]
+  defstruct [:name, :module, :code]
 end
