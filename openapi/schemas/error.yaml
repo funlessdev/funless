@@ -19,5 +19,6 @@ required:
 properties:
   errors:
     type: object
-    detail:
-      type: string
+    properties:
+      detail:
+        type: string

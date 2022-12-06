@@ -53,7 +53,7 @@ post:
 
 patch:
   summary: Update
-  operationId: update_module_by_id
+  operationId: update_module_by_id_with_patch
   description: Update a module
   tags:
     - modules

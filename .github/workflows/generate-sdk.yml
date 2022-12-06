@@ -26,16 +26,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # - name: Swagger CLI bundle
-      #   uses: mpetrunic/swagger-cli-action@v1.0.0
-      #   with:
-      #     command: "bundle openapi/openapi.yaml --outfile _build/openapi.yaml --type yaml"
+      - name: Swagger CLI bundle
+        uses: mpetrunic/swagger-cli-action@v1.0.0
+        with:
+          command: "bundle openapi/openapi.yaml --outfile _build/openapi.yaml --type yaml"
 
       - name: OpenAPI Generator Action
         uses: craicoverflow/openapi-generator-action@v1
         with:
           generator: "go"
-          input: openapi/openapi.yaml
+          input: _build/openapi.yaml
           output: ./generated-sdk
           git-repo-id: fl-client-sdk-go
           git-user-id: funlessdev
