@@ -31,7 +31,7 @@ defmodule Core.Application do
   defp children do
     topologies = Application.fetch_env!(:core, :topologies)
 
-    children = [
+    [
       ## CoreWeb Children
       CoreWeb.PromEx,
       # Start the Telemetry supervisor

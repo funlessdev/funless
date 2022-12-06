@@ -13,7 +13,6 @@
 # limitations under the License.
 
 defmodule CoreWeb.Router do
-  alias CoreWeb.ModuleController
   use CoreWeb, :router
 
   pipeline :api do
@@ -29,9 +28,9 @@ defmodule CoreWeb.Router do
       post("/invoke", FnController, :invoke)
       get("/list/:module", FnController, :list)
     end
-  end
 
-  resources("/modules", ModuleController, except: [:new, :edit])
+    resources("/modules", ModuleController, except: [:new, :edit])
+  end
 
   # Enables LiveDashboard only for development
   #
