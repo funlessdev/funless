@@ -31,7 +31,6 @@ defmodule Core.DataCase do
   use ExUnit.CaseTemplate
 
   alias Ecto.Adapters.SQL.Sandbox
-  @tag integration_test: true
 
   using do
     quote do
@@ -41,6 +40,8 @@ defmodule Core.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import Core.DataCase
+
+      @moduletag integration_test: true
     end
   end
 
