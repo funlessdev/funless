@@ -25,7 +25,7 @@ defmodule Core.ModulesFixtures do
     {:ok, module} =
       attrs
       |> Enum.into(%{
-        name: "some name"
+        name: "some_name"
       })
       |> Core.Modules.create_module()
 
