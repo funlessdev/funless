@@ -17,7 +17,7 @@ name: Generate API SDK
 on:
   push:
     paths:
-      - "core-api.yaml"
+      - "openapi/openapi.yaml"
   workflow_dispatch:
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
       - name: OpenAPI Generator Action
         uses: kpurdon/openapi-generator-action@v0.0.3
         with:
-          args: "generate -i core-api.yaml --git-user-id funlessdev --git-repo-id fl-client-sdk-go -g go -o ./generated-sdk"
+          args: "generate -i openapi/openapi.yaml --git-user-id funlessdev --git-repo-id fl-client-sdk-go -g go -o ./generated-sdk"
       - name: Pushes to fl-client-sdk-go
         id: push_directory
         uses: cpina/github-action-push-to-another-repository@main

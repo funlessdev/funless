@@ -1,0 +1,282 @@
+# Copyright 2022 Giuseppe De Palma, Matteo Trentin
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+openapi: 3.0.2
+info:
+  title: FunLess Platfom API
+  description: The API for the FunLess Platform
+  version: "0.5"
+  license:
+    name: Apache 2.0
+servers:
+  - url: http://localhost:4000
+    description: The dev server for the FunLess API
+tags:
+  - name: modules
+
+components:
+  parameters:
+    $ref: "./parameters/_index.yaml"
+  schemas:
+    $ref: "./schemas/_index.yaml"
+  responses:
+    $ref: "./responses/_index.yaml"
+
+  # schemas:
+  #   error_reponse:
+  #     type: object
+  #     properties:
+  #       error:
+  #         type: string
+  #         description: The error message
+  #   function_invocation:
+  #     type: object
+  #     properties:
+  #       module:
+  #         type: string
+  #       function:
+  #         type: string
+  #       args:
+  #         type: object
+  #   function_invocation_success:
+  #     type: object
+  #     properties:
+  #       result:
+  #         description: The function invocation result
+
+  #   function_creation:
+  #     type: object
+  #     properties:
+  #       name:
+  #         type: string
+  #       module:
+  #         type: string
+  #       code:
+  #         type: string
+  #         format: binary
+  #   function_creation_success:
+  #     type: object
+  #     properties:
+  #       result:
+  #         type: string
+  #         description: The name of the function
+
+  #   function_deletion:
+  #     type: object
+  #     properties:
+  #       name:
+  #         type: string
+  #       module:
+  #         type: string
+  #   function_deletion_success:
+  #     type: object
+  #     properties:
+  #       result:
+  #         type: string
+  #         description: The name of the function
+  #   function_list_success:
+  #     type: object
+  #     properties:
+  #       result:
+  #         type: array
+  #         items:
+  #           type: string
+  #         description: The names of the functions in the module
+
+  #   module_list_success:
+  #     type: object
+  #     properties:
+  #       data:
+  #         type: array
+  #         items:
+  #           type: string
+  #         description: The names of the modules
+  #   module_show_success:
+  #     type: object
+  #     properties:
+  #       data:
+  #         type: string
+  #         items:
+  #           type: string
+  #         description: The name of the module
+
+paths:
+  # /v1/fn/invoke:
+  #   post:
+  #     summary: Invoke a function
+  #     description: >-
+  #       Invokes the specified function from the given module with optional
+  #       parameters from the POST body
+  #     requestBody:
+  #       required: true
+  #       description: >-
+  #         Object containing the function to invoke, the module and optional
+  #         parameters
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: "#/components/schemas/function_invocation"
+  #     responses:
+  #       "200":
+  #         description: The function invocation was successfully sent to a worker
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/function_invocation_success"
+  #             examples:
+  #               Invocation of hello world:
+  #                 value: '{"result": {"payload": "Hello, World!"}}'
+  #       "400":
+  #         description: The invocation request was invalid
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/error_reponse"
+
+  #       "404":
+  #         description: The required function was not found
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/error_reponse"
+  #       "500":
+  #         description: The function invocation failed for some unspecified internal error
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/error_reponse"
+  #             examples:
+  #               Invocation with internal error:
+  #                 value: '{"error": "Failed to invoke function: internal worker error"}'
+  #       "503":
+  #         description: The function invocation failed because no worker was available
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/error_reponse"
+  #             examples:
+  #               Invocation with no workers:
+  #                 value: '{"error": "Failed to invoke function: no worker available"}'
+  # /v1/fn/create:
+  #   post:
+  #     summary: Create a new function
+  #     description: >-
+  #       Creates the given function, extracting the parameters from the POST body
+  #     requestBody:
+  #       required: true
+  #       description: >-
+  #         Object containing the function to create, with name, optional module, code
+  #       content:
+  #         multipart/form-data:
+  #           schema:
+  #             $ref: "#/components/schemas/function_creation"
+  #           encoding:
+  #             code:
+  #               contentType: application/octet-stream
+  #     responses:
+  #       "201":
+  #         description: The function was created successfully
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/function_creation_success"
+  #             examples:
+  #               Creation of the "hellojs" function:
+  #                 value: '{"result": "hellojs"}'
+  #       "400":
+  #         description: The function creation request was invalid
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/error_reponse"
+  #       "503":
+  #         description: The function creation request failed because the database transaction was aborted
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/error_reponse"
+  # /v1/fn/delete:
+  #   delete:
+  #     summary: Delete a function
+  #     description: >-
+  #       Deletes the function with the given name and module in the request body
+  #     requestBody:
+  #       required: true
+  #       description: >-
+  #         Object containing the function's name and module to delete
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: "#/components/schemas/function_deletion"
+  #     responses:
+  #       "200":
+  #         description: The function was deleted successfully
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/function_deletion_success"
+  #             examples:
+  #               Deletion of the "hellojs" function:
+  #                 value: '{"result": "hellojs"}'
+  #       "400":
+  #         description: The function deletion request was invalid
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/error_reponse"
+  #       "404":
+  #         description: The function to delete was not found
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/error_reponse"
+  #       "503":
+  #         description: The function deletion request failed because the database transaction was aborted
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/error_reponse"
+  # /v1/fn/list/{fnModule}:
+  #   get:
+  #     summary: List functions
+  #     parameters:
+  #       - in: path
+  #         name: fnModule
+  #         schema:
+  #           type: string
+  #         required: true
+  #         description: Module of the listed functions
+  #     description: >-
+  #       List all functions in the given module
+  #     responses:
+  #       "200":
+  #         description: The required functions have been returned successfully
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/function_list_success"
+  #             examples:
+  #               Listing a module with the "hellojs" function:
+  #                 value: '{"result": ["hellojs"]}'
+  #       "503":
+  #         description: The request failed because the database transaction was aborted
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/error_reponse"
+
+  /v1/modules:
+    $ref: "./resources/modules.yaml"
+  /v1/modules/{module_id}:
+    $ref: "./resources/module.yaml"
