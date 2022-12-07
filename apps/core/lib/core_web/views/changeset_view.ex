@@ -12,6 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0, exclude: [integration_test: true])
-ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :manual)
+defmodule CoreWeb.ChangesetView do
+  use CoreWeb, :view
+
+  @doc """
+  Traverses and translates changeset errors.
+
+  See `Ecto.Changeset.traverse_errors/2` and
+  `CoreWeb.ErrorHelpers.translate_error/1` for more details.
+  """
+  def translate_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, &translate_error/1)
+  end
+
+  def render("error.json", %{changeset: changeset}) do
+    # When encoded, the changeset returns its errors
+    # as a JSON object. So we just pass it forward.
+    %{errors: translate_errors(changeset)}
+  end
+end

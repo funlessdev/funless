@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule CoreWeb.ConnCase do
+defmodule CoreWeb.ControllerCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -45,10 +45,12 @@ defmodule CoreWeb.ConnCase do
 
       # The default endpoint for testing
       @endpoint CoreWeb.Endpoint
+      @moduletag integration_test: true
     end
   end
 
-  setup _tags do
+  setup tags do
+    Core.DataCase.setup_sandbox(tags)
     Mox.verify_on_exit!()
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end

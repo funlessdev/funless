@@ -12,6 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0, exclude: [integration_test: true])
-ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :manual)
+defmodule CoreWeb.ModuleView do
+  use CoreWeb, :view
+  alias CoreWeb.ModuleView
+
+  def render("index.json", %{modules: modules}) do
+    %{data: render_many(modules, ModuleView, "module.json")}
+  end
+
+  def render("show.json", %{module: module}) do
+    %{data: render_one(module, ModuleView, "module.json")}
+  end
+
+  def render("module.json", %{module: module}) do
+    %{
+      id: module.id,
+      name: module.name
+    }
+  end
+end

@@ -14,12 +14,30 @@
 
 openapi: 3.0.2
 info:
-  title: Funless Platfom API
-  description: The API for the Funless Platform
-  version: "1.0"
+  title: FunLess Platfom API
+  description: The API for the FunLess Platform
+  version: "0.5"
+  license:
+    name: Apache 2.0
+servers:
+  - url: http://localhost:4000
+    description: The dev server for the FunLess API
+tags:
+  - name: modules
 
 components:
+  parameters:
+    $ref: "./parameters/_index.yaml"
+  responses:
+    $ref: "./responses/_index.yaml"
   schemas:
+    $ref: "./schemas/_index.yaml"
+    error_reponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: The error message
     function_invocation:
       type: object
       properties:
@@ -34,13 +52,6 @@ components:
       properties:
         result:
           description: The function invocation result
-    function_invocation_error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: The error message
-
     function_creation:
       type: object
       properties:
@@ -57,13 +68,6 @@ components:
         result:
           type: string
           description: The name of the function
-    function_creation_error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: The error message
-
     function_deletion:
       type: object
       properties:
@@ -77,12 +81,6 @@ components:
         result:
           type: string
           description: The name of the function
-    function_deletion_error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: The error message
     function_list_success:
       type: object
       properties:
@@ -91,12 +89,6 @@ components:
           items:
             type: string
           description: The names of the functions in the module
-    function_list_error:
-      type: object
-      properties:
-        error:
-          type: string
-          description: The error message
 
 paths:
   /v1/fn/invoke:
@@ -129,20 +121,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_invocation_error"
+                $ref: "#/components/schemas/error_reponse"
 
         "404":
           description: The required function was not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_invocation_error"
+                $ref: "#/components/schemas/error_reponse"
         "500":
           description: The function invocation failed for some unspecified internal error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_invocation_error"
+                $ref: "#/components/schemas/error_reponse"
               examples:
                 Invocation with internal error:
                   value: '{"error": "Failed to invoke function: internal worker error"}'
@@ -151,7 +143,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_invocation_error"
+                $ref: "#/components/schemas/error_reponse"
               examples:
                 Invocation with no workers:
                   value: '{"error": "Failed to invoke function: no worker available"}'
@@ -186,13 +178,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_creation_error"
+                $ref: "#/components/schemas/error_reponse"
         "503":
           description: The function creation request failed because the database transaction was aborted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_creation_error"
+                $ref: "#/components/schemas/error_reponse"
   /v1/fn/delete:
     delete:
       summary: Delete a function
@@ -221,29 +213,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_deletion_error"
+                $ref: "#/components/schemas/error_reponse"
         "404":
           description: The function to delete was not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_deletion_error"
+                $ref: "#/components/schemas/error_reponse"
         "503":
           description: The function deletion request failed because the database transaction was aborted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_deletion_error"
+                $ref: "#/components/schemas/error_reponse"
   /v1/fn/list/{fnModule}:
     get:
       summary: List functions
       parameters:
-      - in: path
-        name: fnModule
-        schema:
-          type: string
-        required: true
-        description: Module of the listed functions
+        - in: path
+          name: fnModule
+          schema:
+            type: string
+          required: true
+          description: Module of the listed functions
       description: >-
         List all functions in the given module
       responses:
@@ -261,8 +253,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_list_error"
-servers:
-  - url: http://localhost:4000
-    variables: {}
-    description: The dev server for the funless core launched locally
+                $ref: "#/components/schemas/error_reponse"
+
+  /v1/modules:
+    $ref: "./resources/modules.yaml"
+  /v1/modules/{module_id}:
+    $ref: "./resources/module.yaml"

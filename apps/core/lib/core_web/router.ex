@@ -28,6 +28,8 @@ defmodule CoreWeb.Router do
       post("/invoke", FnController, :invoke)
       get("/list/:module", FnController, :list)
     end
+
+    resources("/modules", ModuleController, except: [:new, :edit])
   end
 
   # Enables LiveDashboard only for development

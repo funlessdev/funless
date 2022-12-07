@@ -12,6 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0, exclude: [integration_test: true])
-ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :manual)
+.PHONY: build-core-image build-worker-image credo dial test
+
+## Compile core docker image
+build-core-image: 
+	docker build -t core -f Dokerfile.core .
+
+## Compile worker docker image
+build-worker-image: 
+	docker build -t worker -f Dokerfile.worker .
+
+## Run credo --strict
+credo: 
+	mix credo --strict
+
+## Run dialyzer
+dial:
+	mix dialyzer
+
+ ## Run test suite, launch Postgres with docker-compose
+test: 
+	mix deps.get
+	docker compose -f docker-compose.yml up --detach
+	mix core.test
+	mix worker.test
+	mix core.integration_test
+	docker compose -f docker-compose.yml down

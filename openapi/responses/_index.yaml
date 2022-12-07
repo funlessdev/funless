@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0, exclude: [integration_test: true])
-ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :manual)
+unexpected_error:
+  $ref: "./unexpected_error.yaml"
+null_response:
+  $ref: "./null_response.yaml"

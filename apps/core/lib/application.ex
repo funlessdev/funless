@@ -31,7 +31,7 @@ defmodule Core.Application do
   defp children do
     topologies = Application.fetch_env!(:core, :topologies)
 
-    children = [
+    [
       ## CoreWeb Children
       CoreWeb.PromEx,
       # Start the Telemetry supervisor
@@ -41,15 +41,10 @@ defmodule Core.Application do
       # Start a worker by calling: CoreWeb.Worker.start_link(arg)
       # {CoreWeb.Worker, arg}
       ## Core Children
+      Core.Repo,
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
       {Core.Adapters.Telemetry.Supervisor, []}
     ]
-
-    case Mix.env() do
-      :test -> children
-      # Start the Ecto repository
-      _ -> children ++ [Core.Repo]
-    end
   end
 
   @impl true

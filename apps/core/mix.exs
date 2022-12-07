@@ -28,7 +28,8 @@ defmodule Core.MixProject do
       start_permanent: Mix.env() == :prod,
       compilers: Mix.compilers(),
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      preferred_cli_env: ["test.integration": :test]
     ]
   end
 

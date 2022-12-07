@@ -40,6 +40,8 @@ defmodule Core.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import Core.DataCase
+
+      @moduletag integration_test: true
     end
   end
 

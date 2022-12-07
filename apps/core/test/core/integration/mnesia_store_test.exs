@@ -15,7 +15,7 @@
 defmodule MnesiaStoreTest do
   use ExUnit.Case
 
-  @tag integration_test: true
+  @moduletag integration_test: true
 
   alias Core.Adapters.FunctionStore.Mnesia
   alias Data.FunctionStruct

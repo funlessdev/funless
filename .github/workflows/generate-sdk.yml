@@ -17,7 +17,7 @@ name: Generate API SDK
 on:
   push:
     paths:
-      - "core-api.yaml"
+      - "openapi/openapi.yaml"
   workflow_dispatch:
 
 jobs:
@@ -25,10 +25,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: OpenAPI Generator Action
-        uses: kpurdon/openapi-generator-action@v0.0.3
+
+      - name: Swagger CLI bundle
+        uses: mpetrunic/swagger-cli-action@v1.0.0
         with:
-          args: "generate -i core-api.yaml --git-user-id funlessdev --git-repo-id fl-client-sdk-go -g go -o ./generated-sdk"
+          command: "bundle openapi/openapi.yaml --outfile _build/openapi.yaml --type yaml"
+
+      - name: OpenAPI Generator Action
+        uses: craicoverflow/openapi-generator-action@v1
+        with:
+          generator: "go"
+          input: _build/openapi.yaml
+          output: ./generated-sdk
+          git-repo-id: fl-client-sdk-go
+          git-user-id: funlessdev
+
       - name: Pushes to fl-client-sdk-go
         id: push_directory
         uses: cpina/github-action-push-to-another-repository@main
