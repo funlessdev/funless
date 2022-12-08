@@ -21,25 +21,30 @@ defmodule Core.FunctionsTest do
     alias Core.Schemas.Function
 
     import Core.FunctionsFixtures
+    import Core.ModulesFixtures
 
     @invalid_attrs %{code: nil, name: nil}
 
     test "list_functions/0 returns all functions" do
-      function = function_fixture()
+      module = module_fixture()
+      function = function_fixture(module.id)
       assert Functions.list_functions() == [function]
     end
 
     test "get_function!/1 returns the function with given id" do
-      function = function_fixture()
+      module = module_fixture()
+      function = function_fixture(module.id)
       assert Functions.get_function!(function.id) == function
     end
 
     test "create_function/1 with valid data creates a function" do
-      valid_attrs = %{code: "some_code", name: "some_name"}
+      module = module_fixture()
+      valid_attrs = %{code: "some_code", name: "some_name", module_id: module.id}
 
       assert {:ok, %Function{} = function} = Functions.create_function(valid_attrs)
       assert function.code == "some_code"
       assert function.name == "some_name"
+      assert function.module_id == module.id
     end
 
     test "create_function/1 with invalid data returns error changeset" do
@@ -47,7 +52,8 @@ defmodule Core.FunctionsTest do
     end
 
     test "update_function/2 with valid data updates the function" do
-      function = function_fixture()
+      module = module_fixture()
+      function = function_fixture(module.id)
       update_attrs = %{code: "some_updated_code", name: "some_updated_name"}
 
       assert {:ok, %Function{} = function} = Functions.update_function(function, update_attrs)
@@ -56,19 +62,22 @@ defmodule Core.FunctionsTest do
     end
 
     test "update_function/2 with invalid data returns error changeset" do
-      function = function_fixture()
+      module = module_fixture()
+      function = function_fixture(module.id)
       assert {:error, %Ecto.Changeset{}} = Functions.update_function(function, @invalid_attrs)
       assert function == Functions.get_function!(function.id)
     end
 
     test "delete_function/1 deletes the function" do
-      function = function_fixture()
+      module = module_fixture()
+      function = function_fixture(module.id)
       assert {:ok, %Function{}} = Functions.delete_function(function)
       assert_raise Ecto.NoResultsError, fn -> Functions.get_function!(function.id) end
     end
 
     test "change_function/1 returns a function changeset" do
-      function = function_fixture()
+      module = module_fixture()
+      function = function_fixture(module.id)
       assert %Ecto.Changeset{} = Functions.change_function(function)
     end
   end

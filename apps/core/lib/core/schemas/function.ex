@@ -22,11 +22,10 @@ defmodule Core.Schemas.Function do
   schema "functions" do
     field(:code, :binary)
     field(:name, :string)
-    field(:module_id, :id)
 
     timestamps()
 
-    belongs_to(:modules, Core.Schemas.Module)
+    belongs_to(:module, Core.Schemas.Module, foreign_key: :module_id)
   end
 
   @doc false
@@ -36,9 +35,10 @@ defmodule Core.Schemas.Function do
     msg = "must contain only alphanumeric characters and underscores"
 
     function
-    |> cast(attrs, [:name, :code])
-    |> validate_required([:name, :code])
+    |> cast(attrs, [:name, :code, :module_id])
+    |> validate_required([:name, :code, :module_id])
     |> validate_format(:name, regex, message: msg)
     |> validate_length(:name, min: 1, max: 160)
+    |> foreign_key_constraint(:module_id)
   end
 end

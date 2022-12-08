@@ -23,12 +23,13 @@ defmodule Core.FunctionsFixtures do
   @doc """
   Generate a function.
   """
-  def function_fixture(attrs \\ %{}) do
+  def function_fixture(module_id, attrs \\ %{}) do
     {:ok, function} =
       attrs
       |> Enum.into(%{
         code: "some_code",
-        name: "some_name"
+        name: "some_name",
+        module_id: module_id
       })
       |> Functions.create_function()
 

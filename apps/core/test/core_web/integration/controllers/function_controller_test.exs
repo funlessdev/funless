@@ -16,6 +16,7 @@ defmodule CoreWeb.FunctionControllerTest do
   use CoreWeb.ControllerCase
 
   import Core.FunctionsFixtures
+  import Core.ModulesFixtures
 
   alias Core.Schemas.Function
 
@@ -42,7 +43,11 @@ defmodule CoreWeb.FunctionControllerTest do
 
   describe "create function" do
     test "renders function when data is valid", %{conn: conn} do
-      conn = post(conn, Routes.function_path(conn, :create), function: @create_attrs)
+      module = module_fixture()
+      create_attrs = Map.put_new(@create_attrs, "module_id", module.id)
+
+      conn = post(conn, Routes.function_path(conn, :create), function: create_attrs)
+
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = get(conn, Routes.function_path(conn, :show, id))
@@ -65,9 +70,12 @@ defmodule CoreWeb.FunctionControllerTest do
 
     test "renders function when data is valid", %{
       conn: conn,
-      function: %Function{id: id} = function
+      function: %Function{id: id} = function,
+      module_id: module_id
     } do
-      conn = put(conn, Routes.function_path(conn, :update, function), function: @update_attrs)
+      update_attrs = Map.put_new(@update_attrs, "module_id", module_id)
+
+      conn = put(conn, Routes.function_path(conn, :update, function), function: update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = get(conn, Routes.function_path(conn, :show, id))
@@ -99,7 +107,8 @@ defmodule CoreWeb.FunctionControllerTest do
   end
 
   defp create_function(_) do
-    function = function_fixture()
-    %{function: function}
+    module = module_fixture()
+    function = function_fixture(module.id)
+    %{function: function, module_id: module.id}
   end
 end
