@@ -24,7 +24,7 @@ defmodule Core.Schemas.Module do
 
     timestamps()
 
-    has_many(:functions, Core.Schemas.Function)
+    has_many(:function, Core.Schemas.Function, on_delete: :delete_all)
   end
 
   @doc false

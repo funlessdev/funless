@@ -16,6 +16,7 @@ defmodule CoreWeb.ModuleControllerTest do
   use CoreWeb.ControllerCase
 
   import Core.ModulesFixtures
+  import Core.FunctionsFixtures
 
   alias Core.Schemas.Module
 
@@ -87,6 +88,16 @@ defmodule CoreWeb.ModuleControllerTest do
 
       assert_error_sent(404, fn ->
         get(conn, Routes.module_path(conn, :show, module))
+      end)
+    end
+
+    test "deletes all associated functions when deleting a module", %{conn: conn, module: module} do
+      function = function_fixture(module.id)
+      conn = delete(conn, Routes.module_path(conn, :delete, module))
+      assert response(conn, 204)
+
+      assert_error_sent(404, fn ->
+        get(conn, Routes.function_path(conn, :show, function))
       end)
     end
   end

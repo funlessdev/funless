@@ -16,11 +16,13 @@ defmodule Core.ModulesTest do
   use Core.DataCase
 
   alias Core.Domain.Modules
+  alias Core.Domain.Functions
 
   describe "modules" do
     alias Core.Schemas.Module
 
     import Core.ModulesFixtures
+    import Core.FunctionsFixtures
 
     @invalid_attrs %{name: nil}
 
@@ -63,6 +65,13 @@ defmodule Core.ModulesTest do
       module = module_fixture()
       assert {:ok, %Module{}} = Modules.delete_module(module)
       assert_raise Ecto.NoResultsError, fn -> Modules.get_module!(module.id) end
+    end
+
+    test "delete_module/1 also deletes all functions" do
+      module = module_fixture()
+      function = function_fixture(module.id)
+      assert {:ok, %Module{}} = Modules.delete_module(module)
+      assert_raise Ecto.NoResultsError, fn -> Functions.get_function!(function.id) end
     end
 
     test "change_module/1 returns a module changeset" do
