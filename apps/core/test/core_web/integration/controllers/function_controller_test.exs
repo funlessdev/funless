@@ -12,87 +12,94 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule CoreWeb.ModuleControllerTest do
+defmodule CoreWeb.FunctionControllerTest do
   use CoreWeb.ControllerCase
 
-  import Core.ModulesFixtures
+  import Core.FunctionsFixtures
 
-  alias Core.Schemas.Module
+  alias Core.Schemas.Function
 
   @create_attrs %{
+    code: "some_code",
     name: "some_name"
   }
   @update_attrs %{
+    code: "some_updated_code",
     name: "some_updated_name"
   }
-  @invalid_attrs %{name: nil}
+  @invalid_attrs %{code: nil, name: nil}
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
   describe "index" do
-    test "lists all modules", %{conn: conn} do
-      conn = get(conn, Routes.module_path(conn, :index))
+    test "lists all functions", %{conn: conn} do
+      conn = get(conn, Routes.function_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
     end
   end
 
-  describe "create module" do
-    test "renders module when data is valid", %{conn: conn} do
-      conn = post(conn, Routes.module_path(conn, :create), module: @create_attrs)
+  describe "create function" do
+    test "renders function when data is valid", %{conn: conn} do
+      conn = post(conn, Routes.function_path(conn, :create), function: @create_attrs)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = get(conn, Routes.module_path(conn, :show, id))
+      conn = get(conn, Routes.function_path(conn, :show, id))
 
       assert %{
                "id" => ^id,
+               "code" => "some_code",
                "name" => "some_name"
              } = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.module_path(conn, :create), module: @invalid_attrs)
+      conn = post(conn, Routes.function_path(conn, :create), function: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
 
-  describe "update module" do
-    setup [:create_module]
+  describe "update function" do
+    setup [:create_function]
 
-    test "renders module when data is valid", %{conn: conn, module: %Module{id: id} = module} do
-      conn = put(conn, Routes.module_path(conn, :update, module), module: @update_attrs)
+    test "renders function when data is valid", %{
+      conn: conn,
+      function: %Function{id: id} = function
+    } do
+      conn = put(conn, Routes.function_path(conn, :update, function), function: @update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = get(conn, Routes.module_path(conn, :show, id))
+      conn = get(conn, Routes.function_path(conn, :show, id))
 
       assert %{
                "id" => ^id,
+               "code" => "some_updated_code",
                "name" => "some_updated_name"
              } = json_response(conn, 200)["data"]
     end
 
-    test "renders errors when data is invalid", %{conn: conn, module: module} do
-      conn = put(conn, Routes.module_path(conn, :update, module), module: @invalid_attrs)
+    test "renders errors when data is invalid", %{conn: conn, function: function} do
+      conn = put(conn, Routes.function_path(conn, :update, function), function: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
 
-  describe "delete module" do
-    setup [:create_module]
+  describe "delete function" do
+    setup [:create_function]
 
-    test "deletes chosen module", %{conn: conn, module: module} do
-      conn = delete(conn, Routes.module_path(conn, :delete, module))
+    test "deletes chosen function", %{conn: conn, function: function} do
+      conn = delete(conn, Routes.function_path(conn, :delete, function))
       assert response(conn, 204)
 
       assert_error_sent(404, fn ->
-        get(conn, Routes.module_path(conn, :show, module))
+        get(conn, Routes.function_path(conn, :show, function))
       end)
     end
   end
 
-  defp create_module(_) do
-    module = module_fixture()
-    %{module: module}
+  defp create_function(_) do
+    function = function_fixture()
+    %{function: function}
   end
 end

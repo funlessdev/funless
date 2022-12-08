@@ -15,10 +15,10 @@
 defmodule Core.ModulesTest do
   use Core.DataCase
 
-  alias Core.Modules
+  alias Core.Domain.Modules
 
   describe "modules" do
-    alias Core.Modules.Module
+    alias Core.Schemas.Module
 
     import Core.ModulesFixtures
 

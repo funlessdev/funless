@@ -12,25 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.ModulesFixtures do
-  @moduledoc """
-  This module defines test helpers for creating
-  entities via the `Core.Domain.Modules` context.
-  """
+defmodule CoreWeb.FunctionView do
+  use CoreWeb, :view
+  alias CoreWeb.FunctionView
 
-  alias Core.Domain.Modules
+  def render("index.json", %{functions: functions}) do
+    %{data: render_many(functions, FunctionView, "function.json")}
+  end
 
-  @doc """
-  Generate a module.
-  """
-  def module_fixture(attrs \\ %{}) do
-    {:ok, module} =
-      attrs
-      |> Enum.into(%{
-        name: "some_name"
-      })
-      |> Modules.create_module()
+  def render("show.json", %{function: function}) do
+    %{data: render_one(function, FunctionView, "function.json")}
+  end
 
-    module
+  def render("function.json", %{function: function}) do
+    %{
+      id: function.id,
+      name: function.name,
+      code: function.code
+    }
   end
 end

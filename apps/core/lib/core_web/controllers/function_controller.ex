@@ -12,44 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule CoreWeb.ModuleController do
+defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
-  alias Core.Domain.Modules
-  alias Core.Schemas.Module
+  alias Core.Domain.Functions
+  alias Core.Schemas.Function
 
   action_fallback(CoreWeb.FallbackController)
 
   def index(conn, _params) do
-    modules = Modules.list_modules()
-    render(conn, "index.json", modules: modules)
+    functions = Functions.list_functions()
+    render(conn, "index.json", functions: functions)
   end
 
-  def create(conn, %{"module" => module_params}) do
-    with {:ok, %Module{} = module} <- Modules.create_module(module_params) do
+  def create(conn, %{"function" => function_params}) do
+    with {:ok, %Function{} = function} <- Functions.create_function(function_params) do
       conn
       |> put_status(:created)
-      |> render("show.json", module: module)
+      |> render("show.json", function: function)
     end
   end
 
   def show(conn, %{"id" => id}) do
-    module = Modules.get_module!(id)
-    render(conn, "show.json", module: module)
+    function = Functions.get_function!(id)
+    render(conn, "show.json", function: function)
   end
 
-  def update(conn, %{"id" => id, "module" => module_params}) do
-    module = Modules.get_module!(id)
+  def update(conn, %{"id" => id, "function" => function_params}) do
+    function = Functions.get_function!(id)
 
-    with {:ok, %Module{} = module} <- Modules.update_module(module, module_params) do
-      render(conn, "show.json", module: module)
+    with {:ok, %Function{} = function} <- Functions.update_function(function, function_params) do
+      render(conn, "show.json", function: function)
     end
   end
 
   def delete(conn, %{"id" => id}) do
-    module = Modules.get_module!(id)
+    function = Functions.get_function!(id)
 
-    with {:ok, %Module{}} <- Modules.delete_module(module) do
+    with {:ok, %Function{}} <- Functions.delete_function(function) do
       send_resp(conn, :no_content, "")
     end
   end
