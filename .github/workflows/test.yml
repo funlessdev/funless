@@ -25,6 +25,29 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: 1.14
+          otp-version: 25.0
+
+      - name: Install Dependencies
+        run: mix deps.get
+
+      - name: Run Core Unit Tests
+        run: mix core.test
+
+      - name: Run Worker Tests
+        run: mix worker.test
+
+  test_with_db:
+    name: Integration Test
+    runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:latest
@@ -48,17 +71,8 @@ jobs:
           elixir-version: 1.14
           otp-version: 25.0
 
-      - name: Setup apps
-        run: mix setup
-
       - name: Install Dependencies
         run: mix deps.get
 
-      - name: Run Core Unit Tests
-        run: mix core.test
-
       - name: Run Core Integration Tests
         run: mix core.integration_test
-
-      - name: Run Worker Tests
-        run: mix worker.test
