@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# path
-module_name:
-  $ref: "./path/module_name.yaml"
-function_name:
-  $ref: "./path/function_name.yaml"
+# {"data": [name, ...]}
+type: object
+properties:
+  data:
+    type: array
+    items:
+      type: string

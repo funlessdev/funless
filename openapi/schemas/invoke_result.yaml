@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: module_id
-in: path
-required: true
-description: The id of the module to retrieve
-schema:
-  type: string
+type: object
+properties:
+  data:
+    type: object
