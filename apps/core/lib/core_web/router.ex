@@ -29,6 +29,7 @@ defmodule CoreWeb.Router do
       get("/list/:module", FnController, :list)
     end
 
+    resources("/functions", FunctionController, except: [:new, :edit])
     resources("/modules", ModuleController, except: [:new, :edit])
   end
 

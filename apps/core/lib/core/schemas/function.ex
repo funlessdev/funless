@@ -12,32 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Schemas.Module do
+defmodule Core.Schemas.Function do
   @moduledoc """
-  The Module schema.
+  The Function schema.
   """
   use Ecto.Schema
   import Ecto.Changeset
 
-  schema "modules" do
+  schema "functions" do
+    field(:code, :binary)
     field(:name, :string)
 
     timestamps()
 
-    has_many(:function, Core.Schemas.Function, on_delete: :delete_all)
+    belongs_to(:module, Core.Schemas.Module, foreign_key: :module_id)
   end
 
   @doc false
-  def changeset(module, attrs) do
+  def changeset(function, attrs) do
     # only allow valid letters, numbers and underscores in the middle
     regex = ~r/^[a-zA-Z0-9]([_a-zA-Z0-9]*[a-zA-Z0-9])?$/
     msg = "must contain only alphanumeric characters and underscores"
 
-    module
-    |> cast(attrs, [:name])
-    |> validate_required([:name])
+    function
+    |> cast(attrs, [:name, :code, :module_id])
+    |> validate_required([:name, :code, :module_id])
     |> validate_format(:name, regex, message: msg)
     |> validate_length(:name, min: 1, max: 160)
-    |> unique_constraint(:name)
+    |> foreign_key_constraint(:module_id)
   end
 end

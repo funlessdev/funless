@@ -23,3 +23,9 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+
+alias Core.Repo
+alias Core.Schemas.Module
+
+# Create default module named "_"
+Repo.insert!(%Module{name: "_"})

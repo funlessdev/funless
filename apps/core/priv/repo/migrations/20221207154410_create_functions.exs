@@ -12,25 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.ModulesFixtures do
-  @moduledoc """
-  This module defines test helpers for creating
-  entities via the `Core.Domain.Modules` context.
-  """
+defmodule Core.Repo.Migrations.CreateFunctions do
+  use Ecto.Migration
 
-  alias Core.Domain.Modules
+  def change do
+    create table(:functions) do
+      add :name, :string
+      add :code, :binary
+      add :module_id, references(:modules), null: false
 
-  @doc """
-  Generate a module.
-  """
-  def module_fixture(attrs \\ %{}) do
-    {:ok, module} =
-      attrs
-      |> Enum.into(%{
-        name: "some_name"
-      })
-      |> Modules.create_module()
+      timestamps()
+    end
 
-    module
+    create unique_index(:functions, [:module_id])
   end
 end

@@ -12,25 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.ModulesFixtures do
+defmodule Core.FunctionsFixtures do
   @moduledoc """
   This module defines test helpers for creating
-  entities via the `Core.Domain.Modules` context.
+  entities via the `Core.Domain.Functions` context.
   """
 
-  alias Core.Domain.Modules
+  alias Core.Domain.Functions
 
   @doc """
-  Generate a module.
+  Generate a function.
   """
-  def module_fixture(attrs \\ %{}) do
-    {:ok, module} =
+  def function_fixture(module_id, attrs \\ %{}) do
+    {:ok, function} =
       attrs
       |> Enum.into(%{
-        name: "some_name"
+        code: "some_code",
+        name: "some_name",
+        module_id: module_id
       })
-      |> Modules.create_module()
+      |> Functions.create_function()
 
-    module
+    function
   end
 end

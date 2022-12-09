@@ -16,8 +16,9 @@ defmodule CoreWeb.ModuleControllerTest do
   use CoreWeb.ControllerCase
 
   import Core.ModulesFixtures
+  import Core.FunctionsFixtures
 
-  alias Core.Modules.Module
+  alias Core.Schemas.Module
 
   @create_attrs %{
     name: "some_name"
@@ -34,7 +35,7 @@ defmodule CoreWeb.ModuleControllerTest do
   describe "index" do
     test "lists all modules", %{conn: conn} do
       conn = get(conn, Routes.module_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 200)["data"] == [%{"id" => 1, "name" => "_"}]
     end
   end
 
@@ -87,6 +88,16 @@ defmodule CoreWeb.ModuleControllerTest do
 
       assert_error_sent(404, fn ->
         get(conn, Routes.module_path(conn, :show, module))
+      end)
+    end
+
+    test "deletes all associated functions when deleting a module", %{conn: conn, module: module} do
+      function = function_fixture(module.id)
+      conn = delete(conn, Routes.module_path(conn, :delete, module))
+      assert response(conn, 204)
+
+      assert_error_sent(404, fn ->
+        get(conn, Routes.function_path(conn, :show, function))
       end)
     end
   end

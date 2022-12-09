@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Modules do
+defmodule Core.Domain.Modules do
   @moduledoc """
   The Modules context.
   """
@@ -20,7 +20,7 @@ defmodule Core.Modules do
   import Ecto.Query, warn: false
   alias Core.Repo
 
-  alias Core.Modules.Module
+  alias Core.Schemas.Module
 
   @doc """
   Returns the list of modules.

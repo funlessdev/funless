@@ -85,7 +85,11 @@ defmodule CoreWeb.FnControllerTest do
 
   describe "POST /v1/fn/create" do
     test "success: should return 200 when the creation is successful", %{conn: conn} do
-      upload = %Plug.Upload{path: "test/fixtures/test_code.txt", filename: "test_code.txt"}
+      upload = %Plug.Upload{
+        path: "test/support/fixtures/test_code.txt",
+        filename: "test_code.txt"
+      }
+
       conn = post(conn, "/v1/fn/create", %{name: "hello", code: upload})
 
       expected = %{"result" => "hello"}
@@ -108,7 +112,11 @@ defmodule CoreWeb.FnControllerTest do
       Core.FunctionStore.Mock
       |> Mox.expect(:insert_function, fn _ -> {:error, {:aborted, "some reason"}} end)
 
-      upload = %Plug.Upload{path: "test/fixtures/test_code.txt", filename: "test_code.txt"}
+      upload = %Plug.Upload{
+        path: "test/support/fixtures/test_code.txt",
+        filename: "test_code.txt"
+      }
+
       conn = post(conn, "/v1/fn/create", %{name: "hello", code: upload})
 
       expected = %{
@@ -216,7 +224,10 @@ defmodule CoreWeb.FnControllerTest do
 
       response =
         assert_error_sent(500, fn ->
-          upload = %Plug.Upload{path: "test/fixtures/test_code.txt", filename: "test_code.txt"}
+          upload = %Plug.Upload{
+            path: "test/support/fixtures/test_code.txt",
+            filename: "test_code.txt"
+          }
 
           conn
           |> post("/v1/fn/create", %{name: "hello", module: "ns", code: upload})
