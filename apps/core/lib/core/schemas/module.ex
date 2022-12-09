@@ -30,7 +30,7 @@ defmodule Core.Schemas.Module do
   @doc false
   def changeset(module, attrs) do
     # only allow valid letters, numbers and underscores in the middle
-    regex = ~r/^[a-zA-Z0-9]([_a-zA-Z0-9]*[a-zA-Z0-9])?$/
+    regex = ~r/^[_a-zA-Z0-9]+$/
     msg = "must contain only alphanumeric characters and underscores"
 
     module
