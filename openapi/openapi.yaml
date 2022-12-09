@@ -24,6 +24,7 @@ servers:
     description: The dev server for the FunLess API
 tags:
   - name: modules
+  - name: functions
 
 components:
   parameters:
@@ -32,230 +33,243 @@ components:
     $ref: "./responses/_index.yaml"
   schemas:
     $ref: "./schemas/_index.yaml"
-    error_reponse:
-      type: object
-      properties:
-        error:
-          type: string
-          description: The error message
-    function_invocation:
-      type: object
-      properties:
-        module:
-          type: string
-        function:
-          type: string
-        args:
-          type: object
-    function_invocation_success:
-      type: object
-      properties:
-        result:
-          description: The function invocation result
-    function_creation:
-      type: object
-      properties:
-        name:
-          type: string
-        module:
-          type: string
-        code:
-          type: string
-          format: binary
-    function_creation_success:
-      type: object
-      properties:
-        result:
-          type: string
-          description: The name of the function
-    function_deletion:
-      type: object
-      properties:
-        name:
-          type: string
-        module:
-          type: string
-    function_deletion_success:
-      type: object
-      properties:
-        result:
-          type: string
-          description: The name of the function
-    function_list_success:
-      type: object
-      properties:
-        result:
-          type: array
-          items:
-            type: string
-          description: The names of the functions in the module
 
 paths:
-  /v1/fn/invoke:
+  /v1/fn:
+    # GET /fn
+    get:
+      summary: List modules
+      operationId: list_modules
+      description: List all modules
+      tags:
+        - modules
+      responses:
+        "200":
+          description: An array of modules
+          headers:
+            X-Total-Count:
+              description: Total number of modules
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "schemas/module_names_result.yaml"
+        default:
+          $ref: "responses/unexpected_error.yaml"
+
+    # POST /fn
     post:
-      summary: Invoke a function
-      description: >-
-        Invokes the specified function from the given module with optional
-        parameters from the POST body
+      summary: Create
+      operationId: create_module
+      description: Create a new module
+      tags:
+        - modules
       requestBody:
+        description: Module to create
         required: true
-        description: >-
-          Object containing the function to invoke, the module and optional
-          parameters
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/function_invocation"
-      responses:
-        "200":
-          description: The function invocation was successfully sent to a worker
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/function_invocation_success"
-              examples:
-                Invocation of hello world:
-                  value: '{"result": {"payload": "Hello, World!"}}'
-        "400":
-          description: The invocation request was invalid
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error_reponse"
-
-        "404":
-          description: The required function was not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error_reponse"
-        "500":
-          description: The function invocation failed for some unspecified internal error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error_reponse"
-              examples:
-                Invocation with internal error:
-                  value: '{"error": "Failed to invoke function: internal worker error"}'
-        "503":
-          description: The function invocation failed because no worker was available
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error_reponse"
-              examples:
-                Invocation with no workers:
-                  value: '{"error": "Failed to invoke function: no worker available"}'
-  /v1/fn/create:
-    post:
-      summary: Create a new function
-      description: >-
-        Creates the given function, extracting the parameters from the POST body
-      requestBody:
-        required: true
-        description: >-
-          Object containing the function to create, with name, optional module, code
-        content:
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/function_creation"
-            encoding:
-              code:
-                contentType: application/octet-stream
+              $ref: "schemas/module_name.yaml"
       responses:
         "201":
-          description: The function was created successfully
+          $ref: "responses/null_response.yaml"
+        default:
+          $ref: "responses/unexpected_error.yaml"
+
+  /v1/fn/{module_name}:
+    # GET /fn/{mod}
+    get:
+      summary: Show module info
+      operationId: show_module_by_name
+      description: Get module data (name, array of functions, number of functions)
+      tags:
+        - modules
+      parameters:
+        - $ref: "parameters/path/module_name.yaml"
+      responses:
+        "200":
+          description: Expected response to a valid request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/function_creation_success"
-              examples:
-                Creation of the "hellojs" function:
-                  value: '{"result": "hellojs"}'
-        "400":
-          description: The function creation request was invalid
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error_reponse"
-        "503":
-          description: The function creation request failed because the database transaction was aborted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error_reponse"
-  /v1/fn/delete:
-    delete:
-      summary: Delete a function
-      description: >-
-        Deletes the function with the given name and module in the request body
+                $ref: "schemas/single_module_result.yaml"
+        default:
+          $ref: "responses/unexpected_error.yaml"
+
+    # POST /fn/{mod}
+    post:
+      summary: Create new function
+      operationId: create_function
+      description: Create a new function in the specified module
+      tags:
+        - functions
+      parameters:
+        - $ref: "parameters/path/module_name.yaml"
       requestBody:
+        description: Function code to upload
         required: true
-        description: >-
-          Object containing the function's name and module to delete
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/function_deletion"
+              $ref: "schemas/function_code.yaml"
+      responses:
+        "201":
+          $ref: "responses/null_response.yaml"
+        default:
+          $ref: "responses/unexpected_error.yaml"
+
+    # PUT /fn/{mod}
+    put:
+      summary: Update module name
+      operationId: update_module
+      description: Update module name
+      tags:
+        - modules
+      parameters:
+        - $ref: "parameters/path/module_name.yaml"
+      requestBody:
+        description: New module name to use
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "schemas/module_name.yaml"
       responses:
         "200":
-          description: The function was deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/function_deletion_success"
-              examples:
-                Deletion of the "hellojs" function:
-                  value: '{"result": "hellojs"}'
-        "400":
-          description: The function deletion request was invalid
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error_reponse"
-        "404":
-          description: The function to delete was not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error_reponse"
-        "503":
-          description: The function deletion request failed because the database transaction was aborted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error_reponse"
-  /v1/fn/list/{fnModule}:
-    get:
-      summary: List functions
+          $ref: "responses/null_response.yaml"
+        default:
+          $ref: "responses/unexpected_error.yaml"
+
+    # DELETE /fn/{mod}
+    delete:
+      summary: Delete module
+      operationId: delete_module
+      description: Delete module
+      tags:
+        - modules
       parameters:
-        - in: path
-          name: fnModule
+        - $ref: "parameters/path/module_name.yaml"
+      responses:
+        "204":
+          $ref: "responses/null_response.yaml"
+        default:
+          $ref: "responses/unexpected_error.yaml"
+
+  /v1/fn/{module_name}/{function_name}:
+    # GET /fn/{mod}/{fun}
+    get:
+      summary: Show function info
+      operationId: show_function_by_name
+      description: Get function data (name, module name, size of code)
+      tags:
+        - functions
+      parameters:
+        - $ref: "parameters/path/module_name.yaml"
+        - $ref: "parameters/path/function_name.yaml"
+      responses:
+        "200":
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "schemas/single_function_result.yaml"
+        default:
+          $ref: "responses/unexpected_error.yaml"
+
+    # PUT /fn/{mod}/{fun}
+    put:
+      summary: Update function code
+      operationId: update_function
+      description: Update function code
+      tags:
+        - functions
+      parameters:
+        - name: module_name
+          in: path
+          required: true
+          description: The name of the module
           schema:
             type: string
+        - name: function_name
+          in: path
           required: true
-          description: Module of the listed functions
-      description: >-
-        List all functions in the given module
+          description: The name of the function
+          schema:
+            type: string
+      requestBody:
+        description: New function code to use
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "schemas/function_code.yaml"
       responses:
         "200":
-          description: The required functions have been returned successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/function_list_success"
-              examples:
-                Listing a module with the "hellojs" function:
-                  value: '{"result": ["hellojs"]}'
-        "503":
-          description: The request failed because the database transaction was aborted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error_reponse"
+          $ref: "responses/null_response.yaml"
+        default:
+          $ref: "responses/unexpected_error.yaml"
 
-  /v1/modules:
-    $ref: "./resources/modules.yaml"
-  /v1/modules/{module_id}:
-    $ref: "./resources/module.yaml"
+    # DELETE /fn/{mod}/{fun}
+    delete:
+      summary: Delete function
+      operationId: delete_function
+      description: Delete single function in module
+      tags:
+        - functions
+      parameters:
+        - name: module_name
+          in: path
+          required: true
+          description: The name of the module
+          schema:
+            type: string
+        - name: function_name
+          in: path
+          required: true
+          description: The name of the function
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: "responses/null_response.yaml"
+        default:
+          $ref: "responses/unexpected_error.yaml"
+
+    # POST /fn/{mod}/{fun}/invoke
+    post:
+      summary: Invoke function
+      operationId: invoke_function
+      description: Invoke function
+      tags:
+        - functions
+      parameters:
+        - name: module_name
+          in: path
+          required: true
+          description: The name of the module
+          schema:
+            type: string
+        - name: function_name
+          in: path
+          required: true
+          description: The name of the function
+          schema:
+            type: string
+      requestBody:
+        description: Function input
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "schemas/invoke_input.yaml"
+      responses:
+        "200":
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "schemas/invoke_result.yaml"
+        default:
+          $ref: "responses/unexpected_error.yaml"
