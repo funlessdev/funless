@@ -15,8 +15,8 @@
 defmodule Core.ModulesTest do
   use Core.DataCase
 
-  alias Core.Domain.Modules
   alias Core.Domain.Functions
+  alias Core.Domain.Modules
 
   describe "modules" do
     alias Core.Schemas.Module
@@ -28,7 +28,7 @@ defmodule Core.ModulesTest do
 
     test "list_modules/0 returns all modules" do
       module = module_fixture()
-      assert Modules.list_modules() == [module]
+      assert Modules.list_modules() |> length == 2
     end
 
     test "get_module!/1 returns the module with given id" do

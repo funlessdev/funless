@@ -35,7 +35,7 @@ defmodule CoreWeb.ModuleControllerTest do
   describe "index" do
     test "lists all modules", %{conn: conn} do
       conn = get(conn, Routes.module_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 200)["data"] == [%{"id" => 1, "name" => "_"}]
     end
   end
 
