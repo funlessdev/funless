@@ -85,7 +85,6 @@ defmodule Core.MixProject do
       "test.integration": [
         "ecto.create --quiet",
         "ecto.migrate --quiet",
-        "run priv/repo/seeds.exs",
         "test --only integration_test"
       ]
     ]

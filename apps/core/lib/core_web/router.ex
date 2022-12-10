@@ -22,15 +22,28 @@ defmodule CoreWeb.Router do
   scope "/v1", CoreWeb do
     pipe_through(:api)
 
-    scope "/fn" do
-      post("/create", FnController, :create)
-      delete("/delete", FnController, :delete)
-      post("/invoke", FnController, :invoke)
-      get("/list/:module", FnController, :list)
-    end
+    # List all modules
+    get("/fn", ModuleController, :index)
+    # Create new module
+    post("/fn", ModuleController, :create)
 
-    resources("/functions", FunctionController, except: [:new, :edit])
-    resources("/modules", ModuleController, except: [:new, :edit])
+    # List all functions in a module
+    get("/fn/:module_name", ModuleController, :show)
+    # Create new function in a module
+    post("/fn/:module_name", FunctionController, :create)
+    # Update module name
+    put("/fn/:module_name", ModuleController, :update)
+    # Delete module
+    delete("/fn/:module_name", ModuleController, :delete)
+
+    # Show single function information
+    get("/fn/:module_name/:function_name", FunctionController, :show)
+    # Update single function code
+    put("/fn/:module_name/:function_name", FunctionController, :update)
+    # Delete single function
+    delete("/fn/:module_name/:function_name", FunctionController, :delete)
+    # Invoke function
+    post("/fn/:module_name/:function_name", FunctionController, :invoke)
   end
 
   # Enables LiveDashboard only for development
