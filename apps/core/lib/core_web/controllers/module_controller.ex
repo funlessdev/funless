@@ -33,13 +33,13 @@ defmodule CoreWeb.ModuleController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    module = Modules.get_module!(id)
-    render(conn, "show.json", module: module)
+  def show_functions(conn, %{"module_name" => name}) do
+    functions = Modules.get_functions_in_module!(name)
+    render(conn, "show_functions.json", functions: Enum.map(functions, &%{name: &1}))
   end
 
   def update(conn, %{"id" => id, "module" => module_params}) do
-    module = Modules.get_module!(id)
+    module = Modules.get_module_by_name!(id)
 
     with {:ok, %Module{} = module} <- Modules.update_module(module, module_params) do
       render(conn, "show.json", module: module)
@@ -47,7 +47,7 @@ defmodule CoreWeb.ModuleController do
   end
 
   def delete(conn, %{"id" => id}) do
-    module = Modules.get_module!(id)
+    module = Modules.get_module_by_name!(id)
 
     with {:ok, %Module{}} <- Modules.delete_module(module) do
       send_resp(conn, :no_content, "")

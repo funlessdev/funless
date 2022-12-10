@@ -14,6 +14,8 @@
 
 defmodule CoreWeb.ModuleView do
   use CoreWeb, :view
+
+  alias CoreWeb.FunctionView
   alias CoreWeb.ModuleView
 
   def render("index.json", %{modules: modules}) do
@@ -26,8 +28,11 @@ defmodule CoreWeb.ModuleView do
 
   def render("module.json", %{module: module}) do
     %{
-      id: module.id,
       name: module.name
     }
+  end
+
+  def render("show_functions.json", %{functions: functions}) do
+    %{data: render_many(functions, FunctionView, "function.json")}
   end
 end

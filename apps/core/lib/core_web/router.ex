@@ -28,7 +28,7 @@ defmodule CoreWeb.Router do
     post("/fn", ModuleController, :create)
 
     # List all functions in a module
-    get("/fn/:module_name", ModuleController, :show)
+    get("/fn/:module_name", ModuleController, :show_functions)
     # Create new function in a module
     post("/fn/:module_name", FunctionController, :create)
     # Update module name

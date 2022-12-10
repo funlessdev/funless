@@ -31,9 +31,15 @@ defmodule Core.ModulesTest do
       assert Modules.list_modules() == [module]
     end
 
-    test "get_module!/1 returns the module with given id" do
+    test "get_module_by_name!/1 returns the module with given name" do
       module = module_fixture()
       assert Modules.get_module_by_name!(module.name) == module
+    end
+
+    test "get_functions_in_module!/1 returns the list of functions" do
+      module = module_fixture()
+      function = function_fixture(module.id)
+      assert Modules.get_functions_in_module!(module.name) == [function.name]
     end
 
     test "create_module/1 with valid data creates a module" do

@@ -26,9 +26,7 @@ defmodule CoreWeb.FunctionView do
 
   def render("function.json", %{function: function}) do
     %{
-      id: function.id,
-      name: function.name,
-      code: function.code
+      name: function.name
     }
   end
 end

@@ -20,6 +20,7 @@ defmodule Core.Domain.Modules do
   import Ecto.Query, warn: false
   alias Core.Repo
 
+  alias Core.Schemas.Function
   alias Core.Schemas.Module
 
   @doc """
@@ -42,10 +43,10 @@ defmodule Core.Domain.Modules do
 
   ## Examples
 
-      iex> get_module!("my_mod")
+      iex> get_module_by_name!("my_mod")
       %Module{}
 
-      iex> get_module!("no_mod")
+      iex> get_module_by_name!("no_mod")
       ** (Ecto.NoResultsError)
 
   """
@@ -101,6 +102,28 @@ defmodule Core.Domain.Modules do
   """
   def delete_module(%Module{} = module) do
     Repo.delete(module)
+  end
+
+  @doc """
+  Get the list of functions associated to this module.
+
+  ## Examples
+      iex> get_functions_in_module!("my_mod")
+      [%Function{}]
+
+      iex> get_functions_in_module!("no_mod")
+      ** (Ecto.NoResultsError)
+  """
+  def get_functions_in_module!(name) do
+    q =
+      from(f in Function,
+        join: m in Module,
+        on: f.module_id == m.id,
+        where: m.name == ^name,
+        select: f.name
+      )
+
+    Repo.all(q)
   end
 
   @doc """
