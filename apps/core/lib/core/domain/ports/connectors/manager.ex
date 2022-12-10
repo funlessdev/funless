@@ -26,10 +26,17 @@ defmodule Core.Domain.Ports.Connectors.Manager do
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @callback connect(function_signature, event) :: :ok | {:error, any}
+  @callback disconnect(function_signature) :: :ok | {:error, any}
 
   @doc """
-  Function to obtain resource information on a specific worker.
+  Connects a function to a specific event. Should spawn a connector process.
   """
   @spec connect(function_signature, event) :: :ok | {:error, any}
   defdelegate connect(function, event), to: @adapter
+
+  @doc """
+  Disconnects a function from all events. Should kill all related connector processes.
+  """
+  @spec disconnect(function_signature) :: :ok | {:error, any}
+  defdelegate disconnect(function), to: @adapter
 end
