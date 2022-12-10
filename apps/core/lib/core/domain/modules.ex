@@ -36,20 +36,20 @@ defmodule Core.Domain.Modules do
   end
 
   @doc """
-  Gets a single module.
+  Gets a single module by the name.
 
   Raises `Ecto.NoResultsError` if the Module does not exist.
 
   ## Examples
 
-      iex> get_module!(123)
+      iex> get_module!("my_mod")
       %Module{}
 
-      iex> get_module!(456)
+      iex> get_module!("no_mod")
       ** (Ecto.NoResultsError)
 
   """
-  def get_module!(id), do: Repo.get!(Module, id)
+  def get_module_by_name!(name), do: Repo.get_by!(Module, name: name)
 
   @doc """
   Creates a module.

@@ -34,7 +34,7 @@ defmodule Core.FunctionsTest do
     test "get_function!/1 returns the function with given id" do
       module = module_fixture()
       function = function_fixture(module.id)
-      assert Functions.get_function!(function.id) == function
+      assert Functions.get_function_by_name!(function.name) == function
     end
 
     test "create_function/1 with valid data creates a function" do
@@ -65,14 +65,14 @@ defmodule Core.FunctionsTest do
       module = module_fixture()
       function = function_fixture(module.id)
       assert {:error, %Ecto.Changeset{}} = Functions.update_function(function, @invalid_attrs)
-      assert function == Functions.get_function!(function.id)
+      assert function == Functions.get_function_by_name!(function.name)
     end
 
     test "delete_function/1 deletes the function" do
       module = module_fixture()
       function = function_fixture(module.id)
       assert {:ok, %Function{}} = Functions.delete_function(function)
-      assert_raise Ecto.NoResultsError, fn -> Functions.get_function!(function.id) end
+      assert_raise Ecto.NoResultsError, fn -> Functions.get_function_by_name!(function.name) end
     end
 
     test "change_function/1 returns a function changeset" do

@@ -42,14 +42,14 @@ defmodule Core.Domain.Functions do
 
   ## Examples
 
-      iex> get_function!(123)
+      iex> get_function_by_name!("my_fun")
       %Function{}
 
-      iex> get_function!(456)
+      iex> get_function_by_name!("no_fun")
       ** (Ecto.NoResultsError)
 
   """
-  def get_function!(id), do: Repo.get!(Function, id)
+  def get_function_by_name!(name), do: Repo.get_by!(Function, name: name)
 
   @doc """
   Creates a function.

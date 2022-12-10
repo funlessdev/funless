@@ -28,12 +28,12 @@ defmodule Core.ModulesTest do
 
     test "list_modules/0 returns all modules" do
       module = module_fixture()
-      assert Modules.list_modules() |> length == 2
+      assert Modules.list_modules() == [module]
     end
 
     test "get_module!/1 returns the module with given id" do
       module = module_fixture()
-      assert Modules.get_module!(module.id) == module
+      assert Modules.get_module_by_name!(module.name) == module
     end
 
     test "create_module/1 with valid data creates a module" do
@@ -58,20 +58,20 @@ defmodule Core.ModulesTest do
     test "update_module/2 with invalid data returns error changeset" do
       module = module_fixture()
       assert {:error, %Ecto.Changeset{}} = Modules.update_module(module, @invalid_attrs)
-      assert module == Modules.get_module!(module.id)
+      assert module == Modules.get_module_by_name!(module.name)
     end
 
     test "delete_module/1 deletes the module" do
       module = module_fixture()
       assert {:ok, %Module{}} = Modules.delete_module(module)
-      assert_raise Ecto.NoResultsError, fn -> Modules.get_module!(module.id) end
+      assert_raise Ecto.NoResultsError, fn -> Modules.get_module_by_name!(module.name) end
     end
 
     test "delete_module/1 also deletes all functions" do
       module = module_fixture()
       function = function_fixture(module.id)
       assert {:ok, %Module{}} = Modules.delete_module(module)
-      assert_raise Ecto.NoResultsError, fn -> Functions.get_function!(function.id) end
+      assert_raise Ecto.NoResultsError, fn -> Functions.get_function_by_name!(function.name) end
     end
 
     test "change_module/1 returns a module changeset" do
