@@ -29,7 +29,7 @@ defmodule Core.Adapters.Connectors.ManagerStore do
     key = module <> "/" <> function
 
     case :ets.lookup(@ets_table, key) do
-      [{^key, pids}] -> pids
+      [{^key, _pid} | _] = res -> Enum.map(res, fn {_, pid} -> pid end)
       [] -> :not_found
     end
   end
@@ -53,7 +53,7 @@ defmodule Core.Adapters.Connectors.ManagerStore do
 
   @impl true
   def init(_args) do
-    table = :ets.new(@ets_table, [:set, :named_table, :protected])
+    table = :ets.new(@ets_table, [:bag, :named_table, :protected])
     Logger.info("Connectors ETS Server: started")
     {:ok, table}
   end
