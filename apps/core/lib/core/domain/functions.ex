@@ -21,6 +21,7 @@ defmodule Core.Domain.Functions do
   alias Core.Repo
 
   alias Core.Schemas.Function
+  alias Core.Schemas.Module
 
   @doc """
   Returns the list of functions.
@@ -36,20 +37,30 @@ defmodule Core.Domain.Functions do
   end
 
   @doc """
-  Gets a single function.
+  Gets a single function in a module.
 
   Raises `Ecto.NoResultsError` if the Function does not exist.
 
   ## Examples
 
-      iex> get_function_by_name!("my_fun")
-      %Function{}
+      iex> get_by_name_in_mod!("my_fun", "my_mod")
+      [%Function{}]
 
-      iex> get_function_by_name!("no_fun")
-      ** (Ecto.NoResultsError)
+      iex> get_by_name_in_mod!("no_fun", "mod")
+      []
 
   """
-  def get_function_by_name!(name), do: Repo.get_by!(Function, name: name)
+  def get_by_name_in_mod!(fun_name, mod_name) do
+    q =
+      from(f in Function,
+        join: m in Module,
+        on: f.module_id == m.id,
+        where: m.name == ^mod_name and f.name == ^fun_name,
+        select: %Function{id: f.id, name: f.name, module_id: f.module_id}
+      )
+
+    Repo.all(q)
+  end
 
   @doc """
   Creates a function.

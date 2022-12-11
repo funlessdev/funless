@@ -38,10 +38,11 @@ defmodule CoreWeb.Router do
 
     # Show single function information
     get("/fn/:module_name/:function_name", FunctionController, :show)
-    # Update single function code
+    # Update single function
     put("/fn/:module_name/:function_name", FunctionController, :update)
     # Delete single function
     delete("/fn/:module_name/:function_name", FunctionController, :delete)
+
     # Invoke function
     post("/fn/:module_name/:function_name", FunctionController, :invoke)
   end

@@ -15,8 +15,7 @@
 defmodule Core.ModulesTest do
   use Core.DataCase
 
-  alias Core.Domain.Functions
-  alias Core.Domain.Modules
+  alias Core.Domain.{Functions, Modules}
 
   describe "modules" do
     alias Core.Schemas.Module
@@ -39,7 +38,10 @@ defmodule Core.ModulesTest do
     test "get_functions_in_module!/1 returns the list of functions" do
       module = module_fixture()
       function = function_fixture(module.id)
-      assert Modules.get_functions_in_module!(module.name) == [function.name]
+
+      assert [fun] = Modules.get_functions_in_module!(module.name)
+      assert fun.id == function.id
+      assert fun.name == function.name
     end
 
     test "create_module/1 with valid data creates a module" do
@@ -77,7 +79,8 @@ defmodule Core.ModulesTest do
       module = module_fixture()
       function = function_fixture(module.id)
       assert {:ok, %Module{}} = Modules.delete_module(module)
-      assert_raise Ecto.NoResultsError, fn -> Functions.get_function_by_name!(function.name) end
+
+      assert [] == Functions.get_by_name_in_mod!(function.name, module.name)
     end
 
     test "change_module/1 returns a module changeset" do

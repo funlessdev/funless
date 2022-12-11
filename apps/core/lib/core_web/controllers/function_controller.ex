@@ -15,42 +15,52 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
-  alias Core.Domain.Functions
-  alias Core.Schemas.Function
+  alias Core.Domain.{Functions, Modules}
+  alias Core.Schemas.{Function, Module}
 
   action_fallback(CoreWeb.FallbackController)
 
-  def index(conn, _params) do
-    functions = Functions.list_functions()
-    render(conn, "index.json", functions: functions)
-  end
-
-  def create(conn, %{"function" => function_params}) do
-    with {:ok, %Function{} = function} <- Functions.create_function(function_params) do
+  def create(conn, %{"module_name" => module_name, "function" => params}) do
+    with %Module{} = module <- Modules.get_module_by_name!(module_name),
+         {:ok, %Function{} = function} <-
+           params
+           |> Map.put_new("module_id", module.id)
+           |> Functions.create_function() do
       conn
       |> put_status(:created)
       |> render("show.json", function: function)
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    function = Functions.get_function!(id)
-    render(conn, "show.json", function: function)
-  end
-
-  def update(conn, %{"id" => id, "function" => function_params}) do
-    function = Functions.get_function!(id)
-
-    with {:ok, %Function{} = function} <- Functions.update_function(function, function_params) do
+  def show(conn, %{"module_name" => mod_name, "function_name" => name}) do
+    with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name) do
       render(conn, "show.json", function: function)
     end
   end
 
-  def delete(conn, %{"id" => id}) do
-    function = Functions.get_function!(id)
+  def update(conn, %{
+        "module_name" => mod_name,
+        "function_name" => name,
+        "function" => function_params
+      }) do
+    with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
+         {:ok, %Function{} = function} <- Functions.update_function(function, function_params) do
+      render(conn, "show.json", function: function)
+    end
+  end
 
-    with {:ok, %Function{}} <- Functions.delete_function(function) do
+  def delete(conn, %{"module_name" => mod_name, "function_name" => name}) do
+    with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
+         {:ok, %Function{}} <- Functions.delete_function(function) do
       send_resp(conn, :no_content, "")
+    end
+  end
+
+  @spec retrieve_fun_in_mod(String.t(), String.t()) :: {:ok, Function.t()} | {:error, :not_found}
+  defp retrieve_fun_in_mod(fname, mod_name) do
+    case Functions.get_by_name_in_mod!(fname, mod_name) do
+      [] -> {:error, :not_found}
+      [function] -> {:ok, function}
     end
   end
 end

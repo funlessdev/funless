@@ -120,7 +120,7 @@ defmodule Core.Domain.Modules do
         join: m in Module,
         on: f.module_id == m.id,
         where: m.name == ^name,
-        select: f.name
+        select: %Function{id: f.id, name: f.name}
       )
 
     Repo.all(q)
