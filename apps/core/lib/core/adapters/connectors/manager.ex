@@ -30,7 +30,7 @@ defmodule Core.Adapters.Connectors.Manager do
       case event_type do
         "mqtt" ->
           DynamicSupervisor.start_child(
-            Core.Adapters.Connectors.Supervisor,
+            Core.Adapters.Connectors.DynamicSupervisor,
             {EventConnectors.Mqtt, %{function: function, module: module, params: params}}
           )
       end
@@ -51,7 +51,7 @@ defmodule Core.Adapters.Connectors.Manager do
 
       pids ->
         Enum.each(pids, fn pid ->
-          DynamicSupervisor.terminate_child(Core.Adapters.Conectors.Supervisor, pid)
+          DynamicSupervisor.terminate_child(Core.Adapters.Connectors.DynamicSupervisor, pid)
         end)
 
         ManagerStore.delete(function, module)
