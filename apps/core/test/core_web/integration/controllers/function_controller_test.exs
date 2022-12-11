@@ -34,33 +34,22 @@ defmodule CoreWeb.FunctionControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  describe "index" do
-    test "lists all functions", %{conn: conn} do
-      conn = get(conn, Routes.function_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
-    end
-  end
-
   describe "create function" do
     test "renders function when data is valid", %{conn: conn} do
       module = module_fixture()
-      create_attrs = Map.put_new(@create_attrs, "module_id", module.id)
+      conn = post(conn, Routes.function_path(conn, :create, module.name), function: @create_attrs)
+      assert %{"name" => name} = json_response(conn, 201)["data"]
 
-      conn = post(conn, Routes.function_path(conn, :create), function: create_attrs)
-
-      assert %{"id" => id} = json_response(conn, 201)["data"]
-
-      conn = get(conn, Routes.function_path(conn, :show, id))
-
-      assert %{
-               "id" => ^id,
-               "code" => "some_code",
-               "name" => "some_name"
-             } = json_response(conn, 200)["data"]
+      conn = get(conn, Routes.function_path(conn, :show, module.name, name))
+      assert %{"name" => "some_name"} = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.function_path(conn, :create), function: @invalid_attrs)
+      module = module_fixture()
+
+      conn =
+        post(conn, Routes.function_path(conn, :create, module.name), function: @invalid_attrs)
+
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
@@ -70,25 +59,29 @@ defmodule CoreWeb.FunctionControllerTest do
 
     test "renders function when data is valid", %{
       conn: conn,
-      function: %Function{id: id} = function,
-      module_id: module_id
+      function: %Function{name: function_name},
+      module_name: module_name
     } do
-      update_attrs = Map.put_new(@update_attrs, "module_id", module_id)
+      conn =
+        put(conn, Routes.function_path(conn, :update, module_name, function_name),
+          function: @update_attrs
+        )
 
-      conn = put(conn, Routes.function_path(conn, :update, function), function: update_attrs)
-      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+      assert %{"name" => new_name} = json_response(conn, 200)["data"]
+      assert new_name == @update_attrs.name
 
-      conn = get(conn, Routes.function_path(conn, :show, id))
-
-      assert %{
-               "id" => ^id,
-               "code" => "some_updated_code",
-               "name" => "some_updated_name"
-             } = json_response(conn, 200)["data"]
+      conn = get(conn, Routes.function_path(conn, :show, module_name, new_name))
+      assert %{"name" => ^new_name} = json_response(conn, 200)["data"]
     end
 
-    test "renders errors when data is invalid", %{conn: conn, function: function} do
-      conn = put(conn, Routes.function_path(conn, :update, function), function: @invalid_attrs)
+    test "renders errors when data is invalid", %{
+      conn: conn,
+      function: %Function{name: name},
+      module_name: module_name
+    } do
+      conn =
+        put(conn, Routes.function_path(conn, :update, module_name, name), function: @invalid_attrs)
+
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
@@ -96,19 +89,22 @@ defmodule CoreWeb.FunctionControllerTest do
   describe "delete function" do
     setup [:create_function]
 
-    test "deletes chosen function", %{conn: conn, function: function} do
-      conn = delete(conn, Routes.function_path(conn, :delete, function))
+    test "deletes chosen function", %{
+      conn: conn,
+      function: %Function{name: function_name},
+      module_name: module_name
+    } do
+      conn = delete(conn, Routes.function_path(conn, :delete, module_name, function_name))
       assert response(conn, 204)
 
-      assert_error_sent(404, fn ->
-        get(conn, Routes.function_path(conn, :show, function))
-      end)
+      conn = get(conn, Routes.function_path(conn, :show, module_name, function_name))
+      assert response(conn, 404)
     end
   end
 
   defp create_function(_) do
     module = module_fixture()
     function = function_fixture(module.id)
-    %{function: function, module_id: module.id}
+    %{function: function, module_name: module.name}
   end
 end

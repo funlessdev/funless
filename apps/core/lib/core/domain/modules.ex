@@ -20,6 +20,7 @@ defmodule Core.Domain.Modules do
   import Ecto.Query, warn: false
   alias Core.Repo
 
+  alias Core.Schemas.Function
   alias Core.Schemas.Module
 
   @doc """
@@ -36,20 +37,20 @@ defmodule Core.Domain.Modules do
   end
 
   @doc """
-  Gets a single module.
+  Gets a single module by the name.
 
   Raises `Ecto.NoResultsError` if the Module does not exist.
 
   ## Examples
 
-      iex> get_module!(123)
+      iex> get_module_by_name!("my_mod")
       %Module{}
 
-      iex> get_module!(456)
+      iex> get_module_by_name!("no_mod")
       ** (Ecto.NoResultsError)
 
   """
-  def get_module!(id), do: Repo.get!(Module, id)
+  def get_module_by_name!(name), do: Repo.get_by!(Module, name: name)
 
   @doc """
   Creates a module.
@@ -101,6 +102,28 @@ defmodule Core.Domain.Modules do
   """
   def delete_module(%Module{} = module) do
     Repo.delete(module)
+  end
+
+  @doc """
+  Get the list of functions associated to this module.
+
+  ## Examples
+      iex> get_functions_in_module!("my_mod")
+      [%Function{}]
+
+      iex> get_functions_in_module!("no_mod")
+      ** (Ecto.NoResultsError)
+  """
+  def get_functions_in_module!(name) do
+    q =
+      from(f in Function,
+        join: m in Module,
+        on: f.module_id == m.id,
+        where: m.name == ^name,
+        select: %Function{id: f.id, name: f.name}
+      )
+
+    Repo.all(q)
   end
 
   @doc """

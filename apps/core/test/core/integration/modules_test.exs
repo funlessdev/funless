@@ -15,8 +15,7 @@
 defmodule Core.ModulesTest do
   use Core.DataCase
 
-  alias Core.Domain.Functions
-  alias Core.Domain.Modules
+  alias Core.Domain.{Functions, Modules}
 
   describe "modules" do
     alias Core.Schemas.Module
@@ -28,12 +27,21 @@ defmodule Core.ModulesTest do
 
     test "list_modules/0 returns all modules" do
       module = module_fixture()
-      assert Modules.list_modules() |> length == 2
+      assert Modules.list_modules() == [module]
     end
 
-    test "get_module!/1 returns the module with given id" do
+    test "get_module_by_name!/1 returns the module with given name" do
       module = module_fixture()
-      assert Modules.get_module!(module.id) == module
+      assert Modules.get_module_by_name!(module.name) == module
+    end
+
+    test "get_functions_in_module!/1 returns the list of functions" do
+      module = module_fixture()
+      function = function_fixture(module.id)
+
+      assert [fun] = Modules.get_functions_in_module!(module.name)
+      assert fun.id == function.id
+      assert fun.name == function.name
     end
 
     test "create_module/1 with valid data creates a module" do
@@ -58,20 +66,21 @@ defmodule Core.ModulesTest do
     test "update_module/2 with invalid data returns error changeset" do
       module = module_fixture()
       assert {:error, %Ecto.Changeset{}} = Modules.update_module(module, @invalid_attrs)
-      assert module == Modules.get_module!(module.id)
+      assert module == Modules.get_module_by_name!(module.name)
     end
 
     test "delete_module/1 deletes the module" do
       module = module_fixture()
       assert {:ok, %Module{}} = Modules.delete_module(module)
-      assert_raise Ecto.NoResultsError, fn -> Modules.get_module!(module.id) end
+      assert_raise Ecto.NoResultsError, fn -> Modules.get_module_by_name!(module.name) end
     end
 
     test "delete_module/1 also deletes all functions" do
       module = module_fixture()
       function = function_fixture(module.id)
       assert {:ok, %Module{}} = Modules.delete_module(module)
-      assert_raise Ecto.NoResultsError, fn -> Functions.get_function!(function.id) end
+
+      assert [] == Functions.get_by_name_in_mod!(function.name, module.name)
     end
 
     test "change_module/1 returns a module changeset" do

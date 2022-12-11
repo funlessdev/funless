@@ -33,21 +33,21 @@ defmodule CoreWeb.ModuleController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    module = Modules.get_module!(id)
-    render(conn, "show.json", module: module)
+  def show_functions(conn, %{"module_name" => name}) do
+    functions = Modules.get_functions_in_module!(name)
+    render(conn, "show_functions.json", functions: functions)
   end
 
-  def update(conn, %{"id" => id, "module" => module_params}) do
-    module = Modules.get_module!(id)
+  def update(conn, %{"module_name" => name, "module" => module_params}) do
+    module = Modules.get_module_by_name!(name)
 
     with {:ok, %Module{} = module} <- Modules.update_module(module, module_params) do
       render(conn, "show.json", module: module)
     end
   end
 
-  def delete(conn, %{"id" => id}) do
-    module = Modules.get_module!(id)
+  def delete(conn, %{"module_name" => name}) do
+    module = Modules.get_module_by_name!(name)
 
     with {:ok, %Module{}} <- Modules.delete_module(module) do
       send_resp(conn, :no_content, "")

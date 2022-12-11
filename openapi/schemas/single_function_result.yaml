@@ -19,7 +19,7 @@ properties:
     properties:
       name:
         type: string
-      module_name:
-        type: string
-      code_size:
-        type: integer
+      # module_name:
+      #   type: string
+      # code_size:
+      #   type: integer
