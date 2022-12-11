@@ -16,22 +16,22 @@ defmodule Core.Domain.Ports.Connectors.Manager do
   @moduledoc """
   Port for managing Event Connectors.
   """
+  alias Data.ConnectedEvent
+
   @type function_signature :: %{
           name: String.t(),
           module: String.t()
         }
 
-  @type event :: map()
-
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback connect(function_signature, event) :: :ok | {:error, any}
+  @callback connect(function_signature, ConnectedEvent.t()) :: :ok | {:error, any}
   @callback disconnect(function_signature) :: :ok | {:error, any}
 
   @doc """
   Connects a function to a specific event. Should spawn a connector process.
   """
-  @spec connect(function_signature, event) :: :ok | {:error, any}
+  @spec connect(function_signature, ConnectedEvent.t()) :: :ok | {:error, any}
   defdelegate connect(function, event), to: @adapter
 
   @doc """
