@@ -22,7 +22,7 @@ defmodule Data.ConnectedEvent do
   """
   @type t :: %__MODULE__{
           type: String.t(),
-          params: Map.t()
+          params: map()
         }
   @enforce_keys [:type, :params]
   defstruct [:type, :params]
