@@ -24,4 +24,8 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
     Logger.info("MQTT Event Connector: started with params #{inspect(params)}")
     {:ok, params}
   end
+
+  def handle_call(:any, _from, params) do
+    {:reply, :ok, params}
+  end
 end
