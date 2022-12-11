@@ -13,6 +13,9 @@
 # limitations under the License.
 
 defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
+  @moduledoc """
+  Event Connector for MQTT messages.
+  """
   use GenServer
   require Logger
 
