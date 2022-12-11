@@ -36,11 +36,20 @@ defmodule Core.Adapters.Connectors.Manager do
       end
 
     case result do
-      {:ok, pid} -> ManagerStore.insert(function, module, pid)
-      _ -> nil
-    end
+      {:ok, pid} ->
+        ManagerStore.insert(function, module, pid)
+        :ok
 
-    result
+      {:ok, pid, _info} ->
+        ManagerStore.insert(function, module, pid)
+        :ok
+
+      :ignore ->
+        {:error, :ignore}
+
+      {:error, err} ->
+        {:error, err}
+    end
   end
 
   @impl true
@@ -55,6 +64,7 @@ defmodule Core.Adapters.Connectors.Manager do
         end)
 
         ManagerStore.delete(function, module)
+        :ok
     end
   end
 end
