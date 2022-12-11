@@ -183,11 +183,11 @@ defmodule CoreWeb.FnControllerTest do
       assert json_response(conn, 200) == expected
     end
 
-    test "error: should raise an error when no module is given", %{conn: conn} do
-      assert_raise Phoenix.Router.NoRouteError, fn ->
-        _conn = get(conn, "/v1/fn/list/")
-      end
-    end
+    # test "error: should raise an error when no module is given", %{conn: conn} do
+    #   assert_raise Phoenix.Router.NoRouteError, fn ->
+    #     _conn = get(conn, "/v1/fn/list/")
+    #   end
+    # end
 
     test "error: should return 503 when the underlying storage transaction fails", %{conn: conn} do
       Core.FunctionStore.Mock
