@@ -13,4 +13,48 @@
 # limitations under the License.
 
 defmodule Core.Adapters.Connectors.Manager do
+  @moduledoc """
+  Adapter to handle Event Connector processes and associate functions to events.
+  """
+  @behaviour Core.Domain.Ports.Connectors.Manager
+  alias Core.Adapters.Connectors.EventConnectors
+  alias Core.Adapters.Connectors.ManagerStore
+  alias Data.ConnectedEvent
+
+  @impl true
+  def connect(%{name: function, module: module}, %ConnectedEvent{
+        type: event_type,
+        params: params
+      }) do
+    result =
+      case event_type do
+        "mqtt" ->
+          DynamicSupervisor.start_child(
+            Core.Adapters.Connectors.Supervisor,
+            {EventConnectors.Mqtt, %{function: function, module: module, params: params}}
+          )
+      end
+
+    case result do
+      {:ok, pid} -> ManagerStore.insert(function, module, pid)
+      _ -> nil
+    end
+
+    result
+  end
+
+  @impl true
+  def disconnect(%{name: function, module: module}) do
+    case ManagerStore.get(function, module) do
+      :not_found ->
+        {:error, :not_found}
+
+      pids ->
+        Enum.each(pids, fn pid ->
+          DynamicSupervisor.terminate_child(Core.Adapters.Conectors.Supervisor, pid)
+        end)
+
+        ManagerStore.delete(function, module)
+    end
+  end
 end
