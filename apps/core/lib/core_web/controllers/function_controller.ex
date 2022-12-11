@@ -56,7 +56,7 @@ defmodule CoreWeb.FunctionController do
     end
   end
 
-  @spec retrieve_fun_in_mod(String.t(), String.t()) :: {:ok, Function.t()} | {:error, :not_found}
+  @spec retrieve_fun_in_mod(String.t(), String.t()) :: {:ok, term()} | {:error, :not_found}
   defp retrieve_fun_in_mod(fname, mod_name) do
     case Functions.get_by_name_in_mod!(fname, mod_name) do
       [] -> {:error, :not_found}
