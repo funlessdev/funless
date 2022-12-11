@@ -12,8 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Mox.defmock(Core.Commands.Mock, for: Core.Domain.Ports.Commands)
-Mox.defmock(Core.Cluster.Mock, for: Core.Domain.Ports.Cluster)
-Mox.defmock(Core.FunctionStore.Mock, for: Core.Domain.Ports.FunctionStore)
-Mox.defmock(Core.Telemetry.Metrics.Mock, for: Core.Domain.Ports.Telemetry.Metrics)
-Mox.defmock(Core.Connectors.Manager.Mock, for: Core.Domain.Ports.Connectors.Manager)
+defmodule Core.Adapters.Connectors.Test do
+  @moduledoc false
+
+  @behaviour Core.Domain.Ports.Connectors.Manager
+
+  @impl true
+  def connect(_function_signature, _event) do
+    :ok
+  end
+
+  @impl true
+  def disconnect(_function_signature) do
+    :ok
+  end
+end
