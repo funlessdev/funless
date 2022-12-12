@@ -14,7 +14,7 @@
 
 import Config
 
-# Print only errors during test
+# Print only errors during test, add :console to print logs
 config :logger, level: :warn, backends: []
 
 # --- Core Configs ---
