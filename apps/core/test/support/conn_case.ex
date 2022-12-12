@@ -45,10 +45,12 @@ defmodule CoreWeb.ConnCase do
 
       # The default endpoint for testing
       @endpoint CoreWeb.Endpoint
+      @moduletag integration_test: true
     end
   end
 
-  setup _tags do
+  setup tags do
+    Core.DataCase.setup_sandbox(tags)
     Mox.verify_on_exit!()
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end

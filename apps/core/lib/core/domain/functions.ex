@@ -24,6 +24,32 @@ defmodule Core.Domain.Functions do
   alias Core.Schemas.Module
 
   @doc """
+  Returns true if the function exists in a module. Otherwise false.
+
+  ## Examples
+
+      iex> exists_in_mod?("my_fun", "my_mod")
+      true
+
+      iex> exists_in_mod?("no_fun", "mod")
+      false
+  """
+  def exists_in_mod?(fun_name, mod_name) do
+    q =
+      from(f in Function,
+        join: m in Module,
+        on: f.module_id == m.id,
+        where: m.name == ^mod_name and f.name == ^fun_name,
+        select: %Function{id: f.id}
+      )
+
+    case Repo.all(q) do
+      [] -> false
+      _ -> true
+    end
+  end
+
+  @doc """
   Returns the list of functions.
 
   ## Examples
@@ -39,7 +65,7 @@ defmodule Core.Domain.Functions do
   @doc """
   Gets a single function in a module.
 
-  Raises `Ecto.NoResultsError` if the Function does not exist.
+  Returns `[]` if the Function does not exist.
 
   ## Examples
 
@@ -61,6 +87,46 @@ defmodule Core.Domain.Functions do
 
     Repo.all(q)
   end
+
+  @doc """
+  Gets a single function with code in a module.
+
+  Returns `[]` if the Function does not exist.
+
+  ## Examples
+
+      iex> get_code_by_name_in_mod!("my_fun", "my_mod")
+      [%Function{}]
+
+      iex> get_code_by_name_in_mod!("no_fun", "mod")
+      []
+  """
+  def get_code_by_name_in_mod!(fun_name, mod_name) do
+    q =
+      from(f in Function,
+        join: m in Module,
+        on: f.module_id == m.id,
+        where: m.name == ^mod_name and f.name == ^fun_name,
+        select: %Function{code: f.code}
+      )
+
+    Repo.all(q)
+  end
+
+  @doc """
+  Gets a single function.
+
+  Raises `Ecto.NoResultsError` if the Function does not exist.
+
+  ## Examples
+
+      iex> get_function!(123)
+      %Function{}
+
+      iex> get_function!(456)
+      ** (Ecto.NoResultsError)
+  """
+  def get(fun_id), do: Repo.get!(Function, fun_id)
 
   @doc """
   Creates a function.

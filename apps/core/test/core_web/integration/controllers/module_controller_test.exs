@@ -13,7 +13,7 @@
 # limitations under the License.
 
 defmodule CoreWeb.ModuleControllerTest do
-  use CoreWeb.ControllerCase
+  use CoreWeb.ConnCase
 
   import Core.ModulesFixtures
   import Core.FunctionsFixtures

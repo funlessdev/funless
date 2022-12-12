@@ -15,9 +15,6 @@
 defmodule Core.Application do
   @moduledoc false
 
-  alias Core.Domain.Nodes
-  alias Core.Domain.Ports.FunctionStore
-
   use Application
 
   @impl true
@@ -46,24 +43,6 @@ defmodule Core.Application do
       {Core.Adapters.Telemetry.Supervisor, []},
       {Core.Adapters.Connectors.Supervisor, []}
     ]
-  end
-
-  @impl true
-  def start_phase(:init_db, _phase_type, :test) do
-    :ok
-  end
-
-  @impl true
-  def start_phase(:init_db, _phase_type, _env) do
-    res =
-      Nodes.core_nodes()
-      |> FunctionStore.init_database()
-
-    case res do
-      :ok -> :ok
-      {:error, {:aborted, {:already_exists, _}}} -> :ok
-      err -> err
-    end
   end
 
   # Tell Phoenix to update the endpoint configuration

@@ -25,19 +25,57 @@ defmodule Core.FunctionsTest do
 
     @invalid_attrs %{code: nil, name: nil}
 
+    test "exists_in_mod?/2 returns true if the function exists in a module" do
+      module = module_fixture()
+      function = function_fixture(module.id)
+      assert Functions.exists_in_mod?(function.name, module.name)
+    end
+
+    test "exists_in_mod?/2 returns false if the function does not exist in a module" do
+      module = module_fixture()
+      assert not Functions.exists_in_mod?("no_fun", module.name)
+    end
+
+    test "exists_in_mod?/2 returns false if the module does not exist" do
+      assert not Functions.exists_in_mod?("no_fun", "no_mod")
+    end
+
     test "list_functions/0 returns all functions" do
       module = module_fixture()
       function = function_fixture(module.id)
       assert Functions.list_functions() == [function]
     end
 
-    test "get_by_name_in_mod!/1 returns the function with given id" do
+    test "get_by_name_in_mod!/2 returns the function with given id" do
       module = module_fixture()
       function = function_fixture(module.id)
 
       assert [got_function] = Functions.get_by_name_in_mod!(function.name, module.name)
       assert got_function.id == function.id
       assert got_function.name == function.name
+      assert got_function.code == nil
+    end
+
+    test "get_by_name_in_mod!/2 returns [] if the function does not exist" do
+      assert Functions.get_by_name_in_mod!("no_fun", "no_mod") == []
+    end
+
+    test "get_code_by_name_in_mod!/2 returns the function with the code field" do
+      module = module_fixture()
+      function = function_fixture(module.id)
+
+      assert [got] = Functions.get_code_by_name_in_mod!(function.name, module.name)
+      assert got.code == function.code
+    end
+
+    test "get/1 returns the function with given id" do
+      module = module_fixture()
+      function = function_fixture(module.id)
+
+      assert got_function = Functions.get(function.id)
+      assert got_function.id == function.id
+      assert got_function.name == function.name
+      assert got_function.code == function.code
     end
 
     test "create_function/1 with valid data creates a function" do

@@ -13,10 +13,9 @@
 # limitations under the License.
 
 defmodule CoreWeb.FunctionControllerTest do
-  use CoreWeb.ControllerCase
+  use CoreWeb.ConnCase
 
-  import Core.FunctionsFixtures
-  import Core.ModulesFixtures
+  import Core.{FunctionsFixtures, ModulesFixtures}
 
   alias Core.Schemas.Function
 
@@ -31,6 +30,9 @@ defmodule CoreWeb.FunctionControllerTest do
   @invalid_attrs %{code: nil, name: nil}
 
   setup %{conn: conn} do
+    Core.Commands.Mock |> Mox.stub_with(Core.Adapters.Commands.Test)
+    Core.Cluster.Mock |> Mox.stub_with(Core.Adapters.Cluster.Test)
+
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
@@ -99,6 +101,93 @@ defmodule CoreWeb.FunctionControllerTest do
 
       conn = get(conn, Routes.function_path(conn, :show, module_name, function_name))
       assert response(conn, 404)
+    end
+  end
+
+  describe "invoke function" do
+    setup [:create_function]
+
+    test "invokes function without passing args", %{
+      conn: conn,
+      function: %Function{name: function_name},
+      module_name: module_name
+    } do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
+
+      conn = post(conn, Routes.function_path(conn, :invoke, module_name, function_name))
+      assert response(conn, 200)
+    end
+
+    test "invokes function with args", %{
+      conn: conn,
+      function: %Function{name: function_name},
+      module_name: module_name
+    } do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
+
+      conn =
+        post(conn, Routes.function_path(conn, :invoke, module_name, function_name),
+          args: %{name: "World"}
+        )
+
+      assert response(conn, 200)
+    end
+
+    test "invokes function when worker does not have function", %{
+      conn: conn,
+      function: %Function{name: function_name},
+      module_name: module_name
+    } do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, :code_not_found} end)
+
+      conn = post(conn, Routes.function_path(conn, :invoke, module_name, function_name))
+      assert response(conn, 200)
+    end
+
+    test "renders errors when no worker is available", %{
+      conn: conn,
+      function: %Function{name: function_name},
+      module_name: module_name
+    } do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [] end)
+
+      conn = post(conn, Routes.function_path(conn, :invoke, module_name, function_name))
+      assert response(conn, 503)
+    end
+
+    test "renders error when function does not exist", %{conn: conn} do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+      conn = post(conn, Routes.function_path(conn, :invoke, "some_module", "no_function"))
+      assert response(conn, 404)
+    end
+
+    test "renders error when module does not exist", %{conn: conn} do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+      conn = post(conn, Routes.function_path(conn, :invoke, "no_module", "some_function"))
+      assert response(conn, 404)
+    end
+
+    test "renders error when there is an exec error", %{
+      conn: conn,
+      function: %Function{name: function_name},
+      module_name: module_name
+    } do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, {:exec_error, "some reason"}} end)
+
+      conn = post(conn, Routes.function_path(conn, :invoke, module_name, function_name))
+      assert response(conn, 422)
     end
   end
 

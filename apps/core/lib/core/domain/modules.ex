@@ -112,7 +112,7 @@ defmodule Core.Domain.Modules do
       [%Function{}]
 
       iex> get_functions_in_module!("no_mod")
-      ** (Ecto.NoResultsError)
+      ** []
   """
   def get_functions_in_module!(name) do
     q =

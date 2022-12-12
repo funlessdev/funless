@@ -30,10 +30,10 @@ defmodule Core.Adapters.Commands.Worker do
   # {:error, {:exec_error, msg}} an error occurred during the execution of the function
 
   @impl true
-  def send_invoke(worker, name, ns, args) do
+  def send_invoke(worker, name, mod, args) do
     worker_addr = {:worker, worker}
-    cmd = {:invoke, %{name: name, module: ns}, args}
-    Logger.info("Sending invoke for #{name} in module #{ns} to #{inspect(worker_addr)}")
+    cmd = {:invoke, %{name: name, module: mod}, args}
+    Logger.info("Sending invoke for #{mod}/#{name} to #{inspect(worker_addr)}")
 
     case GenServer.call(worker_addr, cmd, 30_000) do
       {:ok, result} -> {:ok, %InvokeResult{result: result}}
@@ -42,13 +42,11 @@ defmodule Core.Adapters.Commands.Worker do
   end
 
   @impl true
-  def send_invoke_with_code(worker, %FunctionStruct{} = function, args) do
+  def send_invoke_with_code(worker, %FunctionStruct{} = func, args) do
     worker_addr = {:worker, worker}
-    cmd = {:invoke, function, args}
+    cmd = {:invoke, func, args}
 
-    Logger.info(
-      "Sending invoke with code for #{function.name} in module #{function.module} to #{inspect(worker_addr)}"
-    )
+    Logger.info("Sending invoke with code #{func.module}/#{func.name} to #{inspect(worker_addr)}")
 
     case GenServer.call(worker_addr, cmd, 30_000) do
       {:ok, result} -> {:ok, %InvokeResult{result: result}}

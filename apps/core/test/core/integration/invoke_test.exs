@@ -12,18 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule ApiTest.InvokeTest do
-  alias Core.Domain.Api.Invoker
-  alias Data.FunctionStruct
-  alias Data.InvokeResult
+defmodule Core.InvokeTest do
+  use CoreWeb.ConnCase
 
-  use ExUnit.Case, async: true
-  import Mox, only: [verify_on_exit!: 1]
-  use Plug.Test
+  alias Core.Domain.Invoker
+  alias Data.{FunctionStruct, InvokeParams, InvokeResult}
 
-  setup :verify_on_exit!
+  import Core.{FunctionsFixtures, ModulesFixtures}
 
-  describe "API.Invoker" do
+  describe "Invoker" do
     setup do
       Core.Commands.Mock
       |> Mox.stub_with(Core.Adapters.Commands.Test)
@@ -31,25 +28,38 @@ defmodule ApiTest.InvokeTest do
       Core.Cluster.Mock
       |> Mox.stub_with(Core.Adapters.Cluster.Test)
 
-      Core.FunctionStore.Mock
-      |> Mox.stub_with(Core.Adapters.FunctionStore.Test)
-
-      :ok
+      create_function()
     end
 
-    test "invoke should return {:ok, result} when there is at least a worker and no error occurs" do
+    defp create_function do
+      module = module_fixture()
+      function = function_fixture(module.id)
+      %{function: function, module: module}
+    end
+
+    test "invoke should return {:ok, result} when there is at least a worker and no error occurs",
+         %{
+           function: function,
+           module: module
+         } do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
-      assert Invoker.invoke(%{"function" => "test"}) == {:ok, %InvokeResult{result: "test"}}
+      pars = %InvokeParams{function: function.name, module: module.name}
+      assert Invoker.invoke(pars) == {:ok, function.name}
     end
 
-    test "invoke should return {:error, err} when the invocation on worker encounter errors" do
+    test "invoke should return {:error, err} when the invocation on worker encounter errors",
+         %{
+           function: function,
+           module: module
+         } do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
       |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, {:exec_error, "some error"}} end)
 
-      assert Invoker.invoke(%{"function" => "f"}) == {:error, {:exec_error, "some error"}}
+      pars = %InvokeParams{function: function.name, module: module.name}
+      assert Invoker.invoke(pars) == {:error, {:exec_error, "some error"}}
     end
 
     test "invoke should return {:error, :no_workers} when no workers are found" do
@@ -57,13 +67,18 @@ defmodule ApiTest.InvokeTest do
       assert Invoker.invoke(%{"module" => "_", "function" => "test"}) == expected
     end
 
-    test "invoke on node list with nodes other than workers should only use workers" do
+    test "invoke on node list with nodes other than workers should only use workers",
+         %{
+           function: function,
+           module: module
+         } do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere, :worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn worker, _, _, _ -> {:ok, worker} end)
+      |> Mox.expect(:send_invoke, fn worker, _, _, _ -> {:ok, %InvokeResult{result: worker}} end)
 
-      assert Invoker.invoke(%{"function" => "test"}) == {:ok, :worker@localhost}
+      pars = %InvokeParams{function: function.name, module: module.name}
+      assert Invoker.invoke(pars) == {:ok, :worker@localhost}
     end
 
     test "invoke on node list without workers should return {:error, no workers}" do
@@ -72,32 +87,18 @@ defmodule ApiTest.InvokeTest do
       assert Invoker.invoke(%{"function" => "test"}) == {:error, :no_workers}
     end
 
-    test "invoke with bad parameters should return {:error, :bad_params}" do
-      assert Invoker.invoke(%{"bad" => "arg"}) == {:error, :bad_params}
-    end
-
     test "invoke on a non-existent function should return {:error, :not_found}" do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
-      Core.FunctionStore.Mock |> Mox.expect(:exists?, fn _, _ -> false end)
 
-      assert Invoker.invoke(%{"function" => "hello", "module" => "ns"}) ==
-               {:error, :not_found}
+      pars = %InvokeParams{function: "no_fun", module: "some module"}
+      assert Invoker.invoke(pars) == {:error, :not_found}
     end
 
-    test "invoke with an existent function should send the invocation command using said function" do
-      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
-
-      Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, function, _, _ -> {:ok, %{result: function}} end)
-
-      expected = "hello"
-
-      assert {:ok, %{result: result}} = Invoker.invoke(%{"function" => "hello", "module" => "ns"})
-
-      assert result == expected
-    end
-
-    test "invoke should retry the invocation with the code if the worker returns :no_code_found" do
+    test "invoke should retry the invocation with the code if the worker returns :code_not_found",
+         %{
+           function: function,
+           module: module
+         } do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
@@ -105,19 +106,17 @@ defmodule ApiTest.InvokeTest do
 
       Core.Commands.Mock
       |> Mox.expect(:send_invoke_with_code, fn _worker, function, _args ->
-        {:ok, %{result: function}}
+        {:ok, %InvokeResult{result: function}}
       end)
 
-      # From FunctionStore Test
-      f_in = %{"function" => "hello", "module" => "ns"}
-
       f_out = %FunctionStruct{
-        name: "hello",
-        module: "ns",
-        code: "console.log(\"hello\")"
+        name: function.name,
+        module: module.name,
+        code: function.code
       }
 
-      assert Invoker.invoke(f_in) == {:ok, %{result: f_out}}
+      pars = %InvokeParams{function: function.name, module: module.name}
+      assert Invoker.invoke(pars) == {:ok, f_out}
     end
   end
 end

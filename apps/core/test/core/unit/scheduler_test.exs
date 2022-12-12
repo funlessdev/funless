@@ -28,7 +28,7 @@ defmodule SchedulerTest do
     end
 
     test "select should return the worker when list has only one element" do
-      expected = :worker
+      expected = {:ok, :worker}
       w_nodes = [:worker]
       workers = Scheduler.select(w_nodes)
 
@@ -36,7 +36,7 @@ defmodule SchedulerTest do
     end
 
     test "select should return :no_workers when empty list" do
-      expected = :no_workers
+      expected = {:error, :no_workers}
       w_nodes = []
       workers = Scheduler.select(w_nodes)
 
@@ -53,7 +53,7 @@ defmodule SchedulerTest do
       end)
 
       selected = Scheduler.select([:worker1, :worker2])
-      assert selected == :worker2
+      assert selected == {:ok, :worker2}
     end
   end
 end

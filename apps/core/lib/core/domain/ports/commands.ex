@@ -28,17 +28,16 @@ defmodule Core.Domain.Ports.Commands do
               {:ok, InvokeResult.t()} | {:error, any()}
 
   @doc """
-  Sends an invoke command to a worker passing only the name and module of the function, and args.
-  It requires a worker (a fully qualified name of another node with the :worker actor on), a function struct and
-  (optionally empty) function arguments.
+  Sends an invoke command to a worker passing the function name, module and args.
+  It requires a worker (a fully qualified name of another node with the :worker actor on) and function arguments can be empty.
   """
   @spec send_invoke(atom(), String.t(), String.t(), map()) ::
           {:ok, InvokeResult.t()} | {:error, :code_not_found} | {:error, String.t()}
   defdelegate send_invoke(worker, f_name, ns, args), to: @adapter
 
   @doc """
-  Sends an invoke command to a worker passing the name, module of the function and the code (either wasm file or code string).
-  After this send, the worker will store the wasm file in its cache, so subsequent invokes can be done without passing the code.
+  Sends an invoke command to a worker passing a struct with the function name, module and the code (wasm file binary).
+  The worker will store the wasm file in its cache, so subsequent invokes can be done without passing the code.
   It requires a worker (a fully qualified name of another node with the :worker actor on), a function struct and
   (optionally empty) function arguments.
   """
