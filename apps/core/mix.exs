@@ -39,10 +39,7 @@ defmodule Core.MixProject do
   def application do
     [
       mod: {Core.Application, []},
-      extra_applications: [:logger, :mnesia, :runtime_tools],
-      start_phases: [
-        init_db: Mix.env()
-      ]
+      extra_applications: [:logger, :mnesia, :runtime_tools]
     ]
   end
 

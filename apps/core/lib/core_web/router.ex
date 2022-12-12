@@ -22,13 +22,6 @@ defmodule CoreWeb.Router do
   scope "/v1", CoreWeb do
     pipe_through(:api)
 
-    scope "/fn" do
-      post("/create", FnController, :create)
-      delete("/delete", FnController, :delete)
-      post("/invoke", FnController, :invoke)
-      get("/list/:module", FnController, :list)
-    end
-
     # List all modules
     get("/fn", ModuleController, :index)
     # Create new module

@@ -20,7 +20,6 @@ config :logger, level: :warn, backends: []
 # --- Core Configs ---
 config :core, Core.Domain.Ports.Commands, adapter: Core.Commands.Mock
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Cluster.Mock
-config :core, Core.Domain.Ports.FunctionStore, adapter: Core.FunctionStore.Mock
 config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Telemetry.Metrics.Mock
 
 # Configure your database

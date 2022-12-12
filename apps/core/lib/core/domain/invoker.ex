@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Domain.Api.Invoker do
+defmodule Core.Domain.Invoker do
   @moduledoc """
   Provides functions to request function invocaiton.
   """
