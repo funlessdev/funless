@@ -12,8 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Mox.defmock(Core.Commands.Mock, for: Core.Domain.Ports.Commands)
-Mox.defmock(Core.Cluster.Mock, for: Core.Domain.Ports.Cluster)
-Mox.defmock(Core.FunctionStore.Mock, for: Core.Domain.Ports.FunctionStore)
-Mox.defmock(Core.Telemetry.Metrics.Mock, for: Core.Domain.Ports.Telemetry.Metrics)
-Mox.defmock(Core.Connectors.Manager.Mock, for: Core.Domain.Ports.Connectors.Manager)
+defmodule Data.ConnectedEvent do
+  @moduledoc """
+    ConnectedEvent struct representing an event connected to a function through an Event Connector.
+
+    ## Fields
+      - type: the type of the event; defines the type of connector that will be spawned
+      - params: parameters passed to the connector
+  """
+  @type t :: %__MODULE__{
+          type: String.t(),
+          params: map()
+        }
+  @enforce_keys [:type, :params]
+  defstruct [:type, :params]
+end

@@ -12,8 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Mox.defmock(Core.Commands.Mock, for: Core.Domain.Ports.Commands)
-Mox.defmock(Core.Cluster.Mock, for: Core.Domain.Ports.Cluster)
-Mox.defmock(Core.FunctionStore.Mock, for: Core.Domain.Ports.FunctionStore)
-Mox.defmock(Core.Telemetry.Metrics.Mock, for: Core.Domain.Ports.Telemetry.Metrics)
-Mox.defmock(Core.Connectors.Manager.Mock, for: Core.Domain.Ports.Connectors.Manager)
+defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
+  @moduledoc """
+  Event Connector for MQTT messages.
+  """
+  use GenServer
+  require Logger
+
+  def start_link(params) do
+    GenServer.start_link(__MODULE__, params)
+  end
+
+  def init(%{function: _function, module: _module, params: %{host: _host, port: _port} = params}) do
+    Logger.info("MQTT Event Connector: started with params #{inspect(params)}")
+    {:ok, params}
+  end
+
+  def handle_call(:any, _from, params) do
+    {:reply, :ok, params}
+  end
+end

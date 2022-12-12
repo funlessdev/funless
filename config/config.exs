@@ -24,6 +24,7 @@ config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
 config :core, Core.Domain.Ports.FunctionStore, adapter: Core.Adapters.FunctionStore.Mnesia
 config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Adapters.Telemetry.Metrics
+config :core, Core.Domain.Ports.Connectors.Manager, adapter: Core.Adapters.Connectors.Manager
 
 config :core,
   ecto_repos: [Core.Repo]
