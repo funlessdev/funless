@@ -31,6 +31,9 @@ defmodule CoreWeb.FunctionControllerTest do
   @invalid_attrs %{code: nil, name: nil}
 
   setup %{conn: conn} do
+    Core.Commands.Mock |> Mox.stub_with(Core.Adapters.Commands.Test)
+    Core.Cluster.Mock |> Mox.stub_with(Core.Adapters.Cluster.Test)
+
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
@@ -99,6 +102,24 @@ defmodule CoreWeb.FunctionControllerTest do
 
       conn = get(conn, Routes.function_path(conn, :show, module_name, function_name))
       assert response(conn, 404)
+    end
+  end
+
+  describe "invoke function" do
+    setup [:create_function]
+
+    test "invokes function without passing args", %{
+      conn: conn,
+      function: %Function{name: function_name},
+      module_name: module_name
+    } do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
+
+      conn = post(conn, Routes.function_path(conn, :invoke, module_name, function_name))
+      assert response(conn, 200)
     end
   end
 

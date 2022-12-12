@@ -17,15 +17,13 @@ defmodule Core.Domain.Api.Invoker do
   Provides functions to request function invocaiton.
   """
   require Logger
-  alias Core.Domain.Api.Utils
-  alias Core.Domain.Nodes
-  alias Core.Domain.Ports.Commands
-  alias Core.Domain.Ports.FunctionStore
-  alias Core.Domain.Scheduler
+  alias Core.Domain.{Functions, Nodes, Ports.Commands, Scheduler}
+  alias Data.FunctionStruct
   alias Data.InvokeParams
   alias Data.InvokeResult
 
-  @type invoke_errors :: {:error, :not_found} | {:error, :no_workers} | {:error, String.t()}
+  @type invoke_errors ::
+          {:error, :not_found} | {:error, :no_workers} | {:error, {:exec_error, any()}}
 
   @doc """
   Sends an invocation request for the `name` function in the `mod` module,
@@ -45,65 +43,58 @@ defmodule Core.Domain.Api.Invoker do
   """
   @spec invoke(InvokeParams.t()) ::
           {:ok, InvokeResult.t()} | {:error, :bad_params} | invoke_errors()
-  def invoke(%{"function" => f} = raw_params) do
-    module = Map.get(raw_params, "module") |> Utils.validate_module()
+  def invoke(ivk_pars) do
+    ivk_pars |> dbg()
 
-    ivk_params = %InvokeParams{
-      function: f,
-      module: module,
-      args: Map.get(raw_params, "args", %{})
-    }
+    Logger.info("Invoker: invocation for #{ivk_pars.module}/#{ivk_pars.function} requested")
 
-    Logger.info("API: invocation for #{ivk_params.module}/#{ivk_params.function} requested")
+    # could be {:error, :no_workers}
+    with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select() do
+      case invoke_without_code(worker, ivk_pars) do
+        {:error, :code_not_found} ->
+          worker
+          |> invoke_with_code(ivk_pars)
+          |> handle_result(ivk_pars.function)
 
-    # could be :no_workers
-    worker = Nodes.worker_nodes() |> Scheduler.select()
-
-    res =
-      case invoke_without_code(worker, ivk_params) do
-        {:error, :code_not_found} -> invoke_with_code(worker, ivk_params)
-        res -> res
+        res ->
+          handle_result(res, ivk_pars.function)
       end
-
-    handle_result(res, ivk_params.function)
-  end
-
-  def invoke(_), do: {:error, :bad_params}
-
-  @spec invoke_without_code(atom(), InvokeParams.t()) ::
-          {:ok, InvokeResult.t()} | {:error, :code_not_found} | invoke_errors()
-  defp invoke_without_code(:no_workers, _), do: {:error, :no_workers}
-
-  defp invoke_without_code(worker, ivk_params) do
-    name = ivk_params.function
-    ns = ivk_params.module
-
-    if FunctionStore.exists?(name, ns) do
-      # function found in store, send invocation without code
-      args = ivk_params.args
-      Commands.send_invoke(worker, name, ns, args)
-    else
-      {:error, :not_found}
     end
   end
 
-  @spec invoke_with_code(atom(), InvokeParams.t()) ::
-          {:ok, InvokeResult.t()} | {:error, :not_found} | {:error, any()}
-  defp invoke_with_code(worker, ivk_params) do
-    Logger.warn("API: function not available in worker, re-invoking with code")
+  @spec invoke_without_code(atom(), InvokeParams.t()) ::
+          {:ok, InvokeResult.t()} | {:error, :code_not_found} | invoke_errors()
+  defp invoke_without_code(worker, ivk) do
+    Logger.debug("Invoker: invoking #{ivk.module}/#{ivk.function} without code")
+    # send invocation without code
+    Commands.send_invoke(worker, ivk.function, ivk.module, ivk.args)
+  end
 
-    with {:ok, f} <- FunctionStore.get_function(ivk_params.function, ivk_params.module) do
-      Commands.send_invoke_with_code(worker, f, ivk_params.args)
+  @spec invoke_with_code(atom(), InvokeParams.t()) ::
+          {:ok, InvokeResult.t()} | {:error, any()}
+  defp invoke_with_code(worker, ivk) do
+    Logger.warn("Invoker: function not available in worker, re-invoking with code")
+
+    with [f] <- Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
+      func = %FunctionStruct{
+        name: ivk.function,
+        module: ivk.module,
+        code: f.data.code
+      }
+
+      Commands.send_invoke_with_code(worker, func, ivk.args)
+    else
+      [] -> {:error, :not_found}
     end
   end
 
   defp handle_result({:ok, _} = reply, name) do
-    Logger.info("API: #{name} invoked successfully")
+    Logger.info("Invoker: #{name} invoked successfully")
     reply
   end
 
   defp handle_result({:error, reason}, name) do
-    Logger.error("API: failed to invoke #{name}: #{inspect(reason)}")
+    Logger.error("Invoker: failed to invoke #{name}: #{inspect(reason)}")
     {:error, reason}
   end
 end

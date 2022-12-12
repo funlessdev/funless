@@ -15,10 +15,24 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
+  alias Core.Domain.Api.Invoker
   alias Core.Domain.{Functions, Modules}
   alias Core.Schemas.{Function, Module}
+  alias Data.InvokeParams
 
   action_fallback(CoreWeb.FallbackController)
+
+  def invoke(conn, %{"module_name" => mod_name, "function_name" => fun_name} = params) do
+    ivk = %InvokeParams{
+      function: fun_name,
+      module: mod_name,
+      args: params["args"] || %{}
+    }
+
+    with {:ok, res} <- Invoker.invoke(ivk) do
+      json(conn, %{data: res})
+    end
+  end
 
   def create(conn, %{"module_name" => module_name, "function" => params}) do
     with %Module{} = module <- Modules.get_module_by_name!(module_name),

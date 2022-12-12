@@ -25,15 +25,15 @@ defmodule Core.Domain.Scheduler do
   @doc """
   Receives a list of workers and chooses one which can be used for invocation.
   """
-  @spec select(list()) :: worker_atom() | :no_workers
+  @spec select(list()) :: {:ok, worker_atom()} | {:error, :no_workers}
   def select([]) do
     Logger.warn("Scheduler: tried selection with NO workers")
-    :no_workers
+    {:error, :no_workers}
   end
 
   def select([w]) do
     Logger.info("Scheduler: selection with only one worker #{inspect(w)}")
-    w
+    {:ok, w}
   end
 
   def select(workers) do
@@ -44,7 +44,11 @@ defmodule Core.Domain.Scheduler do
     # Couple worker -> {:ok, resources}
     workers_resources = Enum.zip(workers, resources)
     # Get the {worker, {:ok, resources}}, resource is just the allocated_bytes integer as of now
-    Enum.min_by(workers_resources, fn {_w, {:ok, r}} -> r end)
-    |> elem(0)
+    w =
+      workers_resources
+      |> Enum.min_by(fn {_w, {:ok, r}} -> r end)
+      |> elem(0)
+
+    {:ok, w}
   end
 end
