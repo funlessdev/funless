@@ -65,8 +65,6 @@ defmodule Core.FunctionsTest do
       function = function_fixture(module.id)
 
       assert [got] = Functions.get_code_by_name_in_mod!(function.name, module.name)
-      assert got.id == function.id
-      assert got.name == function.name
       assert got.code == function.code
     end
 

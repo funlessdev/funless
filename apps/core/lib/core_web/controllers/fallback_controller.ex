@@ -49,4 +49,12 @@ defmodule CoreWeb.FallbackController do
     |> put_status(:service_unavailable)
     |> json(res)
   end
+
+  def call(conn, {:error, {:exec_error, msg}}) do
+    res = %{errors: %{detail: "Error: #{msg}"}}
+
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(res)
+  end
 end

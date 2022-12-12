@@ -15,8 +15,7 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
-  alias Core.Domain.Api.Invoker
-  alias Core.Domain.{Functions, Modules}
+  alias Core.Domain.{Functions, Invoker, Modules}
   alias Core.Schemas.{Function, Module}
   alias Data.InvokeParams
 

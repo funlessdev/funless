@@ -41,11 +41,8 @@ defmodule Core.Domain.Invoker do
   - {:error, :no_workers} if no workers are available.
   - {:error, {:exec_error, msg}} if the worker returned an error.
   """
-  @spec invoke(InvokeParams.t()) ::
-          {:ok, InvokeResult.t()} | {:error, :bad_params} | invoke_errors()
+  @spec invoke(InvokeParams.t()) :: {:ok, InvokeResult.t()} | invoke_errors()
   def invoke(ivk_pars) do
-    ivk_pars |> dbg()
-
     Logger.info("Invoker: invocation for #{ivk_pars.module}/#{ivk_pars.function} requested")
 
     # could be {:error, :no_workers}
@@ -66,31 +63,40 @@ defmodule Core.Domain.Invoker do
           {:ok, InvokeResult.t()} | {:error, :code_not_found} | invoke_errors()
   defp invoke_without_code(worker, ivk) do
     Logger.debug("Invoker: invoking #{ivk.module}/#{ivk.function} without code")
-    # send invocation without code
-    Commands.send_invoke(worker, ivk.function, ivk.module, ivk.args)
-  end
 
-  @spec invoke_with_code(atom(), InvokeParams.t()) ::
-          {:ok, InvokeResult.t()} | {:error, any()}
-  defp invoke_with_code(worker, ivk) do
-    Logger.warn("Invoker: function not available in worker, re-invoking with code")
-
-    with [f] <- Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
-      func = %FunctionStruct{
-        name: ivk.function,
-        module: ivk.module,
-        code: f.data.code
-      }
-
-      Commands.send_invoke_with_code(worker, func, ivk.args)
+    if Functions.exists_in_mod?(ivk.function, ivk.module) do
+      # send invocation without code
+      Commands.send_invoke(worker, ivk.function, ivk.module, ivk.args)
     else
-      [] -> {:error, :not_found}
+      {:error, :code_not_found}
     end
   end
 
-  defp handle_result({:ok, _} = reply, name) do
+  @spec invoke_with_code(atom(), InvokeParams.t()) ::
+          {:ok, InvokeResult.t()} | {:error, {:exec_error, any()}}
+  defp invoke_with_code(worker, ivk) do
+    Logger.warn("Invoker: function not available in worker, re-invoking with code")
+
+    case Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
+      [f] ->
+        func = %FunctionStruct{
+          name: ivk.function,
+          module: ivk.module,
+          code: f.code
+        }
+
+        Commands.send_invoke_with_code(worker, func, ivk.args)
+
+      [] ->
+        {:error, :not_found}
+    end
+  end
+
+  @spec handle_result({:ok, InvokeResult.t()} | {:error, any()}, String.t()) ::
+          {:ok, any()} | {:error, any()}
+  defp handle_result({:ok, res}, name) do
     Logger.info("Invoker: #{name} invoked successfully")
-    reply
+    {:ok, res.result}
   end
 
   defp handle_result({:error, reason}, name) do
