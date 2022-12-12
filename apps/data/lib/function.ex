@@ -20,12 +20,12 @@ defmodule Data.FunctionStruct do
     ## Fields
       - name: function name
       - module: function module
-      - code: function code as a string or binary
+      - code: function code binary
   """
   @type t :: %__MODULE__{
           module: String.t(),
           name: String.t(),
-          code: String.t() | binary()
+          code: binary()
         }
   @enforce_keys [:name, :module]
   defstruct [:name, :module, :code]

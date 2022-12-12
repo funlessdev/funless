@@ -61,7 +61,7 @@ defmodule Core.Domain.Invoker do
 
   @spec invoke_without_code(atom(), InvokeParams.t()) ::
           {:ok, InvokeResult.t()} | {:error, :code_not_found} | invoke_errors()
-  defp invoke_without_code(worker, ivk) do
+  def invoke_without_code(worker, ivk) do
     Logger.debug("Invoker: invoking #{ivk.module}/#{ivk.function} without code")
 
     if Functions.exists_in_mod?(ivk.function, ivk.module) do
@@ -74,7 +74,7 @@ defmodule Core.Domain.Invoker do
 
   @spec invoke_with_code(atom(), InvokeParams.t()) ::
           {:ok, InvokeResult.t()} | {:error, {:exec_error, any()}}
-  defp invoke_with_code(worker, ivk) do
+  def invoke_with_code(worker, ivk) do
     Logger.warn("Invoker: function not available in worker, re-invoking with code")
 
     case Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
@@ -92,15 +92,15 @@ defmodule Core.Domain.Invoker do
     end
   end
 
-  @spec handle_result({:ok, InvokeResult.t()} | {:error, any()}, String.t()) ::
-          {:ok, any()} | {:error, any()}
-  defp handle_result({:ok, res}, name) do
+  @spec handle_result({:error, any} | {:ok, InvokeResult.t()}, String.t()) ::
+          {:error, any} | {:ok, any}
+  def handle_result({:ok, ivk_r}, name) do
     Logger.info("Invoker: #{name} invoked successfully")
-    {:ok, res.result}
+    {:ok, ivk_r.result}
   end
 
-  defp handle_result({:error, reason}, name) do
+  def handle_result({:error, reason} = reply, name) do
     Logger.error("Invoker: failed to invoke #{name}: #{inspect(reason)}")
-    {:error, reason}
+    reply
   end
 end
