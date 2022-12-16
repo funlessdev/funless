@@ -32,14 +32,19 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
       }) do
     Process.flag(:trap_exit, true)
 
-    with {:ok, pid} <- connect_to_broker(params) do
-      Logger.info("MQTT Event Connector: started with params #{inspect(params)}")
+    case connect_to_broker(params) do
+      {:ok, pid} ->
+        Logger.info("MQTT Event Connector: started with params #{inspect(params)}")
 
-      {:ok,
-       params |> Map.put(:pid, pid) |> Map.put(:function, function) |> Map.put(:module, module)}
-    else
+        {:ok,
+         params |> Map.put(:pid, pid) |> Map.put(:function, function) |> Map.put(:module, module)}
+
+      {:error, err} ->
+        Logger.warn("MQTT Event Connector failed to start with error: #{inspect(err)}")
+        {:stop, :normal}
+
       other ->
-        Logger.warn("MQTT Event Connector failed to start with result: #{inspect(other)}")
+        Logger.warn("MQTT Event Connector failed to start with reason: #{inspect(other)}")
         {:stop, :normal}
     end
   end
