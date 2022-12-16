@@ -48,13 +48,13 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
         {:publish, _msg = %{payload: payload}},
         %{function: function, module: module} = params
       ) do
-    ivk = %InvokeParams{
-      function: function,
-      module: module,
-      args: payload
-    }
-
-    with {:ok, res} <- Invoker.invoke(ivk) do
+    with {:ok, json_payload} <- Jason.decode(payload),
+         ivk <- %InvokeParams{
+           function: function,
+           module: module,
+           args: json_payload
+         },
+         {:ok, res} <- Invoker.invoke(ivk) do
       Logger.info("MQTT Event Connector: #{module}/#{function} invoked with res #{inspect(res)}")
     else
       {:error, err} ->
