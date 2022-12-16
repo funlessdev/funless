@@ -33,7 +33,14 @@ defmodule CoreWeb.FunctionController do
     end
   end
 
-  def create(conn, %{"module_name" => module_name, "function" => params}) do
+  def create(conn, %{
+        "module_name" => module_name,
+        "name" => fn_name,
+        "code" => %Plug.Upload{path: tmp_path}
+      }) do
+    code = File.read!(tmp_path)
+    params = %{"name" => fn_name, "code" => code}
+
     with %Module{} = module <- Modules.get_module_by_name!(module_name),
          {:ok, %Function{} = function} <-
            params
