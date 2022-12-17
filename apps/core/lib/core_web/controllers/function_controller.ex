@@ -52,6 +52,10 @@ defmodule CoreWeb.FunctionController do
     end
   end
 
+  def create(_conn, _) do
+    {:error, :bad_params}
+  end
+
   def show(conn, %{"module_name" => mod_name, "function_name" => name}) do
     with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name) do
       render(conn, "show.json", function: function)
