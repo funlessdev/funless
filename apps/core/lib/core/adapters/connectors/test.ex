@@ -23,6 +23,11 @@ defmodule Core.Adapters.Connectors.Test do
   end
 
   @impl true
+  def which_connector(_) do
+    {:ok, Core.Adapters.Connectors.EventConnectors.Test}
+  end
+
+  @impl true
   def disconnect(_function_signature) do
     :ok
   end
