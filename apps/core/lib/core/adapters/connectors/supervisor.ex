@@ -28,7 +28,7 @@ defmodule Core.Adapters.Connectors.Supervisor do
     Logger.info("Connectors Supervisor: started")
 
     children = [
-      {Core.Adapters.Connectors.ManagerStore, []},
+      {Registry, keys: :unique, name: Core.Adapters.Connectors.Registry},
       {DynamicSupervisor,
        strategy: :one_for_one,
        max_restarts: 5,

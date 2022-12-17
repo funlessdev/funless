@@ -92,6 +92,7 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
     end
   end
 
+  # TODO: should handle other :EXIT messages (avoid exception with "no clause matching pattern")
   def handle_info({:EXIT, pid, reason}, %{pid: pid} = params) do
     Logger.warn(
       "MQTT Event Connector (host #{params.host}, port #{params.port}, topic #{params.topic}): emqtt process died with reason #{inspect(reason)}"
