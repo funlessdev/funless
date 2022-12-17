@@ -92,7 +92,6 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
     end
   end
 
-  # TODO: should handle other :EXIT messages (avoid exception with "no clause matching pattern")
   def handle_info({:EXIT, pid, reason}, %{pid: pid} = params) do
     Logger.warn(
       "MQTT Event Connector (host #{params.host}, port #{params.port}, topic #{params.topic}): emqtt process died with reason #{inspect(reason)}"
@@ -107,6 +106,11 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
         Logger.warn("MQTT Event Connector: emqtt process restart failed, killing Connector")
         {:stop, :normal, params}
     end
+  end
+
+  # exit messages from other processes are handled normally, shutting the GenServer down gracefully with terminate()
+  def handle_info({:EXIT, _pid, reason}, params) do
+    {:stop, reason, params}
   end
 
   def terminate(_reason, %{pid: pid, topic: topic} = _params) do
