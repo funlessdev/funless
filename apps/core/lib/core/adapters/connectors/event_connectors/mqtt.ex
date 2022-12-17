@@ -25,6 +25,25 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
     GenServer.start_link(__MODULE__, params)
   end
 
+  @spec init(%{
+          :function => String.t(),
+          :module => String.t(),
+          :params => %{
+            :host => atom(),
+            :port => integer(),
+            :topic => String.t()
+          }
+        }) ::
+          {:ok,
+           %{
+             :function => String.t(),
+             :host => atom(),
+             :module => String.t(),
+             :pid => pid(),
+             :port => integer(),
+             :topic => String.t()
+           }}
+          | {:stop, :normal}
   def init(%{
         function: function,
         module: module,
