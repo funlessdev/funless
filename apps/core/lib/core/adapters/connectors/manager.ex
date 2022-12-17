@@ -21,6 +21,7 @@ defmodule Core.Adapters.Connectors.Manager do
 
   @behaviour Core.Domain.Ports.Connectors.Manager
   alias Core.Adapters.Connectors.EventConnectors
+  alias Core.Domain.Ports.Connectors.Manager
   alias Data.ConnectedEvent
 
   @impl true
@@ -28,43 +29,53 @@ defmodule Core.Adapters.Connectors.Manager do
         type: event_type,
         params: params
       }) do
-    # dedicated DynamicSupervisor name for this function's Event Connectors
-    name = "#{Atom.to_string(@main_supervisor)}.#{module}/#{function}"
-    supervisor = {:via, Registry, {@registry, name}}
+    # calling which_connector from the port instead of the current file, to allow mocking
+    with {:ok, connector} <- Manager.which_connector(event_type) do
+      # dedicated DynamicSupervisor name for this function's Event Connectors
+      name = "#{Atom.to_string(@main_supervisor)}.#{module}/#{function}"
+      supervisor = {:via, Registry, {@registry, name}}
 
-    # if the supervisor already exists, add the new process to it; otherwise start the supervisor, and add the child
-    if Registry.lookup(@registry, supervisor) == [] do
-      DynamicSupervisor.start_child(
-        @main_supervisor,
-        {DynamicSupervisor,
-         strategy: :one_for_one, max_restarts: 5, max_seconds: 5, name: supervisor}
-      )
-    end
-
-    result =
-      case event_type do
-        "mqtt" ->
-          DynamicSupervisor.start_child(
-            supervisor,
-            {EventConnectors.Mqtt, %{function: function, module: module, params: params}}
-          )
-
-        _ ->
-          {:error, :not_implemented}
+      # if the supervisor already exists, add the new process to it; otherwise start the supervisor, and add the child
+      if Registry.lookup(@registry, supervisor) == [] do
+        DynamicSupervisor.start_child(
+          @main_supervisor,
+          {DynamicSupervisor,
+           strategy: :one_for_one, max_restarts: 5, max_seconds: 5, name: supervisor}
+        )
       end
 
-    case result do
-      {:ok, _pid} ->
-        :ok
+      result =
+        DynamicSupervisor.start_child(
+          supervisor,
+          {connector,
+           %{
+             function: function,
+             module: module,
+             params: params
+           }}
+        )
 
-      {:ok, _pid, _info} ->
-        :ok
+      case result do
+        {:ok, _pid} ->
+          :ok
 
-      :ignore ->
-        {:error, :ignore}
+        {:ok, _pid, _info} ->
+          :ok
 
-      {:error, err} ->
-        {:error, err}
+        :ignore ->
+          {:error, :ignore}
+
+        {:error, err} ->
+          {:error, err}
+      end
+    end
+  end
+
+  @impl true
+  def which_connector(event_type) do
+    case event_type do
+      "mqtt" -> {:ok, EventConnectors.Mqtt}
+      _ -> {:error, :not_implemented}
     end
   end
 
