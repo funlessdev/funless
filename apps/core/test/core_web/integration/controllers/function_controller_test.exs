@@ -20,7 +20,7 @@ defmodule CoreWeb.FunctionControllerTest do
   alias Core.Schemas.Function
 
   @create_attrs %{
-    code: "some_code",
+    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
     name: "some_name"
   }
   @update_attrs %{
@@ -39,7 +39,7 @@ defmodule CoreWeb.FunctionControllerTest do
   describe "create function" do
     test "renders function when data is valid", %{conn: conn} do
       module = module_fixture()
-      conn = post(conn, Routes.function_path(conn, :create, module.name), function: @create_attrs)
+      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs)
       assert %{"name" => name} = json_response(conn, 201)["data"]
 
       conn = get(conn, Routes.function_path(conn, :show, module.name, name))
@@ -49,10 +49,9 @@ defmodule CoreWeb.FunctionControllerTest do
     test "renders errors when data is invalid", %{conn: conn} do
       module = module_fixture()
 
-      conn =
-        post(conn, Routes.function_path(conn, :create, module.name), function: @invalid_attrs)
+      conn = post(conn, Routes.function_path(conn, :create, module.name), @invalid_attrs)
 
-      assert json_response(conn, 422)["errors"] != %{}
+      assert json_response(conn, 400)["errors"] != %{}
     end
   end
 
