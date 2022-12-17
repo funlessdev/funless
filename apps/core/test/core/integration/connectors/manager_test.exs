@@ -20,17 +20,19 @@ defmodule Core.Integration.Connectors.ManagerTest do
   @main_supervisor Core.Adapters.Connectors.DynamicSupervisor
   @registry Core.Adapters.Connectors.Registry
 
+  alias Core.Adapters.Connectors.Test
   alias Core.Domain.Ports.Connectors.Manager
   alias Data.ConnectedEvent
 
-  # we test all actual functions of the Adapter, except for which_connector, which we mock to avoid the need for external event sources
+  # we test all actual functions of the Adapter, except for which_connector,
+  # which we mock to avoid the need for external event sources
   describe "manager" do
     setup _ do
       Core.Connectors.Manager.Mock
       |> Mox.stub_with(Core.Adapters.Connectors.Manager)
 
       Core.Connectors.Manager.Mock
-      |> Mox.stub(:which_connector, &Core.Adapters.Connectors.Test.which_connector/1)
+      |> Mox.stub(:which_connector, &Test.which_connector/1)
 
       event = %ConnectedEvent{
         type: "mqtt",
@@ -70,7 +72,8 @@ defmodule Core.Integration.Connectors.ManagerTest do
 
       assert :ok = Manager.disconnect(func)
 
-      # given the async nature of the registry, stopped instances might still be registered; we simply test that the processes has stopped
+      # given the async nature of the registry, stopped instances might still be registered;
+      # we simply test that the processes has stopped
       assert !Process.alive?(supervisor_pid)
       assert !Process.alive?(p1)
       assert !Process.alive?(p2)
