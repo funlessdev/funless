@@ -23,9 +23,12 @@ defmodule Core.Domain.Ports.Connectors.Manager do
           module: String.t()
         }
 
+  @type event_type :: String.t()
+
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @callback connect(function_signature, ConnectedEvent.t()) :: :ok | {:error, any}
+  @callback which_connector(event_type) :: {:ok, module()} | {:error, :not_implemented}
   @callback disconnect(function_signature) :: :ok | {:error, any}
 
   @doc """
@@ -33,6 +36,12 @@ defmodule Core.Domain.Ports.Connectors.Manager do
   """
   @spec connect(function_signature, ConnectedEvent.t()) :: :ok | {:error, any}
   defdelegate connect(function, event), to: @adapter
+
+  @doc """
+  Specifies which connector should be called for a certain event type.
+  """
+  @spec which_connector(event_type) :: {:ok, module()} | {:error, any}
+  defdelegate which_connector(event_type), to: @adapter
 
   @doc """
   Disconnects a function from all events. Should kill all related connector processes.

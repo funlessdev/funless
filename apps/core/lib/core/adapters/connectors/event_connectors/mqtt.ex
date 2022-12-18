@@ -18,17 +18,135 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
   """
   use GenServer
   require Logger
+  alias Core.Domain.Invoker
+  alias Data.InvokeParams
 
   def start_link(params) do
     GenServer.start_link(__MODULE__, params)
   end
 
-  def init(%{function: _function, module: _module, params: %{host: _host, port: _port} = params}) do
-    Logger.info("MQTT Event Connector: started with params #{inspect(params)}")
-    {:ok, params}
+  @spec init(%{
+          :function => String.t(),
+          :module => String.t(),
+          :params => %{
+            :host => atom(),
+            :port => integer(),
+            :topic => String.t()
+          }
+        }) ::
+          {:ok,
+           %{
+             :function => String.t(),
+             :host => atom(),
+             :module => String.t(),
+             :pid => pid(),
+             :port => integer(),
+             :topic => String.t()
+           }}
+          | {:stop, :normal}
+  def init(%{
+        function: function,
+        module: module,
+        params: %{host: _host, port: _port, topic: _topic} = params
+      }) do
+    Process.flag(:trap_exit, true)
+
+    case connect_to_broker(params) do
+      {:ok, pid} ->
+        Logger.info("MQTT Event Connector: started with params #{inspect(params)}")
+
+        {:ok,
+         params |> Map.put(:pid, pid) |> Map.put(:function, function) |> Map.put(:module, module)}
+
+      {:error, err} ->
+        Logger.warn("MQTT Event Connector failed to start with error: #{inspect(err)}")
+        {:stop, :normal}
+
+      other ->
+        Logger.warn("MQTT Event Connector failed to start with reason: #{inspect(other)}")
+        {:stop, :normal}
+    end
   end
 
-  def handle_call(:any, _from, params) do
-    {:reply, :ok, params}
+  def handle_info(
+        {:publish, _msg = %{payload: payload}},
+        %{function: function, module: module} = params
+      ) do
+    with {:ok, json_payload} <- Jason.decode(payload),
+         ivk <- %InvokeParams{
+           function: function,
+           module: module,
+           args: json_payload
+         },
+         {:ok, res} <- Invoker.invoke(ivk) do
+      Logger.info("MQTT Event Connector: #{module}/#{function} invoked with res #{inspect(res)}")
+    else
+      {:error, err} ->
+        Logger.warn(
+          "MQTT Event Connector: invocation of #{module}/#{function} failed with error #{inspect(err)}"
+        )
+
+      other ->
+        Logger.warn(
+          "MQTT Event Connector: invocation of #{module}/#{function} failed with cause #{inspect(other)}"
+        )
+    end
+
+    {:noreply, params}
+  end
+
+  def handle_info({:disconnect, _reason, _props}, params) do
+    Logger.warn(
+      "MQTT Event Connector (host #{params.host}, port #{params.port}, topic #{params.topic}): disconnected from broker"
+    )
+
+    case connect_to_broker(params) do
+      {:ok, pid} ->
+        Logger.info("MQTT Event Connector: reconnected")
+        {:noreply, params |> Map.put(:pid, pid)}
+
+      _ ->
+        Logger.warn("MQTT Event Connector: reconnect failed, killing Connector")
+        {:stop, :normal, params}
+    end
+  end
+
+  def handle_info({:EXIT, pid, reason}, %{pid: pid} = params) do
+    Logger.warn(
+      "MQTT Event Connector (host #{params.host}, port #{params.port}, topic #{params.topic}): emqtt process died with reason #{inspect(reason)}"
+    )
+
+    case connect_to_broker(params) do
+      {:ok, pid} ->
+        Logger.info("MQTT Event Connector: emqtt process restarted")
+        {:noreply, params |> Map.put(:pid, pid)}
+
+      _ ->
+        Logger.warn("MQTT Event Connector: emqtt process restart failed, killing Connector")
+        {:stop, :normal, params}
+    end
+  end
+
+  # exit messages from other processes are handled normally, shutting the GenServer down gracefully with terminate()
+  def handle_info({:EXIT, _pid, reason}, params) do
+    {:stop, reason, params}
+  end
+
+  def terminate(_reason, %{pid: pid, topic: topic} = _params) do
+    if Process.alive?(pid) do
+      :emqtt.unsubscribe(pid, %{}, topic)
+      :emqtt.disconnect(pid)
+
+      # `disconnect` actually sends a `stop_and_reply` message to the gen_statem, so calling stop as well is redundant
+      # :emqtt.stop(pid)
+    end
+  end
+
+  defp connect_to_broker(%{host: host, port: port, topic: topic} = _params) do
+    with {:ok, pid} <- :emqtt.start_link([{:host, host}, {:port, port}]),
+         {:ok, _props} <- :emqtt.connect(pid),
+         {:ok, _props, _reasons} <- :emqtt.subscribe(pid, %{}, [{topic, []}]) do
+      {:ok, pid}
+    end
   end
 end

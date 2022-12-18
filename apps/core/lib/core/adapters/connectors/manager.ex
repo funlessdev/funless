@@ -16,9 +16,12 @@ defmodule Core.Adapters.Connectors.Manager do
   @moduledoc """
   Adapter to handle Event Connector processes and associate functions to events.
   """
+  @main_supervisor Core.Adapters.Connectors.DynamicSupervisor
+  @registry Core.Adapters.Connectors.Registry
+
   @behaviour Core.Domain.Ports.Connectors.Manager
   alias Core.Adapters.Connectors.EventConnectors
-  alias Core.Adapters.Connectors.ManagerStore
+  alias Core.Domain.Ports.Connectors.Manager
   alias Data.ConnectedEvent
 
   @impl true
@@ -26,22 +29,57 @@ defmodule Core.Adapters.Connectors.Manager do
         type: event_type,
         params: params
       }) do
-    result =
-      case event_type do
-        "mqtt" ->
+    # calling which_connector from the port instead of the current file, to allow mocking
+    with {:ok, connector} <- Manager.which_connector(event_type) do
+      # dedicated DynamicSupervisor name for this function's Event Connectors
+      name = "#{Atom.to_string(@main_supervisor)}.#{module}/#{function}"
+      supervisor = {:via, Registry, {@registry, name}}
+
+      # if the supervisor already exists, add the new process to it; otherwise start the supervisor, and add the child
+      case Registry.lookup(@registry, supervisor) do
+        [] ->
           DynamicSupervisor.start_child(
-            Core.Adapters.Connectors.DynamicSupervisor,
-            {EventConnectors.Mqtt, %{function: function, module: module, params: params}}
+            @main_supervisor,
+            {DynamicSupervisor,
+             strategy: :one_for_one, max_restarts: 5, max_seconds: 5, name: supervisor}
           )
+
+          start_connector(supervisor, connector, %{
+            function: function,
+            module: module,
+            params: params
+          })
+
+        [{pid, _}] ->
+          if Process.alive?(pid) do
+            start_connector(supervisor, connector, %{
+              function: function,
+              module: module,
+              params: params
+            })
+          else
+            {:error, :supervisor_stopping}
+          end
       end
+    end
+  end
+
+  defp start_connector(
+         supervisor,
+         connector,
+         %{function: _function, module: _module, params: _params} = args
+       ) do
+    result =
+      DynamicSupervisor.start_child(
+        supervisor,
+        {connector, args}
+      )
 
     case result do
-      {:ok, pid} ->
-        ManagerStore.insert(function, module, pid)
+      {:ok, _pid} ->
         :ok
 
-      {:ok, pid, _info} ->
-        ManagerStore.insert(function, module, pid)
+      {:ok, _pid, _info} ->
         :ok
 
       :ignore ->
@@ -53,17 +91,23 @@ defmodule Core.Adapters.Connectors.Manager do
   end
 
   @impl true
+  def which_connector(event_type) do
+    case event_type do
+      "mqtt" -> {:ok, EventConnectors.Mqtt}
+      _ -> {:error, :not_implemented}
+    end
+  end
+
+  @impl true
   def disconnect(%{name: function, module: module}) do
-    case ManagerStore.get(function, module) do
-      :not_found ->
+    supervisor = "#{Atom.to_string(@main_supervisor)}.#{module}/#{function}"
+
+    case Registry.lookup(@registry, supervisor) do
+      [] ->
         {:error, :not_found}
 
-      pids ->
-        Enum.each(pids, fn pid ->
-          DynamicSupervisor.terminate_child(Core.Adapters.Connectors.DynamicSupervisor, pid)
-        end)
-
-        ManagerStore.delete(function, module)
+      [{pid, _}] ->
+        DynamicSupervisor.terminate_child(@main_supervisor, pid)
         :ok
     end
   end

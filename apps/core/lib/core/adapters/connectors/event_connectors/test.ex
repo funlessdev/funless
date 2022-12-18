@@ -12,23 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.Connectors.Test do
-  @moduledoc false
+defmodule Core.Adapters.Connectors.EventConnectors.Test do
+  @moduledoc """
+  Event Connector for testing purposes.
+  """
+  use GenServer
 
-  @behaviour Core.Domain.Ports.Connectors.Manager
-
-  @impl true
-  def connect(_function_signature, _event) do
-    :ok
+  def start_link(params) do
+    GenServer.start_link(__MODULE__, params)
   end
 
-  @impl true
-  def which_connector(_) do
-    {:ok, Core.Adapters.Connectors.EventConnectors.Test}
-  end
-
-  @impl true
-  def disconnect(_function_signature) do
-    :ok
+  def init(_params) do
+    {:ok, nil}
   end
 end
