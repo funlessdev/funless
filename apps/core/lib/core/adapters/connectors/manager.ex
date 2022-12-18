@@ -36,38 +36,57 @@ defmodule Core.Adapters.Connectors.Manager do
       supervisor = {:via, Registry, {@registry, name}}
 
       # if the supervisor already exists, add the new process to it; otherwise start the supervisor, and add the child
-      if Registry.lookup(@registry, supervisor) == [] do
-        DynamicSupervisor.start_child(
-          @main_supervisor,
-          {DynamicSupervisor,
-           strategy: :one_for_one, max_restarts: 5, max_seconds: 5, name: supervisor}
-        )
+      case Registry.lookup(@registry, supervisor) do
+        [] ->
+          DynamicSupervisor.start_child(
+            @main_supervisor,
+            {DynamicSupervisor,
+             strategy: :one_for_one, max_restarts: 5, max_seconds: 5, name: supervisor}
+          )
+
+          start_connector(supervisor, connector, %{
+            function: function,
+            module: module,
+            params: params
+          })
+
+        [{pid, _}] ->
+          if Process.alive?(pid) do
+            start_connector(supervisor, connector, %{
+              function: function,
+              module: module,
+              params: params
+            })
+          else
+            {:error, :supervisor_stopping}
+          end
       end
+    end
+  end
 
-      result =
-        DynamicSupervisor.start_child(
-          supervisor,
-          {connector,
-           %{
-             function: function,
-             module: module,
-             params: params
-           }}
-        )
+  defp start_connector(
+         supervisor,
+         connector,
+         %{function: _function, module: _module, params: _params} = args
+       ) do
+    result =
+      DynamicSupervisor.start_child(
+        supervisor,
+        {connector, args}
+      )
 
-      case result do
-        {:ok, _pid} ->
-          :ok
+    case result do
+      {:ok, _pid} ->
+        :ok
 
-        {:ok, _pid, _info} ->
-          :ok
+      {:ok, _pid, _info} ->
+        :ok
 
-        :ignore ->
-          {:error, :ignore}
+      :ignore ->
+        {:error, :ignore}
 
-        {:error, err} ->
-          {:error, err}
-      end
+      {:error, err} ->
+        {:error, err}
     end
   end
 
