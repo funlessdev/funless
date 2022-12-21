@@ -24,7 +24,7 @@ defmodule CoreWeb.FunctionControllerTest do
     name: "some_name"
   }
   @update_attrs %{
-    code: "some_updated_code",
+    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
     name: "some_updated_name"
   }
   @invalid_attrs %{code: nil, name: nil}
@@ -64,9 +64,7 @@ defmodule CoreWeb.FunctionControllerTest do
       module_name: module_name
     } do
       conn =
-        put(conn, Routes.function_path(conn, :update, module_name, function_name),
-          function: @update_attrs
-        )
+        put(conn, Routes.function_path(conn, :update, module_name, function_name), @update_attrs)
 
       assert %{"name" => new_name} = json_response(conn, 200)["data"]
       assert new_name == @update_attrs.name
@@ -80,10 +78,9 @@ defmodule CoreWeb.FunctionControllerTest do
       function: %Function{name: name},
       module_name: module_name
     } do
-      conn =
-        put(conn, Routes.function_path(conn, :update, module_name, name), function: @invalid_attrs)
+      conn = put(conn, Routes.function_path(conn, :update, module_name, name), @invalid_attrs)
 
-      assert json_response(conn, 422)["errors"] != %{}
+      assert json_response(conn, 400)["errors"] != %{}
     end
   end
 
