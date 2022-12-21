@@ -88,6 +88,37 @@ defmodule Core.FunctionsTest do
       assert function.module_id == module.id
     end
 
+    test "create_function/1 with non-conflicting names and same module creates functions" do
+      module = module_fixture()
+      valid_attrs1 = %{code: "some_code", name: "some_name", module_id: module.id}
+      valid_attrs2 = %{code: "some_code", name: "some_other_name", module_id: module.id}
+
+      assert {:ok, %Function{} = f1} = Functions.create_function(valid_attrs1)
+      assert {:ok, %Function{} = f2} = Functions.create_function(valid_attrs2)
+
+      assert f1.code == "some_code"
+      assert f1.name == "some_name"
+      assert f1.module_id == module.id
+
+      assert f2.code == "some_code"
+      assert f2.name == "some_other_name"
+      assert f2.module_id == module.id
+    end
+
+    test "create_function/1 with existing function name and module returns a constraint error" do
+      module = module_fixture()
+      valid_attrs = %{code: "some_code", name: "some_name", module_id: module.id}
+      assert {:ok, %Function{}} = Functions.create_function(valid_attrs)
+
+      assert {:error,
+              %Ecto.Changeset{
+                errors: [
+                  function_module_index_constraint:
+                    {_, [constraint: :unique, constraint_name: "function_module_index"]}
+                ]
+              }} = Functions.create_function(valid_attrs)
+    end
+
     test "create_function/1 with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = Functions.create_function(@invalid_attrs)
     end
