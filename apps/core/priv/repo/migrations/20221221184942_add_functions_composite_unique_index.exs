@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# {"code": code}
-type: object
-properties:
-  code:
-    type: binary
+defmodule Core.Repo.Migrations.AddFunctionsCompositePrimaryKey do
+  use Ecto.Migration
+
+  def change do
+    create unique_index(:functions, [:module_id, :name], name: :function_module_index)
+  end
+end

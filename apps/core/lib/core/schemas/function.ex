@@ -39,6 +39,7 @@ defmodule Core.Schemas.Function do
     |> validate_required([:name, :code, :module_id])
     |> validate_format(:name, regex, message: msg)
     |> validate_length(:name, min: 1, max: 160)
+    |> unique_constraint(:function_module_index_constraint, name: :function_module_index)
     |> foreign_key_constraint(:module_id)
   end
 end
