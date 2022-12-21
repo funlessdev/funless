@@ -108,7 +108,6 @@ defmodule Core.Adapters.Connectors.Manager do
 
       [{pid, _}] ->
         DynamicSupervisor.terminate_child(@main_supervisor, pid)
-        :ok
     end
   end
 end
