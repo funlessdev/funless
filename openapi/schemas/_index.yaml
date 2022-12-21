@@ -30,8 +30,9 @@ invoke_input:
 invoke_result:
   $ref: "./invoke_result.yaml"
 
-function_code:
-  $ref: "./function_code.yaml"
+function_create_update:
+  $ref: "./function_create_update.yaml"
 
 error:
   $ref: "./error.yaml"
+
