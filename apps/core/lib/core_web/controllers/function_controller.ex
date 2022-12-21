@@ -38,12 +38,10 @@ defmodule CoreWeb.FunctionController do
         "name" => fn_name,
         "code" => %Plug.Upload{path: tmp_path}
       }) do
-    code = File.read!(tmp_path)
-    params = %{"name" => fn_name, "code" => code}
-
-    with %Module{} = module <- Modules.get_module_by_name!(module_name),
+    with {:ok, code} <- File.read(tmp_path),
+         %Module{} = module <- Modules.get_module_by_name!(module_name),
          {:ok, %Function{} = function} <-
-           params
+           %{"name" => fn_name, "code" => code}
            |> Map.put_new("module_id", module.id)
            |> Functions.create_function() do
       conn
@@ -65,12 +63,19 @@ defmodule CoreWeb.FunctionController do
   def update(conn, %{
         "module_name" => mod_name,
         "function_name" => name,
-        "function" => function_params
+        "code" => %Plug.Upload{path: tmp_path},
+        "name" => new_name
       }) do
-    with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
-         {:ok, %Function{} = function} <- Functions.update_function(function, function_params) do
+    with {:ok, code} <- File.read(tmp_path),
+         {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
+         {:ok, %Function{} = function} <-
+           Functions.update_function(function, %{"name" => new_name, "code" => code}) do
       render(conn, "show.json", function: function)
     end
+  end
+
+  def update(_conn, _) do
+    {:error, :bad_params}
   end
 
   def delete(conn, %{"module_name" => mod_name, "function_name" => name}) do
