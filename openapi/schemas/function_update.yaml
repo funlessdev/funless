@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# {"code": code}
-type: string
-format: binary
-description: File with the code of the function
+type: object
+properties:
+  code:
+    $ref: "./function_code.yaml"

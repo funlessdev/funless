@@ -108,12 +108,15 @@ paths:
       parameters:
         - $ref: "parameters/path/module_name.yaml"
       requestBody:
-        description: Function code to upload
+        description: Object containing the function's name and code
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "schemas/function_code.yaml"
+              $ref: "schemas/function_creation.yaml"
+            encoding:
+              code:
+                contentType: application/octet-stream
       responses:
         "201":
           $ref: "responses/null_response.yaml"
@@ -202,9 +205,12 @@ paths:
         description: New function code to use
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "schemas/function_code.yaml"
+              $ref: "schemas/function_update.yaml"
+            encoding:
+              code:
+                contentType: application/octet-stream
       responses:
         "200":
           $ref: "responses/null_response.yaml"
