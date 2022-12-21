@@ -113,7 +113,7 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: "schemas/function_creation.yaml"
+              $ref: "schemas/function_create_update.yaml"
             encoding:
               code:
                 contentType: application/octet-stream
@@ -207,7 +207,7 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: "schemas/function_update.yaml"
+              $ref: "schemas/function_create_update.yaml"
             encoding:
               code:
                 contentType: application/octet-stream

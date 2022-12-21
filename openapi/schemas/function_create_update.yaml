@@ -14,5 +14,10 @@
 
 type: object
 properties:
+  name:
+    description: Name of the function
+    type: string
   code:
-    $ref: "./function_code.yaml"
+    type: string
+    format: binary
+    description: File with the code of the function
