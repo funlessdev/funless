@@ -17,7 +17,7 @@
 ARG ALPINE_VERSION=3.16
 ARG SECRET_KEY_BASE
 
-FROM elixir:1.14-alpine AS builder
+FROM elixir:1.13-alpine AS builder
 
 ARG MIX_ENV=prod
 
