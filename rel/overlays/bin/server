@@ -14,4 +14,9 @@
 
 #!/bin/sh
 cd -P -- "$(dirname -- "$0")"
-exec ./core start
+
+if [[ -z "$NODE_IP" ]]; then
+    PORT=${PORT} DEPLOY_ENV=${DEPLOY_ENV} exec ./core start
+else
+    RELEASE_NODE=core@${NODE_IP} PORT=${PORT} DEPLOY_ENV=${DEPLOY_ENV} exec ./core start
+fi
