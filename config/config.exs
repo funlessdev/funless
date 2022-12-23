@@ -20,6 +20,8 @@ config :logger, :console,
   metadata: [:request_id, :file, :line]
 
 # --- Core Configs ---
+config :core, Core.Repo, start_apps_before_migration: [:logger]
+
 config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
 config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Adapters.Telemetry.Metrics

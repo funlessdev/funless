@@ -23,18 +23,15 @@ config :iex, default_prompt: ">>>"
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 if config_env() == :prod do
-  database_url =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
-
   maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
   config :core, Core.Repo,
     # ssl: true,
-    url: database_url,
+    username: System.get_env("PGUSER") || "postgres",
+    password: System.get_env("PGPASSWORD") || "postgres",
+    database: System.get_env("PGDATABASE") || "funless",
+    hostname: System.get_env("PGHOST") || "postgres",
+    port: System.get_env("PGPORT") || "5432",
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6
 
