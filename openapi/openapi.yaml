@@ -183,9 +183,9 @@ paths:
 
     # PUT /fn/{mod}/{fun}
     put:
-      summary: Update function code
+      summary: Update function
       operationId: update_function
-      description: Update function code
+      description: Update function
       tags:
         - functions
       parameters:

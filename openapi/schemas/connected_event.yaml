@@ -14,15 +14,10 @@
 
 type: object
 properties:
-  name:
-    description: Name of the function
+  type:
     type: string
-  code:
-    type: string
-    format: binary
-    description: File with the code of the function
-  events:
-    type: array
-    description: Events that can trigger the function
-    items:
-      $ref: "./connected_event.yaml"
+    enum: [mqtt]
+    description: Type of the event
+  params:
+    type: object
+    description: Additional parameters of the event

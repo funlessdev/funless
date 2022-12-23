@@ -33,6 +33,9 @@ invoke_result:
 function_create_update:
   $ref: "./function_create_update.yaml"
 
+connected_event:
+  $ref: "./connected_event.yaml"
+
 error:
   $ref: "./error.yaml"
 
