@@ -13,6 +13,9 @@
 # limitations under the License.
 
 defmodule Core.Release do
+  @moduledoc """
+  This module contains the functions to run migrations and seeds after release.
+  """
   require Logger
 
   @app :core
