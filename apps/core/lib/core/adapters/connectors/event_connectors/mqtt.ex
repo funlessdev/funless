@@ -25,31 +25,15 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
     GenServer.start_link(__MODULE__, params)
   end
 
-  @spec init(%{
-          :function => String.t(),
-          :module => String.t(),
-          :params => %{
-            :host => atom(),
-            :port => integer(),
-            :topic => String.t()
-          }
-        }) ::
-          {:ok,
-           %{
-             :function => String.t(),
-             :host => atom(),
-             :module => String.t(),
-             :pid => pid(),
-             :port => integer(),
-             :topic => String.t()
-           }}
-          | {:stop, :normal}
   def init(%{
         function: function,
         module: module,
-        params: %{host: _host, port: _port, topic: _topic} = params
+        params: %{"host" => host, "port" => port, "topic" => topic}
       }) do
     Process.flag(:trap_exit, true)
+
+    # params come from json, but emqtt only accepts atoms as host and integers as port
+    params = %{host: String.to_atom(host), port: String.to_integer(port), topic: topic}
 
     case connect_to_broker(params) do
       {:ok, pid} ->
