@@ -32,6 +32,7 @@ defmodule CoreWeb.FunctionControllerTest do
   setup %{conn: conn} do
     Core.Commands.Mock |> Mox.stub_with(Core.Adapters.Commands.Test)
     Core.Cluster.Mock |> Mox.stub_with(Core.Adapters.Cluster.Test)
+    Core.Connectors.Manager.Mock |> Mox.stub_with(Core.Adapters.Connectors.Test)
 
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
