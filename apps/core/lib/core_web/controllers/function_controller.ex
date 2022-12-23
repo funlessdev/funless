@@ -15,7 +15,7 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
-  alias Core.Domain.{Functions, Invoker, Modules}
+  alias Core.Domain.{Events, Functions, Invoker, Modules}
   alias Core.Schemas.{Function, Module}
   alias Data.InvokeParams
 
@@ -49,8 +49,7 @@ defmodule CoreWeb.FunctionController do
            |> Functions.create_function() do
       # TODO: update API spec with new possible return code and object
 
-      event_results =
-        Core.Domain.Events.connect_events(fn_name, module_name, Map.get(params, "events"))
+      event_results = Events.connect_events(fn_name, module_name, Map.get(params, "events"))
 
       event_errors? =
         event_results
@@ -58,14 +57,14 @@ defmodule CoreWeb.FunctionController do
           e != :ok
         end)
 
-      if !event_errors? do
-        conn
-        |> put_status(:created)
-        |> render("show.json", function: function)
-      else
+      if event_errors? do
         conn
         |> put_status(:multi_status)
         |> render("show.json", function: function, events: event_results)
+      else
+        conn
+        |> put_status(:created)
+        |> render("show.json", function: function)
       end
     end
   end
@@ -95,8 +94,7 @@ defmodule CoreWeb.FunctionController do
          {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
          {:ok, %Function{} = function} <-
            Functions.update_function(function, %{"name" => new_name, "code" => code}) do
-      event_results =
-        Core.Domain.Events.update_events(new_name, mod_name, Map.get(params, "events"))
+      event_results = Events.update_events(new_name, mod_name, Map.get(params, "events"))
 
       event_errors? =
         event_results
@@ -104,13 +102,13 @@ defmodule CoreWeb.FunctionController do
           e != :ok
         end)
 
-      if !event_errors? do
-        conn
-        |> render("show.json", function: function)
-      else
+      if event_errors? do
         conn
         |> put_status(:multi_status)
         |> render("show.json", function: function, events: event_results)
+      else
+        conn
+        |> render("show.json", function: function)
       end
     end
   end
@@ -122,7 +120,7 @@ defmodule CoreWeb.FunctionController do
   def delete(conn, %{"module_name" => mod_name, "function_name" => name}) do
     with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
          {:ok, %Function{}} <- Functions.delete_function(function),
-         :ok <- Core.Domain.Events.disconnect_events(name, mod_name) do
+         :ok <- Events.disconnect_events(name, mod_name) do
       send_resp(conn, :no_content, "")
     end
   end
