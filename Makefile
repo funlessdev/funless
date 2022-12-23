@@ -14,13 +14,14 @@
 
 .PHONY: build-core-image build-worker-image credo dial test
 
+SECRET_KEY_BASE ?= $(shell mix phx.gen.secret)
 ## Compile core docker image
 build-core-image: 
-	docker build -t core -f Dokerfile.core .
+	docker build --build-arg SECRET_KEY_BASE=$(SECRET_KEY_BASE) --build-arg MIX_ENV=prod -t core -f ./Dockerfile.core .
 
 ## Compile worker docker image
 build-worker-image: 
-	docker build -t worker -f Dokerfile.worker .
+	docker build -t worker -f ./Dockerfile.worker .
 
 ## Run credo --strict
 credo: 

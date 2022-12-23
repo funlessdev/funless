@@ -15,15 +15,14 @@
 # The version of Alpine to use for the final image
 # This should match the version of Alpine that the `elixir:1.14-alpine` image uses
 ARG ALPINE_VERSION=3.16
+ARG SECRET_KEY_BASE
 
 FROM elixir:1.13-alpine AS builder
 
-# The following are build arguments used to change variable parts of the image.
-# The name of your application/release (required)
 ARG MIX_ENV=prod
 
-ENV MIX_ENV=${MIX_ENV}
-# RUSTUP_HOME=/opt/rust CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
+ENV MIX_ENV=${MIX_ENV} \
+    SECRET_KEY_BASE=${SECRET_KEY_BASE}
 
 # By convention, /opt is typically used for applications
 WORKDIR /opt/app
@@ -51,6 +50,7 @@ RUN mix release core
 FROM alpine:${ALPINE_VERSION}
 
 ARG MIX_ENV=prod
+ARG SECRET_KEY_BASE
 ARG PORT=4000
 ARG NODE_IP=""
 ARG DEPLOY_ENV=""
@@ -61,20 +61,33 @@ RUN apk update && \
     apk add --no-cache libstdc++ libgcc ncurses-libs
 
 ENV REPLACE_OS_VARS=true \
+    USER=funless \
     MIX_ENV=${MIX_ENV} \ 
+    SECRET_KEY_BASE=${SECRET_KEY_BASE} \
     PORT=${PORT} \
     NODE_IP=${NODE_IP} \
-    DEPLOY_ENV=${DEPLOY_ENV}
+    DEPLOY_ENV=${DEPLOY_ENV} \
+    PGUSER=postgres \
+    PGPASSWORD=postgres \
+    PGDATABASE=funless \
+    PGHOST=postgres \
+    PGPORT=5432
 
-WORKDIR /home/funless
-RUN adduser --disabled-password --home "$(pwd)" funless &&\
-    echo "funless ALL=(ALL:ALL) NOPASSWD: ALL" >>/etc/sudoers
 
-USER funless
+WORKDIR "/home/${USER}/app"
+# Creates an unprivileged user to be used exclusively to run the Phoenix app
+RUN addgroup -g 1000 -S "${USER}" && adduser -s /bin/sh -u 1000 -G "${USER}" \
+    -h "/home/${USER}" -D "${USER}" && su "${USER}"
 
-COPY --chown=funless --from=builder /opt/app/_build/${MIX_ENV}/rel/core ./core
+# Everything from this line onwards will run in the context of the unprivileged user.
+USER "${USER}"
 
-CMD if [[ -z "$NODE_IP" ]] ; \
-    then PORT=${PORT} DEPLOY_ENV=${DEPLOY_ENV} core/bin/core start ; \
-    else RELEASE_NODE=core@${NODE_IP} PORT=${PORT} DEPLOY_ENV=${DEPLOY_ENV} core/bin/core start ; \
-    fi
+COPY --chown="${USER}":"${USER}" --from=builder /opt/app/_build/${MIX_ENV}/rel/core/ .
+
+# # Usage:
+# #  * build: sudo docker image build -t elixir/my_app .
+# #  * shell: sudo docker container run --rm -it --entrypoint "" -p 127.0.0.1:4000:4000 elixir/my_app sh
+# #  * run:   sudo docker container run --rm -it -p 127.0.0.1:4000:4000 --name my_app elixir/my_app
+# #  * exec:  sudo docker container exec -it my_app sh
+# #  * logs:  sudo docker container logs --follow --tail 100 my_app
+CMD ["sh", "-c", "bin/migrate && bin/seed && bin/server"]
