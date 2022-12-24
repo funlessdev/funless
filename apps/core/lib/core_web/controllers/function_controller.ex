@@ -47,8 +47,6 @@ defmodule CoreWeb.FunctionController do
            %{"name" => fn_name, "code" => code}
            |> Map.put_new("module_id", module.id)
            |> Functions.create_function() do
-      # TODO: update API spec with new possible return code and object
-
       event_results = Events.connect_events(fn_name, module_name, Map.get(params, "events"))
 
       event_errors? =
@@ -88,8 +86,6 @@ defmodule CoreWeb.FunctionController do
           "name" => new_name
         } = params
       ) do
-    # TODO: update API spec with new possible return type and object
-
     with {:ok, code} <- File.read(tmp_path),
          {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
          {:ok, %Function{} = function} <-
