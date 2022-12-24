@@ -37,7 +37,11 @@ defmodule Core.Domain.Events do
     []
   end
 
-  def connect_events(function, module, [_] = events) do
+  def connect_events(_, _, []) do
+    []
+  end
+
+  def connect_events(function, module, [_ | _] = events) do
     Enum.map(events, fn e -> connect_single_event(function, module, e) end)
   end
 
@@ -83,7 +87,11 @@ defmodule Core.Domain.Events do
     []
   end
 
-  def update_events(function, module, [_] = events) do
+  def update_events(_, _, []) do
+    []
+  end
+
+  def update_events(function, module, [_ | _] = events) do
     Manager.disconnect(%{name: function, module: module})
     connect_events(function, module, events)
   end
