@@ -21,3 +21,8 @@ properties:
     type: string
     format: binary
     description: File with the code of the function
+  events:
+    type: array
+    description: Events that can trigger the function
+    items:
+      $ref: "./connected_event.yaml"

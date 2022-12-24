@@ -12,33 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module_name:
-  $ref: "./module_name.yaml"
-
-single_module_result:
-  $ref: "./single_module_result.yaml"
-
-module_names_result:
-  $ref: "./module_names_result.yaml"
-
-single_function_result:
-  $ref: "./single_function_result.yaml"
-
-invoke_input:
-  $ref: "./invoke_input.yaml"
-
-invoke_result:
-  $ref: "./invoke_result.yaml"
-
-function_create_update:
-  $ref: "./function_create_update.yaml"
-
-connected_event:
-  $ref: "./connected_event.yaml"
-
-mixed_event_results:
-  $ref: "./mixed_event_results.yaml"
-
-error:
-  $ref: "./error.yaml"
-
+description: Mixed response
+content:
+  application/json:
+    schema:
+      $ref: "../schemas/mixed_event_results.yaml"
