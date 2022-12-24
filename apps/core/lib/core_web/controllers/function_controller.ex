@@ -60,7 +60,7 @@ defmodule CoreWeb.FunctionController do
       if event_errors? do
         conn
         |> put_status(:multi_status)
-        |> render("show.json", function: function, events: event_results)
+        |> render("show.json", data: %{function: function, events: event_results})
       else
         conn
         |> put_status(:created)
@@ -105,7 +105,7 @@ defmodule CoreWeb.FunctionController do
       if event_errors? do
         conn
         |> put_status(:multi_status)
-        |> render("show.json", function: function, events: event_results)
+        |> render("show.json", data: %{function: function, events: event_results})
       else
         conn
         |> render("show.json", function: function)
