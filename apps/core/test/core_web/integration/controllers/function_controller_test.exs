@@ -23,9 +23,45 @@ defmodule CoreWeb.FunctionControllerTest do
     code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
     name: "some_name"
   }
+  @create_attrs_events %{
+    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
+    name: "some_name",
+    events: [
+      %{
+        "type" => "mqtt",
+        "params" => %{}
+      },
+      %{
+        "type" => "rabbitmq",
+        "params" => %{}
+      },
+      %{
+        "type" => "rabbitmq",
+        "params" => %{}
+      }
+    ]
+  }
   @update_attrs %{
     code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
     name: "some_updated_name"
+  }
+  @update_attrs_events %{
+    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
+    name: "some_updated_name",
+    events: [
+      %{
+        "type" => "mqtt",
+        "params" => %{}
+      },
+      %{
+        "type" => "rabbitmq",
+        "params" => %{}
+      },
+      %{
+        "type" => "rabbitmq",
+        "params" => %{}
+      }
+    ]
   }
   @invalid_attrs %{code: nil, name: nil}
 
@@ -38,9 +74,18 @@ defmodule CoreWeb.FunctionControllerTest do
   end
 
   describe "create function" do
-    test "renders function when data is valid", %{conn: conn} do
+    test "renders function when data without events is valid", %{conn: conn} do
       module = module_fixture()
       conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs)
+      assert %{"name" => name} = json_response(conn, 201)["data"]
+
+      conn = get(conn, Routes.function_path(conn, :show, module.name, name))
+      assert %{"name" => "some_name"} = json_response(conn, 200)["data"]
+    end
+
+    test "renders function when data with events is valid", %{conn: conn} do
+      module = module_fixture()
+      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs_events)
       assert %{"name" => name} = json_response(conn, 201)["data"]
 
       conn = get(conn, Routes.function_path(conn, :show, module.name, name))
@@ -53,6 +98,30 @@ defmodule CoreWeb.FunctionControllerTest do
       conn = post(conn, Routes.function_path(conn, :create, module.name), @invalid_attrs)
 
       assert json_response(conn, 400)["errors"] != %{}
+    end
+
+    test "renders mixed response when some events couldn't connect", %{conn: conn} do
+      module = module_fixture()
+
+      Core.Connectors.Manager.Mock
+      |> Mox.expect(:connect, 1, fn _, %Data.ConnectedEvent{type: "mqtt"} -> :ok end)
+
+      Core.Connectors.Manager.Mock
+      |> Mox.expect(:connect, 2, fn _, %Data.ConnectedEvent{type: "rabbitmq"} ->
+        {:error, :some_error}
+      end)
+
+      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs_events)
+
+      assert %{
+               "name" => _name,
+               "events" => [
+                 %{"status" => "success"},
+                 %{"status" => "error"},
+                 %{"status" => "error"}
+               ],
+               "metadata" => %{"successful" => 1, "failed" => 2}
+             } = json_response(conn, 207)["data"]
     end
   end
 
@@ -82,6 +151,37 @@ defmodule CoreWeb.FunctionControllerTest do
       conn = put(conn, Routes.function_path(conn, :update, module_name, name), @invalid_attrs)
 
       assert json_response(conn, 400)["errors"] != %{}
+    end
+
+    test "renders mixed response when some events couldn't connect", %{
+      conn: conn,
+      function: %Function{name: name},
+      module_name: module_name
+    } do
+      Core.Connectors.Manager.Mock
+      |> Mox.expect(:connect, 1, fn _, %Data.ConnectedEvent{type: "mqtt"} -> :ok end)
+
+      Core.Connectors.Manager.Mock
+      |> Mox.expect(:connect, 2, fn _, %Data.ConnectedEvent{type: "rabbitmq"} ->
+        {:error, :some_error}
+      end)
+
+      conn =
+        put(
+          conn,
+          Routes.function_path(conn, :update, module_name, name),
+          @update_attrs_events
+        )
+
+      assert %{
+               "name" => _name,
+               "events" => [
+                 %{"status" => "success"},
+                 %{"status" => "error"},
+                 %{"status" => "error"}
+               ],
+               "metadata" => %{"successful" => 1, "failed" => 2}
+             } = json_response(conn, 207)["data"]
     end
   end
 
