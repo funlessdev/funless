@@ -16,3 +16,5 @@ unexpected_error:
   $ref: "./unexpected_error.yaml"
 null_response:
   $ref: "./null_response.yaml"
+mixed_response_events:
+  $ref: "./mixed_response_events.yaml"

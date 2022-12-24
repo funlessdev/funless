@@ -120,6 +120,8 @@ paths:
       responses:
         "201":
           $ref: "responses/null_response.yaml"
+        "207":
+          $ref: "responses/mixed_response_events.yaml"
         default:
           $ref: "responses/unexpected_error.yaml"
 
@@ -214,6 +216,8 @@ paths:
       responses:
         "200":
           $ref: "responses/null_response.yaml"
+        "207":
+          $ref: "responses/mixed_response_events.yaml"
         default:
           $ref: "responses/unexpected_error.yaml"
 
