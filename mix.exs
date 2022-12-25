@@ -18,7 +18,7 @@ defmodule Core.Umbrella.MixProject do
   def project do
     [
       apps_path: "apps",
-      version: "0.5.0",
+      version: "0.6.0",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"},

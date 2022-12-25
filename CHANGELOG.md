@@ -14,6 +14,85 @@
   ~ limitations under the License.
 -->
 
+## v0.6.0 (2022-12-25)
+
+### Feat
+
+- **openapi**: add 207 response to create and update
+- **core_web**: add view in function_controller for function+events
+- **core_web**: add event connect/disconnect in function_controller
+- **core**: add wrapper for event connector manager in domain
+- **openapi**: add connected events to function create/update
+- **core**: handle migrations and seed when deploying core
+- **connectors**: add function invocation in mqtt connector
+- **connectors**: add mqtt connector genserver
+- **core**: use db with invoker
+- **connectors**: add supervisor and dynamic supervisor for child processes
+- **connectors**: add connector manager adapter, ets store and example process
+- **connectors**: update manager specification
+- **data**: add connected event data type
+- **connectors**: update connector manager spec
+- **connectors**: add connector manager port
+- **core**: finish implementation of list,create,update,delete
+- **core**: implement list functions in a module route
+- **core**: seed db with default module '_'
+- **core**: generate functions json api
+- **core**: add phx generated module api
+- **core**: setup ecto
+
+### Fix
+
+- **core**: add correct list match in domain.events
+- **connectors**: handle string key and params in mqtt
+- **mix.exs**: fix ecto.setup command in core
+- **core**: add start if node_ip in server script
+- **core**: add license header and credo warnings
+- **openapi**: fix wrong schema file name
+- **core**: add composite unique constraint in functions on name+module_id
+- **core**: remove module_id unique constraint in functions table
+- **core_web**: add catch-all case for update; handle missing tmp file for plug; add name in update
+- **connectors**: remove :ok return value in manager.disconnect
+- **openapi**: fix function create/update type and params
+- **connectors**: handle registered stopped supervisor in manager
+- **core_web**: add missing case in function_controller
+- **connectors**: handle exit messages in mqtt connector
+- **connectors**: remove ets table; handle connector restart
+- **core_web**: fix create with file upload in function_controller
+- **core**: fix dialyzer warning
+- **connectors**: fix manager adapter return types
+- **data**: fix type in connected event struct
+- **connectors**: set correct table type
+- **core**: dialyzer warning
+- **core**: regex accepts underscores as first and last char
+- **core**: add cascading delete on functions
+- **license**: add header
+- **openapi**: operation id repeated
+
+### Refactor
+
+- **core_web**: remove todos in function_controller
+- **core_web**: fix some credo warnings in function_controller
+- **openapi**: merge function create+update schema
+- **connectors**: fix credo warnings
+- **connectors**: add missing license header
+- **connectors**: add mqtt init typespec
+- **connectors**: update manager spec for easier testing
+- **connectors**: fix credo warning in mqtt
+- **core**: update invoker checks and reorganize tests
+- **core**: remove function store port/adapter
+- **core**: update docs and functions context
+- **connectors**: add example call to stub connector
+- **core**: add get_by_name for functions and modules
+- **core**: update routes to match openapi spec
+- **openapi**: update spec with new function api
+- **makefile**: remove help
+- **openapi**: uncomment fn api
+- **openapi**: reorganize spec structure with new modules api
+- **core**: reorganize test folders
+- **structs**: add data app to hold core and worker structs
+- swap namespace naming to module
+- **core**: join core and core_web apps in a single phoenix app
+
 ## v0.5.0 (2022-11-26)
 
 ### Feat

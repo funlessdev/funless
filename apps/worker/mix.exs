@@ -18,7 +18,7 @@ defmodule FunlessWorker.MixProject do
   def project do
     [
       app: :worker,
-      version: "0.4.0",
+      version: "0.6.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
