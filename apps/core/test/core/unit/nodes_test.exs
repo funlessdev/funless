@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule NodesTest do
+defmodule Core.Unit.NodesTest do
   use ExUnit.Case, async: true
   alias Core.Domain.Nodes
   import Mox, only: [verify_on_exit!: 1]

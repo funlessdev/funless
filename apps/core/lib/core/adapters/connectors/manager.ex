@@ -24,6 +24,8 @@ defmodule Core.Adapters.Connectors.Manager do
   alias Core.Domain.Ports.Connectors.Manager
   alias Data.ConnectedEvent
 
+  require Logger
+
   @impl true
   def connect(%{name: function, module: module}, %ConnectedEvent{
         type: event_type,
@@ -31,6 +33,10 @@ defmodule Core.Adapters.Connectors.Manager do
       }) do
     # calling which_connector from the port instead of the current file, to allow mocking
     with {:ok, connector} <- Manager.which_connector(event_type) do
+      Logger.debug(
+        "ConnectorManager: connecting #{event_type} to #{module}/#{function} with #{inspect(params)}"
+      )
+
       # dedicated DynamicSupervisor name for this function's Event Connectors
       name = "#{Atom.to_string(@main_supervisor)}.#{module}/#{function}"
       supervisor = {:via, Registry, {@registry, name}}
@@ -76,17 +82,10 @@ defmodule Core.Adapters.Connectors.Manager do
       )
 
     case result do
-      {:ok, _pid} ->
-        :ok
-
-      {:ok, _pid, _info} ->
-        :ok
-
-      :ignore ->
-        {:error, :ignore}
-
-      {:error, err} ->
-        {:error, err}
+      {:ok, _pid} -> :ok
+      {:ok, _pid, _info} -> :ok
+      :ignore -> {:error, :ignore}
+      {:error, err} -> {:error, err}
     end
   end
 

@@ -15,6 +15,7 @@
 defmodule CoreWeb.FunctionControllerTest do
   use CoreWeb.ConnCase
 
+  require Logger
   import Core.{FunctionsFixtures, ModulesFixtures}
 
   alias Core.Schemas.Function
@@ -26,20 +27,8 @@ defmodule CoreWeb.FunctionControllerTest do
   @create_attrs_events %{
     code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
     name: "some_name",
-    events: [
-      %{
-        "type" => "mqtt",
-        "params" => %{}
-      },
-      %{
-        "type" => "rabbitmq",
-        "params" => %{}
-      },
-      %{
-        "type" => "rabbitmq",
-        "params" => %{}
-      }
-    ]
+    events:
+      "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]"
   }
   @update_attrs %{
     code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
@@ -48,20 +37,8 @@ defmodule CoreWeb.FunctionControllerTest do
   @update_attrs_events %{
     code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
     name: "some_updated_name",
-    events: [
-      %{
-        "type" => "mqtt",
-        "params" => %{}
-      },
-      %{
-        "type" => "rabbitmq",
-        "params" => %{}
-      },
-      %{
-        "type" => "rabbitmq",
-        "params" => %{}
-      }
-    ]
+    events:
+      "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]"
   }
   @invalid_attrs %{code: nil, name: nil}
 
@@ -85,6 +62,7 @@ defmodule CoreWeb.FunctionControllerTest do
 
     test "renders function when data with events is valid", %{conn: conn} do
       module = module_fixture()
+
       conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs_events)
       assert %{"name" => name} = json_response(conn, 201)["data"]
 

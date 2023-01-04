@@ -19,6 +19,8 @@ defmodule CoreWeb.FunctionController do
   alias Core.Schemas.{Function, Module}
   alias Data.InvokeParams
 
+  require Logger
+
   action_fallback(CoreWeb.FallbackController)
 
   def invoke(conn, %{"module_name" => mod_name, "function_name" => fun_name} = params) do
@@ -41,28 +43,32 @@ defmodule CoreWeb.FunctionController do
           "code" => %Plug.Upload{path: tmp_path}
         } = params
       ) do
-    with {:ok, code} <- File.read(tmp_path),
-         %Module{} = module <- Modules.get_module_by_name!(module_name),
-         {:ok, %Function{} = function} <-
-           %{"name" => fn_name, "code" => code}
-           |> Map.put_new("module_id", module.id)
-           |> Functions.create_function() do
-      event_results = Events.connect_events(fn_name, module_name, Map.get(params, "events"))
+    events_req = params |> Map.get("events", nil) |> parse_requested_events_string()
 
-      event_errors? =
-        event_results
-        |> Enum.any?(fn e ->
-          e != :ok
-        end)
+    if events_req == :error do
+      Logger.error("Function Controller: events not a valid JSON. Aborting function creation.")
+      {:error, :bad_params}
+    else
+      Logger.debug("Function Controller: events parsed #{inspect(events_req)}.")
 
-      if event_errors? do
-        conn
-        |> put_status(:multi_status)
-        |> render("show.json", data: %{function: function, events: event_results})
-      else
-        conn
-        |> put_status(:created)
-        |> render("show.json", function: function)
+      with {:ok, code} <- File.read(tmp_path),
+           %Module{} = module <- Modules.get_module_by_name!(module_name),
+           {:ok, %Function{} = function} <-
+             %{"name" => fn_name, "code" => code}
+             |> Map.put_new("module_id", module.id)
+             |> Functions.create_function() do
+        event_results = Events.connect_events(fn_name, module_name, events_req)
+        event_errors? = Enum.any?(event_results, &(&1 != :ok))
+
+        if event_errors? do
+          conn
+          |> put_status(:multi_status)
+          |> render("show.json", data: %{function: function, events: event_results})
+        else
+          conn
+          |> put_status(:created)
+          |> render("show.json", function: function)
+        end
       end
     end
   end
@@ -86,25 +92,29 @@ defmodule CoreWeb.FunctionController do
           "name" => new_name
         } = params
       ) do
-    with {:ok, code} <- File.read(tmp_path),
-         {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
-         {:ok, %Function{} = function} <-
-           Functions.update_function(function, %{"name" => new_name, "code" => code}) do
-      event_results = Events.update_events(new_name, mod_name, Map.get(params, "events"))
+    events_req = params |> Map.get("events", nil) |> parse_requested_events_string()
 
-      event_errors? =
-        event_results
-        |> Enum.any?(fn e ->
-          e != :ok
-        end)
+    if events_req == :error do
+      Logger.error("Function Controller: events not a valid JSON. Aborting function update.")
+      {:error, :bad_params}
+    else
+      Logger.debug("Function Controller: events parsed #{inspect(events_req)}.")
 
-      if event_errors? do
-        conn
-        |> put_status(:multi_status)
-        |> render("show.json", data: %{function: function, events: event_results})
-      else
-        conn
-        |> render("show.json", function: function)
+      with {:ok, code} <- File.read(tmp_path),
+           {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
+           {:ok, %Function{} = function} <-
+             Functions.update_function(function, %{"name" => new_name, "code" => code}) do
+        event_results = Events.update_events(new_name, mod_name, events_req)
+        event_errors? = Enum.any?(event_results, &(&1 != :ok))
+
+        if event_errors? do
+          conn
+          |> put_status(:multi_status)
+          |> render("show.json", data: %{function: function, events: event_results})
+        else
+          conn
+          |> render("show.json", function: function)
+        end
       end
     end
   end
@@ -126,6 +136,17 @@ defmodule CoreWeb.FunctionController do
     case Functions.get_by_name_in_mod!(fname, mod_name) do
       [] -> {:error, :not_found}
       [function] -> {:ok, function}
+    end
+  end
+
+  @spec parse_requested_events_string(String.t() | nil) :: term() | nil | :error
+  defp parse_requested_events_string(nil), do: nil
+  defp parse_requested_events_string(""), do: nil
+
+  defp parse_requested_events_string(events_string) do
+    case Jason.decode(events_string) do
+      {:ok, events} -> events
+      {:error, _} -> :error
     end
   end
 end
