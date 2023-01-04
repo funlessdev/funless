@@ -33,13 +33,7 @@ defmodule Core.Domain.Events do
     - :ok if the event was connected successfully
     - {:error, err} if the event failed to connect for some reason
   """
-  def connect_events(_, _, nil) do
-    []
-  end
-
-  def connect_events(_, _, []) do
-    []
-  end
+  def connect_events(_, _, ev) when is_nil(ev) or ev == [], do: []
 
   def connect_events(function, module, [_ | _] = events) do
     Enum.map(events, fn e -> connect_single_event(function, module, e) end)
@@ -64,9 +58,7 @@ defmodule Core.Domain.Events do
     Manager.connect(%{name: function, module: module}, connected_event)
   end
 
-  def connect_single_event(_, _, _) do
-    {:error, :bad_event_format}
-  end
+  def connect_single_event(_, _, _), do: {:error, :bad_event_format}
 
   @doc """
     Update the events a function is connected to; disconnects the function from all previous events
@@ -83,13 +75,7 @@ defmodule Core.Domain.Events do
     - {:error, err} if the event failed to connect for some reason
   """
   @spec update_events(String.t(), String.t(), [map()] | nil) :: [:ok | {:error, any}]
-  def update_events(_, _, nil) do
-    []
-  end
-
-  def update_events(_, _, []) do
-    []
-  end
+  def update_events(_, _, ev) when is_nil(ev) or ev == [], do: []
 
   def update_events(function, module, [_ | _] = events) do
     Manager.disconnect(%{name: function, module: module})

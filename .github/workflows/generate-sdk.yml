@@ -29,7 +29,7 @@ jobs:
       - name: Swagger CLI bundle
         uses: mpetrunic/swagger-cli-action@v1.0.0
         with:
-          command: "bundle openapi/openapi.yaml --outfile _build/openapi.yaml --type yaml"
+          command: "bundle openapi/openapi.yaml -r --outfile _build/openapi.yaml --type yaml"
 
       - name: OpenAPI Generator Action
         uses: craicoverflow/openapi-generator-action@v1

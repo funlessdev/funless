@@ -33,21 +33,30 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
     Process.flag(:trap_exit, true)
 
     # params come from json, but emqtt only accepts atoms as host and integers as port
-    params = %{host: String.to_atom(host), port: String.to_integer(port), topic: topic}
+    case host |> String.to_charlist() |> :inet.getaddr(:inet) do
+      {:ok, address} ->
+        params = %{host: address, port: String.to_integer(port), topic: topic}
 
-    case connect_to_broker(params) do
-      {:ok, pid} ->
-        Logger.info("MQTT Event Connector: started with params #{inspect(params)}")
+        case connect_to_broker(params) do
+          {:ok, pid} ->
+            Logger.info("MQTT Event Connector: started with params #{inspect(params)}")
 
-        {:ok,
-         params |> Map.put(:pid, pid) |> Map.put(:function, function) |> Map.put(:module, module)}
+            {:ok,
+             params
+             |> Map.put(:pid, pid)
+             |> Map.put(:function, function)
+             |> Map.put(:module, module)}
 
-      {:error, err} ->
-        Logger.warn("MQTT Event Connector failed to start with error: #{inspect(err)}")
-        {:stop, :normal}
+          {:error, err} ->
+            Logger.warn("MQTT Event Connector failed to start with error: #{inspect(err)}")
+            {:stop, :normal}
 
-      other ->
-        Logger.warn("MQTT Event Connector failed to start with reason: #{inspect(other)}")
+          other ->
+            Logger.warn("MQTT Event Connector failed to start with reason: #{inspect(other)}")
+            {:stop, :normal}
+        end
+
+      _ ->
         {:stop, :normal}
     end
   end
