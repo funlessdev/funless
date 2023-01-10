@@ -126,17 +126,15 @@ components:
           format: binary
           description: File with the code of the function
         events:
-          type: array
           description: Events that can trigger the function
+          type: array
           items:
             type: object
             properties:
               type:
                 type: string
+                enum: ["mqtt"]
                 description: Type of the event
-                #oneOf:
-                #  - const: mqtt
-                #    description: Events produced by an MQTT client/broker
               params:
                 type: object
                 description: Additional parameters of the event

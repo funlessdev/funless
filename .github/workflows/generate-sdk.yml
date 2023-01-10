@@ -31,7 +31,7 @@ jobs:
         with:
           generator: "go"
           openapi-file: openapi/openapi.yaml
-          command-args: "--git-repo-id fl-client-sdk-go --git-user-id funlessdev"
+          command-args: "--git-repo-id fl-client-sdk-go --git-user-id funlessdev --global-property skipFormModel=false"
 
       - name: Pushes to fl-client-sdk-go
         id: push_directory
