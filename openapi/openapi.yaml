@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-openapi: 3.0.2
+openapi: 3.1.0
 info:
   title: FunLess Platfom API
   description: The API for the FunLess Platform
   version: "0.5"
   license:
     name: Apache 2.0
+    identifier: Apache-2.0
 servers:
   - url: http://localhost:4000
     description: The dev server for the FunLess API
@@ -28,11 +29,164 @@ tags:
 
 components:
   parameters:
-    $ref: "./parameters/_index.yaml"
+    module_name:
+      name: module_name
+      in: path
+      required: true
+      description: The name of the module to retrieve
+      schema:
+        type: string
+    function_name:
+      name: function_name
+      in: path
+      required: true
+      description: The name of the function
+      schema:
+        type: string
   responses:
-    $ref: "./responses/_index.yaml"
+    unexpected_error:
+      description: Unexpected error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    null_response:
+      description: Null response
+    mixed_response_events:
+      description: Mixed response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/mixed_event_results"
   schemas:
-    $ref: "./schemas/_index.yaml"
+    module_name:
+      type: object
+      properties:
+        module:
+          type: object
+          properties:
+            name:
+              type: string
+
+    single_module_result:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            name:
+              type: string
+            functions:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+
+    module_names_result:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+
+    single_function_result:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            name:
+              type: string
+
+    invoke_input:
+      type: object
+      properties:
+        args:
+          type: object
+
+    invoke_result:
+      type: object
+      properties:
+        data:
+          type: object
+
+    function_create_update:
+      type: object
+      properties:
+        name:
+          description: Name of the function
+          type: string
+        code:
+          type: string
+          format: binary
+          description: File with the code of the function
+        events:
+          type: array
+          description: Events that can trigger the function
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                description: Type of the event
+                oneOf:
+                  - const: mqtt
+                    description: Events produced by an MQTT client/broker
+              params:
+                type: object
+                description: Additional parameters of the event
+
+    mixed_event_results:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            name:
+              type: string
+              description: The name of the function
+            events:
+              description: The results of event connection, both successful and failed
+              type: array
+              items:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["success", "error"]
+                    description: Whether the corresponding event was connected successfully
+                  message:
+                    type: string
+                    description: Additional information on the error
+            metadata:
+              type: object
+              properties:
+                successful:
+                  type: integer
+                  description: The amount of events that was successfully connected
+                failed:
+                  type: integer
+                  description: The amount of events that wasn't successfully connected
+                total:
+                  type: integer
+                  description: The total amount of events that was passed
+
+    error:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            detail:
+              type: string
 
 paths:
   /v1/fn:
@@ -54,9 +208,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "schemas/module_names_result.yaml"
+                $ref: "#/components/schemas/module_names_result"
         default:
-          $ref: "responses/unexpected_error.yaml"
+          $ref: "#/components/responses/unexpected_error"
 
     # POST /fn
     post:
@@ -71,12 +225,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "schemas/module_name.yaml"
+              $ref: "#/components/schemas/module_name"
       responses:
         "201":
-          $ref: "responses/null_response.yaml"
+          $ref: "#/components/responses/null_response"
         default:
-          $ref: "responses/unexpected_error.yaml"
+          $ref: "#/components/responses/unexpected_error"
 
   /v1/fn/{module_name}:
     # GET /fn/{mod}
@@ -87,16 +241,16 @@ paths:
       tags:
         - modules
       parameters:
-        - $ref: "parameters/path/module_name.yaml"
+        - $ref: "#/components/parameters/module_name"
       responses:
         "200":
           description: Expected response to a valid request
           content:
             application/json:
               schema:
-                $ref: "schemas/single_module_result.yaml"
+                $ref: "#/components/schemas/single_module_result"
         default:
-          $ref: "responses/unexpected_error.yaml"
+          $ref: "#/components/responses/unexpected_error"
 
     # POST /fn/{mod}
     post:
@@ -106,24 +260,24 @@ paths:
       tags:
         - functions
       parameters:
-        - $ref: "parameters/path/module_name.yaml"
+        - $ref: "#/components/parameters/module_name"
       requestBody:
         description: Object containing the function's name and code
         required: true
         content:
           multipart/form-data:
             schema:
-              $ref: "schemas/function_create_update.yaml"
+              $ref: "#/components/schemas/function_create_update"
             encoding:
               code:
                 contentType: application/octet-stream
       responses:
         "201":
-          $ref: "responses/null_response.yaml"
+          $ref: "#/components/responses/null_response"
         "207":
-          $ref: "responses/mixed_response_events.yaml"
+          $ref: "#/components/responses/mixed_response_events"
         default:
-          $ref: "responses/unexpected_error.yaml"
+          $ref: "#/components/responses/unexpected_error"
 
     # PUT /fn/{mod}
     put:
@@ -133,19 +287,19 @@ paths:
       tags:
         - modules
       parameters:
-        - $ref: "parameters/path/module_name.yaml"
+        - $ref: "#/components/parameters/module_name"
       requestBody:
         description: New module name to use
         required: true
         content:
           application/json:
             schema:
-              $ref: "schemas/module_name.yaml"
+              $ref: "#/components/schemas/module_name"
       responses:
         "200":
-          $ref: "responses/null_response.yaml"
+          $ref: "#/components/responses/null_response"
         default:
-          $ref: "responses/unexpected_error.yaml"
+          $ref: "#/components/responses/unexpected_error"
 
     # DELETE /fn/{mod}
     delete:
@@ -155,12 +309,12 @@ paths:
       tags:
         - modules
       parameters:
-        - $ref: "parameters/path/module_name.yaml"
+        - $ref: "#/components/parameters/module_name"
       responses:
         "204":
-          $ref: "responses/null_response.yaml"
+          $ref: "#/components/responses/null_response"
         default:
-          $ref: "responses/unexpected_error.yaml"
+          $ref: "#/components/responses/unexpected_error"
 
   /v1/fn/{module_name}/{function_name}:
     # GET /fn/{mod}/{fun}
@@ -171,17 +325,17 @@ paths:
       tags:
         - functions
       parameters:
-        - $ref: "parameters/path/module_name.yaml"
-        - $ref: "parameters/path/function_name.yaml"
+        - $ref: "#/components/parameters/module_name"
+        - $ref: "#/components/parameters/function_name"
       responses:
         "200":
           description: Expected response to a valid request
           content:
             application/json:
               schema:
-                $ref: "schemas/single_function_result.yaml"
+                $ref: "#/components/schemas/single_function_result"
         default:
-          $ref: "responses/unexpected_error.yaml"
+          $ref: "#/components/responses/unexpected_error"
 
     # PUT /fn/{mod}/{fun}
     put:
@@ -209,17 +363,17 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: "schemas/function_create_update.yaml"
+              $ref: "#/components/schemas/function_create_update"
             encoding:
               code:
                 contentType: application/octet-stream
       responses:
         "200":
-          $ref: "responses/null_response.yaml"
+          $ref: "#/components/responses/null_response"
         "207":
-          $ref: "responses/mixed_response_events.yaml"
+          $ref: "#/components/responses/mixed_response_events"
         default:
-          $ref: "responses/unexpected_error.yaml"
+          $ref: "#/components/responses/unexpected_error"
 
     # DELETE /fn/{mod}/{fun}
     delete:
@@ -243,9 +397,9 @@ paths:
             type: string
       responses:
         "200":
-          $ref: "responses/null_response.yaml"
+          $ref: "#/components/responses/null_response"
         default:
-          $ref: "responses/unexpected_error.yaml"
+          $ref: "#/components/responses/unexpected_error"
 
     # POST /fn/{mod}/{fun}/invoke
     post:
@@ -273,13 +427,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "schemas/invoke_input.yaml"
+              $ref: "#/components/schemas/invoke_input"
       responses:
         "200":
           description: Expected response to a valid request
           content:
             application/json:
               schema:
-                $ref: "schemas/invoke_result.yaml"
+                $ref: "#/components/schemas/invoke_result"
         default:
-          $ref: "responses/unexpected_error.yaml"
+          $ref: "#/components/responses/unexpected_error"

@@ -26,19 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Swagger CLI bundle
-        uses: mpetrunic/swagger-cli-action@v1.0.0
-        with:
-          command: "bundle openapi/openapi.yaml -r --outfile _build/openapi.yaml --type yaml"
-
       - name: OpenAPI Generator Action
-        uses: craicoverflow/openapi-generator-action@v1
+        uses: openapi-generators/openapitools-generator-action@v1.4.0
         with:
           generator: "go"
-          input: _build/openapi.yaml
-          output: ./generated-sdk
-          git-repo-id: fl-client-sdk-go
-          git-user-id: funlessdev
+          openapi-file: openapi/openapi.yaml
+          command-args: "--git-repo-id fl-client-sdk-go --git-user-id funlessdev"
 
       - name: Pushes to fl-client-sdk-go
         id: push_directory
@@ -46,7 +39,7 @@ jobs:
         env:
           SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
         with:
-          source-directory: generated-sdk/
+          source-directory: go-client/
           destination-github-username: "funlessdev"
           destination-repository-name: "fl-client-sdk-go"
       - name: Test get variable exported by push-to-another-repository
