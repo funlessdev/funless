@@ -43,9 +43,8 @@ defmodule CoreWeb.ModuleControllerTest do
       function = function_fixture(module.id)
       conn = get(conn, Routes.module_path(conn, :show_functions, module.name))
 
-      assert json_response(conn, 200)["data"] == [
-               %{"name" => function.name}
-             ]
+      assert json_response(conn, 200)["data"] ==
+               %{"functions" => [%{"name" => "some_name"}], "name" => module.name}
     end
   end
 

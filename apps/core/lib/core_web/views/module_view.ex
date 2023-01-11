@@ -26,8 +26,8 @@ defmodule CoreWeb.ModuleView do
     %{data: render_one(module, ModuleView, "module.json")}
   end
 
-  def render("show_functions.json", %{functions: functions}) do
-    %{data: render_many(functions, FunctionView, "function.json")}
+  def render("show_functions.json", %{module_name: name, functions: functions}) do
+    %{data: %{name: name, functions: render_many(functions, FunctionView, "function.json")}}
   end
 
   def render("module.json", %{module: module}) do
