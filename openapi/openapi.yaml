@@ -56,7 +56,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/mixed_event_results"
+            $ref: "#/components/schemas/mixed_results"
   schemas:
     module_name:
       type: object
@@ -138,8 +138,21 @@ components:
               params:
                 type: object
                 description: Additional parameters of the event
+        sinks:
+          description: Data sinks that receive invocation's results
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: ["mongodb"]
+                description: Type of the data sink
+              params:
+                type: object
+                description: Additional parameters for the data sink (usually connection params)
 
-    mixed_event_results:
+    mixed_results:
       type: object
       properties:
         data:
@@ -161,7 +174,32 @@ components:
                   message:
                     type: string
                     description: Additional information on the error
-            metadata:
+            sinks:
+              description: The results of sink connection, both successful and failed
+              type: array
+              items:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["success", "error"]
+                    description: Whether the corresponding sink was connected successfully
+                  message:
+                    type: string
+                    description: Additional information on the error
+            sinks_metadata:
+              type: object
+              properties:
+                successful:
+                  type: integer
+                  description: The amount of data sinks that was successfully connected
+                failed:
+                  type: integer
+                  description: The amount of data sinks that wasn't successfully connected
+                total:
+                  type: integer
+                  description: The total amount of data sinks that was passed
+            events_metadata:
               type: object
               properties:
                 successful:
