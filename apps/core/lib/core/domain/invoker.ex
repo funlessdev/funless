@@ -97,7 +97,6 @@ defmodule Core.Domain.Invoker do
   def return_result({:ok, ivk_r}, module, name) do
     Logger.info("Invoker: #{module}/#{name} invoked successfully")
 
-    # TODO: for each data sink associated with module/function, call save()
     Manager.get_all(module, name)
     |> case do
       {:error, :not_found} ->

@@ -13,6 +13,9 @@
 # limitations under the License.
 
 defmodule Core.Adapters.DataSinks.Manager do
+  @moduledoc """
+  Adapter to handle Data Sinks processes.
+  """
   @main_supervisor Core.Adapters.DataSinks.DynamicSupervisor
   @registry Core.Adapters.DataSinks.Registry
 
