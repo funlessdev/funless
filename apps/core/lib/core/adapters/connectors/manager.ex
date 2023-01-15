@@ -41,40 +41,37 @@ defmodule Core.Adapters.Connectors.Manager do
       name = "#{Atom.to_string(@main_supervisor)}.#{module}/#{function}"
       supervisor = {:via, Registry, {@registry, name}}
 
-      # if the supervisor already exists, add the new process to it; otherwise start the supervisor, and add the child
-      case Registry.lookup(@registry, supervisor) do
-        [] ->
-          DynamicSupervisor.start_child(
-            @main_supervisor,
-            {DynamicSupervisor,
-             strategy: :one_for_one, max_restarts: 5, max_seconds: 5, name: supervisor}
-          )
-
-          start_connector(supervisor, connector, %{
-            function: function,
-            module: module,
-            params: params
-          })
-
-        [{pid, _}] ->
-          if Process.alive?(pid) do
-            start_connector(supervisor, connector, %{
-              function: function,
-              module: module,
-              params: params
-            })
-          else
-            {:error, :supervisor_stopping}
-          end
-      end
+      @registry
+      |> Registry.lookup(supervisor)
+      |> start_connector_process(supervisor, connector, %{
+        function: function,
+        module: module,
+        params: params
+      })
     end
   end
 
-  defp start_connector(
-         supervisor,
-         connector,
-         %{function: _function, module: _module, params: _params} = args
-       ) do
+  # if the supervisor does not exist start it and add the child
+  defp start_connector_process([], supervisor, connector, args) do
+    DynamicSupervisor.start_child(
+      @main_supervisor,
+      {DynamicSupervisor,
+       strategy: :one_for_one, max_restarts: 5, max_seconds: 5, name: supervisor}
+    )
+
+    start_connector(supervisor, connector, args)
+  end
+
+  # if the supervisor already exists add the new process to it
+  defp start_connector_process([{pid, _}], supervisor, connector, args) do
+    if Process.alive?(pid) do
+      start_connector(supervisor, connector, args)
+    else
+      {:error, :supervisor_stopping}
+    end
+  end
+
+  defp start_connector(supervisor, connector, args) do
     result =
       DynamicSupervisor.start_child(
         supervisor,
