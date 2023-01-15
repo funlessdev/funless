@@ -16,30 +16,35 @@ defmodule CoreWeb.FunctionView do
   use CoreWeb, :view
   alias CoreWeb.FunctionView
 
-  # If I receive only the sinks
+  # If we receive only the sinks
   def render("show.json", %{function: _function, sinks: [_ | _], events: []} = content) do
     %{
       data: render_one(content, FunctionView, "function_sinks.json", as: :data)
     }
   end
 
-  # If I receive only the events
+  # If we receive only the events
   def render("show.json", %{function: _function, events: [_ | _], sinks: []} = content) do
     %{
       data: render_one(content, FunctionView, "function_events.json", as: :data)
     }
   end
 
-  # If I receive neither events nor sinks
+  # If we receive empty events and sinks
   def render("show.json", %{function: function, events: [], sinks: []}) do
     %{data: render_one(function, FunctionView, "function.json")}
   end
 
-  # If I receive both sinks and events
+  # If we receive both sinks and events
   def render("show.json", %{function: _function, events: _events, sinks: _sinks} = content) do
     %{
       data: render_one(content, FunctionView, "function_events_sinks.json", as: :data)
     }
+  end
+
+  # If we receive only the function
+  def render("show.json", %{function: function}) do
+    %{data: render_one(function, FunctionView, "function.json")}
   end
 
   def render("function_sinks.json", %{

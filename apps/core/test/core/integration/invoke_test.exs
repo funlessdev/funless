@@ -28,6 +28,9 @@ defmodule Core.InvokeTest do
       Core.Cluster.Mock
       |> Mox.stub_with(Core.Adapters.Cluster.Test)
 
+      Core.DataSinks.Manager.Mock
+      |> Mox.stub_with(Core.Adapters.DataSinks.Test)
+
       create_function()
     end
 

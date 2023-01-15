@@ -24,6 +24,12 @@ defmodule CoreWeb.FunctionController do
 
   action_fallback(CoreWeb.FallbackController)
 
+  def show(conn, %{"module_name" => mod_name, "function_name" => name}) do
+    with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name) do
+      render(conn, "show.json", function: function)
+    end
+  end
+
   def invoke(conn, %{"module_name" => mod_name, "function_name" => fun_name} = params) do
     ivk = %InvokeParams{
       function: fun_name,
@@ -61,7 +67,7 @@ defmodule CoreWeb.FunctionController do
         sinks_results = DataSink.plug_data_sinks(fn_name, module_name, sinks_req)
 
         {status, render_params} =
-          build_render_params(%{function: function}, event_results, sinks_results)
+          build_render_params(%{function: function}, event_results, sinks_results, :created)
 
         conn
         |> put_status(status)
@@ -72,12 +78,6 @@ defmodule CoreWeb.FunctionController do
 
   def create(_conn, _) do
     {:error, :bad_params}
-  end
-
-  def show(conn, %{"module_name" => mod_name, "function_name" => name}) do
-    with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name) do
-      render(conn, "show.json", function: function)
-    end
   end
 
   def update(
@@ -144,7 +144,7 @@ defmodule CoreWeb.FunctionController do
     end
   end
 
-  defp build_render_params(render_params, events, sinks) do
+  defp build_render_params(render_params, events, sinks, default_status \\ :ok) do
     event_errors? = Enum.any?(events, &(&1 != :ok))
     sinks_errors? = Enum.any?(sinks, &(&1 != :ok))
 
@@ -152,7 +152,7 @@ defmodule CoreWeb.FunctionController do
       if event_errors? or sinks_errors? do
         :multi_status
       else
-        :created
+        default_status
       end
 
     {status,

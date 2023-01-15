@@ -30,6 +30,20 @@ defmodule CoreWeb.FunctionControllerTest do
     events:
       "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]"
   }
+  @create_attrs_sinks %{
+    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
+    name: "some_name",
+    sinks:
+      "[{\"type\": \"mongodb\", \"params\": {}}, {\"type\": \"another_one\", \"params\": {}}]"
+  }
+  @create_attrs_events_sinks %{
+    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
+    name: "some_name",
+    events:
+      "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]",
+    sinks:
+      "[{\"type\": \"mongodb\", \"params\": {}}, {\"type\": \"another_one\", \"params\": {}}]"
+  }
   @update_attrs %{
     code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
     name: "some_updated_name"
@@ -40,12 +54,27 @@ defmodule CoreWeb.FunctionControllerTest do
     events:
       "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]"
   }
+  @update_attrs_sinks %{
+    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
+    name: "some_updated_name",
+    sinks:
+      "[{\"type\": \"mongodb\", \"params\": {}}, {\"type\": \"another_one\", \"params\": {}}]"
+  }
+  @update_attrs_events_sinks %{
+    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
+    name: "some_updated_name",
+    events:
+      "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]",
+    sinks:
+      "[{\"type\": \"mongodb\", \"params\": {}}, {\"type\": \"another_one\", \"params\": {}}]"
+  }
   @invalid_attrs %{code: nil, name: nil}
 
   setup %{conn: conn} do
     Core.Commands.Mock |> Mox.stub_with(Core.Adapters.Commands.Test)
     Core.Cluster.Mock |> Mox.stub_with(Core.Adapters.Cluster.Test)
     Core.Connectors.Manager.Mock |> Mox.stub_with(Core.Adapters.Connectors.Test)
+    Core.DataSinks.Manager.Mock |> Mox.stub_with(Core.Adapters.DataSinks.Test)
 
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
@@ -98,7 +127,7 @@ defmodule CoreWeb.FunctionControllerTest do
                  %{"status" => "error"},
                  %{"status" => "error"}
                ],
-               "metadata" => %{"successful" => 1, "failed" => 2}
+               "events_metadata" => %{"successful" => 1, "failed" => 2}
              } = json_response(conn, 207)["data"]
     end
   end
@@ -158,7 +187,7 @@ defmodule CoreWeb.FunctionControllerTest do
                  %{"status" => "error"},
                  %{"status" => "error"}
                ],
-               "metadata" => %{"successful" => 1, "failed" => 2}
+               "events_metadata" => %{"successful" => 1, "failed" => 2}
              } = json_response(conn, 207)["data"]
     end
   end
