@@ -12,8 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Mox.defmock(Core.Commands.Mock, for: Core.Domain.Ports.Commands)
-Mox.defmock(Core.Cluster.Mock, for: Core.Domain.Ports.Cluster)
-Mox.defmock(Core.Telemetry.Metrics.Mock, for: Core.Domain.Ports.Telemetry.Metrics)
-Mox.defmock(Core.Connectors.Manager.Mock, for: Core.Domain.Ports.Connectors.Manager)
-Mox.defmock(Core.DataSinks.Manager.Mock, for: Core.Domain.Ports.DataSinks.Manager)
+defmodule Data.DataSink do
+  @moduledoc """
+    DataSink struct representing a pluggable data binding connected to a function.
+    The function invocation result will be sent to each plugged data sink.
+
+    ## Fields
+      - type: the type of the data binding.
+      - params: parameters needed to connect to the data sink.
+  """
+  @type t :: %__MODULE__{
+          type: String.t(),
+          params: map()
+        }
+  @enforce_keys [:type, :params]
+  defstruct [:type, :params]
+end

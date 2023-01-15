@@ -41,7 +41,8 @@ defmodule Core.Application do
       Core.Repo,
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
       {Core.Adapters.Telemetry.Supervisor, []},
-      {Core.Adapters.Connectors.Supervisor, []}
+      {Core.Adapters.Connectors.Supervisor, []},
+      {Core.Adapters.DataSinks.Supervisor, []}
     ]
   end
 
