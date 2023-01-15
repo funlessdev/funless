@@ -17,7 +17,7 @@ defmodule Core.Domain.Invoker do
   Provides functions to request function invocaiton.
   """
   require Logger
-  alias Core.Domain.{Functions, Nodes, Ports.Commands, Scheduler}
+  alias Core.Domain.{Functions, Nodes, Ports.Commands, Ports.DataSinks.Manager, Scheduler}
   alias Data.FunctionStruct
   alias Data.InvokeParams
   alias Data.InvokeResult
@@ -51,10 +51,10 @@ defmodule Core.Domain.Invoker do
         {:error, :code_not_found} ->
           worker
           |> invoke_with_code(ivk_pars)
-          |> handle_result(ivk_pars.function)
+          |> return_result(ivk_pars.module, ivk_pars.function)
 
         res ->
-          handle_result(res, ivk_pars.function)
+          return_result(res, ivk_pars.module, ivk_pars.function)
       end
     end
   end
@@ -68,7 +68,7 @@ defmodule Core.Domain.Invoker do
       # send invocation without code
       Commands.send_invoke(worker, ivk.function, ivk.module, ivk.args)
     else
-      {:error, :code_not_found}
+      {:error, :not_found}
     end
   end
 
@@ -92,15 +92,33 @@ defmodule Core.Domain.Invoker do
     end
   end
 
-  @spec handle_result({:error, any} | {:ok, InvokeResult.t()}, String.t()) ::
+  @spec return_result({:error, any} | {:ok, InvokeResult.t()}, String.t(), String.t()) ::
           {:error, any} | {:ok, any}
-  def handle_result({:ok, ivk_r}, name) do
-    Logger.info("Invoker: #{name} invoked successfully")
+  def return_result({:ok, ivk_r}, module, name) do
+    Logger.info("Invoker: #{module}/#{name} invoked successfully")
+
+    # TODO: for each data sink associated with module/function, call save()
+    Manager.get_all(module, name)
+    |> case do
+      {:error, :not_found} ->
+        Logger.debug("Invoker: no sinks found for #{module}/#{name}")
+
+        []
+
+      {:ok, children} ->
+        Logger.debug("Invoker: saving result to #{length(children)} sinks")
+
+        children
+        |> Enum.each(fn sink_pid ->
+          GenServer.cast(sink_pid, {:save, ivk_r.result})
+        end)
+    end
+
     {:ok, ivk_r.result}
   end
 
-  def handle_result({:error, reason} = reply, name) do
-    Logger.error("Invoker: failed to invoke #{name}: #{inspect(reason)}")
+  def return_result({:error, reason} = reply, module, name) do
+    Logger.error("Invoker: failed to invoke #{module}/#{name}: #{inspect(reason)}")
     reply
   end
 end
