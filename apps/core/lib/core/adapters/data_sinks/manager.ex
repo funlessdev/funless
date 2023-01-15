@@ -57,11 +57,7 @@ defmodule Core.Adapters.DataSinks.Manager do
 
       @registry
       |> Registry.lookup(supervisor)
-      |> start_sink_process(supervisor, sink, %{
-        function: function,
-        module: module,
-        params: params
-      })
+      |> start_sink_process(supervisor, sink, params)
     end
   end
 

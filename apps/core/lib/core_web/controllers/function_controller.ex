@@ -63,11 +63,9 @@ defmodule CoreWeb.FunctionController do
         {status, render_params} =
           build_render_params(%{function: function}, event_results, sinks_results)
 
-        Logger.debug("Function Controller: rendering params #{inspect(render_params)}.")
-
         conn
         |> put_status(status)
-        |> render("show.json", %{data: render_params})
+        |> render("show.json", render_params)
       end
     end
   end
@@ -98,8 +96,6 @@ defmodule CoreWeb.FunctionController do
       Logger.error("Function Controller: received invalid JSON. Aborting function update.")
       {:error, :bad_params}
     else
-      Logger.debug("Function Controller: events parsed #{inspect(events_req)}.")
-
       with {:ok, code} <- File.read(tmp_path),
            {:ok, %Function{} = function} <- retrieve_fun_in_mod(fn_name, module_name),
            {:ok, %Function{} = function} <-
@@ -110,11 +106,9 @@ defmodule CoreWeb.FunctionController do
         {status, render_params} =
           build_render_params(%{function: function}, event_results, sinks_results)
 
-        Logger.debug("Function Controller: rendering params #{inspect(render_params)}.")
-
         conn
         |> put_status(status)
-        |> render("show.json", %{data: render_params})
+        |> render("show.json", render_params)
       end
     end
   end
@@ -154,20 +148,6 @@ defmodule CoreWeb.FunctionController do
     event_errors? = Enum.any?(events, &(&1 != :ok))
     sinks_errors? = Enum.any?(sinks, &(&1 != :ok))
 
-    params =
-      if event_errors? do
-        Map.put(render_params, :events, events)
-      else
-        render_params
-      end
-
-    params =
-      if sinks_errors? do
-        Map.put(params, :sinks, sinks)
-      else
-        params
-      end
-
     status =
       if event_errors? or sinks_errors? do
         :multi_status
@@ -175,6 +155,9 @@ defmodule CoreWeb.FunctionController do
         :created
       end
 
-    {status, params}
+    {status,
+     render_params
+     |> Map.put(:events, events)
+     |> Map.put(:sinks, sinks)}
   end
 end

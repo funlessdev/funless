@@ -16,36 +16,30 @@ defmodule CoreWeb.FunctionView do
   use CoreWeb, :view
   alias CoreWeb.FunctionView
 
-  def render("index.json", %{functions: functions}) do
-    %{data: render_many(functions, FunctionView, "function.json")}
-  end
-
-  # If I receive both sinks and events
-  def render("show.json", %{
-        data: %{function: _function, events: _events, sinks: _sinks} = content
-      }) do
-    %{
-      data: render_one(content, FunctionView, "function_events_sinks.json", as: :data)
-    }
-  end
-
   # If I receive only the sinks
-  def render("show.json", %{data: %{function: _function, sinks: _sinks} = content}) do
+  def render("show.json", %{function: _function, sinks: [_ | _], events: []} = content) do
     %{
       data: render_one(content, FunctionView, "function_sinks.json", as: :data)
     }
   end
 
   # If I receive only the events
-  def render("show.json", %{data: %{function: _function, events: _events} = content}) do
+  def render("show.json", %{function: _function, events: [_ | _], sinks: []} = content) do
     %{
       data: render_one(content, FunctionView, "function_events.json", as: :data)
     }
   end
 
   # If I receive neither events nor sinks
-  def render("show.json", %{function: function}) do
+  def render("show.json", %{function: function, events: [], sinks: []}) do
     %{data: render_one(function, FunctionView, "function.json")}
+  end
+
+  # If I receive both sinks and events
+  def render("show.json", %{function: _function, events: _events, sinks: _sinks} = content) do
+    %{
+      data: render_one(content, FunctionView, "function_events_sinks.json", as: :data)
+    }
   end
 
   def render("function_sinks.json", %{
