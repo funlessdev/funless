@@ -51,10 +51,10 @@ defmodule Core.Domain.Invoker do
         {:error, :code_not_found} ->
           worker
           |> invoke_with_code(ivk_pars)
-          |> return_result(ivk_pars.module, ivk_pars.function)
+          |> save_to_sinks(ivk_pars.module, ivk_pars.function)
 
         res ->
-          return_result(res, ivk_pars.module, ivk_pars.function)
+          save_to_sinks(res, ivk_pars.module, ivk_pars.function)
       end
     end
   end
@@ -92,9 +92,9 @@ defmodule Core.Domain.Invoker do
     end
   end
 
-  @spec return_result({:error, any} | {:ok, InvokeResult.t()}, String.t(), String.t()) ::
+  @spec save_to_sinks({:error, any} | {:ok, InvokeResult.t()}, String.t(), String.t()) ::
           {:error, any} | {:ok, any}
-  def return_result({:ok, ivk_r}, module, name) do
+  def save_to_sinks({:ok, ivk_r}, module, name) do
     Logger.info("Invoker: #{module}/#{name} invoked successfully")
 
     Manager.get_all(module, name)
@@ -116,7 +116,7 @@ defmodule Core.Domain.Invoker do
     {:ok, ivk_r.result}
   end
 
-  def return_result({:error, reason} = reply, module, name) do
+  def save_to_sinks({:error, reason} = reply, module, name) do
     Logger.error("Invoker: failed to invoke #{module}/#{name}: #{inspect(reason)}")
     reply
   end

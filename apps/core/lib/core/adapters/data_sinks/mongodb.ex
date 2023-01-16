@@ -25,20 +25,38 @@ defmodule Core.Adapters.DataSinks.MongoDB do
   end
 
   @impl true
-  def init(%{"mongo_url" => url, "collection" => col} = opts) do
+  def init(%{
+        "mongo_url" => url,
+        "collection" => col,
+        "username" => user,
+        "password" => password
+      }) do
     Process.flag(:trap_exit, true)
-
-    Logger.info("MongoDB Sink: init with #{inspect(opts)}")
     # Starts an unpooled connection
-    {:ok, conn_pid} = Mongo.start_link(url: url)
-    {:ok, %{mongodb_pid: conn_pid, collection: col}}
+    case Mongo.start_link(
+           url: url,
+           username: user,
+           password: password,
+           auth_source: "admin"
+         ) do
+      {:ok, conn_pid} ->
+        Logger.info("MongoDB Sink: connected to #{url} as #{user}")
+        {:ok, %{mongodb_pid: conn_pid, collection: col}}
+
+      {:error, reason} ->
+        Logger.error("MongoDB Sink: connection failed: #{inspect(reason)}")
+        {:stop, "Connection failed: #{inspect(reason)}"}
+    end
   end
 
-  def init(_), do: {:stop, "MongoDB Sink: init failed"}
+  def init(_) do
+    {:stop,
+     "Connection failed: bad params received. Expected keys mongo_url, collection, username, password."}
+  end
 
   @impl true
   def handle_cast({:save, result}, %{mongodb_pid: pid, collection: col} = state) do
-    Logger.info("MongoDB Sink: received #{inspect(result)}... saving it to #{col}")
+    Logger.info("MongoDB Sink: received #{inspect(result)}... saving it to #{col} collection")
 
     Mongo.insert_one(pid, col, result)
     {:noreply, state}
