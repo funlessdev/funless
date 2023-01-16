@@ -92,14 +92,14 @@ defmodule Worker.Adapters.ResourceCache do
   @impl true
   def handle_call({:insert, function_name, module, runtime}, _from, table) do
     :ets.insert(table, {{function_name, module}, runtime})
-    Logger.info("Resource Cache: added resource for #{function_name} in #{module}")
+    Logger.info("Resource Cache: added resource for #{function_name} in module #{module}")
     {:reply, :ok, table}
   end
 
   @impl true
   def handle_call({:delete, function_name, module}, _from, table) do
     :ets.delete(table, {function_name, module})
-    Logger.info("Resource Cache: deleted resource of #{function_name} in #{module}")
+    Logger.info("Resource Cache: deleted resource of #{function_name} in module #{module}")
     {:reply, :ok, table}
   end
 end

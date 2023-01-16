@@ -98,7 +98,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine.Cache do
   @impl true
   def handle_call({:insert, key, engine}, _from, table) do
     :ets.insert(table, {key, engine})
-    Logger.info("Wasm Engine Cache: engine handle added with key #{key}")
+    Logger.info("Wasm Engine Cache: engine handle created")
     {:reply, :ok, table}
   end
 

@@ -45,7 +45,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Module do
 
     receive do
       {:ok, resource} ->
-        Logger.info("Wasm module compiled successfully #{inspect(resource)}")
+        Logger.info("Wasm module compiled successfully")
         {:ok, wrap_resource(resource)}
 
       {:error, err} ->
