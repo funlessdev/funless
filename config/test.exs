@@ -22,6 +22,7 @@ config :core, Core.Domain.Ports.Commands, adapter: Core.Commands.Mock
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Cluster.Mock
 config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Telemetry.Metrics.Mock
 config :core, Core.Domain.Ports.Connectors.Manager, adapter: Core.Connectors.Manager.Mock
+config :core, Core.Domain.Ports.DataSinks.Manager, adapter: Core.DataSinks.Manager.Mock
 
 # Configure your database
 

@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,8 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Mox.defmock(Core.Commands.Mock, for: Core.Domain.Ports.Commands)
-Mox.defmock(Core.Cluster.Mock, for: Core.Domain.Ports.Cluster)
-Mox.defmock(Core.Telemetry.Metrics.Mock, for: Core.Domain.Ports.Telemetry.Metrics)
-Mox.defmock(Core.Connectors.Manager.Mock, for: Core.Domain.Ports.Connectors.Manager)
-Mox.defmock(Core.DataSinks.Manager.Mock, for: Core.Domain.Ports.DataSinks.Manager)
+defmodule Core.Adapters.DataSinks.Test do
+  @moduledoc false
+
+  @behaviour Core.Domain.Ports.DataSinks.Manager
+
+  @impl true
+  def get_all(_module, _function) do
+    {:ok, []}
+  end
+
+  @impl true
+  def plug(_function_signature, _event) do
+    :ok
+  end
+
+  @impl true
+  def which_data_sink(_) do
+    {:ok, Core.Adapters.Connectors.EventConnectors.Test}
+  end
+
+  @impl true
+  def unplug(_function_signature) do
+    :ok
+  end
+end

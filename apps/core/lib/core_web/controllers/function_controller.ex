@@ -15,6 +15,7 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
+  alias Core.Domain.DataSink
   alias Core.Domain.{Events, Functions, Invoker, Modules}
   alias Core.Schemas.{Function, Module}
   alias Data.InvokeParams
@@ -22,6 +23,12 @@ defmodule CoreWeb.FunctionController do
   require Logger
 
   action_fallback(CoreWeb.FallbackController)
+
+  def show(conn, %{"module_name" => mod_name, "function_name" => name}) do
+    with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name) do
+      render(conn, "show.json", function: function)
+    end
+  end
 
   def invoke(conn, %{"module_name" => mod_name, "function_name" => fun_name} = params) do
     ivk = %InvokeParams{
@@ -43,14 +50,13 @@ defmodule CoreWeb.FunctionController do
           "code" => %Plug.Upload{path: tmp_path}
         } = params
       ) do
-    events_req = params |> Map.get("events", nil) |> parse_requested_events_string()
+    events_req = params |> Map.get("events", nil) |> parse_requested_events_sinks()
+    sinks_req = params |> Map.get("sinks", nil) |> parse_requested_events_sinks()
 
-    if events_req == :error do
-      Logger.error("Function Controller: events not a valid JSON. Aborting function creation.")
+    if events_req == :error or sinks_req == :error do
+      Logger.error("Function Controller: received invalid JSON. Aborting function creation.")
       {:error, :bad_params}
     else
-      Logger.debug("Function Controller: events parsed #{inspect(events_req)}.")
-
       with {:ok, code} <- File.read(tmp_path),
            %Module{} = module <- Modules.get_module_by_name!(module_name),
            {:ok, %Function{} = function} <-
@@ -58,17 +64,14 @@ defmodule CoreWeb.FunctionController do
              |> Map.put_new("module_id", module.id)
              |> Functions.create_function() do
         event_results = Events.connect_events(fn_name, module_name, events_req)
-        event_errors? = Enum.any?(event_results, &(&1 != :ok))
+        sinks_results = DataSink.plug_data_sinks(fn_name, module_name, sinks_req)
 
-        if event_errors? do
-          conn
-          |> put_status(:multi_status)
-          |> render("show.json", data: %{function: function, events: event_results})
-        else
-          conn
-          |> put_status(:created)
-          |> render("show.json", function: function)
-        end
+        {status, render_params} =
+          build_render_params(%{function: function}, event_results, sinks_results, :created)
+
+        conn
+        |> put_status(status)
+        |> render("show.json", render_params)
       end
     end
   end
@@ -77,44 +80,35 @@ defmodule CoreWeb.FunctionController do
     {:error, :bad_params}
   end
 
-  def show(conn, %{"module_name" => mod_name, "function_name" => name}) do
-    with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name) do
-      render(conn, "show.json", function: function)
-    end
-  end
-
   def update(
         conn,
         %{
-          "module_name" => mod_name,
-          "function_name" => name,
+          "module_name" => module_name,
+          "function_name" => fn_name,
           "code" => %Plug.Upload{path: tmp_path},
           "name" => new_name
         } = params
       ) do
-    events_req = params |> Map.get("events", nil) |> parse_requested_events_string()
+    events_req = params |> Map.get("events", nil) |> parse_requested_events_sinks()
+    sinks_req = params |> Map.get("sinks", nil) |> parse_requested_events_sinks()
 
-    if events_req == :error do
-      Logger.error("Function Controller: events not a valid JSON. Aborting function update.")
+    if events_req == :error or sinks_req == :error do
+      Logger.error("Function Controller: received invalid JSON. Aborting function update.")
       {:error, :bad_params}
     else
-      Logger.debug("Function Controller: events parsed #{inspect(events_req)}.")
-
       with {:ok, code} <- File.read(tmp_path),
-           {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
+           {:ok, %Function{} = function} <- retrieve_fun_in_mod(fn_name, module_name),
            {:ok, %Function{} = function} <-
              Functions.update_function(function, %{"name" => new_name, "code" => code}) do
-        event_results = Events.update_events(new_name, mod_name, events_req)
-        event_errors? = Enum.any?(event_results, &(&1 != :ok))
+        event_results = Events.update_events(fn_name, module_name, events_req)
+        sinks_results = DataSink.update_data_sinks(fn_name, module_name, sinks_req)
 
-        if event_errors? do
-          conn
-          |> put_status(:multi_status)
-          |> render("show.json", data: %{function: function, events: event_results})
-        else
-          conn
-          |> render("show.json", function: function)
-        end
+        {status, render_params} =
+          build_render_params(%{function: function}, event_results, sinks_results)
+
+        conn
+        |> put_status(status)
+        |> render("show.json", render_params)
       end
     end
   end
@@ -126,7 +120,8 @@ defmodule CoreWeb.FunctionController do
   def delete(conn, %{"module_name" => mod_name, "function_name" => name}) do
     with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name),
          {:ok, %Function{}} <- Functions.delete_function(function),
-         :ok <- Events.disconnect_events(name, mod_name) do
+         :ok <- Events.disconnect_events(name, mod_name),
+         :ok <- DataSink.unplug_data_sink(name, mod_name) do
       send_resp(conn, :no_content, "")
     end
   end
@@ -139,14 +134,30 @@ defmodule CoreWeb.FunctionController do
     end
   end
 
-  @spec parse_requested_events_string(String.t() | nil) :: term() | nil | :error
-  defp parse_requested_events_string(nil), do: nil
-  defp parse_requested_events_string(""), do: nil
+  @spec parse_requested_events_sinks(String.t() | nil) :: term() | nil | :error
+  defp parse_requested_events_sinks(s) when is_nil(s) or s == "", do: nil
 
-  defp parse_requested_events_string(events_string) do
-    case Jason.decode(events_string) do
-      {:ok, events} -> events
+  defp parse_requested_events_sinks(s) do
+    case Jason.decode(s) do
+      {:ok, e} -> e
       {:error, _} -> :error
     end
+  end
+
+  defp build_render_params(render_params, events, sinks, default_status \\ :ok) do
+    event_errors? = Enum.any?(events, &(&1 != :ok))
+    sinks_errors? = Enum.any?(sinks, &(&1 != :ok))
+
+    status =
+      if event_errors? or sinks_errors? do
+        :multi_status
+      else
+        default_status
+      end
+
+    {status,
+     render_params
+     |> Map.put(:events, events)
+     |> Map.put(:sinks, sinks)}
   end
 end

@@ -40,7 +40,7 @@ defmodule CoreWeb.ModuleControllerTest do
 
     test "show_functions: lists all functions in a module", %{conn: conn} do
       module = module_fixture()
-      function = function_fixture(module.id)
+      function_fixture(module.id)
       conn = get(conn, Routes.module_path(conn, :show_functions, module.name))
 
       assert json_response(conn, 200)["data"] ==

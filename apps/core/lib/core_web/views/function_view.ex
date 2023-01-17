@@ -16,31 +16,91 @@ defmodule CoreWeb.FunctionView do
   use CoreWeb, :view
   alias CoreWeb.FunctionView
 
-  def render("index.json", %{functions: functions}) do
-    %{data: render_many(functions, FunctionView, "function.json")}
+  # If we receive only the sinks
+  def render("show.json", %{function: _function, sinks: [_ | _], events: []} = content) do
+    %{
+      data: render_one(content, FunctionView, "function_sinks.json", as: :data)
+    }
   end
 
-  def render("show.json", %{data: %{function: _function, events: _events} = content}) do
+  # If we receive only the events
+  def render("show.json", %{function: _function, events: [_ | _], sinks: []} = content) do
     %{
       data: render_one(content, FunctionView, "function_events.json", as: :data)
     }
   end
 
+  # If we receive empty events and sinks
+  def render("show.json", %{function: function, events: [], sinks: []}) do
+    %{data: render_one(function, FunctionView, "function.json")}
+  end
+
+  # If we receive both sinks and events
+  def render("show.json", %{function: _function, events: _events, sinks: _sinks} = content) do
+    %{
+      data: render_one(content, FunctionView, "function_events_sinks.json", as: :data)
+    }
+  end
+
+  # If we receive only the function
   def render("show.json", %{function: function}) do
     %{data: render_one(function, FunctionView, "function.json")}
   end
 
+  def render("function_sinks.json", %{
+        data: %{function: function, sinks: sinks}
+      }) do
+    successful_sinks = sinks |> Enum.count(fn e -> e == :ok end)
+    failed_sinks = length(sinks) - successful_sinks
+
+    %{
+      name: function.name,
+      sinks: render_many(sinks, FunctionView, "event.json", as: :result),
+      sinks_metadata: %{
+        successful: successful_sinks,
+        failed: failed_sinks,
+        total: length(sinks)
+      }
+    }
+  end
+
   def render("function_events.json", %{data: %{function: function, events: events}}) do
-    successful = events |> Enum.count(fn e -> e == :ok end)
-    failed = length(events) - successful
+    successful_events = events |> Enum.count(fn e -> e == :ok end)
+    failed_events = length(events) - successful_events
 
     %{
       name: function.name,
       events: render_many(events, FunctionView, "event.json", as: :result),
-      metadata: %{
-        successful: successful,
-        failed: failed,
+      events_metadata: %{
+        successful: successful_events,
+        failed: failed_events,
         total: length(events)
+      }
+    }
+  end
+
+  def render("function_events_sinks.json", %{
+        data: %{function: function, events: events, sinks: sinks}
+      }) do
+    successful_events = events |> Enum.count(fn e -> e == :ok end)
+    failed_events = length(events) - successful_events
+
+    successful_sinks = sinks |> Enum.count(fn e -> e == :ok end)
+    failed_sinks = length(sinks) - successful_sinks
+
+    %{
+      name: function.name,
+      events: render_many(events, FunctionView, "event.json", as: :result),
+      sinks: render_many(sinks, FunctionView, "event.json", as: :result),
+      events_metadata: %{
+        successful: successful_events,
+        failed: failed_events,
+        total: length(events)
+      },
+      sinks_metadata: %{
+        successful: successful_sinks,
+        failed: failed_sinks,
+        total: length(sinks)
       }
     }
   end

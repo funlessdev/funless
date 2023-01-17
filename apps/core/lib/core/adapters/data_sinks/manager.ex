@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,70 +12,83 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.Connectors.Manager do
+defmodule Core.Adapters.DataSinks.Manager do
   @moduledoc """
-  Adapter to handle Event Connector processes and associate functions to events.
+  Adapter to handle Data Sinks processes.
   """
-  @main_supervisor Core.Adapters.Connectors.DynamicSupervisor
-  @registry Core.Adapters.Connectors.Registry
+  @main_supervisor Core.Adapters.DataSinks.DynamicSupervisor
+  @registry Core.Adapters.DataSinks.Registry
 
-  @behaviour Core.Domain.Ports.Connectors.Manager
-  alias Core.Adapters.Connectors.EventConnectors
-  alias Core.Domain.Ports.Connectors.Manager
-  alias Data.ConnectedEvent
+  @behaviour Core.Domain.Ports.DataSinks.Manager
+
+  alias Core.Adapters.DataSinks.CouchDB
+  alias Core.Domain.Ports.DataSinks.Manager
+  alias Data.DataSink
 
   require Logger
 
   @impl true
-  def connect(%{name: function, module: module}, %ConnectedEvent{
-        type: event_type,
+  def get_all(module, function) do
+    name = "#{Atom.to_string(@main_supervisor)}.#{module}/#{function}"
+
+    case Registry.lookup(@registry, name) do
+      [] ->
+        {:error, :not_found}
+
+      [{pid, _}] ->
+        {:ok,
+         pid
+         |> DynamicSupervisor.which_children()
+         |> Enum.map(fn {_, child, _, _} -> child end)
+         |> Enum.filter(&(&1 != :restarting))}
+    end
+  end
+
+  @impl true
+  def plug(%{name: function, module: module}, %DataSink{
+        type: sink_type,
         params: params
       }) do
-    # calling which_connector from the port instead of the current file, to allow mocking
-    with {:ok, connector} <- Manager.which_connector(event_type) do
+    with {:ok, sink} <- Manager.which_data_sink(sink_type) do
       Logger.debug(
-        "ConnectorManager: connecting #{event_type} to #{module}/#{function} with #{inspect(params)}"
+        "DataSinkManager: plugging #{module}/#{function} with #{sink_type}: #{inspect(params)}"
       )
 
-      # dedicated DynamicSupervisor name for this function's Event Connectors
+      # dedicated DynamicSupervisor name for this function's Data Sinks
       name = "#{Atom.to_string(@main_supervisor)}.#{module}/#{function}"
       supervisor = {:via, Registry, {@registry, name}}
 
       @registry
       |> Registry.lookup(supervisor)
-      |> start_connector_process(supervisor, connector, %{
-        function: function,
-        module: module,
-        params: params
-      })
+      |> start_sink_process(supervisor, sink, params)
     end
   end
 
-  # if the supervisor does not exist start it and add the child
-  defp start_connector_process([], supervisor, connector, args) do
+  # if the supervisor does not exist, first start it and then the child
+  defp start_sink_process([], supervisor, sink, args) do
     DynamicSupervisor.start_child(
       @main_supervisor,
       {DynamicSupervisor,
        strategy: :one_for_one, max_restarts: 5, max_seconds: 5, name: supervisor}
     )
 
-    start_connector(supervisor, connector, args)
+    start_sink(supervisor, sink, args)
   end
 
-  # if the supervisor already exists add the new process to it
-  defp start_connector_process([{pid, _}], supervisor, connector, args) do
+  # if the supervisor exists, just add the child
+  defp start_sink_process([{pid, _}], supervisor, sink, args) do
     if Process.alive?(pid) do
-      start_connector(supervisor, connector, args)
+      start_sink(supervisor, sink, args)
     else
       {:error, :supervisor_stopping}
     end
   end
 
-  defp start_connector(supervisor, connector, args) do
+  defp start_sink(supervisor, sink, args) do
     result =
       DynamicSupervisor.start_child(
         supervisor,
-        {connector, args}
+        {sink, args}
       )
 
     case result do
@@ -87,15 +100,15 @@ defmodule Core.Adapters.Connectors.Manager do
   end
 
   @impl true
-  def which_connector(event_type) do
-    case event_type do
-      "mqtt" -> {:ok, EventConnectors.Mqtt}
+  def which_data_sink(sink_type) do
+    case sink_type do
+      "couchdb" -> {:ok, CouchDB}
       _ -> {:error, :not_implemented}
     end
   end
 
   @impl true
-  def disconnect(%{name: function, module: module}) do
+  def unplug(%{name: function, module: module}) do
     supervisor = "#{Atom.to_string(@main_supervisor)}.#{module}/#{function}"
 
     case Registry.lookup(@registry, supervisor) do
