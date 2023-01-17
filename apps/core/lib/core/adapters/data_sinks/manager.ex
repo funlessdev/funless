@@ -21,7 +21,7 @@ defmodule Core.Adapters.DataSinks.Manager do
 
   @behaviour Core.Domain.Ports.DataSinks.Manager
 
-  alias Core.Adapters.DataSinks.MongoDB
+  alias Core.Adapters.DataSinks.CouchDB
   alias Core.Domain.Ports.DataSinks.Manager
   alias Data.DataSink
 
@@ -102,7 +102,7 @@ defmodule Core.Adapters.DataSinks.Manager do
   @impl true
   def which_data_sink(sink_type) do
     case sink_type do
-      "mongodb" -> {:ok, MongoDB}
+      "couchdb" -> {:ok, CouchDB}
       _ -> {:error, :not_implemented}
     end
   end
