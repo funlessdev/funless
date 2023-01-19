@@ -98,12 +98,7 @@ defmodule Core.Adapters.Connectors.Manager do
   def disconnect(%{name: function, module: module}) do
     supervisor = "#{Atom.to_string(@main_supervisor)}.#{module}/#{function}"
 
-    case Registry.lookup(@registry, supervisor) do
-      [] ->
-        {:error, :not_found}
-
-      [{pid, _}] ->
-        DynamicSupervisor.terminate_child(@main_supervisor, pid)
-    end
+    Registry.lookup(@registry, supervisor)
+    |> Enum.each(fn {pid, _} -> DynamicSupervisor.terminate_child(@main_supervisor, pid) end)
   end
 end

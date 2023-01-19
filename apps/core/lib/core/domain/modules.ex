@@ -39,18 +39,23 @@ defmodule Core.Domain.Modules do
   @doc """
   Gets a single module by the name.
 
-  Raises `Ecto.NoResultsError` if the Module does not exist.
+  Returns `{:ok, %Module{}}` if the module exists, `{error, :not_found}` otherwise.
 
   ## Examples
 
-      iex> get_module_by_name!("my_mod")
-      %Module{}
+      iex> get_module_by_name("my_mod")
+      {:ok, %Module{}}
 
-      iex> get_module_by_name!("no_mod")
-      ** (Ecto.NoResultsError)
+      iex> get_module_by_name("no_mod")
+      {:error, :not_found}
 
   """
-  def get_module_by_name!(name), do: Repo.get_by!(Module, name: name)
+  def get_module_by_name(name) do
+    case Repo.get_by(Module, name: name) do
+      nil -> {:error, :not_found}
+      mod -> {:ok, mod}
+    end
+  end
 
   @doc """
   Creates a module.
