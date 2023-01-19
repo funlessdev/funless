@@ -17,7 +17,7 @@ defmodule CoreWeb.FunctionController do
 
   alias Core.Domain.DataSink
   alias Core.Domain.{Events, Functions, Invoker, Modules}
-  alias Core.Schemas.{Function, Module}
+  alias Core.Schemas.Function
   alias Data.InvokeParams
 
   require Logger
@@ -58,7 +58,7 @@ defmodule CoreWeb.FunctionController do
       {:error, :bad_params}
     else
       with {:ok, code} <- File.read(tmp_path),
-           %Module{} = module <- Modules.get_module_by_name!(module_name),
+           {:ok, module} <- Modules.get_module_by_name(module_name),
            {:ok, %Function{} = function} <-
              %{"name" => fn_name, "code" => code}
              |> Map.put_new("module_id", module.id)

@@ -30,9 +30,9 @@ defmodule Core.ModulesTest do
       assert Modules.list_modules() == [module]
     end
 
-    test "get_module_by_name!/1 returns the module with given name" do
+    test "get_module_by_name/1 returns the module with given name" do
       module = module_fixture()
-      assert Modules.get_module_by_name!(module.name) == module
+      assert {:ok, module} = Modules.get_module_by_name(module.name)
     end
 
     test "get_functions_in_module!/1 returns the list of functions" do
@@ -66,13 +66,13 @@ defmodule Core.ModulesTest do
     test "update_module/2 with invalid data returns error changeset" do
       module = module_fixture()
       assert {:error, %Ecto.Changeset{}} = Modules.update_module(module, @invalid_attrs)
-      assert module == Modules.get_module_by_name!(module.name)
+      assert {:ok, module} = Modules.get_module_by_name(module.name)
     end
 
     test "delete_module/1 deletes the module" do
       module = module_fixture()
       assert {:ok, %Module{}} = Modules.delete_module(module)
-      assert_raise Ecto.NoResultsError, fn -> Modules.get_module_by_name!(module.name) end
+      assert {:error, :not_found} = Modules.get_module_by_name(module.name)
     end
 
     test "delete_module/1 also deletes all functions" do
