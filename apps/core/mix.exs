@@ -39,7 +39,7 @@ defmodule Core.MixProject do
   def application do
     [
       mod: {Core.Application, []},
-      extra_applications: [:logger, :mnesia, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :os_mon]
     ]
   end
 
@@ -66,7 +66,7 @@ defmodule Core.MixProject do
       {:plug_cowboy, "~> 2.5.2"},
       {:prom_ex, git: "https://github.com/akoutmos/prom_ex.git"},
       {:emqtt, github: "emqx/emqtt", tag: "1.6.1", system_env: [{"BUILD_WITHOUT_QUIC", "1"}]},
-      {:mongodb_driver, "~> 1.0"},
+      {:ecto_psql_extras, "~> 0.7"},
       # dev deps
       {:mox, "~> 1.0", only: :test}
     ]

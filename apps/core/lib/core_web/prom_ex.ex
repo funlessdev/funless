@@ -26,8 +26,8 @@ defmodule CoreWeb.PromEx do
       # PromEx built in plugins
       Plugins.Application,
       Plugins.Beam,
-      {Plugins.Phoenix, router: CoreWeb.Router, endpoint: CoreWeb.Endpoint}
-      # Plugins.Ecto,
+      {Plugins.Phoenix, router: CoreWeb.Router, endpoint: CoreWeb.Endpoint},
+      Plugins.Ecto
       # Plugins.Oban,
       # Plugins.PhoenixLiveView,
       # Plugins.Absinthe,
