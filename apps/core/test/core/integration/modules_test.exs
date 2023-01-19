@@ -32,7 +32,7 @@ defmodule Core.ModulesTest do
 
     test "get_module_by_name/1 returns the module with given name" do
       module = module_fixture()
-      assert {:ok, module} = Modules.get_module_by_name(module.name)
+      assert {:ok, _module} = Modules.get_module_by_name(module.name)
     end
 
     test "get_functions_in_module!/1 returns the list of functions" do
@@ -66,7 +66,7 @@ defmodule Core.ModulesTest do
     test "update_module/2 with invalid data returns error changeset" do
       module = module_fixture()
       assert {:error, %Ecto.Changeset{}} = Modules.update_module(module, @invalid_attrs)
-      assert {:ok, module} = Modules.get_module_by_name(module.name)
+      assert {:ok, _module} = Modules.get_module_by_name(module.name)
     end
 
     test "delete_module/1 deletes the module" do

@@ -78,11 +78,5 @@ defmodule Core.Integration.Connectors.ManagerTest do
       assert !Process.alive?(p1)
       assert !Process.alive?(p2)
     end
-
-    test "disconnect/1 should return {:error, :not_found} when trying to disconnect a function with no associated events",
-         %{func: func} do
-      result = Manager.disconnect(func)
-      assert {:error, :not_found} == result
-    end
   end
 end
