@@ -26,7 +26,7 @@ defmodule Worker.PromEx do
     [
       # PromEx built in plugins
       {Plugins.Application, otp_app: :worker},
-      Plugins.Beam
+      Plugins.Beam,
       # {Plugins.Phoenix, router: WorkerWeb.Router, endpoint: WorkerWeb.Endpoint},
       # Plugins.Ecto,
       # Plugins.Oban,
@@ -36,6 +36,7 @@ defmodule Worker.PromEx do
 
       # Add your own PromEx metrics plugins
       # Worker.Users.PromExPlugin
+      Worker.PromEx.Plugins.OsMon
     ]
   end
 
@@ -51,8 +52,8 @@ defmodule Worker.PromEx do
   def dashboards do
     [
       # PromEx built in Grafana dashboards
-      # {:prom_ex, "application.json"},
-      # {:prom_ex, "beam.json"}
+      {:prom_ex, "application.json"},
+      {:prom_ex, "beam.json"}
       # {:prom_ex, "phoenix.json"},
       # {:prom_ex, "ecto.json"},
       # {:prom_ex, "oban.json"},
