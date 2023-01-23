@@ -21,6 +21,10 @@ defmodule Core.Adapters.Telemetry.Collector do
   require Logger
   alias Core.Adapters.Telemetry.MetricsServer
 
+  @prom_url_query "http://prometheus:9090/api/v1/query?query="
+  # @beam_memory_allocated "worker_prom_ex_beam_memory_allocated_bytes"
+  @os_mon_available_memory "worker_prom_ex_os_mon_resources_available_mem"
+
   def start_link(node) do
     GenServer.start_link(__MODULE__, node,
       name: {:via, Registry, {Core.Adapters.Telemetry.Registry, "telemetry_#{node}"}}
@@ -62,8 +66,8 @@ defmodule Core.Adapters.Telemetry.Collector do
 
   @spec save_metrics(atom(), map()) :: :ok
   defp save_metrics(worker, metrics) do
-    if Map.has_key?(metrics, "worker_prom_ex_beam_memory_allocated_bytes") do
-      mem = metrics["worker_prom_ex_beam_memory_allocated_bytes"]
+    if Map.has_key?(metrics, @os_mon_available_memory) do
+      mem = metrics[@os_mon_available_memory]
       MetricsServer.insert(worker, %{memory: mem})
     end
 
@@ -87,10 +91,8 @@ defmodule Core.Adapters.Telemetry.Collector do
 
   @spec pull_metrics() :: {:ok, map()} | {:error, any()}
   defp pull_metrics do
-    prom_url =
-      "http://prometheus:9090/api/v1/query?query=worker_prom_ex_beam_memory_allocated_bytes"
-
-    response = :httpc.request(:get, {prom_url, []}, [], [])
+    prom_query = "#{@prom_url_query}#{@os_mon_available_memory}"
+    response = :httpc.request(:get, {prom_query, []}, [], [])
 
     case response do
       {:ok, {_response_status, _headers, json_body}} ->
