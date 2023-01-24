@@ -19,21 +19,21 @@ header:
     copyright-owner: Giuseppe De Palma, Matteo Trentin
 
   paths-ignore:
-    - '**/LICENSE'
-    - '**/.*-version'
-    - '**/.task/**'
-    - '**/build/**'
-    - '**/target/**'
-    - '**/pres/**'
-    - '**/task/**'
-    - 'workspace.code-workspace'
-    - 'CODEOWNERS'
-    - '.gitkeep'
-    - '.gitmodules'
-    - '**/aliases'
-    - '**/native/scheduler/.cargo/**'
+    - "**/LICENSE"
+    - "**/.*-version"
+    - "**/.task/**"
+    - "**/build/**"
+    - "**/target/**"
+    - "**/pres/**"
+    - "**/task/**"
+    - "workspace.code-workspace"
+    - "CODEOWNERS"
+    - ".gitkeep"
+    - ".gitmodules"
+    - "**/aliases"
+    - "**/apps/worker/native/fn_wasm/.cargo/*"
     - "**/*.lock"
     - "**/*.svg"
-    - '.formatter.exs'
+    - ".formatter.exs"
 
   comment: on-failure

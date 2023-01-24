@@ -22,7 +22,7 @@ defmodule Core.Umbrella.MixProject do
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
-        plt_add_apps: [:ex_unit, :mix, :mnesia]
+        plt_add_apps: [:ex_unit, :mix]
       ],
       deps: deps(),
       aliases: aliases(),
