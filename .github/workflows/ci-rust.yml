@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Elixir Linter and Formatter
+name: Rust NIF
 
 on:
   push:
@@ -21,25 +21,22 @@ on:
     branches: [main]
 
 jobs:
-  linter:
-    name: Linter and formatting
+  test:
+    name: Tests and linter
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup elixir
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: 1.14
-          otp-version: 25.0
+      - name: Build FN rust module
+        run: cargo build --verbose
+        working-directory: apps/worker/native/fn_wasm
 
-      - name: Install Dependencies
-        run: mix deps.get
+      - name: Run cargo clippy on FN
+        run: cargo clippy --verbose
+        working-directory: apps/worker/native/fn_wasm
 
-      - name: Check formatting
-        run: mix format --check-formatted
-
-      - name: Run Mix Credo
-        run: mix credo --strict
+      - name: Run FN tests
+        run: cargo test --verbose
+        working-directory: apps/worker/native/fn_wasm

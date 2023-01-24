@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Check License Headers
+name: License Headers
 
 on:
   push:
@@ -22,7 +22,7 @@ on:
 
 jobs:
   license:
-    name: Check license headers
+    name: Check headers
     runs-on: ubuntu-latest
 
     steps:

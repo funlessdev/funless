@@ -24,18 +24,35 @@ jobs:
   dialyzer:
     name: Dialyzer check
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        elixir: [1.14]
+        otp: [25]
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Elixir
-        id: beam
+
+      - name: Setup Elixir/OTP
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: 1.14
-          otp-version: 25
+          otp-version: "=${{ matrix.otp }}"
+          elixir-version: ${{ matrix.elixir }}
+          install-hex: true
+          install-rebar: true
 
-      - name: Install Dependencies
-        run: mix deps.get
+      - name: Retrieve Mix Dependencies Cache
+        uses: actions/cache@v1
+        id: mix-cache # id to use in retrieve action
+        with:
+          path: deps
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+
+      - name: Install Mix Dependencies (if deps cache miss)
+        if: steps.mix-cache.outputs.cache-hit != 'true'
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
 
       # Don't cache PLTs based on mix.lock hash, as Dialyzer can incrementally update even old ones
       # Cache key based on Elixir & Erlang version (also useful when running in matrix)
