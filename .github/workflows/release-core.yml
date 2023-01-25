@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: FunLess Release
+name: Core Release
 
 on:
   push:
@@ -47,23 +47,9 @@ jobs:
             release-tarball: core-x86_64-macos.tar.gz
             release-name: core
 
-          - os: ubuntu-20.04
-            rust-target: x86_64-unknown-linux-gnu
-            release-tarball: worker-x86_64-linux.tar.gz
-            release-name: worker
-          - os: windows-2019
-            rust-target: x86_64-pc-windows-gnu
-            release-tarball: worker-x86_64-windows.tar.gz
-            release-name: worker
-          - os: macos-11
-            rust-target: x86_64-apple-darwin
-            release-tarball: worker-x86_64-macos.tar.gz
-            release-name: worker
-
     runs-on: ${{ matrix.os }}
     env:
       MIX_ENV: prod
-      SECRET_KEY_BASE: ${{ secrets.FUNLESS_SECRET_KEY_BASE }}
 
     steps:
       - uses: actions/checkout@v3
