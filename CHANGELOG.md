@@ -14,6 +14,41 @@
   ~ limitations under the License.
 -->
 
+## v0.7.0 (2023-01-26)
+
+### Feat
+
+- **worker**: add promex plugin to expose os_mon metrics
+- **core**: add prom_ex ecto and os_mon metrics for dev dashboard
+- **core**: add mongodb sink and contact all data sinks on invoke result
+- **core**: setup data_sink port/adapter like connector
+- **openapi**: add data sinks
+
+### Fix
+
+- **core**: change get_module_by_name to not raise and use it in with
+- **core**: when function delete don't return :not_found if events/sinks do not exist
+- **core**: credo warnings
+- **core**: events and sinks render parameters handling
+- **core**: update function controller/view with data sinks responses
+- **core**: add module name in get module response
+- **openapi**: fix missing model in generated sdk
+- **core**: parse events string in function_controller
+
+### Refactor
+
+- **core**: metrics collector update
+- **core**: switch to couchdb with simple http post request
+- **core**: update mongodb params and invoker function name
+- **worker**: update some logs
+- **core**: make connector manager code more clear
+- **openapi**: revert openapi spec to v3.0.2
+- **openapi**: update openapi and gen sdk action
+
+### Perf
+
+- **core**: remove atom generation in mqtt connector
+
 ## v0.6.0 (2022-12-25)
 
 ### Feat
