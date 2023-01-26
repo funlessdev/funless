@@ -1,0 +1,122 @@
+# Copyright 2023 Giuseppe De Palma, Matteo Trentin
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Core Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+env:
+  otp-version: 25
+  elixir-version: 1.14
+
+# Run on tag push or on manual dispatch. Release will not be created for manual dispatch
+jobs:
+  create-mix-releases:
+    if: ${{ startswith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
+    name: Mix release
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, windows-2019, macos-11]
+        include:
+          - os: ubuntu-20.04
+            rust-target: x86_64-unknown-linux-gnu
+            release-tarball: core-x86_64-linux.tar.gz
+            release-name: core
+          - os: windows-2019
+            rust-target: x86_64-pc-windows-gnu
+            release-tarball: core-x86_64-windows.tar.gz
+            release-name: core
+          - os: macos-11
+            rust-target: x86_64-apple-darwin
+            release-tarball: core-x86_64-macos.tar.gz
+            release-name: core
+
+    runs-on: ${{ matrix.os }}
+    env:
+      MIX_ENV: prod
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Elixir/OTP
+        if: ${{ startswith(matrix.os, 'ubuntu') || startswith(matrix.os, 'windows') }}
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "=${{ env.otp-version }}"
+          elixir-version: "${{ env.elixir-version }}"
+          install-hex: true
+          install-rebar: true
+      - name: Setup Elixir/OTP
+        if: ${{ startswith(matrix.os, 'macos') }}
+        run: |
+          brew install erlang
+          brew install elixir
+
+      - name: Retrieve Mix Dependencies Cache
+        uses: actions/cache@v1
+        id: mix-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+
+      - name: Install Rebar and Hex
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+      - name: Install Mix Dependencies (if deps cache miss)
+        if: steps.mix-cache.outputs.cache-hit != 'true'
+        run: |
+          mix do deps.get, deps.compile
+
+      - name: Compile Elixir
+        shell: bash
+        run: |
+          mix compile
+
+      - name: Create Mix Release
+        shell: bash
+        run: |
+          mix release ${{ matrix.release-name }}
+          cd _build/${{ env.MIX_ENV }}/rel/${{ matrix.release-name }}
+          tar -czvf ${{ matrix.release-tarball }} bin erts-* lib releases
+          mv ${{ matrix.release-tarball }} ../../../../
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.release-tarball }}
+          path: ${{ matrix.release-tarball }}
+
+  github-release:
+    if: startswith(github.ref, 'refs/tags/') # Only run on tag push
+    needs: [create-mix-releases]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Release Tarballs
+        uses: actions/download-artifact@v3
+        with:
+          path: release
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/**/*.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: false
+          draft: false
