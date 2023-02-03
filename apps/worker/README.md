@@ -16,17 +16,15 @@
 
 # Worker
 
-**TODO: add description**
-
-This is the Worker component app of the Funless (FL) platform.
+This is the Worker component app of the FunLess platform.
 
 The Worker is written in Elixir and makes use of Rust NIFs to run user-defined functions.
 
 To run functions it uses the [wasmtime](https://github.com/bytecodealliance/wasmtime) WebAssembly runtime.
 
-## Running the Worker
+It is a GenServer that receives invocation requests from the Core component.
 
-### Running in an interactive session
+### Running 
 
 The project can be run in an interactive session by running:
 ```
@@ -34,10 +32,11 @@ mix deps.get
 mix compile
 iex -S mix
 ```
-#### Using WebAssembly
 
-When using the WebAssembly runtime, `fcode` must contain the binary string corresponding to a compiled WebAssembly module, preferably created using [fl-runtimes](https://github.com/funlessdev/fl-runtimes):
-```
-fcode = File.read!("code.wasm")
-...
+### Testing
+
+The project can be tested by running:
+
+```bash
+mix test
 ```
