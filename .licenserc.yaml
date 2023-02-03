@@ -28,6 +28,7 @@ header:
     - "**/task/**"
     - "workspace.code-workspace"
     - "CODEOWNERS"
+    - ".github/ISSUE_TEMPLATE/**"
     - ".gitkeep"
     - ".gitmodules"
     - "**/aliases"
