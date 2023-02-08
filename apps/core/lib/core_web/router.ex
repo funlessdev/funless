@@ -22,6 +22,9 @@ defmodule CoreWeb.Router do
   scope "/v1", CoreWeb do
     pipe_through(:api)
 
+    # A simple get "/" to health check
+    get("/", DefaultController, :index)
+
     # List all modules
     get("/fn", ModuleController, :index)
     # Create new module
