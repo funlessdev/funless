@@ -12,19 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule CoreWeb.ErrorHelpers do
-  @moduledoc """
-  Conveniences for translating and building error messages.
-  """
+defmodule CoreWeb.DefaultController do
+  use CoreWeb, :controller
 
-  @doc """
-  Translates an error message.
-  """
-  def translate_error({msg, opts}) do
-    # Because the error messages we show in our forms and APIs
-    # are defined inside Ecto, we need to translate them dynamically.
-    Enum.reduce(opts, msg, fn {key, value}, acc ->
-      String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
-    end)
+  def index(conn, _params) do
+    text(conn, "This FunLess Core is up and running! (#{Mix.env()})")
   end
 end
