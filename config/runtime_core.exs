@@ -1,4 +1,4 @@
-# Copyright 2022 Giuseppe De Palma, Matteo Trentin
+# Copyright 2023 Giuseppe De Palma, Matteo Trentin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,6 +30,16 @@ if config_env() == :prod do
     username: System.get_env("PGUSER") || "postgres",
     password: System.get_env("PGPASSWORD") || "postgres",
     database: System.get_env("PGDATABASE") || "funless",
+    hostname: System.get_env("PGHOST") || "postgres",
+    port: System.get_env("PGPORT") || "5432",
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+    socket_options: maybe_ipv6
+
+  config :core, Core.SubjectsRepo,
+    # ssl: true,
+    username: System.get_env("PGUSER") || "postgres",
+    password: System.get_env("PGPASSWORD") || "postgres",
+    database: System.get_env("PGDATABASE") || "subjects",
     hostname: System.get_env("PGHOST") || "postgres",
     port: System.get_env("PGPORT") || "5432",
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
