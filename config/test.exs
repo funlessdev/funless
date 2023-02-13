@@ -1,4 +1,4 @@
-# Copyright 2022 Giuseppe De Palma, Matteo Trentin
+# Copyright 2023 Giuseppe De Palma, Matteo Trentin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,6 +34,14 @@ config :core, Core.Repo,
   password: "postgres",
   hostname: "localhost",
   database: "core_test#{System.get_env("MIX_TEST_PARTITION")}",
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: 10
+
+config :core, Core.SubjectsRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "subjects_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10
 

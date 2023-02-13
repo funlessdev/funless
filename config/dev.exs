@@ -1,4 +1,4 @@
-# Copyright 2022 Giuseppe De Palma, Matteo Trentin
+# Copyright 2023 Giuseppe De Palma, Matteo Trentin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,12 +16,20 @@ import Config
 
 config :libcluster, debug: false
 
-# Configure your database
 config :core, Core.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
   database: "core_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 10
+
+config :core, Core.SubjectsRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "subjects_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10

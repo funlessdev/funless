@@ -39,6 +39,7 @@ defmodule Core.Application do
       # {CoreWeb.Worker, arg}
       ## Core Children
       Core.Repo,
+      Core.SubjectsRepo,
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
       {Core.Adapters.Telemetry.Supervisor, []},
       {Core.Adapters.Connectors.Supervisor, []},
