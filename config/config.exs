@@ -21,6 +21,7 @@ config :logger, :console,
 
 # --- Core Configs ---
 config :core, Core.Repo, start_apps_before_migration: [:logger]
+config :core, Core.SubjectsRepo, start_apps_before_migration: [:logger]
 
 config :core, Core.Domain.Ports.Commands, adapter: Core.Adapters.Commands.Worker
 config :core, Core.Domain.Ports.Cluster, adapter: Core.Adapters.Cluster
@@ -29,7 +30,7 @@ config :core, Core.Domain.Ports.Connectors.Manager, adapter: Core.Adapters.Conne
 config :core, Core.Domain.Ports.DataSinks.Manager, adapter: Core.Adapters.DataSinks.Manager
 
 config :core,
-  ecto_repos: [Core.Repo]
+  ecto_repos: [Core.Repo, Core.SubjectsRepo]
 
 config :core,
   generators: [context_app: :core]

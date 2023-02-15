@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.DataCase do
+defmodule Core.SubjectsDataCase do
   @moduledoc """
+  DataCase that uses the SubjectsRepo.
+
   This module defines the setup for tests requiring
   access to the application's data layer.
 
@@ -34,7 +36,7 @@ defmodule Core.DataCase do
 
   using do
     quote do
-      alias Core.Repo
+      alias Core.SubjectsRepo, as: Repo
 
       import Ecto
       import Ecto.Changeset
@@ -45,7 +47,7 @@ defmodule Core.DataCase do
   end
 
   setup tags do
-    Core.DataCase.setup_sandbox(tags)
+    Core.SubjectsDataCase.setup_sandbox(tags)
     :ok
   end
 
@@ -53,7 +55,7 @@ defmodule Core.DataCase do
   Sets up the sandbox based on the test tags.
   """
   def setup_sandbox(tags) do
-    pid = Sandbox.start_owner!(Core.Repo, shared: not tags[:async])
+    pid = Sandbox.start_owner!(Core.SubjectsRepo, shared: not tags[:async])
     on_exit(fn -> Sandbox.stop_owner(pid) end)
   end
 

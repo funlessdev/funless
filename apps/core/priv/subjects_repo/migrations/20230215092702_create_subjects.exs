@@ -12,7 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0, exclude: [integration_test: true])
-ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :auto)
-Ecto.Adapters.SQL.Sandbox.mode(Core.SubjectsRepo, :auto)
+defmodule Core.SubjectsRepo.Migrations.CreateSubjects do
+  use Ecto.Migration
+
+  def change do
+    create table(:subjects) do
+      add :name, :string
+      add :token, :string
+
+      timestamps()
+    end
+  end
+end

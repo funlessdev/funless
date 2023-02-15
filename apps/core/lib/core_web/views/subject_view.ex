@@ -12,7 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0, exclude: [integration_test: true])
-ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :auto)
-Ecto.Adapters.SQL.Sandbox.mode(Core.SubjectsRepo, :auto)
+defmodule CoreWeb.SubjectView do
+  use CoreWeb, :view
+  alias CoreWeb.SubjectView
+
+  def render("index.json", %{subjects: subjects}) do
+    %{data: render_many(subjects, SubjectView, "subject.json")}
+  end
+
+  def render("show.json", %{subject: subject}) do
+    %{data: render_one(subject, SubjectView, "subject.json")}
+  end
+
+  def render("subject.json", %{subject: subject}) do
+    %{
+      id: subject.id,
+      name: subject.name,
+      token: subject.token
+    }
+  end
+end

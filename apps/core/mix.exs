@@ -79,11 +79,7 @@ defmodule Core.MixProject do
     [
       setup: ["deps.get", "ecto.setup"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      "test.integration": [
-        "ecto.create --quiet",
-        "ecto.migrate --quiet",
-        "test --only integration_test"
-      ]
+      "test.integration": ["test --only integration_test"]
     ]
   end
 end

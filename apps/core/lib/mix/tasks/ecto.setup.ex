@@ -22,9 +22,6 @@ defmodule Mix.Tasks.Ecto.Setup do
   - mix ecto.create -r Core.SubjectsRepo
   - mix ecto.migrate
   - mix ecto.migrate -r Core.SubjectsRepo
-  - mix run priv/repo/seeds/seeds.exs
-  - mix run priv/subjects_repo/seeds/subjects_seeds.exs
-
   """
   @shortdoc "Setup for core and subjects databases"
 
@@ -43,7 +40,7 @@ defmodule Mix.Tasks.Ecto.Setup do
     Mix.Task.run("ecto.migrate", [])
     Mix.Task.rerun("ecto.migrate", ["-r", "Core.SubjectsRepo"])
     Mix.shell().info("Seeding databases...")
-    Mix.Task.run("run", ["apps/core/priv/repo/seeds/seeds.exs"])
-    Mix.Task.rerun("run", ["apps/core/priv/subjects_repo/seeds/subjects_seeds.exs"])
+    # Mix.Task.run("run", ["apps/core/priv/repo/seeds/seeds.exs"])
+    # Mix.Task.rerun("run", ["apps/core/priv/subjects_repo/seeds/subjects_seeds.exs"])
   end
 end

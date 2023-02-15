@@ -25,6 +25,11 @@ defmodule CoreWeb.Router do
     # A simple get "/" to health check
     get("/", DefaultController, :index)
 
+    # Admin routes (Subjects)
+    resources("/admin/subjects", SubjectController, except: [:new, :edit])
+
+    # --- Public API routes ---
+
     # List all modules
     get("/fn", ModuleController, :index)
     # Create new module
@@ -63,7 +68,10 @@ defmodule CoreWeb.Router do
     scope "/" do
       pipe_through([:fetch_session, :protect_from_forgery])
 
-      live_dashboard("/dashboard", metrics: CoreWeb.Telemetry, ecto_repos: [Core.Repo])
+      live_dashboard("/dashboard",
+        metrics: CoreWeb.Telemetry,
+        ecto_repos: [Core.Repo, Core.SubjectsRepo]
+      )
     end
   end
 end
