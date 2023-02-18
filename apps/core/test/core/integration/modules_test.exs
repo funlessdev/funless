@@ -35,11 +35,11 @@ defmodule Core.ModulesTest do
       assert {:ok, _module} = Modules.get_module_by_name(module.name)
     end
 
-    test "get_functions_in_module!/1 returns the list of functions" do
+    test "get_functions_in_module/1 returns the list of functions" do
       module = module_fixture()
       function = function_fixture(module.id)
 
-      assert [fun] = Modules.get_functions_in_module!(module.name)
+      assert [fun] = Modules.get_functions_in_module(module.name)
       assert fun.id == function.id
       assert fun.name == function.name
     end
