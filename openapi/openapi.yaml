@@ -58,6 +58,26 @@ components:
           schema:
             $ref: "#/components/schemas/mixed_results"
   schemas:
+    subject_name:
+      type: object
+      properties:
+        subject:
+          type: object
+          properties:
+            name:
+              type: string
+
+    single_subject_result:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            name:
+              type: string
+            token:
+              type: string
+
     module_name:
       type: object
       properties:
@@ -224,6 +244,49 @@ components:
               type: string
 
 paths:
+  /v1/admin/subjects:
+    # GET /admin/subjects
+    get:
+      summary: List all subjects
+      operationId: list_subjects
+      description: List all subjects
+      tags:
+        - subjects
+      responses:
+        "200":
+          description: An array of subject names
+          content:
+            application/json:
+              schema:
+                # I'm re-using the module names schema cause it's the same
+                $ref: "#/components/schemas/module_names_result"
+        default:
+          $ref: "#/components/responses/unexpected_error"
+
+    # POST /admin/subjects
+    post:
+      summary: Create subject
+      operationId: create_subject
+      description: Create a new subject (name, token)
+      tags:
+        - subjects
+      requestBody:
+        description: Subject to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/subject_name"
+      responses:
+        "200":
+          description: The created subject
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/single_module_result"
+        default:
+          $ref: "#/components/responses/unexpected_error"
+
   /v1/fn:
     # GET /fn
     get:
