@@ -21,15 +21,22 @@ defmodule Core.Schemas.Subject do
 
   schema "subjects" do
     field(:name, :string)
-    field(:token, :string)
+    field(:token, :string, redact: true)
 
     timestamps()
   end
 
   @doc false
   def changeset(subject, attrs) do
+    # only allow valid letters, numbers and underscores in the middle
+    regex = ~r/^[_a-zA-Z0-9]+$/
+    msg = "must contain only alphanumeric characters and underscores"
+
     subject
     |> cast(attrs, [:name, :token])
     |> validate_required([:name, :token])
+    |> validate_format(:name, regex, message: msg)
+    |> validate_length(:name, min: 1, max: 160)
+    |> unique_constraint(:name)
   end
 end
