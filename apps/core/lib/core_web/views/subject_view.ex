@@ -26,7 +26,6 @@ defmodule CoreWeb.SubjectView do
 
   def render("subject.json", %{subject: subject}) do
     %{
-      id: subject.id,
       name: subject.name,
       token: subject.token
     }

@@ -22,5 +22,7 @@ defmodule Core.SubjectsRepo.Migrations.CreateSubjects do
 
       timestamps()
     end
+
+    create unique_index(:subjects, [:name])
   end
 end

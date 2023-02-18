@@ -26,8 +26,8 @@ defmodule Core.SubjectsFixtures do
     {:ok, subject} =
       attrs
       |> Enum.into(%{
-        name: "some name",
-        token: "some token"
+        name: "some_name",
+        token: "some_token"
       })
       |> Subjects.create_subject()
 
