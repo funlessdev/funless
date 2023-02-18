@@ -52,6 +52,23 @@ defmodule Core.Domain.Subjects do
   def get_subject!(id), do: Repo.get!(Subject, id)
 
   @doc """
+  Gets a single subject by name.
+
+  Returns `nil` if the Subject does not exist.
+
+  ## Examples
+
+      iex> get_subject_by_name("name")
+      %Subject{}
+
+      iex> get_subject_by_name("not_found")
+      nil
+  """
+  def get_subject_by_name(name) do
+    Repo.get_by(Subject, name: name)
+  end
+
+  @doc """
   Creates a subject.
 
   ## Examples

@@ -34,7 +34,7 @@ defmodule CoreWeb.ModuleController do
   end
 
   def show_functions(conn, %{"module_name" => name}) do
-    functions = Modules.get_functions_in_module!(name)
+    functions = Modules.get_functions_in_module(name)
     render(conn, "show_functions.json", %{module_name: name, functions: functions})
   end
 

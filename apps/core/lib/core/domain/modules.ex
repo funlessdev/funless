@@ -117,9 +117,9 @@ defmodule Core.Domain.Modules do
       [%Function{}]
 
       iex> get_functions_in_module!("no_mod")
-      ** []
+      []
   """
-  def get_functions_in_module!(name) do
+  def get_functions_in_module(name) do
     q =
       from(f in Function,
         join: m in Module,
