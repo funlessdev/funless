@@ -12,7 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0, exclude: [integration_test: true])
-ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :auto)
-Ecto.Adapters.SQL.Sandbox.mode(Core.SubjectsRepo, :auto)
+defmodule Core.SubjectsFixtures do
+  @moduledoc """
+  This module defines test helpers for creating
+  entities via the `Core.Domain.Subjects` context.
+  """
+  alias Core.Domain.Subjects
+
+  @doc """
+  Generate a subject.
+  """
+  def subject_fixture(attrs \\ %{}) do
+    {:ok, subject} =
+      attrs
+      |> Enum.into(%{
+        name: "some name",
+        token: "some token"
+      })
+      |> Subjects.create_subject()
+
+    subject
+  end
+end

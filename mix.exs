@@ -39,6 +39,9 @@ defmodule Core.Umbrella.MixProject do
             worker: :permanent
           ]
         ]
+      ],
+      preferred_cli_env: [
+        "core.itest": :test
       ]
     ]
   end
@@ -66,9 +69,12 @@ defmodule Core.Umbrella.MixProject do
     [
       # run `mix setup` in all child apps
       setup: "cmd mix setup",
-      "core.test": "cmd --app core mix test --color",
-      "core.integration_test": "cmd --app core mix test.integration --color",
-      "worker.test": "cmd --app worker mix test --color"
+      "core.utest": "cmd --app core mix test --color",
+      "core.itest": [
+        "ecto.setup --quiet",
+        "cmd --app core mix test.integration --color"
+      ],
+      "worker.utest": "cmd --app worker mix test --color"
     ]
   end
 end

@@ -12,7 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ExUnit.configure(seed: 0, exclude: [integration_test: true])
-ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, :auto)
-Ecto.Adapters.SQL.Sandbox.mode(Core.SubjectsRepo, :auto)
+defmodule Core.Schemas.Subject do
+  @moduledoc """
+  The Subject schema
+  """
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  schema "subjects" do
+    field(:name, :string)
+    field(:token, :string)
+
+    timestamps()
+  end
+
+  @doc false
+  def changeset(subject, attrs) do
+    subject
+    |> cast(attrs, [:name, :token])
+    |> validate_required([:name, :token])
+  end
+end
