@@ -69,9 +69,11 @@ defmodule Core.Umbrella.MixProject do
     [
       # run `mix setup` in all child apps
       setup: "cmd mix setup",
+      "ecto.seed": "cmd --app core mix ecto.seed",
       "core.utest": "cmd --app core mix test --color",
       "core.itest": [
         "ecto.setup --quiet",
+        "run apps/core/priv/subjects_repo/seeds/seeds.exs",
         "cmd --app core mix test.integration --color"
       ],
       "worker.utest": "cmd --app worker mix test --color"

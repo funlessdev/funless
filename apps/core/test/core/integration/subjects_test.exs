@@ -26,7 +26,7 @@ defmodule Core.SubjectsTest do
 
     test "list_subjects/0 returns all subjects" do
       subject = subject_fixture()
-      assert Subjects.list_subjects() == [subject]
+      assert [_, ^subject] = Subjects.list_subjects()
     end
 
     test "get_subject!/1 returns the subject with given id" do

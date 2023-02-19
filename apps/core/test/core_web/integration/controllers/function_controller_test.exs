@@ -18,6 +18,7 @@ defmodule CoreWeb.FunctionControllerTest do
   require Logger
   import Core.{FunctionsFixtures, ModulesFixtures}
 
+  alias Core.Domain.Subjects
   alias Core.Schemas.Function
 
   @create_attrs %{
@@ -76,7 +77,14 @@ defmodule CoreWeb.FunctionControllerTest do
     Core.Connectors.Manager.Mock |> Mox.stub_with(Core.Adapters.Connectors.Test)
     Core.DataSinks.Manager.Mock |> Mox.stub_with(Core.Adapters.DataSinks.Test)
 
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    user = Subjects.get_subject_by_name("guest")
+
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", "Bearer #{user.token}")
+
+    {:ok, conn: conn}
   end
 
   describe "create function" do

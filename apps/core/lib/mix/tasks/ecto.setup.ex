@@ -39,8 +39,5 @@ defmodule Mix.Tasks.Ecto.Setup do
     Mix.shell().info("Performing migrations...")
     Mix.Task.run("ecto.migrate", [])
     Mix.Task.rerun("ecto.migrate", ["-r", "Core.SubjectsRepo"])
-    Mix.shell().info("Seeding databases...")
-    # Mix.Task.run("run", ["apps/core/priv/repo/seeds/seeds.exs"])
-    # Mix.Task.rerun("run", ["apps/core/priv/subjects_repo/seeds/subjects_seeds.exs"])
   end
 end

@@ -15,10 +15,11 @@
 defmodule CoreWeb.ModuleControllerTest do
   use CoreWeb.ConnCase
 
+  alias Core.Domain.Subjects
   import Core.ModulesFixtures
   import Core.FunctionsFixtures
-
   alias Core.Schemas.Module
+  alias Ecto.Adapters.SQL.Sandbox
 
   @create_attrs %{
     name: "some_name"
@@ -29,7 +30,15 @@ defmodule CoreWeb.ModuleControllerTest do
   @invalid_attrs %{name: nil}
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    :ok = Sandbox.checkout(Core.SubjectsRepo)
+    user = Subjects.get_subject_by_name("guest")
+
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", "Bearer #{user.token}")
+
+    {:ok, conn: conn}
   end
 
   describe "lists" do
