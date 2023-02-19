@@ -19,16 +19,23 @@ defmodule CoreWeb.Router do
     plug(:accepts, ["json"])
   end
 
+  pipeline :authenticated do
+    plug(CoreWeb.Plug.Authenticate)
+  end
+
+  # Endpoints without authentication
   scope "/v1", CoreWeb do
     pipe_through(:api)
 
     # A simple get "/" to health check
     get("/", DefaultController, :index)
 
-    # Admin routes (Subjects)
-    resources("/admin/subjects", SubjectController, except: [:new, :edit])
+    get("/admin/subjects", SubjectController, :index)
+    post("/admin/subjects", SubjectController, :create)
+  end
 
-    # --- Public API routes ---
+  scope "/v1", CoreWeb do
+    pipe_through([:api, :authenticated])
 
     # List all modules
     get("/fn", ModuleController, :index)

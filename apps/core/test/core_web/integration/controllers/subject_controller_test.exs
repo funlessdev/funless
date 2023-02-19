@@ -36,18 +36,17 @@ defmodule CoreWeb.SubjectControllerTest do
   describe "index" do
     test "lists all subjects", %{conn: conn} do
       conn = get(conn, Routes.subject_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+
+      assert [
+               %{"name" => "guest", "token" => _t}
+             ] = json_response(conn, 200)["data"]
     end
   end
 
   describe "create subject" do
     test "renders subject when data is valid", %{conn: conn} do
       conn = post(conn, Routes.subject_path(conn, :create), subject: @create_attrs)
-
-      assert %{
-               "name" => "some_name",
-               "token" => "some_token"
-             } = json_response(conn, 201)["data"]
+      assert %{"name" => "some_name", "token" => _} = json_response(conn, 201)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do

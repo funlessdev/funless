@@ -15,6 +15,8 @@
 defmodule CoreWeb.SubjectController do
   use CoreWeb, :controller
 
+  require Logger
+
   alias Core.Domain.Subjects
   alias Core.Schemas.Subject
 
@@ -25,8 +27,11 @@ defmodule CoreWeb.SubjectController do
     render(conn, "index.json", subjects: subjects)
   end
 
-  def create(conn, %{"subject" => subject_params}) do
-    with {:ok, %Subject{} = subject} <- Subjects.create_subject(subject_params) do
+  def create(conn, %{"subject" => %{"name" => name}}) do
+    signed_token = CoreWeb.Token.sign(%{user: name})
+
+    with {:ok, %Subject{} = subject} <-
+           Subjects.create_subject(%{name: name, token: signed_token}) do
       conn
       |> put_status(:created)
       |> render("show.json", subject: subject)
@@ -38,19 +43,19 @@ defmodule CoreWeb.SubjectController do
     render(conn, "show.json", subject: subject)
   end
 
-  def update(conn, %{"id" => id, "subject" => subject_params}) do
-    subject = Subjects.get_subject!(id)
+  # def update(conn, %{"id" => id, "subject" => subject_params}) do
+  #   subject = Subjects.get_subject!(id)
 
-    with {:ok, %Subject{} = subject} <- Subjects.update_subject(subject, subject_params) do
-      render(conn, "show.json", subject: subject)
-    end
-  end
+  #   with {:ok, %Subject{} = subject} <- Subjects.update_subject(subject, subject_params) do
+  #     render(conn, "show.json", subject: subject)
+  #   end
+  # end
 
-  def delete(conn, %{"id" => id}) do
-    subject = Subjects.get_subject!(id)
+  # def delete(conn, %{"id" => id}) do
+  #   subject = Subjects.get_subject!(id)
 
-    with {:ok, %Subject{}} <- Subjects.delete_subject(subject) do
-      send_resp(conn, :no_content, "")
-    end
-  end
+  #   with {:ok, %Subject{}} <- Subjects.delete_subject(subject) do
+  #     send_resp(conn, :no_content, "")
+  #   end
+  # end
 end
