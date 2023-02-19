@@ -19,6 +19,7 @@ defmodule CoreWeb.ModuleControllerTest do
   import Core.ModulesFixtures
   import Core.FunctionsFixtures
   alias Core.Schemas.Module
+  alias Ecto.Adapters.SQL.Sandbox
 
   @create_attrs %{
     name: "some_name"
@@ -29,6 +30,7 @@ defmodule CoreWeb.ModuleControllerTest do
   @invalid_attrs %{name: nil}
 
   setup %{conn: conn} do
+    :ok = Sandbox.checkout(Core.SubjectsRepo)
     user = Subjects.get_subject_by_name("guest")
 
     conn =
