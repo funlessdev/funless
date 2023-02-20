@@ -30,7 +30,9 @@ defmodule CoreWeb.Plug.Authenticate do
   def call(conn, _opts) do
     with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
          {:ok, %{user: name}} <- Token.verify(token),
-         user when not is_nil(user) <- Subjects.get_subject_by_name(name) do
+         user when not is_nil(user) <- Subjects.get_subject_by_name(name),
+         {:ok, %{user: saved_name}} <- Token.verify(user.token),
+         true <- user.token == token && name == saved_name do
       assign(conn, :current_user, user)
     else
       _error ->
