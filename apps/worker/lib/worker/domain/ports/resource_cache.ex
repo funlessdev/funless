@@ -1,4 +1,4 @@
-# Copyright 2022 Giuseppe De Palma, Matteo Trentin
+# Copyright 2023 Giuseppe De Palma, Matteo Trentin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ defmodule Worker.Domain.Ports.ResourceCache do
   """
   alias Data.ExecutionResource
 
-  @callback get(String.t(), String.t()) :: ExecutionResource.t() | :runtime_not_found
+  @callback get(String.t(), String.t()) :: ExecutionResource.t() | :resource_not_found
   @callback insert(String.t(), String.t(), ExecutionResource.t()) :: :ok | {:error, any}
   @callback delete(String.t(), String.t()) :: :ok | {:error, any}
 

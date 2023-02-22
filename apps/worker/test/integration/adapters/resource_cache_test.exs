@@ -1,4 +1,4 @@
-# Copyright 2022 Giuseppe De Palma, Matteo Trentin
+# Copyright 2023 Giuseppe De Palma, Matteo Trentin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ defmodule Integration.ResourceCacheTest do
 
   setup :verify_on_exit!
 
-  test "get_function_runtimes returns an empty list when no runtimes stored" do
+  test "get returns an empty :resource_not_found when no resource stored" do
     result = ResourceCache.get("test-no-runtime", "fake-ns")
     assert result == :resource_not_found
   end
 
-  test "insert adds {function_name, module} => runtime to the cache" do
+  test "insert adds {function_name, module} => resource to the cache" do
     runtime = %ExecutionResource{resource: "runtime"}
 
     ResourceCache.insert("test", "ns", runtime)
@@ -33,7 +33,7 @@ defmodule Integration.ResourceCacheTest do
     ResourceCache.delete("test", "ns")
   end
 
-  test "delete removes a {function_name, ns} =>, runtime couple from the storage" do
+  test "delete removes a {function_name, ns} =>, resource couple from the storage" do
     runtime = %ExecutionResource{resource: "runtime"}
     ResourceCache.insert("test-delete", "ns", runtime)
     ResourceCache.delete("test-delete", "ns")
