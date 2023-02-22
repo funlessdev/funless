@@ -19,6 +19,7 @@ defmodule CoreWeb.Plug.Authenticate do
   import Plug.Conn
   require Logger
 
+  alias Core.Domain.Ports.SubjectCache
   alias Core.Domain.Subjects
   alias CoreWeb.Token
 
@@ -30,10 +31,10 @@ defmodule CoreWeb.Plug.Authenticate do
   def call(conn, _opts) do
     with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
          {:ok, %{user: name}} <- Token.verify(token),
-         user when not is_nil(user) <- Subjects.get_subject_by_name(name),
-         {:ok, %{user: saved_name}} <- Token.verify(user.token),
-         true <- user.token == token && name == saved_name do
-      assign(conn, :current_user, user)
+         {:ok, stored_token} <- retrieve_subject(name),
+         {:ok, %{user: stored_name}} <- Token.verify(stored_token),
+         true <- stored_token == token && name == stored_name do
+      assign(conn, :current_user, name)
     else
       _error ->
         conn
@@ -43,4 +44,24 @@ defmodule CoreWeb.Plug.Authenticate do
         |> halt()
     end
   end
+
+  @spec retrieve_subject(String.t()) :: {:ok, any()} | {:error, any()}
+  defp retrieve_subject(name) do
+    name
+    |> SubjectCache.get()
+    |> db_fallback(name)
+  end
+
+  defp db_fallback(:subject_not_found, name) do
+    case Subjects.get_subject_by_name(name) do
+      nil ->
+        {:error, :subject_not_found}
+
+      user ->
+        SubjectCache.insert(name, user.token)
+        {:ok, user.token}
+    end
+  end
+
+  defp db_fallback(token, _name), do: {:ok, token}
 end
