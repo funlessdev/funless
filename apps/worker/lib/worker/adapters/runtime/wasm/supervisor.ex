@@ -21,7 +21,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Supervisor do
   @impl true
   def children do
     [
-      {Worker.Adapters.Runtime.Wasm.Engine.Cache, []},
+      {Worker.Adapters.Runtime.Wasm.Engine, []},
       {Worker.Adapters.ResourceCache, []}
     ]
   end

@@ -40,13 +40,13 @@ defmodule Worker.Domain.ProvisionResource do
   - `{:error, err}` if any error is encountered
   """
   @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any}
-  def provision(%{name: name, module: ns} = f) do
-    Logger.info("API: Provisioning runtime for #{name} in module #{ns}")
+  def provision(%{name: name, module: mod} = f) do
+    Logger.info("API: Provisioning #{mod}/#{name} execution resource")
 
-    case ResourceCache.get(name, ns) do
+    case ResourceCache.get(name, mod) do
       :resource_not_found ->
         Logger.warn("Resource not found in cache")
-        Provisioner.provision(f) |> cache_resource(name, ns)
+        Provisioner.provision(f) |> cache_resource(name, mod)
 
       resource ->
         Logger.info("Resource found in cache")

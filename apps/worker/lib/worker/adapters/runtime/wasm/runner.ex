@@ -24,13 +24,17 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
   require Logger
 
   @impl true
-  def run_function(%{name: name, module: ns}, args, %ExecutionResource{resource: module}) do
-    Logger.info("Wasm: Running #{ns}/#{name} with args #{inspect(args)}")
-
+  def run_function(
+        %{name: name, module: mod},
+        args,
+        %ExecutionResource{
+          resource: {store, wasm_module}
+        }
+      ) do
+    Logger.info("Wasm: Running #{mod}/#{name} with args #{inspect(args)}")
     string_args = Jason.encode!(args)
 
     engine = Wasm.Engine.get_handle()
-    Wasm.Nif.run_function(engine.resource, module.resource, string_args)
 
     receive do
       {:ok, payload} ->
