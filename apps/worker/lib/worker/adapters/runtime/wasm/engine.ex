@@ -36,7 +36,8 @@ defmodule Worker.Adapters.Runtime.Wasm.Engine do
   @doc """
   Returns the Engine handle stored in the Agent.
   """
-  def get_handle() do
+  @spec get_handle :: Wasmex.Engine.t()
+  def get_handle do
     Agent.get(__MODULE__, & &1)
   end
 

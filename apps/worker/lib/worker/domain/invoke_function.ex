@@ -25,19 +25,18 @@ defmodule Worker.Domain.InvokeFunction do
   require Elixir.Logger
 
   @doc """
-    Invokes the given function if an associated runtime exists, using the RuntimeCache and Runtime callbacks.
+    Invokes the given function if an associated execution resource exists, using the ResourceCache and Runtime callbacks.
 
     ## Parameters
-      - the list of available runtimes to use
       - %{...}: struct with all the fields required by Data.FunctionStruct
       - args: arguments passed to the function
 
     ## Returns
-      - {:ok, result} if a runtime exists and the function runs successfully;
-      - {:error, {:noruntime, err}} if no runtime is found;
-      - {:error, err} if a runtime is found, but an error is encountered when running the function.
+      - {:ok, result} if a resource exists and the function runs successfully;
+      - {:error, :code_not_found} if no resource is found and it cannot create one;
+      - {:error, err} if a resource is found, but an error is encountered when running the function.
   """
-  @spec invoke(map(), map()) :: {:ok, any} | {:error, any}
+  @spec invoke(map(), map()) :: {:ok, any} | {:error, :code_not_found} | {:error, any}
   def invoke(_, args \\ %{})
 
   def invoke(%{__struct__: _s} = f, args), do: invoke(Map.from_struct(f), args)
