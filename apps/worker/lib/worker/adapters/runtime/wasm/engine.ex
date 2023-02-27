@@ -14,98 +14,41 @@
 
 defmodule Worker.Adapters.Runtime.Wasm.Engine do
   @moduledoc """
-  The Engine resource for the wasmtime Engine struct.
+  The Engine handle for the wasmtime Engine struct.
+  It is stored in an Agent so that it can be accessed from different processes.
   """
-  alias Worker.Adapters.Runtime.Wasm.Nif
+  use Agent
 
-  @engine_key :engine_handle_key
-  @ets_server :wasmtime_engine_server
-  @ets_table :wasmtime_engine_cache
+  @doc """
+  Starts the Agent, which will create the Engine and store it in its state.
+  The Agent is registered under its module name so that it can be easily accessed from other modules.
 
-  defstruct [
-    # The actual NIF Resource.
-    resource: nil,
-    # Normally the compiler will happily do stuff like inlining the
-    # resource in attributes. This will convert the resource into an
-    # empty binary with no warning. This will make that harder to
-    # accidentaly do.
-    reference: nil
-  ]
-
-  @type t :: %__MODULE__{
-          resource: binary(),
-          reference: reference()
-        }
-
-  def wrap_resource(resource) do
-    %__MODULE__{
-      resource: resource,
-      reference: make_ref()
-    }
+  There should be only one Engine per worker deployment.
+  """
+  def start_link(_opts) do
+    # These option could be passed as opts to start_link to customize the engine.
+    fuel = false
+    opt_level = :speed_and_size
+    backtrace = false
+    Agent.start_link(fn -> start_engine(fuel, opt_level, backtrace) end, name: __MODULE__)
   end
 
   @doc """
-  Retrieves the handle of the Wasmtime Engine.
-  It performs a lazy initialization of the engine, if not found in the cache it creates a new one and stores it.
+  Returns the Engine handle stored in the Agent.
   """
-  @spec get_handle() :: __MODULE__.t()
+  @spec get_handle :: Wasmex.Engine.t()
   def get_handle do
-    case :ets.lookup(@ets_table, @engine_key) do
-      [{_, handle}] -> handle
-      _ -> start_engine()
-    end
+    Agent.get(__MODULE__, & &1)
   end
 
-  @spec start_engine() :: __MODULE__.t()
-  defp start_engine do
-    {:ok, resource} = Nif.init()
-    engine = wrap_resource(resource)
-    GenServer.call(@ets_server, {:insert, @engine_key, engine})
+  defp start_engine(fuel, opt_level, backtrace) do
+    config =
+      %Wasmex.EngineConfig{}
+      |> Wasmex.EngineConfig.consume_fuel(fuel)
+      |> Wasmex.EngineConfig.cranelift_opt_level(opt_level)
+      |> Wasmex.EngineConfig.wasm_backtrace_details(backtrace)
+
+    {:ok, engine} = Wasmex.Engine.new(config)
     engine
-  end
-end
-
-defimpl Inspect, for: Worker.Adapters.Runtime.Wasm.Engine do
-  @moduledoc """
-  Implements the Inspect protocol for the Wasmtime Engine.
-  """
-  import Inspect.Algebra
-
-  def inspect(dict, opts) do
-    concat(["#Wasm.Engine<", to_doc(dict.reference, opts), ">"])
-  end
-end
-
-defmodule Worker.Adapters.Runtime.Wasm.Engine.Cache do
-  @moduledoc """
-  The ETS table to store the Wasmtime Engine.
-  """
-  use GenServer, restart: :permanent
-
-  require Logger
-
-  def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: :wasmtime_engine_server)
-  end
-
-  @impl true
-  def init(_args) do
-    table = :ets.new(:wasmtime_engine_cache, [:set, :named_table, :protected])
-    Logger.info("Wasm Engine Cache: started")
-    {:ok, table}
-  end
-
-  @impl true
-  def handle_call({:insert, key, engine}, _from, table) do
-    :ets.insert(table, {key, engine})
-    Logger.info("Wasm Engine Cache: engine handle created")
-    {:reply, :ok, table}
-  end
-
-  @impl true
-  def handle_call({:delete, key}, _from, table) do
-    :ets.delete(table, key)
-    Logger.info("Wasm Engine Cache: engine handle deleted")
-    {:reply, :ok, table}
   end
 end

@@ -21,31 +21,50 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   alias Data.ExecutionResource
   alias Data.FunctionStruct
   alias Worker.Adapters.Runtime.Wasm.Engine
-  alias Worker.Adapters.Runtime.Wasm.Module
 
   require Logger
 
+  @doc """
+  Compiles the given function code into a wasmtime module and returns an execution resource
+  containing the wasmtime Store and Module.
+  """
   @impl true
   @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}
   def provision(function) do
-    Logger.info("Wasm Provisioner: compiling module for function #{function.name}")
-
     function
     |> compile_module()
     |> wrap_in_execution_resource()
   end
 
-  @spec compile_module(FunctionStruct.t()) :: {:ok, Module.t()} | {:error, any()}
-  defp compile_module(function) do
-    if function.code == nil or not is_binary(function.code) do
-      {:error, :code_not_found}
-    else
-      Module.compile(Engine.get_handle(), function.code)
+  @spec compile_module(FunctionStruct.t()) ::
+          {:ok, binary()} | {:error, any()}
+  defp compile_module(%{module: mod, name: name, code: nil}) do
+    Logger.warn("Provisioner: wasm binary not provided for #{mod}/#{name}")
+    {:error, :code_not_found}
+  end
+
+  defp compile_module(%{name: name, module: mod, code: code}) when not is_binary(code) do
+    Logger.warn("Provisioner: #{mod}/#{name} wasm code provided is not a binary")
+    {:error, "invalid wasm code, not a binary"}
+  end
+
+  defp compile_module(%{name: name, module: mod, code: code}) do
+    Logger.info("Provisioner: compiling #{mod}/#{name} wasm")
+
+    case Wasmex.Engine.precompile_module(Engine.get_handle(), code) do
+      {:ok, module} ->
+        {:ok, module}
+
+      {:error, msg} = error ->
+        Logger.error("Provisioner: error compiling #{mod}/#{name}: #{inspect(msg)}")
+        error
     end
   end
 
-  @spec wrap_in_execution_resource({:ok, Module.t()} | {:error, any()}) ::
+  @spec wrap_in_execution_resource({:ok, binary()} | {:error, any()}) ::
           {:ok, ExecutionResource.t()} | {:error, any()}
-  defp wrap_in_execution_resource({:ok, module}), do: {:ok, %ExecutionResource{resource: module}}
+  defp wrap_in_execution_resource({:ok, mod}),
+    do: {:ok, %ExecutionResource{resource: mod}}
+
   defp wrap_in_execution_resource(error), do: error
 end

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule FunlessWorker.MixProject do
+defmodule Worker.MixProject do
   use Mix.Project
 
   def project do
@@ -26,11 +26,6 @@ defmodule FunlessWorker.MixProject do
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      rustler_crates: [
-        fn_wasm: [
-          mode: if(Mix.env() == :dev, do: :debug, else: :release)
-        ]
-      ],
       deps: deps(),
       aliases: aliases()
     ]
@@ -47,14 +42,17 @@ defmodule FunlessWorker.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      # From umbrella
       {:data, in_umbrella: true},
-      {:rustler, "~> 0.26.0"},
+
+      # Prod deps
       {:jason, "~> 1.3"},
       {:libcluster, "~> 3.3"},
       {:logger_file_backend, "~> 0.0.13"},
       {:telemetry, "~> 1.1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:prom_ex, git: "https://github.com/akoutmos/prom_ex.git"},
+      {:wasmex, "~> 0.8"},
 
       # Dev deps
       {:mox, "~> 1.0", only: :test}
