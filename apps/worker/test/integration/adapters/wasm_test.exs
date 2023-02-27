@@ -12,7 +12,6 @@ defmodule Integration.Adapters.WasmTest do
   describe "Wasmex Provisioner" do
     setup do
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Wasm.Provisioner)
-      Worker.Runner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Wasm.Runner)
       Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache)
 
       function = %Data.FunctionStruct{
@@ -27,7 +26,7 @@ defmodule Integration.Adapters.WasmTest do
     test "provision should return {:ok, %ExecutionResource{..}} when no errors occur", %{
       function: function
     } do
-      assert {:ok, %{resource: {_store, _module}}} = Provisioner.provision(function)
+      assert {:ok, %{resource: _module}} = Provisioner.provision(function)
     end
 
     test "provision should return {:error, :code_not_found} when function code is nil", %{
@@ -44,5 +43,8 @@ defmodule Integration.Adapters.WasmTest do
       assert {:error, msg} = Provisioner.provision(function)
       assert msg != :code_not_found
     end
+  end
+
+  describe "Wasmex Runner" do
   end
 end
