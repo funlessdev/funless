@@ -57,4 +57,12 @@ defmodule CoreWeb.FallbackController do
     |> put_status(:unprocessable_entity)
     |> json(res)
   end
+
+  def call(conn, {:error, any}) do
+    res = %{errors: %{detail: "Something went wrong: #{inspect(any)}"}}
+
+    conn
+    |> put_status(:internal_server_error)
+    |> json(res)
+  end
 end
