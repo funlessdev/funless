@@ -31,7 +31,7 @@ defmodule Integration.Adapters.WasmTest do
       function = %Data.FunctionStruct{
         name: "test-function",
         module: "test-module",
-        code: File.read!("test/fixtures/code.wasm")
+        code: File.read!("test/fixtures/not_impl.wasm")
       }
 
       {:ok, function: function}
@@ -60,5 +60,58 @@ defmodule Integration.Adapters.WasmTest do
   end
 
   describe "Wasmex Runner" do
+    setup do
+      Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Wasm.Provisioner)
+      Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache)
+      Worker.Runner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Wasm.Runner)
+
+      err_function = %Data.FunctionStruct{
+        name: "err_function",
+        module: "testmodule",
+        code: File.read!("test/fixtures/not_impl.wasm")
+      }
+
+      hello_function = %Data.FunctionStruct{
+        name: "hello_function",
+        module: "testmodule",
+        code: File.read!("test/fixtures/hello_name.wasm")
+      }
+
+      {:ok, err_function: err_function, hello_function: hello_function}
+    end
+
+    test "invalid input" do
+      function = %{name: "f", module: "m"}
+      args = %{}
+
+      resource = %Data.ExecutionResource{
+        resource: "this is not webassembly"
+      }
+
+      assert {:error, :failed} = Runner.run_function(function, args, resource)
+    end
+
+    test "run should return {:error, {:exec_error, msg}} when error occurs while execution", %{
+      err_function: err_function
+    } do
+      # Provisione the function
+      assert {:ok, %{resource: _module} = resource} = Provisioner.provision(err_function)
+
+      # Run the function
+      assert {:error, {:exec_error, _}} = Runner.run_function(err_function, %{}, resource)
+    end
+
+    test "run should return {:ok, result} when no errors occur", %{
+      hello_function: hello_function
+    } do
+      # Provisione the function
+      assert {:ok, %{resource: _module} = resource} = Provisioner.provision(hello_function)
+
+      # Run the function
+      assert {:ok, result} =
+               Runner.run_function(hello_function, %{"name" => "Team FunLess"}, resource)
+
+      assert result == %{"payload" => "Hello Team FunLess!"}
+    end
   end
 end
