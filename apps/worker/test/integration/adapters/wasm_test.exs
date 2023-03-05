@@ -19,7 +19,6 @@ defmodule Integration.Adapters.WasmTest do
 
   alias Worker.Adapters.Runtime.Wasm.Provisioner
   alias Worker.Adapters.Runtime.Wasm.Runner
-  alias Worker.Domain.Ports.ResourceCache
 
   setup :verify_on_exit!
 
@@ -77,7 +76,14 @@ defmodule Integration.Adapters.WasmTest do
         code: File.read!("test/fixtures/hello_name.wasm")
       }
 
-      {:ok, err_function: err_function, hello_function: hello_function}
+      http_function = %Data.FunctionStruct{
+        name: "http_function",
+        module: "testmodule",
+        code: File.read!("test/fixtures/rs_http.wasm")
+      }
+
+      {:ok,
+       err_function: err_function, hello_function: hello_function, http_function: http_function}
     end
 
     test "invalid input" do
@@ -112,6 +118,102 @@ defmodule Integration.Adapters.WasmTest do
                Runner.run_function(hello_function, %{"name" => "Team FunLess"}, resource)
 
       assert result == %{"payload" => "Hello Team FunLess!"}
+    end
+
+    test "run should return {:ok, result} when no errors occur in HTTP function", %{
+      http_function: http_function
+    } do
+      assert {:ok, %{resource: _module} = resource} = Provisioner.provision(http_function)
+
+      assert {:ok, get_result} =
+               Runner.run_function(
+                 http_function,
+                 %{"method" => "GET", "body" => "", "url" => "https://dummyjson.com/products/1"},
+                 resource
+               )
+
+      assert {:ok, post_result} =
+               Runner.run_function(
+                 http_function,
+                 %{
+                   "method" => "POST",
+                   "body" => "{\"title\":\"product-fl\"}",
+                   "url" => "https://dummyjson.com/products/add"
+                 },
+                 resource
+               )
+
+      assert {:ok, put_result} =
+               Runner.run_function(
+                 http_function,
+                 %{
+                   "method" => "PUT",
+                   "body" => "{\"title\":\"product-fl\"}",
+                   "url" => "https://dummyjson.com/products/1"
+                 },
+                 resource
+               )
+
+      assert {:ok, delete_result} =
+               Runner.run_function(
+                 http_function,
+                 %{
+                   "method" => "DELETE",
+                   "body" => "",
+                   "url" => "https://dummyjson.com/products/1"
+                 },
+                 resource
+               )
+
+      assert %{
+               "status" => "200",
+               "payload" => %{
+                 "brand" => "Apple",
+                 "category" => "smartphones",
+                 "id" => 1,
+                 "price" => 549,
+                 "rating" => 4.69,
+                 "stock" => 94,
+                 "title" => "iPhone 9"
+               }
+             } = get_result
+
+      assert post_result == %{
+               "status" => "200",
+               "payload" => %{
+                 "title" => "product-fl",
+                 "id" => 101
+               }
+             }
+
+      assert %{
+               "payload" => %{
+                 "brand" => "Apple",
+                 "category" => "smartphones",
+                 "id" => 1,
+                 "price" => 549,
+                 "rating" => 4.69,
+                 "stock" => 94,
+                 "title" => "product-fl"
+               },
+               "status" => "200"
+             } = put_result
+
+      assert %{
+               "payload" => %{
+                 "brand" => "Apple",
+                 "category" => "smartphones",
+                 "deletedOn" => _,
+                 "discountPercentage" => 12.96,
+                 "id" => 1,
+                 "isDeleted" => true,
+                 "price" => 549,
+                 "rating" => 4.69,
+                 "stock" => 94,
+                 "title" => "iPhone 9"
+               },
+               "status" => "200"
+             } = delete_result
     end
   end
 end
