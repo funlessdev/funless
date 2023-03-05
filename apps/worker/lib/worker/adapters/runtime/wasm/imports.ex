@@ -119,7 +119,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Imports do
 
     body = Wasmex.Memory.read_string(caller, memory, body_ptr, body_len)
 
-    Logger.debug("WASM sending HTTP request: #{poison_method} #{uri} #{poison_headers} #{body}")
+    Logger.debug("WASM sending HTTP request: #{poison_method} #{uri}")
 
     request = %HTTPoison.Request{
       method: poison_method,
