@@ -34,7 +34,34 @@ defmodule Worker.Adapters.Runtime.Wasm.Imports do
          fn context, ptr, len -> insert_response(:funless, context, agent, ptr, len) end},
       "__insert_error" =>
         {:fn, [:i32, :i32], [],
-         fn context, ptr, len -> insert_error(:funless, context, agent, ptr, len) end}
+         fn context, ptr, len -> insert_error(:funless, context, agent, ptr, len) end},
+      "__http_request" =>
+        {:fn, [:i32, :i32, :i32, :i32, :i32, :i32, :i32, :i32, :i32, :i32], [],
+         fn context,
+            response_ptr,
+            response_len_ptr,
+            status_ptr,
+            method,
+            uri_ptr,
+            uri_len,
+            header_ptr,
+            header_len,
+            body_ptr,
+            body_len ->
+           http_request(
+             :funless,
+             context,
+             %{
+               output: %{response: {response_ptr, response_len_ptr}, status: status_ptr},
+               input: %{
+                 method: method,
+                 uri: {uri_ptr, uri_len},
+                 header: {header_ptr, header_len},
+                 body: {body_ptr, body_len}
+               }
+             }
+           )
+         end}
     }
   end
 
@@ -53,6 +80,99 @@ defmodule Worker.Adapters.Runtime.Wasm.Imports do
     caller = context.caller
     Wasmex.Memory.write_binary(caller, memory, in_ptr, payload)
     nil
+  end
+
+  defp http_request(
+         _api_type,
+         context,
+         %{
+           output: %{response: {response_ptr, response_len_ptr}, status: status_ptr},
+           input: %{
+             method: method,
+             uri: {uri_ptr, uri_len},
+             header: {header_ptr, header_len},
+             body: {body_ptr, body_len}
+           }
+         }
+       ) do
+    caller = context.caller
+    memory = context.memory
+
+    poison_method =
+      case method do
+        0 -> :get
+        1 -> :post
+        2 -> :put
+        3 -> :delete
+      end
+
+    uri = Wasmex.Memory.read_string(caller, memory, uri_ptr, uri_len)
+    headers = Wasmex.Memory.read_string(caller, memory, header_ptr, header_len)
+
+    # headers are encoded client-side as a single string, with "\n" separators between couples
+    # and ":" separators between key and value, e.g.
+    # Content-Type:application/json\nAge:12345
+    poison_headers =
+      headers
+      |> String.split("\n")
+      |> Enum.map(fn s -> s |> String.split(":") |> List.to_tuple() end)
+
+    body = Wasmex.Memory.read_string(caller, memory, body_ptr, body_len)
+
+    Logger.debug("WASM sending HTTP request: #{poison_method} #{uri}")
+
+    request = %HTTPoison.Request{
+      method: poison_method,
+      url: uri,
+      body: body,
+      headers: poison_headers
+    }
+
+    case HTTPoison.request(request) do
+      {:ok, %{status_code: status_code, body: response_body}} ->
+        # write status to memory
+        Wasmex.Memory.write_binary(
+          caller,
+          memory,
+          status_ptr,
+          <<status_code::integer-unsigned-size(16)-little>>
+        )
+
+        # write body length to memory
+        Wasmex.Memory.write_binary(
+          caller,
+          memory,
+          response_len_ptr,
+          <<String.length(response_body)::integer-unsigned-size(32)-little>>
+        )
+
+        # write body to memory
+        Wasmex.Memory.write_binary(caller, memory, response_ptr, response_body)
+
+        nil
+
+      {:error, err} ->
+        # in case of an unexpected error, the status is 0 and the body is empty
+
+        Wasmex.Memory.write_binary(
+          caller,
+          memory,
+          status_ptr,
+          <<0::integer-unsigned-size(16)-little>>
+        )
+
+        Wasmex.Memory.write_binary(
+          caller,
+          memory,
+          response_len_ptr,
+          <<String.length("")::integer-unsigned-size(32)-little>>
+        )
+
+        Wasmex.Memory.write_binary(caller, memory, response_ptr, "")
+
+        Logger.error("Error in HTTP request from WASM function #{err}")
+        nil
+    end
   end
 
   # Load the guest response indicated by the location and length into the :response state field.

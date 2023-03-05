@@ -53,6 +53,7 @@ defmodule Worker.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:prom_ex, git: "https://github.com/akoutmos/prom_ex.git"},
       {:wasmex, "~> 0.8"},
+      {:httpoison, "~> 2.0"},
 
       # Dev deps
       {:mox, "~> 1.0", only: :test}
