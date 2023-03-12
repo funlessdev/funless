@@ -283,7 +283,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/single_module_result"
+                $ref: "#/components/schemas/single_subject_result"
         default:
           $ref: "#/components/responses/unexpected_error"
 
