@@ -15,9 +15,10 @@
 defmodule Core.SubjectsFixtures do
   @moduledoc """
   This module defines test helpers for creating
-  entities via the `Core.Domain.Subjects` context.
+  entities via the `Core.Domain.Subjects` and `Core.Domain.Admins` contexts.
   """
   alias Core.Domain.Subjects
+  alias Core.Domain.Admins
 
   @doc """
   Generate a subject.
@@ -32,5 +33,20 @@ defmodule Core.SubjectsFixtures do
       |> Subjects.create_subject()
 
     subject
+  end
+
+  @doc """
+  Generate a admin.
+  """
+  def admin_fixture(attrs \\ %{}) do
+    {:ok, admin} =
+      attrs
+      |> Enum.into(%{
+        name: "some name",
+        token: "some token"
+      })
+      |> Admins.create_admin()
+
+    admin
   end
 end
