@@ -29,3 +29,6 @@ alias Core.Schemas.Subject
 
 signed_token = CoreWeb.Token.sign(%{user: "guest"})
 SubjectsRepo.insert!(%Subject{name: "guest", token: signed_token})
+
+admin_token = CoreWeb.Token.sign(%{user: "admin"})
+SubjectsRepo.insert!(%Admin{name: "admin", token: signed_token})
