@@ -29,6 +29,7 @@ config :core, Core.Domain.Ports.Telemetry.Metrics, adapter: Core.Adapters.Teleme
 config :core, Core.Domain.Ports.Connectors.Manager, adapter: Core.Adapters.Connectors.Manager
 config :core, Core.Domain.Ports.DataSinks.Manager, adapter: Core.Adapters.DataSinks.Manager
 config :core, Core.Domain.Ports.SubjectCache, adapter: Core.Adapters.Subjects.Cache
+config :core, Core.Domain.Ports.AdminCache, adapter: Core.Adapters.Admins.Cache
 
 config :core,
   ecto_repos: [Core.Repo, Core.SubjectsRepo]
@@ -53,6 +54,8 @@ config :core, CoreWeb.PromEx,
   drop_metrics_groups: [],
   metrics_server: :disabled,
   grafana: :disabled
+
+config :core, Core.Seeds, path: "/tmp/funless/tokens"
 
 # --- Worker Configs ---
 config :worker, Worker.Domain.Ports.Runtime.Provisioner,

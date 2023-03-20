@@ -26,9 +26,17 @@
 
 alias Core.SubjectsRepo
 alias Core.Schemas.Subject
+alias Core.Schemas.Admin
 
 signed_token = CoreWeb.Token.sign(%{user: "guest"})
 SubjectsRepo.insert!(%Subject{name: "guest", token: signed_token})
 
 admin_token = CoreWeb.Token.sign(%{user: "admin"})
-SubjectsRepo.insert!(%Admin{name: "admin", token: signed_token})
+SubjectsRepo.insert!(%Admin{name: "admin", token: admin_token})
+
+
+file_path = :core |> Application.compile_env!(Core.Seeds) |> Keyword.fetch!(:path)
+
+with :ok <- File.mkdir_p(Path.dirname(file_path)) do
+  File.write(file_path, "Admin=#{admin_token}\nGuest=#{signed_token}")
+end

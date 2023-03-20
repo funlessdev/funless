@@ -17,8 +17,8 @@ defmodule Core.SubjectsFixtures do
   This module defines test helpers for creating
   entities via the `Core.Domain.Subjects` and `Core.Domain.Admins` contexts.
   """
-  alias Core.Domain.Subjects
   alias Core.Domain.Admins
+  alias Core.Domain.Subjects
 
   @doc """
   Generate a subject.
