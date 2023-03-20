@@ -4,7 +4,7 @@ defmodule Core.Domain.Admins do
   """
 
   import Ecto.Query, warn: false
-  alias Core.Repo
+  alias Core.SubjectsRepo, as: Repo
 
   alias Core.Schemas.Admin
 

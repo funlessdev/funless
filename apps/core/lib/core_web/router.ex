@@ -23,12 +23,20 @@ defmodule CoreWeb.Router do
     plug(CoreWeb.Plug.Authenticate)
   end
 
+  pipeline :admin do
+    plug(CoreWeb.Plug.AuthenticateAdmin)
+  end
+
   # Endpoints without authentication
   scope "/v1", CoreWeb do
     pipe_through(:api)
 
     # A simple get "/" to health check
     get("/", DefaultController, :index)
+  end
+
+  scope "/v1", CoreWeb do
+    pipe_through([:api, :admin])
 
     get("/admin/subjects", SubjectController, :index)
     post("/admin/subjects", SubjectController, :create)
