@@ -1,4 +1,4 @@
-# Copyright 2022 Giuseppe De Palma, Matteo Trentin
+# Copyright 2023 Giuseppe De Palma, Matteo Trentin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/sh
-cd -P -- "$(dirname -- "$0")"
-exec ./core eval 'Core.Release.seed(Elixir.Core.Repo, "seeds.exs");\
- Plug.Crypto.Application.start(%{}, %{});\
- Core.Release.seed(Elixir.Core.SubjectsRepo, "seeds.exs")'
+defmodule Core.SubjectsRepo.Migrations.CreateAdmins do
+  use Ecto.Migration
+
+  def change do
+    create table(:admins) do
+      add :name, :string
+      add :token, :string
+
+      timestamps()
+    end
+
+    create unique_index(:admins, [:name])
+  end
+end

@@ -14,10 +14,10 @@
 
 # The version of Alpine to use for the final image
 # This should match the version of Alpine that the `elixir:1.14-alpine` image uses
-ARG ALPINE_VERSION=3.16
+ARG ALPINE_VERSION=3.17
 ARG SECRET_KEY_BASE
 
-FROM elixir:1.13-alpine AS builder
+FROM elixir:1.14-alpine AS builder
 
 ARG MIX_ENV=prod
 
@@ -33,11 +33,6 @@ RUN apk update && \
     apk add --no-cache git build-base bash curl openssl ncurses-libs libgcc && \
     mix local.rebar --force && \
     mix local.hex --force
-
-# Get Rust
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-ENV RUSTFLAGS='--codegen target-feature=-crt-static'
 
 # This copies our app source code into the build container
 COPY . .

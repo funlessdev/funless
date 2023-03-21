@@ -54,6 +54,8 @@ config :core, CoreWeb.PromEx,
   metrics_server: :disabled,
   grafana: :disabled
 
+config :core, Core.Seeds, path: "/tmp/funless/tokens"
+
 # --- Worker Configs ---
 config :worker, Worker.Domain.Ports.Runtime.Provisioner,
   adapter: Worker.Adapters.Runtime.Wasm.Provisioner
