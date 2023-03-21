@@ -25,7 +25,14 @@ defmodule CoreWeb.Token do
   """
   @spec sign(map()) :: binary()
   def sign(data) do
-    Phoenix.Token.sign(CoreWeb.Endpoint, @signing_salt, data)
+    try do
+      Phoenix.Token.sign(CoreWeb.Endpoint, @signing_salt, data)
+    rescue
+      # if the ETS table does not exist (i.e. the application is not running), we pass the secret key itself as an argument
+      _ in ArgumentError ->
+        key_base = System.fetch_env!("SECRET_KEY_BASE")
+        Phoenix.Token.sign(key_base, @signing_salt, data)
+    end
   end
 
   @doc """

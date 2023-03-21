@@ -14,4 +14,6 @@
 
 #!/bin/sh
 cd -P -- "$(dirname -- "$0")"
-exec ./core eval 'Core.Release.seed(Elixir.Core.Repo, "seeds.exs")'
+exec ./core eval 'Core.Release.seed(Elixir.Core.Repo, "seeds.exs");\
+ Plug.Crypto.Application.start(%{}, %{});\
+ Core.Release.seed(Elixir.Core.SubjectsRepo, "seeds.exs")'
