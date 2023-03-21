@@ -17,6 +17,7 @@ defmodule CoreWeb.SubjectControllerTest do
 
   import Core.SubjectsFixtures
 
+  alias Core.Domain.Admins
   alias Core.Schemas.Subject
 
   @create_attrs %{
@@ -31,6 +32,15 @@ defmodule CoreWeb.SubjectControllerTest do
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
+
+    admin = Admins.get_admin_by_name("admin")
+
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", "Bearer #{admin.token}")
+
+    {:ok, conn: conn}
   end
 
   describe "index" do

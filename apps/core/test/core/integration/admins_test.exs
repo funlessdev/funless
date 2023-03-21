@@ -13,7 +13,7 @@
 # limitations under the License.
 
 defmodule Core.AdminsTest do
-  use Core.DataCase
+  use Core.SubjectsDataCase
 
   alias Core.Domain.Admins
 
@@ -26,7 +26,7 @@ defmodule Core.AdminsTest do
 
     test "list_admins/0 returns all admins" do
       admin = admin_fixture()
-      assert Admins.list_admins() == [admin]
+      assert [_, ^admin] = Admins.list_admins()
     end
 
     test "get_admin!/1 returns the admin with given id" do
@@ -35,11 +35,11 @@ defmodule Core.AdminsTest do
     end
 
     test "create_admin/1 with valid data creates a admin" do
-      valid_attrs = %{name: "some name", token: "some token"}
+      valid_attrs = %{name: "some_name", token: "some_token"}
 
       assert {:ok, %Admin{} = admin} = Admins.create_admin(valid_attrs)
-      assert admin.name == "some name"
-      assert admin.token == "some token"
+      assert admin.name == "some_name"
+      assert admin.token == "some_token"
     end
 
     test "create_admin/1 with invalid data returns error changeset" do
@@ -48,11 +48,11 @@ defmodule Core.AdminsTest do
 
     test "update_admin/2 with valid data updates the admin" do
       admin = admin_fixture()
-      update_attrs = %{name: "some updated name", token: "some updated token"}
+      update_attrs = %{name: "some_updated_name", token: "some_updated_token"}
 
       assert {:ok, %Admin{} = admin} = Admins.update_admin(admin, update_attrs)
-      assert admin.name == "some updated name"
-      assert admin.token == "some updated token"
+      assert admin.name == "some_updated_name"
+      assert admin.token == "some_updated_token"
     end
 
     test "update_admin/2 with invalid data returns error changeset" do

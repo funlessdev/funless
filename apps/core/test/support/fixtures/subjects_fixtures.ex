@@ -42,8 +42,8 @@ defmodule Core.SubjectsFixtures do
     {:ok, admin} =
       attrs
       |> Enum.into(%{
-        name: "some name",
-        token: "some token"
+        name: "some_name",
+        token: "some_token"
       })
       |> Admins.create_admin()
 
