@@ -45,17 +45,20 @@ defmodule Core.Domain.Invoker do
   def invoke(ivk_pars) do
     Logger.info("Invoker: invocation for #{ivk_pars.module}/#{ivk_pars.function} requested")
 
-    # could be {:error, :no_workers}
-    with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select() do
-      case invoke_without_code(worker, ivk_pars) do
-        {:error, :code_not_found} ->
-          worker
-          |> invoke_with_code(ivk_pars)
-          |> save_to_sinks(ivk_pars.module, ivk_pars.function)
+    if Functions.exists_in_mod?(ivk_pars.function, ivk_pars.module) do
+      with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select() do
+        case invoke_without_code(worker, ivk_pars) do
+          {:error, :code_not_found} ->
+            worker
+            |> invoke_with_code(ivk_pars)
+            |> save_to_sinks(ivk_pars.module, ivk_pars.function)
 
-        res ->
-          save_to_sinks(res, ivk_pars.module, ivk_pars.function)
+          res ->
+            save_to_sinks(res, ivk_pars.module, ivk_pars.function)
+        end
       end
+    else
+      {:error, :not_found}
     end
   end
 
@@ -63,13 +66,8 @@ defmodule Core.Domain.Invoker do
           {:ok, InvokeResult.t()} | {:error, :code_not_found} | invoke_errors()
   def invoke_without_code(worker, ivk) do
     Logger.debug("Invoker: invoking #{ivk.module}/#{ivk.function} without code")
-
-    if Functions.exists_in_mod?(ivk.function, ivk.module) do
-      # send invocation without code
-      Commands.send_invoke(worker, ivk.function, ivk.module, ivk.args)
-    else
-      {:error, :not_found}
-    end
+    # send invocation without code
+    Commands.send_invoke(worker, ivk.function, ivk.module, ivk.args)
   end
 
   @spec invoke_with_code(atom(), InvokeParams.t()) ::

@@ -422,13 +422,13 @@ defmodule CoreWeb.FunctionControllerTest do
     end
 
     test "renders error when function does not exist", %{conn: conn} do
-      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, 0, fn -> [:worker@localhost] end)
       conn = post(conn, Routes.function_path(conn, :invoke, "some_module", "no_function"))
       assert response(conn, 404)
     end
 
     test "renders error when module does not exist", %{conn: conn} do
-      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, 0, fn -> [:worker@localhost] end)
       conn = post(conn, Routes.function_path(conn, :invoke, "no_module", "some_function"))
       assert response(conn, 404)
     end
