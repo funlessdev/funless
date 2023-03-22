@@ -65,9 +65,13 @@ defmodule Core.InvokeTest do
       assert Invoker.invoke(pars) == {:error, {:exec_error, "some error"}}
     end
 
-    test "invoke should return {:error, :no_workers} when no workers are found" do
+    test "invoke should return {:error, :no_workers} when no workers are found", %{
+      function: function,
+      module: module
+    } do
       expected = {:error, :no_workers}
-      assert Invoker.invoke(%{"module" => "_", "function" => "test"}) == expected
+      pars = %InvokeParams{function: function.name, module: module.name}
+      assert Invoker.invoke(pars) == expected
     end
 
     test "invoke on node list with nodes other than workers should only use workers",
@@ -84,14 +88,19 @@ defmodule Core.InvokeTest do
       assert Invoker.invoke(pars) == {:ok, :worker@localhost}
     end
 
-    test "invoke on node list without workers should return {:error, no workers}" do
+    test "invoke on node list without workers should return {:error, no workers}",
+         %{
+           function: function,
+           module: module
+         } do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere] end)
 
-      assert Invoker.invoke(%{"function" => "test"}) == {:error, :no_workers}
+      pars = %InvokeParams{function: function.name, module: module.name}
+      assert Invoker.invoke(pars) == {:error, :no_workers}
     end
 
     test "invoke on a non-existent function should return {:error, :not_found}" do
-      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, 0, fn -> [:worker@localhost] end)
 
       pars = %InvokeParams{function: "no_fun", module: "some module"}
       assert Invoker.invoke(pars) == {:error, :not_found}
