@@ -13,17 +13,19 @@
 # limitations under the License.
 
 # The version of Alpine to use for the final image
-# This should match the version of Alpine that the `elixir:1.13.4-alpine` image uses
+# This should match the version of Alpine that the `elixir:1.14-alpine` image uses
 ARG ALPINE_VERSION=3.17
+ARG SECRET_KEY_BASE
+ARG COMPONENT=core
+ARG MIX_ENV=prod
 
 FROM elixir:1.14-alpine AS builder
 
-# The following are build arguments used to change variable parts of the image.
-# The name of your application/release (required)
-ARG MIX_ENV=prod
+ARG MIX_ENV
+ARG COMPONENT
 
-ENV MIX_ENV=${MIX_ENV}
-# RUSTUP_HOME=/opt/rust CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
+ENV MIX_ENV=${MIX_ENV} \
+    SECRET_KEY_BASE=${SECRET_KEY_BASE}
 
 # By convention, /opt is typically used for applications
 WORKDIR /opt/app
@@ -38,13 +40,18 @@ RUN apk update && \
 # This copies our app source code into the build container
 COPY . .
 
-RUN mix deps.get --only $MIX_ENV
-RUN mix release worker
+RUN mix deps.get --only "${MIX_ENV}"
+RUN mix compile
+RUN echo "Building FunLess ${COMPONENT} in env ${MIX_ENV}"
+RUN MIX_ENV=${MIX_ENV} mix release ${COMPONENT}
 
 # From this line onwards, we're in a new image, which will be the image used in production
 FROM alpine:${ALPINE_VERSION}
 
-ARG MIX_ENV=prod
+ARG MIX_ENV
+ARG COMPONENT
+ARG SECRET_KEY_BASE
+ARG PORT=4000
 ARG NODE_IP=""
 ARG DEPLOY_ENV=""
 
@@ -54,19 +61,30 @@ RUN apk update && \
     apk add --no-cache libstdc++ libgcc ncurses-libs
 
 ENV REPLACE_OS_VARS=true \
-    MIX_ENV=${MIX_ENV} \
+    USER=funless \
+    MIX_ENV=${MIX_ENV} \ 
+    COMPONENT=${COMPONENT}\
+    SECRET_KEY_BASE=${SECRET_KEY_BASE} \
+    PORT=${PORT} \
     NODE_IP=${NODE_IP} \
-    DEPLOY_ENV=${DEPLOY_ENV}
+    DEPLOY_ENV=${DEPLOY_ENV} \
+    PGUSER=postgres \
+    PGPASSWORD=postgres \
+    PGDATABASE=funless \
+    PGHOST=postgres \
+    PGPORT=5432
 
-WORKDIR /home/funless
-RUN adduser --disabled-password --home "$(pwd)" funless &&\
-    echo "funless ALL=(ALL:ALL) NOPASSWD: ALL" >>/etc/sudoers
 
-USER funless 
+WORKDIR "/home/${USER}/app"
 
-COPY --chown=funless --from=builder /opt/app/_build/${MIX_ENV}/rel/worker ./worker
+# Creates an unprivileged user to be used exclusively to run the Phoenix app
+RUN addgroup -g 1000 -S "${USER}" && adduser -s /bin/sh -u 1000 -G "${USER}" \
+    -h "/home/${USER}" -D "${USER}" && su "${USER}"
 
-CMD if [[ -z "$NODE_IP" ]] ; \
-    then DEPLOY_ENV=${DEPLOY_ENV} worker/bin/worker start ; \
-    else RELEASE_NODE=worker@${NODE_IP} DEPLOY_ENV=${DEPLOY_ENV} worker/bin/worker start ; \
-    fi
+# Everything from this line onwards will run in the context of the unprivileged user.
+USER "${USER}"
+
+COPY --chown="${USER}":"${USER}" --from=builder /opt/app/_build/${MIX_ENV}/rel/${COMPONENT}/ .
+
+RUN echo "Command: FunLess ${COMPONENT} in env ${MIX_ENV}"
+CMD  ["sh", "-c", "bin/run"]

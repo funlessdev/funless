@@ -17,11 +17,16 @@
 SECRET_KEY_BASE ?= $(shell mix phx.gen.secret)
 ## Compile core docker image
 build-core-image: 
-	docker build --build-arg SECRET_KEY_BASE=$(SECRET_KEY_BASE) --build-arg MIX_ENV=prod -t core -f ./Dockerfile.core .
+	docker build \
+	--build-arg SECRET_KEY_BASE=$(SECRET_KEY_BASE) \
+	--build-arg MIX_ENV="prod" \
+	--build-arg COMPONENT="core" \
+	-t core .
 
 ## Compile worker docker image
 build-worker-image: 
-	docker build -t worker -f ./Dockerfile.worker .
+	docker build --build-arg COMPONENT="worker" \
+	--build-arg MIX_ENV="prod" -t worker .
 
 ## Run credo --strict
 credo: 
@@ -35,7 +40,7 @@ dial:
 test: 
 	mix deps.get
 	docker compose -f docker-compose.yml up --detach
-	mix core.test
-	mix worker.test
-	mix core.integration_test
+	mix core.utest
+	mix worker.utest
+	mix core.itest
 	docker compose -f docker-compose.yml down
