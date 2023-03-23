@@ -14,6 +14,10 @@
 
 #!/bin/sh
 cd -P -- "$(dirname -- "$0")"
-exec ./core eval 'Core.Release.seed(Elixir.Core.Repo, "seeds.exs");\
- Plug.Crypto.Application.start(%{}, %{});\
- Core.Release.seed(Elixir.Core.SubjectsRepo, "seeds.exs")'
+echo "Starting $COMPONENT in env $MIX_ENV"
+
+if [ "$COMPONENT" = "core" ]; then
+    sh -c ./migrate && ./seed && ./run_core start
+else
+    sh -c ./run_worker start
+fi
