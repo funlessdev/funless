@@ -209,6 +209,20 @@ defmodule CoreWeb.FunctionControllerTest do
                "sinks_metadata" => %{"successful" => 1, "failed" => 1}
              } = json_response(conn, 207)["data"]
     end
+
+    test "error when module doesn't exist", %{conn: conn} do
+      conn = post(conn, Routes.function_path(conn, :create, "non_existing_module"), @create_attrs)
+      assert json_response(conn, 404)["errors"] == %{"detail" => "Not Found"}
+    end
+
+    test "error when creating already existing function", %{conn: conn} do
+      module = module_fixture()
+      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs)
+      assert json_response(conn, 201)["data"] == %{"name" => "some_name"}
+
+      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs)
+      assert json_response(conn, 409)["errors"] == %{"detail" => "Conflict"}
+    end
   end
 
   describe "update function" do

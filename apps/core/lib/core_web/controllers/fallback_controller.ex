@@ -42,6 +42,13 @@ defmodule CoreWeb.FallbackController do
     |> render(:"400")
   end
 
+  def call(conn, {:error, :conflict}) do
+    conn
+    |> put_status(:conflict)
+    |> put_view(CoreWeb.ErrorView)
+    |> render(:"409")
+  end
+
   def call(conn, {:error, :no_workers}) do
     res = %{errors: %{detail: "No worker available"}}
 
