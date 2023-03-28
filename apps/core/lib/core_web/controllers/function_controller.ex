@@ -58,20 +58,36 @@ defmodule CoreWeb.FunctionController do
       {:error, :bad_params}
     else
       with {:ok, code} <- File.read(tmp_path),
-           {:ok, module} <- Modules.get_module_by_name(module_name),
-           {:ok, %Function{} = function} <-
-             %{"name" => fn_name, "code" => code}
+           {:ok, module} <- Modules.get_module_by_name(module_name) do
+        case %{"name" => fn_name, "code" => code}
              |> Map.put_new("module_id", module.id)
              |> Functions.create_function() do
-        event_results = Events.connect_events(fn_name, module_name, events_req)
-        sinks_results = DataSink.plug_data_sinks(fn_name, module_name, sinks_req)
+          {:ok, %Function{} = function} ->
+            Logger.info(
+              "Function Controller: function #{module_name}/#{fn_name} created successfully."
+            )
 
-        {status, render_params} =
-          build_render_params(%{function: function}, event_results, sinks_results, :created)
+            event_results = Events.connect_events(fn_name, module_name, events_req)
+            sinks_results = DataSink.plug_data_sinks(fn_name, module_name, sinks_req)
 
-        conn
-        |> put_status(status)
-        |> render("show.json", render_params)
+            {status, render_params} =
+              build_render_params(%{function: function}, event_results, sinks_results, :created)
+
+            conn
+            |> put_status(status)
+            |> render("show.json", render_params)
+
+          {:error, %{errors: [function_module_index_constraint: {"has already been taken", _}]}} ->
+            Logger.error("Function Controller: #{module_name}/#{fn_name} already exists.")
+            {:error, :conflict}
+
+          e ->
+            Logger.error(
+              "Function Controller: error while creating #{module_name}/#{fn_name}: #{inspect(e)}."
+            )
+
+            e
+        end
       end
     end
   end

@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export SHELL:=/bin/bash
+export SHELLOPTS:=$(if $(SHELLOPTS),$(SHELLOPTS):)pipefail:errexit
+
+.ONESHELL:
+
 .PHONY: build-core-image build-worker-image credo dial test
 
 SECRET_KEY_BASE ?= $(shell mix phx.gen.secret)
@@ -38,9 +43,12 @@ dial:
 
  ## Run test suite, launch Postgres with docker-compose
 test: 
+	function tearDown {
+		docker compose -f docker-compose.yml down
+	}
+	trap tearDown EXIT
 	mix deps.get
 	docker compose -f docker-compose.yml up --detach
 	mix core.utest
 	mix worker.utest
 	mix core.itest
-	docker compose -f docker-compose.yml down
