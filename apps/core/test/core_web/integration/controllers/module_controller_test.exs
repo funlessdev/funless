@@ -29,6 +29,8 @@ defmodule CoreWeb.ModuleControllerTest do
   }
   @invalid_attrs %{name: nil}
 
+  @default_module "_"
+
   setup %{conn: conn} do
     :ok = Sandbox.checkout(Core.SubjectsRepo)
     user = Subjects.get_subject_by_name("guest")
@@ -112,6 +114,11 @@ defmodule CoreWeb.ModuleControllerTest do
 
       conn = get(conn, Routes.function_path(conn, :show, module.name, function.name))
       assert response(conn, 404)
+    end
+
+    test "error when deleting default module", %{conn: conn} do
+      conn = delete(conn, Routes.module_path(conn, :delete, @default_module))
+      assert response(conn, 400)
     end
   end
 
