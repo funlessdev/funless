@@ -18,6 +18,8 @@ defmodule CoreWeb.ModuleController do
   alias Core.Domain.Modules
   alias Core.Schemas.Module
 
+  @default_module "_"
+
   action_fallback(CoreWeb.FallbackController)
 
   def index(conn, _params) do
@@ -46,9 +48,15 @@ defmodule CoreWeb.ModuleController do
   end
 
   def delete(conn, %{"module_name" => name}) do
-    with {:ok, module} <- Modules.get_module_by_name(name),
-         {:ok, %Module{}} <- Modules.delete_module(module) do
-      send_resp(conn, :no_content, "")
+    if name == @default_module do
+      conn
+      |> put_status(:bad_request)
+      |> json(%{error: "Cannot delete default module"})
+    else
+      with {:ok, module} <- Modules.get_module_by_name(name),
+           {:ok, %Module{}} <- Modules.delete_module(module) do
+        send_resp(conn, :no_content, "")
+      end
     end
   end
 end
