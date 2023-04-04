@@ -57,6 +57,11 @@ defmodule CoreWeb.ModuleControllerTest do
       assert json_response(conn, 200)["data"] ==
                %{"functions" => [%{"name" => "some_name"}], "name" => module.name}
     end
+
+    test "show_functions: list request on non-existend module fails", %{conn: conn} do
+      conn = get(conn, Routes.module_path(conn, :show_functions, "non_existent_module"))
+      assert json_response(conn, 404)
+    end
   end
 
   describe "create module" do
