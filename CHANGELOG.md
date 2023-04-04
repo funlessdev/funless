@@ -14,6 +14,43 @@
   ~ limitations under the License.
 -->
 
+## v0.8.0 (2023-04-04)
+
+### Feat
+
+- **core**: save guest/admin tokens on external file
+- **core**: add admin authentication for subject endpoints
+- add admin context/schema/migration
+- **worker**: add http request import for wasm
+- **core**: add cache between subject db and auth check
+- **core**: add phx.token and auth plug
+- **core**: add subject_by_name and small changes
+- **core**: improve subject schema with regex, index on name and redact token
+- **core**: gen simple subject table and configure testing
+- **core**: add new repo for subjects database
+- **core**: add get route for health checks
+
+### Fix
+
+- **core**: 404 when list on non-existent module (#176)
+- **core**: return err when deleting default module (#152)
+- **core**: return error when fn already exists (#168)
+- **core**: check function exists then pick worker (#157)
+- **release**: handle subjectsrepo seeding in release
+- **openapi**: create subject result schema
+- **worker**: fix crash in http imports
+- **core**: add error, any match in fallback controller
+- **core**: add more checks in auth.ex
+- update license date
+
+### Refactor
+
+- **token**: fix credo warnings
+- **worker**: update runner with wasmex and imports
+- **worker**: update provisioner and fix dialyzer warnings
+- **worker**: remove rustler nif with wasmex rewrite
+- **core**: disable unused plugs
+
 ## v0.7.0 (2023-01-26)
 
 ### Feat
