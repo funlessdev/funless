@@ -12,19 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Domain.Ports.Telemetry.Metrics do
-  @moduledoc """
-  Port for requesting telemetry information about workers.
-  """
+defmodule Data.Worker.Metrics do
+  @type t :: %__MODULE__{
+          cpu: number(),
+          load_avg: %{l1: number(), l5: number(), l15: number()},
+          memory: %{free: number(), available: number(), total: number()}
+        }
+  defstruct [:cpu, :load_avg, :memory]
+end
 
-  @type worker :: atom()
-  @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
-
-  @callback resources(worker) :: {:ok, Data.Worker.Metrics} | {:error, :not_found}
-
-  @doc """
-  Function to obtain resource information on a specific worker.
-  """
-  @spec resources(worker) :: {:ok, Data.Worker.Metrics} | {:error, :not_found}
-  defdelegate resources(worker), to: @adapter
+defmodule Data.Worker do
+  @type t :: %__MODULE__{
+          name: atom(),
+          resources: Data.Worker.Metrics,
+          tag: String.t()
+        }
+  @enforce_keys [:name]
+  defstruct [:name, :resources, :tag]
 end
