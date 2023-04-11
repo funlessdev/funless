@@ -38,7 +38,7 @@ end
 
 defmodule Data.Configurations.APP.Tag do
   @type t :: %__MODULE__{
-          blocks: [APP.Block.t()],
+          blocks: [Data.Configurations.APP.Block.t()],
           followup: :default | :fail
         }
   defstruct [:blocks, followup: :fail]

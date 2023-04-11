@@ -24,7 +24,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
           | {:error, :no_matching_tag}
           | {:error, :no_function_metadata}
 
-  @spec select(Data.Configurations.APP.t(), [Data.Workers.t()], Data.FunctionStruct.t()) ::
+  @spec select(Data.Configurations.APP.t(), [Data.Worker.t()], Data.FunctionStruct.t()) ::
           {:ok, Data.Worker.t()} | {:error, :no_matching_tag} | select_errors()
   def select(
         %APP{tags: tags} = _configuration,
@@ -65,6 +65,18 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
 
   def select(_, _, _) do
     {:error, :invalid_input}
+  end
+
+  defp schedule(
+         [
+           %Block{
+             workers: :*
+           } = block
+           | rest
+         ],
+         workers
+       ) do
+    schedule([block |> Map.put(:workers, workers) | rest], workers)
   end
 
   defp schedule(

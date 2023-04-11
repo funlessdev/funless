@@ -77,11 +77,12 @@ defmodule Core.Domain.Invoker do
 
     case Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
       [f] ->
-        func = %FunctionStruct{
-          name: ivk.function,
-          module: ivk.module,
-          code: f.code
-        }
+        func =
+          struct(FunctionStruct, %{
+            name: ivk.function,
+            module: ivk.module,
+            code: f.code
+          })
 
         Commands.send_invoke_with_code(worker, func, ivk.args)
 
