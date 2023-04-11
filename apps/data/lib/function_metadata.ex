@@ -12,16 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defprotocol Core.Domain.Policies.SchedulingPolicy do
-  @moduledoc """
-    Protocol to define scheduling policies.
-    Each policy is parameterized on the type of its configuration.
-  """
-
-  @doc """
-    Should select a worker from a list of workers, given a specific configuration.
-  """
-  @spec select(t, [Data.Worker.t()], Data.FunctionStruct.t()) ::
-          {:ok, Data.Worker.t()} | {:error, any}
-  def select(configuration, workers, function)
+defmodule Data.FunctionMetadata do
+  @type t :: %__MODULE__{
+          tag: String.t(),
+          capacity: integer()
+        }
+  defstruct [:tag, :capacity]
 end

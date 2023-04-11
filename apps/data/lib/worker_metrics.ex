@@ -12,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defprotocol Core.Domain.Policies.SchedulingPolicy do
+defmodule Data.Worker.Metrics do
   @moduledoc """
-    Protocol to define scheduling policies.
-    Each policy is parameterized on the type of its configuration.
-  """
+  Struct describing metrics collected about a Worker.
 
-  @doc """
-    Should select a worker from a list of workers, given a specific configuration.
+  ## Fields
+    - cpu: percentage of cpu currently in use
+    - load_avg: load average over 1, 5 and 15 minutes
+    - memory: free, available and total RAM in the system
   """
-  @spec select(t, [Data.Worker.t()], Data.FunctionStruct.t()) ::
-          {:ok, Data.Worker.t()} | {:error, any}
-  def select(configuration, workers, function)
+  @type t :: %__MODULE__{
+          cpu: number(),
+          load_avg: %{l1: number(), l5: number(), l15: number()},
+          memory: %{free: number(), available: number(), total: number()}
+        }
+  defstruct [:cpu, :load_avg, :memory]
 end

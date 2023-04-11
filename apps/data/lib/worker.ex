@@ -12,21 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Data.Worker.Metrics do
-  @type t :: %__MODULE__{
-          cpu: number(),
-          load_avg: %{l1: number(), l5: number(), l15: number()},
-          memory: %{free: number(), available: number(), total: number()}
-        }
-  defstruct [:cpu, :load_avg, :memory]
-end
-
 defmodule Data.Worker do
+  @moduledoc """
+  Struct describing a Worker node.
+
+  ## Fields
+    - name: name of BEAM instance hosting the Worker
+    - resources: metrics collected about the Worker
+    - tag: tag of the Worker, used to group it with similar ones
+    - concurrent_functions: number of functions currently running on the Worker
+  """
   @type t :: %__MODULE__{
           name: atom(),
           resources: Data.Worker.Metrics,
-          tag: String.t()
+          tag: String.t(),
+          concurrent_functions: integer()
         }
   @enforce_keys [:name]
-  defstruct [:name, :resources, :tag]
+  defstruct [:name, :resources, :tag, :concurrent_functions]
 end
