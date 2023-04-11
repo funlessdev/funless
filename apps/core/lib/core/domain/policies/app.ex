@@ -34,22 +34,24 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
     default = tags |> Map.get("default")
     tag = tags |> Map.get(tag_name, default)
 
-    with %Tag{blocks: [_ | _] = blocks, followup: followup} <- tag do
-      case {schedule(blocks, workers), followup, default} do
-        {nil, :fail, _} ->
-          {:error, :no_valid_workers}
+    case tag do
+      %Tag{blocks: [_ | _] = blocks, followup: followup} ->
+        case {schedule(blocks, workers), followup, default} do
+          {nil, :fail, _} ->
+            {:error, :no_valid_workers}
 
-        {nil, :default, nil} ->
-          {:error, :no_valid_workers}
+          {nil, :default, nil} ->
+            {:error, :no_valid_workers}
 
-        {nil, :default, %Tag{blocks: [_ | _] = default_blocks}} ->
-          schedule(default_blocks, workers)
+          {nil, :default, %Tag{blocks: [_ | _] = default_blocks}} ->
+            schedule(default_blocks, workers)
 
-        {%Data.Worker{} = wrk, _, _} ->
-          {:ok, wrk}
-      end
-    else
-      nil -> {:error, :no_matching_tag}
+          {%Data.Worker{} = wrk, _, _} ->
+            {:ok, wrk}
+        end
+
+      nil ->
+        {:error, :no_matching_tag}
     end
   end
 
@@ -86,15 +88,15 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
       |> MapSet.intersection(MapSet.new(workers))
       |> MapSet.to_list()
       |> Enum.map(fn {_, w} -> w end)
-      |> Enum.filter(fn %Data.Worker{concurrent_functions: c} ->
-        invalidate_invocations == :infinity or c < invalidate_invocations
-      end)
       |> Enum.filter(fn %Data.Worker{
+                          concurrent_functions: c,
                           resources: %Data.Worker.Metrics{
                             memory: %{available: available, total: total}
                           }
                         } ->
-        (total - available) / total * 100 < invalidate_capacity
+        (invalidate_invocations == :infinity or c < invalidate_invocations) and
+          (invalidate_capacity == :infinity or
+             (total - available) / total * 100 < invalidate_capacity)
       end)
 
     case {filtered_workers, strategy} do
