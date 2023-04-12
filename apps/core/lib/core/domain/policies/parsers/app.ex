@@ -85,12 +85,7 @@ defmodule Core.Domain.Policies.Parsers.APP do
     {parsed, errors} =
       yaml
       |> Enum.map(fn tag -> tag |> Map.to_list() |> parse_tag end)
-      |> Enum.split_with(fn {_, out} ->
-        case out do
-          {:ok, _} -> true
-          {:error, _} -> false
-        end
-      end)
+      |> Enum.split_with(&match?({:ok, _}, &1))
 
     case errors do
       [] -> %Data.Configurations.APP{tags: parsed |> Enum.into(%{})}

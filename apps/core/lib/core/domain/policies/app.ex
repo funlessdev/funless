@@ -24,7 +24,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
           | {:error, :no_matching_tag}
           | {:error, :no_function_metadata}
 
-  @spec select(Data.Configurations.APP.t(), [Data.Worker.t()], Data.FunctionStruct.t()) ::
+  @spec select(APP.t(), [Data.Worker.t()], Data.FunctionStruct.t()) ::
           {:ok, Data.Worker.t()} | {:error, :no_matching_tag} | select_errors()
   def select(
         %APP{tags: tags} = _configuration,
@@ -122,10 +122,14 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
         wrk |> Enum.random()
 
       {[_ | _] = wrk, :platform} ->
-        wrk
-        |> Enum.max_by(fn %Data.Worker{resources: %{memory: %{available: available}}} ->
-          available
-        end)
+        {:ok, selected} =
+          Core.Domain.Policies.SchedulingPolicy.select(
+            %Data.Configurations.Empty{},
+            wrk,
+            struct(Data.FunctionStruct, %{name: nil, module: nil})
+          )
+
+        selected
     end
   end
 
