@@ -12,32 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- producer:
+- t:
   - workers:
-    - worker1
-    - worker2
-    strategy: random
-    affinity:
-      - "consumer"
-      - "!heavy"
-
-- consumer:
-  - workers:
-    - worker1
-    - worker2
-    strategy: random
-    affinity:
-      - "producer"
-      - "!heavy"
-  - workers:
-    - worker1
-    - worker2
-    strategy: random
-    affinity:
-      - "!heavy"
-
-- heavy:
-  - workers:
-    - worker1
-    - worker2
-    strategy: random
+    invalidate:
+      capacity_used: 50%
+      max_concurrent_invocations: 3
