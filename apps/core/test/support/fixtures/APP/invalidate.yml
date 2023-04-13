@@ -1,0 +1,7 @@
+- t:
+  - workers:
+    - w1
+    - w2
+    invalidate:
+      capacity_used: 50%
+      max_concurrent_invocations: 3

@@ -1,0 +1,29 @@
+- producer:
+  - workers:
+    - worker1
+    - worker2
+    strategy: random
+    affinity:
+      - "consumer"
+      - "!heavy"
+
+- consumer:
+  - workers:
+    - worker1
+    - worker2
+    strategy: random
+    affinity:
+      - "producer"
+      - "!heavy"
+  - workers:
+    - worker1
+    - worker2
+    strategy: random
+    affinity:
+      - "!heavy"
+
+- heavy:
+  - workers:
+    - worker1
+    - worker2
+    strategy: random
