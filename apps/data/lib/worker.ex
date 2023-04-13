@@ -18,16 +18,18 @@ defmodule Data.Worker do
 
   ## Fields
     - name: name of BEAM instance hosting the Worker
+    - long_name: string representing a symbolic name for the worker; can be unrelated to the :name attribute
     - resources: metrics collected about the Worker
     - tag: tag of the Worker, used to group it with similar ones
     - concurrent_functions: number of functions currently running on the Worker
   """
   @type t :: %__MODULE__{
           name: atom(),
+          long_name: String.t(),
           resources: Data.Worker.Metrics,
           tag: String.t(),
           concurrent_functions: integer()
         }
   @enforce_keys [:name]
-  defstruct [:name, :resources, :tag, :concurrent_functions]
+  defstruct [:name, :long_name, :resources, :tag, :concurrent_functions]
 end

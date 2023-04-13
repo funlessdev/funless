@@ -25,7 +25,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
           | {:error, :no_function_metadata}
 
   @spec select(APP.t(), [Data.Worker.t()], Data.FunctionStruct.t()) ::
-          {:ok, Data.Worker.t()} | {:error, :no_matching_tag} | select_errors()
+          {:ok, Data.Worker.t()} | select_errors()
   def select(
         %APP{tags: tags} = _configuration,
         [_ | _] = workers,
@@ -36,7 +36,9 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
 
     case tag do
       %Tag{blocks: [_ | _] = blocks, followup: followup} ->
-        case {schedule(blocks, workers), followup, default} do
+        mapped_workers = workers |> Map.new(fn %Data.Worker{long_name: n} = w -> {n, w} end)
+
+        case {schedule(blocks, mapped_workers), followup, default} do
           {nil, :fail, _} ->
             {:error, :no_valid_workers}
 
@@ -44,7 +46,13 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
             {:error, :no_valid_workers}
 
           {nil, :default, %Tag{blocks: [_ | _] = default_blocks}} ->
-            schedule(default_blocks, workers)
+            wrk = schedule(default_blocks, mapped_workers)
+
+            if wrk == nil do
+              {:error, :no_valid_workers}
+            else
+              {:ok, wrk}
+            end
 
           {%Data.Worker{} = wrk, _, _} ->
             {:ok, wrk}
@@ -70,13 +78,14 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
   defp schedule(
          [
            %Block{
-             workers: :*
+             workers: "*"
            } = block
            | rest
          ],
          workers
        ) do
-    schedule([block |> Map.put(:workers, workers) | rest], workers)
+    new_block = block |> Map.put(:workers, workers |> Map.keys())
+    schedule([new_block | rest], workers)
   end
 
   defp schedule(
@@ -95,11 +104,12 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
        ) do
     filtered_workers =
       block_workers
-      |> Enum.with_index(fn w, i -> {i, w} end)
-      |> MapSet.new()
-      |> MapSet.intersection(MapSet.new(workers))
-      |> MapSet.to_list()
-      |> Enum.map(fn {_, w} -> w end)
+      |> Enum.flat_map(fn w ->
+        case Map.get(workers, w) do
+          nil -> []
+          wrk -> [wrk]
+        end
+      end)
       |> Enum.filter(fn %Data.Worker{
                           concurrent_functions: c,
                           resources: %Data.Worker.Metrics{
