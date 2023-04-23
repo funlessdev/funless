@@ -29,7 +29,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
   def select(
         %APP{tags: tags} = _configuration,
         [_ | _] = workers,
-        %Data.FunctionStruct{metadata: %{tag: tag_name, capacity: _function_capacity}}
+        %Data.FunctionStruct{metadata: %{tag: tag_name, capacity: _function_capacity}} = function
       ) do
     default = tags |> Map.get("default")
     tag = tags |> Map.get(tag_name, default)
@@ -38,7 +38,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
       %Tag{blocks: [_ | _] = blocks, followup: followup} ->
         mapped_workers = workers |> Map.new(fn %Data.Worker{long_name: n} = w -> {n, w} end)
 
-        case {schedule(blocks, mapped_workers), followup, default} do
+        case {schedule(blocks, mapped_workers, function), followup, default} do
           {nil, :fail, _} ->
             {:error, :no_valid_workers}
 
@@ -46,7 +46,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
             {:error, :no_valid_workers}
 
           {nil, :default, %Tag{blocks: [_ | _] = default_blocks}} ->
-            wrk = schedule(default_blocks, mapped_workers)
+            wrk = schedule(default_blocks, mapped_workers, function)
 
             if wrk == nil do
               {:error, :no_valid_workers}
@@ -75,33 +75,37 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
     {:error, :invalid_input}
   end
 
-  defp schedule(
-         [
-           %Block{
-             workers: "*"
-           } = block
-           | rest
-         ],
-         workers
-       ) do
+  @spec schedule([Block.t()], %{String.t() => Data.Worker.t()}, Data.FunctionStruct.t()) ::
+          Data.Worker.t() | nil
+  def schedule(
+        [
+          %Block{
+            workers: "*"
+          } = block
+          | rest
+        ],
+        workers,
+        function
+      ) do
     new_block = block |> Map.put(:workers, workers |> Map.keys())
-    schedule([new_block | rest], workers)
+    schedule([new_block | rest], workers, function)
   end
 
-  defp schedule(
-         [
-           %Block{
-             workers: block_workers,
-             strategy: strategy,
-             invalidate: %{
-               capacity_used: invalidate_capacity,
-               max_concurrent_invocations: invalidate_invocations
-             }
-           }
-           | rest
-         ],
-         workers
-       ) do
+  def schedule(
+        [
+          %Block{
+            workers: block_workers,
+            strategy: strategy,
+            invalidate: %{
+              capacity_used: invalidate_capacity,
+              max_concurrent_invocations: invalidate_invocations
+            }
+          }
+          | rest
+        ],
+        workers,
+        function
+      ) do
     filtered_workers =
       block_workers
       |> Enum.flat_map(fn w ->
@@ -123,7 +127,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
 
     case {filtered_workers, strategy} do
       {[], _} ->
-        schedule(rest, workers)
+        schedule(rest, workers, function)
 
       {[h | _], :"best-first"} ->
         h
@@ -136,14 +140,14 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
           Core.Domain.Policies.SchedulingPolicy.select(
             %Data.Configurations.Empty{},
             wrk,
-            struct(Data.FunctionStruct, %{name: nil, module: nil})
+            function
           )
 
         selected
     end
   end
 
-  defp schedule([], _) do
+  def schedule([], _, _) do
     nil
   end
 end
