@@ -34,29 +34,115 @@ defmodule Core.Unit.Policies.Parsers.AppParserTest do
   alias Data.Configurations.APP.Block
   alias Data.Configurations.APP.Tag
 
-  import(Mox, only: [verify_on_exit!: 1])
-
-  setup :verify_on_exit!
-
   describe "Parser" do
-    test "parse should return {:error, :no_blocks} if a tag without blocks is given" do
+    test "parse should contain {:error, :no_block_workers} if a tag without blocks is given" do
+      script = File.read!("test/support/fixtures/APP/no_workers.yml")
+
+      assert Parsers.APP.parse(script) ==
+               {:error, %{"t" => {:error, [{:error, :no_block_workers}]}}}
+    end
+
+    test "parse should contain {:error, :no_blocks} if a tag without blocks is given" do
       script = File.read!("test/support/fixtures/APP/no_blocks.yml")
+
+      assert Parsers.APP.parse(script) == {:error, %{"t2" => {:error, :no_blocks}}}
     end
 
-    test "parse should return {:error, :unknown_followup} if a tag includes a followup other than 'fail' or 'default'" do
+    test "parse should contain {:error, :unknown_followup} if a tag includes a followup other than 'fail' or 'default'" do
       script = File.read!("test/support/fixtures/APP/unknown_followup.yml")
+
+      assert Parsers.APP.parse(script) == {:error, %{"t" => {:error, :unknown_followup}}}
     end
 
-    test "parse should return {:error, :unknown_construct} if a tag defines something other than blocks and followup" do
+    test "parse should contain {:error, :unknown_construct} if a tag defines something other than blocks and followup" do
       script = File.read!("test/support/fixtures/APP/unknown_construct.yml")
+
+      assert Parsers.APP.parse(script) == {:error, %{"construct" => {:error, :unknown_construct}}}
     end
 
     test "parse should return a valid APP struct when given a correct script (invalidate.yml)" do
       script = File.read!("test/support/fixtures/APP/invalidate.yml")
+
+      assert {:ok,
+              %APP{
+                tags: %{
+                  "t" => %Tag{
+                    blocks: [
+                      %Block{
+                        affinity: %{affinity: [], antiaffinity: []},
+                        workers: ["w1", "w2"],
+                        invalidate: %{
+                          capacity_used: 50,
+                          max_concurrent_invocations: 3
+                        }
+                      }
+                    ],
+                    followup: :fail
+                  }
+                }
+              }} == Parsers.APP.parse(script)
     end
 
     test "parse should return a valid APP struct when given a correct script (producer_consumer.yml)" do
       script = File.read!("test/support/fixtures/APP/producer_consumer.yml")
+
+      assert {:ok,
+              %APP{
+                tags: %{
+                  "producer" => %Tag{
+                    blocks: [
+                      %Block{
+                        affinity: %{affinity: ["consumer"], antiaffinity: ["heavy"]},
+                        workers: ["worker1", "worker2"],
+                        strategy: :random,
+                        invalidate: %{
+                          capacity_used: :infinity,
+                          max_concurrent_invocations: :infinity
+                        }
+                      }
+                    ],
+                    followup: :fail
+                  },
+                  "consumer" => %Tag{
+                    blocks: [
+                      %Block{
+                        affinity: %{affinity: ["producer"], antiaffinity: ["heavy"]},
+                        workers: ["worker1", "worker2"],
+                        strategy: :random,
+                        invalidate: %{
+                          capacity_used: :infinity,
+                          max_concurrent_invocations: :infinity
+                        }
+                      },
+                      %Block{
+                        affinity: %{affinity: [], antiaffinity: ["heavy"]},
+                        workers: ["worker1", "worker2"],
+                        strategy: :random,
+                        invalidate: %{
+                          capacity_used: :infinity,
+                          max_concurrent_invocations: :infinity
+                        }
+                      }
+                    ],
+                    followup: :fail
+                  },
+                  "heavy" => %Tag{
+                    blocks: [
+                      %Block{
+                        affinity: %{affinity: [], antiaffinity: []},
+                        workers: ["worker1", "worker2"],
+                        strategy: :random,
+                        invalidate: %{
+                          capacity_used: :infinity,
+                          max_concurrent_invocations: :infinity
+                        }
+                      }
+                    ],
+                    followup: :fail
+                  }
+                }
+              }} ===
+               Parsers.APP.parse(script)
     end
   end
 end
