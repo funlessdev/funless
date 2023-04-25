@@ -38,23 +38,16 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
       %Tag{blocks: [_ | _] = blocks, followup: followup} ->
         mapped_workers = workers |> Map.new(fn %Data.Worker{long_name: n} = w -> {n, w} end)
 
-        case {schedule(blocks, mapped_workers, function), followup, default} do
-          {nil, :fail, _} ->
+        case schedule(blocks, mapped_workers, function) do
+          {:error, :no_valid_workers}
+          when followup == :fail or (followup == :default and is_nil(default)) ->
             {:error, :no_valid_workers}
 
-          {nil, :default, nil} ->
-            {:error, :no_valid_workers}
+          {:error, :no_valid_workers} when followup == :default ->
+            %Tag{blocks: [_ | _] = default_blocks} = default
+            schedule(default_blocks, mapped_workers, function)
 
-          {nil, :default, %Tag{blocks: [_ | _] = default_blocks}} ->
-            wrk = schedule(default_blocks, mapped_workers, function)
-
-            if wrk == nil do
-              {:error, :no_valid_workers}
-            else
-              {:ok, wrk}
-            end
-
-          {%Data.Worker{} = wrk, _, _} ->
+          {:ok, %Data.Worker{} = wrk} ->
             {:ok, wrk}
         end
 
@@ -76,7 +69,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
   end
 
   @spec schedule([Block.t()], %{String.t() => Data.Worker.t()}, Data.FunctionStruct.t()) ::
-          Data.Worker.t() | nil
+          {:ok, Data.Worker.t()} | {:error, :no_valid_workers}
   def schedule(
         [
           %Block{
@@ -114,40 +107,47 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
           wrk -> [wrk]
         end
       end)
-      |> Enum.filter(fn %Data.Worker{
-                          concurrent_functions: c,
-                          resources: %Data.Worker.Metrics{
-                            memory: %{available: available, total: total}
-                          }
-                        } ->
-        (invalidate_invocations == :infinity or c < invalidate_invocations) and
-          (invalidate_capacity == :infinity or
-             (total - available) / total * 100 < invalidate_capacity)
-      end)
+      |> Enum.filter(fn w -> is_valid?(w, invalidate_capacity, invalidate_invocations) end)
 
-    case {filtered_workers, strategy} do
-      {[], _} ->
+    case filtered_workers do
+      [] ->
         schedule(rest, workers, function)
 
-      {[h | _], :"best-first"} ->
-        h
+      [h | _] = wrk ->
+        case strategy do
+          :"best-first" ->
+            {:ok, h}
 
-      {[_ | _] = wrk, :random} ->
-        wrk |> Enum.random()
+          :random ->
+            {:ok, Enum.random(wrk)}
 
-      {[_ | _] = wrk, :platform} ->
-        {:ok, selected} =
-          Core.Domain.Policies.SchedulingPolicy.select(
-            %Data.Configurations.Empty{},
-            wrk,
-            function
-          )
-
-        selected
+          :platform ->
+            Core.Domain.Policies.SchedulingPolicy.select(
+              %Data.Configurations.Empty{},
+              wrk,
+              function
+            )
+        end
     end
   end
 
   def schedule([], _, _) do
-    nil
+    {:error, :no_valid_workers}
+  end
+
+  @spec is_valid?(Data.Worker.t(), number() | :infinity, number() | :infinity) :: boolean
+  def is_valid?(
+        %Data.Worker{
+          concurrent_functions: c,
+          resources: %Data.Worker.Metrics{
+            memory: %{available: available, total: total}
+          }
+        } = _w,
+        invalidate_capacity,
+        invalidate_invocations
+      ) do
+    (invalidate_invocations == :infinity or c < invalidate_invocations) and
+      (invalidate_capacity == :infinity or
+         (total - available) / total * 100 < invalidate_capacity)
   end
 end

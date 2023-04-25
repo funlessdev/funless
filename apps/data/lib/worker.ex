@@ -26,7 +26,7 @@ defmodule Data.Worker do
   @type t :: %__MODULE__{
           name: atom(),
           long_name: String.t(),
-          resources: Data.Worker.Metrics,
+          resources: Data.Worker.Metrics.t(),
           tag: String.t(),
           concurrent_functions: integer()
         }
