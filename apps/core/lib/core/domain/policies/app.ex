@@ -38,14 +38,14 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
       %Tag{blocks: [_ | _] = blocks, followup: followup} ->
         mapped_workers = workers |> Map.new(fn %Data.Worker{long_name: n} = w -> {n, w} end)
 
-        case schedule(blocks, mapped_workers, function) do
+        case schedule_on_blocks(blocks, mapped_workers, function) do
           {:error, :no_valid_workers}
           when followup == :fail or (followup == :default and is_nil(default)) ->
             {:error, :no_valid_workers}
 
           {:error, :no_valid_workers} when followup == :default ->
             %Tag{blocks: [_ | _] = default_blocks} = default
-            schedule(default_blocks, mapped_workers, function)
+            schedule_on_blocks(default_blocks, mapped_workers, function)
 
           {:ok, %Data.Worker{} = wrk} ->
             {:ok, wrk}
@@ -56,11 +56,11 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
     end
   end
 
-  def select(_, [], _) do
+  def select(%APP{tags: _}, [], _) do
     {:error, :no_workers}
   end
 
-  def select(%APP{tags: _}, _, %Data.FunctionStruct{}) do
+  def select(%APP{tags: _}, _, %Data.FunctionStruct{metadata: nil}) do
     {:error, :no_function_metadata}
   end
 
@@ -68,9 +68,9 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
     {:error, :invalid_input}
   end
 
-  @spec schedule([Block.t()], %{String.t() => Data.Worker.t()}, Data.FunctionStruct.t()) ::
+  @spec schedule_on_blocks([Block.t()], %{String.t() => Data.Worker.t()}, Data.FunctionStruct.t()) ::
           {:ok, Data.Worker.t()} | {:error, :no_valid_workers}
-  def schedule(
+  def schedule_on_blocks(
         [
           %Block{
             workers: "*"
@@ -81,10 +81,10 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
         function
       ) do
     new_block = block |> Map.put(:workers, workers |> Map.keys())
-    schedule([new_block | rest], workers, function)
+    schedule_on_blocks([new_block | rest], workers, function)
   end
 
-  def schedule(
+  def schedule_on_blocks(
         [
           %Block{
             workers: block_workers,
@@ -107,11 +107,13 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
           wrk -> [wrk]
         end
       end)
-      |> Enum.filter(fn w -> is_valid?(w, invalidate_capacity, invalidate_invocations) end)
+      |> Enum.filter(fn w ->
+        is_valid?(w, function, invalidate_capacity, invalidate_invocations)
+      end)
 
     case filtered_workers do
       [] ->
-        schedule(rest, workers, function)
+        schedule_on_blocks(rest, workers, function)
 
       [h | _] = wrk ->
         case strategy do
@@ -131,11 +133,16 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
     end
   end
 
-  def schedule([], _, _) do
+  def schedule_on_blocks([], _, _) do
     {:error, :no_valid_workers}
   end
 
-  @spec is_valid?(Data.Worker.t(), number() | :infinity, number() | :infinity) :: boolean
+  @spec is_valid?(
+          Data.Worker.t(),
+          Data.FunctionStruct.t(),
+          number() | :infinity,
+          number() | :infinity
+        ) :: boolean
   def is_valid?(
         %Data.Worker{
           concurrent_functions: c,
@@ -143,11 +150,17 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
             memory: %{available: available, total: total}
           }
         } = _w,
+        %Data.FunctionStruct{
+          metadata: %Data.FunctionMetadata{
+            capacity: function_capacity
+          }
+        },
         invalidate_capacity,
         invalidate_invocations
       ) do
-    (invalidate_invocations == :infinity or c < invalidate_invocations) and
+    function_capacity <= available and
+      (invalidate_invocations == :infinity or c < invalidate_invocations) and
       (invalidate_capacity == :infinity or
-         (total - available) / total * 100 < invalidate_capacity)
+         (total - available + function_capacity) / total * 100 <= invalidate_capacity)
   end
 end

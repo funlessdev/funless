@@ -16,18 +16,28 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.Empty do
   alias Data.Configurations.Empty
 
   @spec select(Empty.t(), [Data.Worker.t()], Data.FunctionStruct.t()) ::
-          {:ok, Data.Worker.t()} | {:error, :no_workers}
+          {:ok, Data.Worker.t()} | {:error, :no_workers} | {:error, :no_valid_workers}
   def select(
         %Empty{},
         [_ | _] = workers,
-        _
+        %Data.FunctionStruct{metadata: %Data.FunctionMetadata{capacity: c}}
       ) do
-    case workers
-         |> Enum.max_by(fn %Data.Worker{resources: %{memory: %{available: available}}} ->
-           available
-         end) do
-      nil -> {:error, :no_workers}
+    selected_worker =
+      workers
+      |> Enum.filter(fn %Data.Worker{resources: %{memory: %{available: available}}} ->
+        c <= available
+      end)
+      |> Enum.max_by(fn %Data.Worker{resources: %{memory: %{available: available}}} ->
+        available
+      end)
+
+    case selected_worker do
+      nil -> {:error, :no_valid_workers}
       %Data.Worker{} = wrk -> {:ok, wrk}
     end
+  end
+
+  def select(%Empty{}, [], _) do
+    {:error, :no_workers}
   end
 end
