@@ -13,6 +13,9 @@
 # limitations under the License.
 
 defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
+  @moduledoc """
+  Implementation of the SchedulingPolicy protocol for the APP datatype.
+  """
   alias Data.Configurations.APP
   alias Data.Configurations.APP.Block
   alias Data.Configurations.APP.Tag
@@ -24,6 +27,22 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
           | {:error, :no_matching_tag}
           | {:error, :no_function_metadata}
 
+  @doc """
+  Selects a suitable worker to host the given function, according to the provided APP configuration.
+
+  ## Parameters
+  - configuration: an APP script (Data.Configurations.APP), generally obtained through parsing using the Core.Domain.Policies.Parsers.APP module.
+  - workers: a list of Data.Worker structs, each with relevant worker metrics.
+  - function: a Data.FunctionStruct struct, with the necessary function information. It must contain function metadata, specifically a tag and a capacity.
+
+  ## Returns
+  - {:ok, wrk} if a suitable worker was found, with `wrk` being the worker.
+  - {:error, :no_workers} if an empty list of workers is received.
+  - {:error, :no_valid_workers} if no suitable worker was found (but a non-empty list of workers was given in input).
+  - {:error, :no_matching_tag} if the function's tag does not exist in the given configuration, and no default tag was specified in it.
+  - {:error, :no_function_metadata} if the given FunctionStruct does not include the necessary metadata (i.e. tag, capacity).
+  - {:error, :invalid_input} if the given input was invalid in any other way (e.g. wrong types).
+  """
   @spec select(APP.t(), [Data.Worker.t()], Data.FunctionStruct.t()) ::
           {:ok, Data.Worker.t()} | select_errors()
   def select(
@@ -68,6 +87,18 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
     {:error, :invalid_input}
   end
 
+  @doc """
+  Helper function, recursively explores the blocks specified for a function's tag in an APP configuration.
+
+  ## Parameters
+  - blocks: a list of APP blocks (Data.Configurations.APP.Block), extracted from the function's tag definition in the APP configuration.
+  - workers: a map with String keys and Data.Worker values; the keys are each worker's "long_name" attribute, which are the same names used inside the APP configuration.
+  - function: a Data.FunctionStruct struct, with the necessary function information. It must contain function metadata, specifically a tag and a capacity.
+
+  ## Returns
+  - {:ok, wrk} if a suitable worker was found, with `wrk` being the worker.
+  - {:error, :no_valid_workers} if no suitable worker was found (but a non-empty list of workers was given in input).
+  """
   @spec schedule_on_blocks([Block.t()], %{String.t() => Data.Worker.t()}, Data.FunctionStruct.t()) ::
           {:ok, Data.Worker.t()} | {:error, :no_valid_workers}
   def schedule_on_blocks(
@@ -137,6 +168,21 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
     {:error, :no_valid_workers}
   end
 
+  @doc """
+  Helper function, checks if a worker is valid according to the given "invalidate" options and a certain function.
+  The basic validity check consists in ensuring that the worker has enough available memory to host the function, given its capacity.
+
+  ## Parameters
+  - w: a Data.Worker struct, with defined memory metrics and amount of concurrent functions.
+  - function: a Data.FunctionStruct struct, with the necessary function information. It must contain function metadata, specifically its capacity.
+  - invalidate_capacity: either a number or the :infinity atom, it's the maximum memory (percentage relative to the total worker memory) that can
+                        be occupied in the worker, before it is considered invalid.
+  - invalidate_invocations: either a number or the :infinity atom, it's the maximum number of concurrent functions the worker can host before being considered invalid.
+
+  ## Returns
+  - true if the worker can host the function, given the conditions
+  - false otherwise
+  """
   @spec is_valid?(
           Data.Worker.t(),
           Data.FunctionStruct.t(),

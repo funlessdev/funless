@@ -13,6 +13,13 @@
 # limitations under the License.
 
 defmodule Core.Domain.Policies.Parsers.APP do
+  @moduledoc """
+  Parser for APP configuration scripts.
+  Contains the main parse/1 function and several helper functions.
+
+  When the module is loaded, Data.Configurations.APP, Data.Configurations.APP.Block and Data.Configurations.APP.Tag
+  are loaded as well. This prevents errors when using String.to_existing_atom/1 in this module.
+  """
   @on_load :load_atoms
 
   defp load_atoms do
@@ -22,6 +29,23 @@ defmodule Core.Domain.Policies.Parsers.APP do
     :ok
   end
 
+  @doc """
+  Parses a given YAML string and builds the relevant APP configuration from it.
+
+  ## Parameters
+  - content: a String, containing the APP configuration as it was written in YAML.
+            Must be valid YAML.
+
+  ## Returns
+  - {:ok, app} if the string was parsed successfully, and the APP configuration was built.
+  - {:error, YamlElixir._} if the given content was not valid YAML.
+  - {:error, errors} if any error was encountered during the parsing.
+              The returned errors are a map, with tag names as keys, and the actual errors as values.
+              For each tag, each error can either be a single tuple (if the error was at the tag level),
+              or a list of tuples (one for each block where an error was found).
+              E.g. %{"t1" => [{:error, _}, {:error, _}], "t2" => {:error, :no_blocks}}
+
+  """
   @spec parse(String.t()) ::
           {:ok, Data.Configurations.APP.t()} | {:error, %{String.t() => {:error, any}}}
   def parse(content) do
@@ -30,6 +54,16 @@ defmodule Core.Domain.Policies.Parsers.APP do
     end
   end
 
+  @doc """
+  Helper function, performs the actual parsing of the YAML file into an APP struct.
+
+  ## Parameters
+  - yaml: parsed YAML. Should be a list, with each element encoding a single tag.
+
+  ## Returns
+  - {:error, :unknown_construct} if the given parsed YAML has an incorrect structure.
+  - See returns values for parse/1.
+  """
   @spec parse_script([map()]) ::
           {:ok, Data.Configurations.APP.t()} | {:error, %{String.t() => {:error, any}}}
   def parse_script([_ | _] = yaml) do
@@ -57,6 +91,23 @@ defmodule Core.Domain.Policies.Parsers.APP do
     {:error, :unknown_construct}
   end
 
+  @doc """
+  Helper function, parses a single tag and builds the relative APP.Tag struct.
+
+  ## Parameters
+  - [_, _]: should be a 2-element list, with shape:
+            [{tag_name, tag}, {"followup", followup}] or [{"followup", followup}, {tag_name, tag}].
+            The order of the two elements can vary, as the list is built from a Map, and the keys
+            are in lexicographic order; therefore, two different clauses are given for this function,
+            with the same behaviour.
+
+  ## Returns
+  - {tag_name, tag} if the tag was parsed successfully, with "tag" being an APP.Tag struct.
+  - {tag_name, {:error, :no_blocks}} when the given YAML has no blocks associated with the tag.
+  - {tag_name, {:error, :unknown_followup}} when the given YAML has a followup value that is neither "default" nor "fail".
+  - {tag_name, {:error, :unknown_construct}} when the given YAML is malformed or has additional keys in the tag definition.
+  - See returns values for parse/1.
+  """
   @spec parse_tag([{String.t(), any}]) ::
           {String.t(),
            {:error, :no_blocks | :unknown_construct | :unknown_followup | [{:error, any}]}
@@ -108,6 +159,20 @@ defmodule Core.Domain.Policies.Parsers.APP do
     {tag_name, {:error, :unknown_construct}}
   end
 
+  @doc """
+  Helper function, parses a single block and builds the relative APP.Block struct.
+
+  ## Parameters
+  - block: a map, with a mandatory "workers" key.
+           Can also have a "strategy" key with either "random", "best-first", or "platform" value.
+           If the "strategy" key is missing, "best-first" is assumed as value.
+           Other missing fields are filled when building the struct.
+
+  ## Returns
+  - {:ok, block} if the block was parsed successfully, with "block" being an APP.Block struct.
+  - {:error, :no_block_workers} if the "workers" key was missing in the given block.
+  - See returns values for parse/1.
+  """
   @spec parse_block(%{String.t() => any}) ::
           {:ok, Data.Configurations.APP.Block.t()} | {:error, :no_block_workers}
   def parse_block(%{"workers" => wrk, "strategy" => strategy} = block)

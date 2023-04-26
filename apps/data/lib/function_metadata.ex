@@ -13,9 +13,16 @@
 # limitations under the License.
 
 defmodule Data.FunctionMetadata do
+  @moduledoc """
+  A struct that represents the metadata associated with a function.
+
+  ## Fields
+    - tag: a string containing the function's tag. Can be anything, generally used with custom scheduling policies or metrics.
+    - capacity: the amount of memory this function requires to be allocated on a worker
+  """
   @type t :: %__MODULE__{
           tag: String.t(),
           capacity: integer()
         }
-  defstruct [:tag, :capacity]
+  defstruct tag: nil, capacity: -1
 end

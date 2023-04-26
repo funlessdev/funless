@@ -13,6 +13,10 @@
 # limitations under the License.
 
 defmodule Data.Configurations.Empty do
+  @moduledoc """
+  Represents the absence of a scheduling configuration.
+  Used in the default scheduling, as it does not require any configuration file.
+  """
   @type t :: %__MODULE__{}
   defstruct []
 end

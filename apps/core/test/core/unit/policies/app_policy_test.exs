@@ -286,7 +286,8 @@ defmodule Core.Unit.Policies.AppPolicyTest do
 
     test "select should return the same result as the default scheduling when the strategy is :platform",
          %{impl: app_impl, workers: workers, function: function, script: script} do
-      # regardless of the default scheduling implementation, the APP scheduler must use that policy when the "platform" strategy is given
+      # regardless of the default scheduling implementation,
+      # the APP scheduler must use that policy when the "platform" strategy is given
       default_impl = SchedulingPolicy.impl_for(%Data.Configurations.Empty{})
       [main_block | _] = Map.get(script.tags, "test-tag") |> Map.get(:blocks)
 
@@ -434,7 +435,8 @@ defmodule Core.Unit.Policies.AppPolicyTest do
         tags: script.tags |> Map.put("test-tag", %Tag{blocks: [additional_block]})
       }
 
-      # first check the unmodified script on the valid workers is actually working as intended (not part of the test, but nice to have in case it breaks)
+      # first check the unmodified script on the valid workers is actually working as intended
+      # (not part of the test, but nice to have in case it breaks)
       assert app_impl.select(script, workers, function) == {:ok, wrk1}
 
       # the result should be the same, whether wrk1 and wrk2 are invalid or not when using one_block_script
