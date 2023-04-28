@@ -67,6 +67,7 @@ defmodule Core.MixProject do
       {:prom_ex, git: "https://github.com/akoutmos/prom_ex.git"},
       {:emqtt, github: "emqx/emqtt", tag: "1.6.1", system_env: [{"BUILD_WITHOUT_QUIC", "1"}]},
       {:ecto_psql_extras, "~> 0.7"},
+      {:yaml_elixir, "~> 2.9.0"},
       # dev deps
       {:mox, "~> 1.0", only: :test}
     ]

@@ -12,23 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Data.FunctionStruct do
+defmodule Data.Configurations.Empty do
   @moduledoc """
-    Function struct that represents a function in the platform. It has
-    the suffix `Struct` to avoid name collision with the `Function` module.
-
-    ## Fields
-      - name: function name
-      - module: function module
-      - code: function code binary
-      - metadata: additional information about the function
+  Represents the absence of a scheduling configuration.
+  Used in the default scheduling, as it does not require any configuration file.
   """
-  @type t :: %__MODULE__{
-          module: String.t(),
-          name: String.t(),
-          code: binary(),
-          metadata: Data.FunctionMetadata.t()
-        }
-  @enforce_keys [:name, :module]
-  defstruct [:name, :module, :code, :metadata]
+  @type t :: %__MODULE__{}
+  defstruct []
 end

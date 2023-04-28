@@ -12,23 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Data.FunctionStruct do
+defmodule Data.FunctionMetadata do
   @moduledoc """
-    Function struct that represents a function in the platform. It has
-    the suffix `Struct` to avoid name collision with the `Function` module.
+  A struct that represents the metadata associated with a function.
 
-    ## Fields
-      - name: function name
-      - module: function module
-      - code: function code binary
-      - metadata: additional information about the function
+  ## Fields
+    - tag: a string containing the function's tag. Can be anything, generally used with custom scheduling policies or metrics.
+    - capacity: the amount of memory this function requires to be allocated on a worker
   """
   @type t :: %__MODULE__{
-          module: String.t(),
-          name: String.t(),
-          code: binary(),
-          metadata: Data.FunctionMetadata.t()
+          tag: String.t(),
+          capacity: integer()
         }
-  @enforce_keys [:name, :module]
-  defstruct [:name, :module, :code, :metadata]
+  defstruct tag: nil, capacity: -1
 end

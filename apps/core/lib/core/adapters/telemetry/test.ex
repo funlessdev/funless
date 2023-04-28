@@ -19,7 +19,7 @@ defmodule Core.Adapters.Telemetry.Test do
   @impl true
   def resources(_worker) do
     {:ok,
-     %{
+     %Data.Worker.Metrics{
        cpu: 1,
        load_avg: %{l1: 1, l5: 5, l15: 15},
        memory: %{free: 20, available: 10, total: 50}

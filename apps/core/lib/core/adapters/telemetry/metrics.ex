@@ -20,18 +20,15 @@ defmodule Core.Adapters.Telemetry.Metrics do
 
   alias Core.Adapters.Telemetry.MetricsServer
 
-  @type metrics :: %{
-          cpu: number(),
-          load_avg: %{l1: number(), l5: number(), l15: number()},
-          memory: %{free: number(), available: number(), total: number()}
-        }
-
   @impl true
-  @spec resources(any) :: {:ok, metrics} | {:error, :not_found}
+  @spec resources(any) :: {:ok, Data.Worker.Metrics.t()} | {:error, :not_found}
   def resources(worker) do
-    worker
-    |> retrieve_metrics
-    |> extract_resources
+    with {:ok, res} <-
+           worker
+           |> retrieve_metrics
+           |> extract_resources do
+      {:ok, struct(Data.Worker.Metrics, res)}
+    end
   end
 
   defp retrieve_metrics(worker), do: MetricsServer.get(worker)

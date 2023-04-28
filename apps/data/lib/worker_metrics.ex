@@ -12,23 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Data.FunctionStruct do
+defmodule Data.Worker.Metrics do
   @moduledoc """
-    Function struct that represents a function in the platform. It has
-    the suffix `Struct` to avoid name collision with the `Function` module.
+  Struct describing metrics collected about a Worker.
 
-    ## Fields
-      - name: function name
-      - module: function module
-      - code: function code binary
-      - metadata: additional information about the function
+  ## Fields
+    - cpu: percentage of cpu currently in use
+    - load_avg: load average over 1, 5 and 15 minutes
+    - memory: free, available and total RAM in the system
   """
   @type t :: %__MODULE__{
-          module: String.t(),
-          name: String.t(),
-          code: binary(),
-          metadata: Data.FunctionMetadata.t()
+          cpu: number(),
+          load_avg: %{l1: number(), l5: number(), l15: number()},
+          memory: %{free: number(), available: number(), total: number()}
         }
-  @enforce_keys [:name, :module]
-  defstruct [:name, :module, :code, :metadata]
+  defstruct [:cpu, :load_avg, :memory]
 end

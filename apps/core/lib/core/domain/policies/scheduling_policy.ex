@@ -12,23 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Data.FunctionStruct do
+defprotocol Core.Domain.Policies.SchedulingPolicy do
   @moduledoc """
-    Function struct that represents a function in the platform. It has
-    the suffix `Struct` to avoid name collision with the `Function` module.
-
-    ## Fields
-      - name: function name
-      - module: function module
-      - code: function code binary
-      - metadata: additional information about the function
+    Protocol to define scheduling policies.
+    Each policy is parameterized on the type of its configuration.
   """
-  @type t :: %__MODULE__{
-          module: String.t(),
-          name: String.t(),
-          code: binary(),
-          metadata: Data.FunctionMetadata.t()
-        }
-  @enforce_keys [:name, :module]
-  defstruct [:name, :module, :code, :metadata]
+
+  @doc """
+    Should select a worker from a list of workers, given a specific configuration.
+  """
+  @spec select(t, [Data.Worker.t()], Data.FunctionStruct.t()) ::
+          {:ok, Data.Worker.t()} | {:error, any}
+  def select(configuration, workers, function)
 end
