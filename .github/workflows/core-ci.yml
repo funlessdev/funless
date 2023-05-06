@@ -23,6 +23,10 @@ on:
 env:
   MIX_ENV: test
 
+defaults:
+  run:
+    working-directory: core
+
 jobs:
   lint:
     name: Lint check
@@ -106,10 +110,8 @@ jobs:
           mix do deps.get, deps.compile
 
       - name: Run Core Unit Tests
-        run: mix core.utest
+        run: mix test
 
-      - name: Run Worker Tests
-        run: mix worker.utest
 
   integration-test:
     name: Integration Tests
@@ -165,4 +167,4 @@ jobs:
           mix deps.get
 
       - name: Run Core Integration Tests
-        run: mix core.itest
+        run: mix itest
