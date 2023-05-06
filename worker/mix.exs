@@ -22,6 +22,10 @@ defmodule Worker.MixProject do
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
+      dialyzer: [
+        plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
+        plt_add_apps: [:ex_unit, :mix]
+      ],
       deps: deps(),
       aliases: aliases()
     ]
