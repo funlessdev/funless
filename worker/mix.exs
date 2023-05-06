@@ -19,10 +19,6 @@ defmodule Worker.MixProject do
     [
       app: :worker,
       version: "0.8.0",
-      build_path: "../../_build",
-      config_path: "../../config/config.exs",
-      deps_path: "../../deps",
-      lockfile: "../../mix.lock",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -42,21 +38,21 @@ defmodule Worker.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # From umbrella
-      {:data, in_umbrella: true},
-
+      {:data, path: "../data"},
       # Prod deps
       {:jason, "~> 1.3"},
       {:libcluster, "~> 3.3"},
       {:logger_file_backend, "~> 0.0.13"},
       {:telemetry, "~> 1.1.0"},
       {:telemetry_poller, "~> 1.0"},
-      {:prom_ex, git: "https://github.com/akoutmos/prom_ex.git"},
+      {:prom_ex, "~> 1.8"},
       {:wasmex, "~> 0.8"},
       {:httpoison, "~> 2.0"},
 
       # Dev deps
-      {:mox, "~> 1.0", only: :test}
+      {:mox, "~> 1.0", only: :test},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
 
