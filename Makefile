@@ -17,38 +17,57 @@ export SHELLOPTS:=$(if $(SHELLOPTS),$(SHELLOPTS):)pipefail:errexit
 
 .ONESHELL:
 
-.PHONY: build-core-image build-worker-image credo dial test
+.PHONY: build-core-image build-worker-image credo-core credo-worker dial-core dial-worker test-core test-worker test-all
 
 SECRET_KEY_BASE ?= $(shell mix phx.gen.secret)
 ## Compile core docker image
 build-core-image: 
+	cd core
 	docker build \
 	--build-arg SECRET_KEY_BASE=$(SECRET_KEY_BASE) \
 	--build-arg MIX_ENV="prod" \
-	--build-arg COMPONENT="core" \
 	-t core .
 
 ## Compile worker docker image
 build-worker-image: 
-	docker build --build-arg COMPONENT="worker" \
-	--build-arg MIX_ENV="prod" -t worker .
+	cd worker
+	docker build --build-arg --build-arg MIX_ENV="prod" -t worker .
 
 ## Run credo --strict
-credo: 
+credo-core: 
+	cd core
+	mix credo --strict
+
+credo-worker:
+	cd worker
 	mix credo --strict
 
 ## Run dialyzer
-dial:
+dial-core:
+	cd core
+	mix dialyzer
+
+dial-worker:
+	cd worker
 	mix dialyzer
 
  ## Run test suite, launch Postgres with docker-compose
-test: 
+test-core: 
+	cd core
 	function tearDown {
 		docker compose -f docker-compose.yml down
 	}
 	trap tearDown EXIT
 	mix deps.get
 	docker compose -f docker-compose.yml up --detach
-	mix core.utest
-	mix worker.utest
-	mix core.itest
+	mix test
+	mix itest
+
+test-worker:
+	cd worker
+	mix deps.get
+	mix test
+
+test-all:
+	make test-core
+	make test-worker
