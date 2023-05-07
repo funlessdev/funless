@@ -55,12 +55,6 @@ config :core, CoreWeb.Endpoint,
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
 
-# --- Worker Configs ---
-config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.ResourceCache.Mock
-config :worker, Worker.Domain.Ports.Runtime.Provisioner, adapter: Worker.Provisioner.Mock
-config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Runner.Mock
-config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Cleaner.Mock
-
 # --- Libcluster Configs ---
 config :core,
   topologies: [
@@ -69,17 +63,6 @@ config :core,
       strategy: Cluster.Strategy.Gossip,
       config: [
         port: String.to_integer(System.get_env("LIBCLUSTER_PORT") || "45892")
-      ]
-    ]
-  ]
-
-config :worker,
-  topologies: [
-    funless_test: [
-      # The selected clustering strategy. Required.
-      strategy: Cluster.Strategy.Gossip,
-      config: [
-        port: String.to_integer(System.get_env("LIBCLUSTER_PORT") || "45893")
       ]
     ]
   ]

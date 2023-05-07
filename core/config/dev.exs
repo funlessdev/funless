@@ -102,14 +102,3 @@ config :core,
       ]
     ]
   ]
-
-config :worker,
-  topologies: [
-    funless_test: [
-      # The selected clustering strategy. Required.
-      strategy: Cluster.Strategy.Gossip,
-      config: [
-        port: String.to_integer(System.get_env("LIBCLUSTER_PORT") || "45893")
-      ]
-    ]
-  ]

@@ -23,6 +23,10 @@ on:
 env:
   otp-version: 25
   elixir-version: 1.14
+  
+defaults:
+  run:
+    working-directory: core
 
 # Run on tag push or on manual dispatch. Release will not be created for manual dispatch
 jobs:

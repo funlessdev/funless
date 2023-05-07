@@ -19,17 +19,17 @@ defmodule Core.MixProject do
     [
       app: :core,
       version: "0.8.0",
-      build_path: "../../_build",
-      config_path: "../../config/config.exs",
-      deps_path: "../../deps",
-      lockfile: "../../mix.lock",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
+      dialyzer: [
+        plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
+        plt_add_apps: [:ex_unit, :mix]
+      ],
       compilers: Mix.compilers(),
       aliases: aliases(),
       deps: deps(),
-      preferred_cli_env: ["test.integration": :test]
+      preferred_cli_env: [itest: :test]
     ]
   end
 
@@ -52,7 +52,8 @@ defmodule Core.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:data, in_umbrella: true},
+      {:data, path: "../data"},
+      # prod deps
       {:phoenix, "~> 1.6.15"},
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_dashboard, "~> 0.6"},
@@ -64,12 +65,15 @@ defmodule Core.MixProject do
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:plug_cowboy, "~> 2.5.2"},
-      {:prom_ex, git: "https://github.com/akoutmos/prom_ex.git"},
+      {:prom_ex, "~> 1.8"},
       {:emqtt, github: "emqx/emqtt", tag: "1.6.1", system_env: [{"BUILD_WITHOUT_QUIC", "1"}]},
       {:ecto_psql_extras, "~> 0.7"},
       {:yaml_elixir, "~> 2.9.0"},
+      {:cowlib, "~> 2.11.0", override: true},
       # dev deps
-      {:mox, "~> 1.0", only: :test}
+      {:mox, "~> 1.0", only: :test},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -84,7 +88,11 @@ defmodule Core.MixProject do
         "run priv/repo/seeds/seeds.exs",
         "run priv/subjects_repo/seeds/seeds.exs"
       ],
-      "test.integration": ["test --only integration_test"]
+      itest: [
+        "ecto.setup --quiet",
+        "run priv/subjects_repo/seeds/seeds.exs",
+        "test --only integration_test"
+      ]
     ]
   end
 end

@@ -12,12 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/sh
-cd -P -- "$(dirname -- "$0")"
-echo "Starting $COMPONENT in env $MIX_ENV"
+import Config
 
-if [ "$COMPONENT" = "core" ]; then
-    sh -c ./migrate && ./seed && ./run_core start
-else
-    sh -c ./run_worker start
-fi
+config :libcluster, debug: false
+
+# Do not include metadata nor timestamps in development logs
+config :logger, :console, format: "[$level] $message\n"
+
+config :worker,
+  topologies: [
+    funless_test: [
+      # The selected clustering strategy. Required.
+      strategy: Cluster.Strategy.Gossip,
+      config: [
+        port: String.to_integer(System.get_env("LIBCLUSTER_PORT") || "45893")
+      ]
+    ]
+  ]

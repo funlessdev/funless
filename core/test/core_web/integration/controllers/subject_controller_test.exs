@@ -15,19 +15,16 @@
 defmodule CoreWeb.SubjectControllerTest do
   use CoreWeb.SubjectsConnCase
 
-  import Core.SubjectsFixtures
-
   alias Core.Domain.Admins
-  alias Core.Schemas.Subject
 
   @create_attrs %{
     name: "some_name",
     token: "some_token"
   }
-  @update_attrs %{
-    name: "some_updated_name",
-    token: "some_updated_token"
-  }
+  # @update_attrs %{
+  #   name: "some_updated_name",
+  #   token: "some_updated_token"
+  # }
   @invalid_attrs %{name: nil, token: nil}
 
   setup %{conn: conn} do
@@ -100,8 +97,8 @@ defmodule CoreWeb.SubjectControllerTest do
   #   end
   # end
 
-  defp create_subject(_) do
-    subject = subject_fixture()
-    %{subject: subject}
-  end
+  # defp create_subject(_) do
+  #   subject = subject_fixture()
+  #   %{subject: subject}
+  # end
 end

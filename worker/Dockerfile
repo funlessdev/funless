@@ -15,17 +15,13 @@
 # The version of Alpine to use for the final image
 # This should match the version of Alpine that the `elixir:1.14-alpine` image uses
 ARG ALPINE_VERSION=3.17
-ARG SECRET_KEY_BASE
-ARG COMPONENT=core
 ARG MIX_ENV=prod
 
 FROM elixir:1.14-alpine AS builder
 
 ARG MIX_ENV
-ARG COMPONENT
 
-ENV MIX_ENV=${MIX_ENV} \
-    SECRET_KEY_BASE=${SECRET_KEY_BASE}
+ENV MIX_ENV=${MIX_ENV}
 
 # By convention, /opt is typically used for applications
 WORKDIR /opt/app
@@ -42,16 +38,12 @@ COPY . .
 
 RUN mix deps.get --only "${MIX_ENV}"
 RUN mix compile
-RUN echo "Building FunLess ${COMPONENT} in env ${MIX_ENV}"
-RUN MIX_ENV=${MIX_ENV} mix release ${COMPONENT}
+RUN MIX_ENV=${MIX_ENV} mix release
 
 # From this line onwards, we're in a new image, which will be the image used in production
 FROM alpine:${ALPINE_VERSION}
 
 ARG MIX_ENV
-ARG COMPONENT
-ARG SECRET_KEY_BASE
-ARG PORT=4000
 ARG NODE_IP=""
 ARG DEPLOY_ENV=""
 
@@ -63,16 +55,8 @@ RUN apk update && \
 ENV REPLACE_OS_VARS=true \
     USER=funless \
     MIX_ENV=${MIX_ENV} \ 
-    COMPONENT=${COMPONENT}\
-    SECRET_KEY_BASE=${SECRET_KEY_BASE} \
-    PORT=${PORT} \
     NODE_IP=${NODE_IP} \
-    DEPLOY_ENV=${DEPLOY_ENV} \
-    PGUSER=postgres \
-    PGPASSWORD=postgres \
-    PGDATABASE=funless \
-    PGHOST=postgres \
-    PGPORT=5432
+    DEPLOY_ENV=${DEPLOY_ENV}
 
 
 WORKDIR "/home/${USER}/app"
@@ -86,5 +70,4 @@ USER "${USER}"
 
 COPY --chown="${USER}":"${USER}" --from=builder /opt/app/_build/${MIX_ENV}/rel/${COMPONENT}/ .
 
-RUN echo "Command: FunLess ${COMPONENT} in env ${MIX_ENV}"
 CMD  ["sh", "-c", "bin/run"]

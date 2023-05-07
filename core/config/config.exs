@@ -56,44 +56,6 @@ config :core, CoreWeb.PromEx,
 
 config :core, Core.Seeds, path: "/tmp/funless/tokens"
 
-# --- Worker Configs ---
-config :worker, Worker.Domain.Ports.Runtime.Provisioner,
-  adapter: Worker.Adapters.Runtime.Wasm.Provisioner
-
-config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Adapters.Runtime.Wasm.Runner
-config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Adapters.Runtime.Wasm.Cleaner
-
-config :worker, Worker.Domain.Ports.Runtime.Supervisor,
-  adapter: Worker.Adapters.Runtime.Wasm.Supervisor
-
-config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.Adapters.ResourceCache
-
-config :os_mon,
-  start_cpu_sup: true,
-  start_memsup: true,
-  start_disksup: false,
-  start_os_sup: false,
-  memsup_system_only: true
-
-config :worker, Worker.PromEx,
-  disabled: false,
-  manual_metrics_start_delay: :no_delay,
-  drop_metrics_groups: [],
-  grafana: :disabled,
-  metrics_server: [
-    port: 4021,
-    # This is an optional setting and will default to `"/metrics"`
-    path: "/metrics",
-    # This is an optional setting and will default to `:http`
-    protocol: :http,
-    # This is an optional setting and will default to `5`
-    pool_size: 5,
-    # This is an optional setting and will default to `[]`
-    cowboy_opts: [],
-    # This is an optional and will default to `:none`
-    auth_strategy: :none
-  ]
-
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
