@@ -15,16 +15,13 @@
 export SHELL:=/bin/bash
 export SHELLOPTS:=$(if $(SHELLOPTS),$(SHELLOPTS):)pipefail:errexit
 
-.ONESHELL:
-
 .PHONY: build-core-image build-worker-image credo-core credo-worker dial-core dial-worker test-core test-worker test-all
 
-SECRET_KEY_BASE ?= $(shell mix phx.gen.secret)
 ## Compile core docker image
 build-core-image: 
 	cd core
 	docker build \
-	--build-arg SECRET_KEY_BASE=$(SECRET_KEY_BASE) \
+	--build-arg SECRET_KEY_BASE=local-make-secret \
 	--build-arg MIX_ENV="prod" \
 	-t core .
 

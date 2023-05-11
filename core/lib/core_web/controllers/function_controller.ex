@@ -26,7 +26,7 @@ defmodule CoreWeb.FunctionController do
 
   def show(conn, %{"module_name" => mod_name, "function_name" => name}) do
     with {:ok, %Function{} = function} <- retrieve_fun_in_mod(name, mod_name) do
-      render(conn, "show.json", function: function)
+      render(conn, :show, function: function)
     end
   end
 
@@ -75,7 +75,7 @@ defmodule CoreWeb.FunctionController do
 
             conn
             |> put_status(status)
-            |> render("show.json", render_params)
+            |> render(:show, render_params)
 
           {:error, %{errors: [function_module_index_constraint: {"has already been taken", _}]}} ->
             Logger.error("Function Controller: #{module_name}/#{fn_name} already exists.")
@@ -124,7 +124,7 @@ defmodule CoreWeb.FunctionController do
 
         conn
         |> put_status(status)
-        |> render("show.json", render_params)
+        |> render(:show, render_params)
       end
     end
   end

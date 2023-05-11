@@ -24,7 +24,7 @@ defmodule CoreWeb.SubjectController do
 
   def index(conn, _params) do
     subjects = Subjects.list_subjects()
-    render(conn, "index.json", subjects: subjects)
+    render(conn, :index, subjects: subjects)
   end
 
   def create(conn, %{"subject" => %{"name" => name}}) do
@@ -34,20 +34,20 @@ defmodule CoreWeb.SubjectController do
            Subjects.create_subject(%{name: name, token: signed_token}) do
       conn
       |> put_status(:created)
-      |> render("show.json", subject: subject)
+      |> render(:show, subject: subject)
     end
   end
 
   def show(conn, %{"id" => id}) do
     subject = Subjects.get_subject!(id)
-    render(conn, "show.json", subject: subject)
+    render(conn, :show, subject: subject)
   end
 
   # def update(conn, %{"id" => id, "subject" => subject_params}) do
   #   subject = Subjects.get_subject!(id)
 
   #   with {:ok, %Subject{} = subject} <- Subjects.update_subject(subject, subject_params) do
-  #     render(conn, "show.json", subject: subject)
+  #     render(conn, :show, subject: subject)
   #   end
   # end
 

@@ -24,28 +24,28 @@ defmodule CoreWeb.ModuleController do
 
   def index(conn, _params) do
     modules = Modules.list_modules()
-    render(conn, "index.json", modules: modules)
+    render(conn, :index, modules: modules)
   end
 
   def create(conn, %{"module" => module_params}) do
     with {:ok, %Module{} = module} <- Modules.create_module(module_params) do
       conn
       |> put_status(:created)
-      |> render("show.json", module: module)
+      |> render(:show, module: module)
     end
   end
 
   def show_functions(conn, %{"module_name" => name}) do
     with {:ok, %Module{}} <- Modules.get_module_by_name(name) do
       functions = Modules.get_functions_in_module(name)
-      render(conn, "show_functions.json", %{module_name: name, functions: functions})
+      render(conn, :show_functions, %{module_name: name, functions: functions})
     end
   end
 
   def update(conn, %{"module_name" => name, "module" => module_params}) do
     with {:ok, module} <- Modules.get_module_by_name(name),
          {:ok, %Module{} = module} <- Modules.update_module(module, module_params) do
-      render(conn, "show.json", module: module)
+      render(conn, :show, module: module)
     end
   end
 

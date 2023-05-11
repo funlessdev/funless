@@ -27,15 +27,14 @@ defmodule CoreWeb.Endpoint do
   socket("/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]])
 
   # Serve at "/" the static files from "priv/static" directory.
+  #
   # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.
-  # NOTE: We have no static assets to serve right now, as it's only an API.
-  # plug(Plug.Static,
+  # plug Plug.Static,
   #   at: "/",
   #   from: :core,
   #   gzip: false,
-  #   only: ~w(assets fonts images favicon.ico robots.txt)
-  # )
+  #   only: CoreWeb.static_paths()
 
   plug(PromEx.Plug, prom_ex_module: CoreWeb.PromEx)
 

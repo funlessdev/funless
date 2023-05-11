@@ -39,7 +39,11 @@ config :core,
 # Configures the endpoint, we need to listen to 0.0.0.0 because it's in a container
 config :core, CoreWeb.Endpoint,
   url: [host: "0.0.0.0"],
-  render_errors: [view: CoreWeb.ErrorView, accepts: ~w(json), layout: false],
+  render_errors: [
+    formats: [json: CoreWeb.ErrorJSON],
+    layout: false
+  ],
+  pubsub_server: Core.PubSub,
   live_view: [signing_salt: "sRzweIOe"]
 
 # pubsub_server: Core.PubSub,
