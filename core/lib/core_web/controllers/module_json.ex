@@ -1,6 +1,6 @@
 defmodule CoreWeb.ModuleJSON do
   alias Core.Schemas.Module
-  alias CoreWeb.FunctionJson
+  alias CoreWeb.FunctionJSON
 
   @doc """
   Renders a list of modules.
@@ -17,7 +17,11 @@ defmodule CoreWeb.ModuleJSON do
   end
 
   def show_functions(%{module_name: name, functions: functions}) do
-    %{data: %{name: name, functions: for(function <- functions, do: FunctionJson.show(function))}}
+    funs =
+      for(function <- functions, do: FunctionJSON.show(%{function: function}))
+      |> Enum.map(fn f -> f.data end)
+
+    %{data: %{name: name, functions: funs}}
   end
 
   defp data(%Module{} = module) do

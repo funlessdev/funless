@@ -45,36 +45,36 @@ defmodule CoreWeb.ModuleControllerTest do
 
   describe "lists" do
     test "index: lists all modules", %{conn: conn} do
-      conn = get(conn, Routes.module_path(conn, :index))
+      conn = get(conn, ~p"/v1/fn")
       assert json_response(conn, 200)["data"] == []
     end
 
     test "show_functions: lists all functions in a module", %{conn: conn} do
       module = module_fixture()
       function_fixture(module.id)
-      conn = get(conn, Routes.module_path(conn, :show_functions, module.name))
+      conn = get(conn, ~p"/v1/fn/#{module.name}")
 
       assert json_response(conn, 200)["data"] ==
                %{"functions" => [%{"name" => "some_name"}], "name" => module.name}
     end
 
     test "show_functions: list request on non-existend module fails", %{conn: conn} do
-      conn = get(conn, Routes.module_path(conn, :show_functions, "non_existent_module"))
+      conn = get(conn, ~p"/v1/fn/non_existent_module")
       assert json_response(conn, 404)
     end
   end
 
   describe "create module" do
     test "renders module when data is valid", %{conn: conn} do
-      conn = post(conn, Routes.module_path(conn, :create), module: @create_attrs)
+      conn = post(conn, ~p"/v1/fn", module: @create_attrs)
       assert json_response(conn, 201)["data"] == %{"name" => @create_attrs.name}
 
-      conn = get(conn, Routes.module_path(conn, :index))
+      conn = get(conn, ~p"/v1/fn")
       assert json_response(conn, 200)["data"] == [%{"name" => "some_name"}]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.module_path(conn, :create), module: @invalid_attrs)
+      conn = post(conn, ~p"/v1/fn", module: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
@@ -83,10 +83,10 @@ defmodule CoreWeb.ModuleControllerTest do
     setup [:create_module]
 
     test "renders module when data is valid", %{conn: conn, module: %Module{name: name}} do
-      conn = put(conn, Routes.module_path(conn, :update, name), module: @update_attrs)
+      conn = put(conn, ~p"/v1/fn/#{name}", module: @update_attrs)
       assert %{"name" => "some_updated_name"} = json_response(conn, 200)["data"]
 
-      conn = get(conn, Routes.module_path(conn, :index))
+      conn = get(conn, ~p"/v1/fn")
 
       assert [
                %{
@@ -96,7 +96,7 @@ defmodule CoreWeb.ModuleControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn, module: module} do
-      conn = put(conn, Routes.module_path(conn, :update, module.name), module: @invalid_attrs)
+      conn = put(conn, ~p"/v1/fn/#{module.name}", module: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
@@ -105,24 +105,24 @@ defmodule CoreWeb.ModuleControllerTest do
     setup [:create_module]
 
     test "deletes chosen module", %{conn: conn, module: module} do
-      conn = delete(conn, Routes.module_path(conn, :delete, module.name))
+      conn = delete(conn, ~p"/v1/fn/#{module.name}")
       assert response(conn, 204)
 
-      conn = get(conn, Routes.module_path(conn, :index))
+      conn = get(conn, ~p"/v1/fn")
       assert [] == json_response(conn, 200)["data"]
     end
 
     test "deletes all associated functions when deleting a module", %{conn: conn, module: module} do
       function = function_fixture(module.id)
-      conn = delete(conn, Routes.module_path(conn, :delete, module.name))
+      conn = delete(conn, ~p"/v1/fn/#{module.name}")
       assert response(conn, 204)
 
-      conn = get(conn, Routes.function_path(conn, :show, module.name, function.name))
+      conn = get(conn, ~p"/v1/fn/#{module.name}/#{function.name}")
       assert response(conn, 404)
     end
 
     test "error when deleting default module", %{conn: conn} do
-      conn = delete(conn, Routes.module_path(conn, :delete, @default_module))
+      conn = delete(conn, ~p"/v1/fn/#{@default_module}")
       assert response(conn, 400)
     end
   end

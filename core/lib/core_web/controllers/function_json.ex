@@ -1,12 +1,12 @@
 defmodule CoreWeb.FunctionJSON do
-  alias Core.Schemas.Function
-
   # @doc """
   # Renders a list of functions.
   # """
   # def index(%{functions: functions}) do
   #   %{data: for(function <- functions, do: data(function))}
   # end
+
+  alias Core.Schemas.Function
 
   @doc """
   Renders a single function.
@@ -90,7 +90,7 @@ defmodule CoreWeb.FunctionJSON do
     }
   end
 
-  def just_function(%{function: function}) do
+  def just_function(%Function{} = function) do
     %{name: function.name}
   end
 

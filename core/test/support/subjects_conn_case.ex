@@ -44,7 +44,7 @@ defmodule CoreWeb.SubjectsConnCase do
       import Support.AssertionHelpers
       import Mox
 
-      alias CoreWeb.Router.Helpers, as: Routes
+      use CoreWeb, :verified_routes
 
       # The default endpoint for testing
       @endpoint CoreWeb.Endpoint
