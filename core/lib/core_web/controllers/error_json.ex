@@ -12,22 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule CoreWeb.ChangesetView do
-  use CoreWeb, :view
+defmodule CoreWeb.ErrorJSON do
+  # If you want to customize a particular status code,
+  # you may add your own clauses, such as:
+  #
+  # def render("500.json", _assigns) do
+  #   %{errors: %{detail: "Internal Server Error"}}
+  # end
 
-  @doc """
-  Traverses and translates changeset errors.
-
-  See `Ecto.Changeset.traverse_errors/2` and
-  `CoreWeb.ErrorHelpers.translate_error/1` for more details.
-  """
-  def translate_errors(changeset) do
-    Ecto.Changeset.traverse_errors(changeset, &translate_error/1)
-  end
-
-  def render("error.json", %{changeset: changeset}) do
-    # When encoded, the changeset returns its errors
-    # as a JSON object. So we just pass it forward.
-    %{errors: translate_errors(changeset)}
+  # By default, Phoenix returns the status message from
+  # the template name. For example, "404.json" becomes
+  # "Not Found".
+  def render(template, _assigns) do
+    %{errors: %{detail: Phoenix.Controller.status_message_from_template(template)}}
   end
 end

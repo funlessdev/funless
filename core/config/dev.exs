@@ -57,6 +57,9 @@ config :phoenix, :stacktrace_depth, 20
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
 
+# Enable dev routes for dashboard and mailbox
+config :core, dev_routes: true
+
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed
@@ -65,7 +68,6 @@ config :phoenix, :plug_init_mode, :runtime
 #
 #     mix phx.gen.cert
 #
-# Note that this task requires Erlang/OTP 20 or later.
 # Run `mix help phx.gen.cert` for more information.
 #
 # The `http:` config above can be replaced with:
@@ -79,17 +81,10 @@ config :phoenix, :plug_init_mode, :runtime
 #
 # If desired, both `http:` and `https:` keys can be
 # configured to run both http and https servers on
-# different ports.
+# different ports
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
-
-# Initialize plugs at runtime for faster development compilation
-config :phoenix, :plug_init_mode, :runtime
-
-# Set a higher stacktrace during development. Avoid configuring such
-# in production as building large stacktraces may be expensive.
-config :phoenix, :stacktrace_depth, 20
 
 # --- For libcluster ---
 config :core,

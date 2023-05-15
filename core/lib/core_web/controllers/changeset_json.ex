@@ -12,17 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule CoreWeb.ErrorHelpers do
-  @moduledoc """
-  Conveniences for translating and building error messages.
-  """
-
+defmodule CoreWeb.ChangesetJSON do
   @doc """
-  Translates an error message.
+  Renders changeset errors.
   """
-  def translate_error({msg, opts}) do
-    # Because the error messages we show in our forms and APIs
-    # are defined inside Ecto, we need to translate them dynamically.
+  def error(%{changeset: changeset}) do
+    # When encoded, the changeset returns its errors
+    # as a JSON object. So we just pass it forward.
+    %{errors: Ecto.Changeset.traverse_errors(changeset, &translate_error/1)}
+  end
+
+  defp translate_error({msg, opts}) do
+    # You can make use of gettext to translate error messages by
+    # uncommenting and adjusting the following code:
+
+    # if count = opts[:count] do
+    #   Gettext.dngettext(CoreWeb.Gettext, "errors", msg, msg, count, opts)
+    # else
+    #   Gettext.dgettext(CoreWeb.Gettext, "errors", msg, opts)
+    # end
+
     Enum.reduce(opts, msg, fn {key, value}, acc ->
       String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
     end)

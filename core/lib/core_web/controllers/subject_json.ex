@@ -12,27 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule CoreWeb.ModuleView do
-  use CoreWeb, :view
+defmodule CoreWeb.SubjectJSON do
+  alias Core.Schemas.Subject
 
-  alias CoreWeb.FunctionView
-  alias CoreWeb.ModuleView
-
-  def render("index.json", %{modules: modules}) do
-    %{data: render_many(modules, ModuleView, "module.json")}
+  @doc """
+  Renders a list of subjects.
+  """
+  def index(%{subjects: subjects}) do
+    %{data: for(subject <- subjects, do: data(subject))}
   end
 
-  def render("show.json", %{module: module}) do
-    %{data: render_one(module, ModuleView, "module.json")}
+  @doc """
+  Renders a single subject.
+  """
+  def show(%{subject: subject}) do
+    %{data: data(subject)}
   end
 
-  def render("show_functions.json", %{module_name: name, functions: functions}) do
-    %{data: %{name: name, functions: render_many(functions, FunctionView, "function.json")}}
-  end
-
-  def render("module.json", %{module: module}) do
+  defp data(%Subject{} = subject) do
     %{
-      name: module.name
+      name: subject.name,
+      token: subject.token
     }
   end
 end

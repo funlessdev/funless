@@ -54,9 +54,9 @@ defmodule Core.MixProject do
     [
       {:data, path: "../data"},
       # prod deps
-      {:phoenix, "~> 1.6.15"},
+      {:phoenix, "~> 1.7.2"},
       {:phoenix_ecto, "~> 4.4"},
-      {:phoenix_live_dashboard, "~> 0.6"},
+      {:phoenix_live_dashboard, "~> 0.7.2"},
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.3"},
@@ -64,7 +64,7 @@ defmodule Core.MixProject do
       {:logger_file_backend, "~> 0.0.13"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
-      {:plug_cowboy, "~> 2.5.2"},
+      {:plug_cowboy, "~> 2.5"},
       {:prom_ex, "~> 1.8"},
       {:emqtt, github: "emqx/emqtt", tag: "1.6.1", system_env: [{"BUILD_WITHOUT_QUIC", "1"}]},
       {:ecto_psql_extras, "~> 0.7"},

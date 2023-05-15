@@ -12,50 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule CoreWeb.FunctionView do
-  use CoreWeb, :view
-  alias CoreWeb.FunctionView
+defmodule CoreWeb.FunctionJSON do
+  # @doc """
+  # Renders a list of functions.
+  # """
+  # def index(%{functions: functions}) do
+  #   %{data: for(function <- functions, do: data(function))}
+  # end
 
+  alias Core.Schemas.Function
+
+  @doc """
+  Renders a single function.
+  """
   # If we receive only the sinks
-  def render("show.json", %{function: _function, sinks: [_ | _], events: []} = content) do
-    %{
-      data: render_one(content, FunctionView, "function_sinks.json", as: :data)
-    }
+  def show(%{function: _function, sinks: [_ | _], events: []} = content) do
+    %{data: function_sinks(content)}
   end
 
   # If we receive only the events
-  def render("show.json", %{function: _function, events: [_ | _], sinks: []} = content) do
-    %{
-      data: render_one(content, FunctionView, "function_events.json", as: :data)
-    }
+  def show(%{function: _function, events: [_ | _], sinks: []} = content) do
+    %{data: function_events(content)}
   end
 
-  # If we receive empty events and sinks
-  def render("show.json", %{function: function, events: [], sinks: []}) do
-    %{data: render_one(function, FunctionView, "function.json")}
+  # If we receive events and sinks but they are empty
+  def show(%{function: function, events: [], sinks: []}) do
+    %{data: just_function(function)}
   end
 
   # If we receive both sinks and events
-  def render("show.json", %{function: _function, events: _events, sinks: _sinks} = content) do
-    %{
-      data: render_one(content, FunctionView, "function_events_sinks.json", as: :data)
-    }
+  def show(%{function: _function, events: _events, sinks: _sinks} = content) do
+    %{data: function_events_sinks(content)}
   end
 
   # If we receive only the function
-  def render("show.json", %{function: function}) do
-    %{data: render_one(function, FunctionView, "function.json")}
+  def show(%{function: function}) do
+    %{data: just_function(function)}
   end
 
-  def render("function_sinks.json", %{
-        data: %{function: function, sinks: sinks}
-      }) do
+  def function_sinks(%{function: function, sinks: sinks}) do
     successful_sinks = sinks |> Enum.count(fn e -> e == :ok end)
     failed_sinks = length(sinks) - successful_sinks
 
     %{
       name: function.name,
-      sinks: render_many(sinks, FunctionView, "event.json", as: :result),
+      sinks: for(s <- sinks, do: event(s)),
       sinks_metadata: %{
         successful: successful_sinks,
         failed: failed_sinks,
@@ -64,13 +65,13 @@ defmodule CoreWeb.FunctionView do
     }
   end
 
-  def render("function_events.json", %{data: %{function: function, events: events}}) do
+  def function_events(%{function: function, events: events}) do
     successful_events = events |> Enum.count(fn e -> e == :ok end)
     failed_events = length(events) - successful_events
 
     %{
       name: function.name,
-      events: render_many(events, FunctionView, "event.json", as: :result),
+      events: for(e <- events, do: event(e)),
       events_metadata: %{
         successful: successful_events,
         failed: failed_events,
@@ -79,9 +80,7 @@ defmodule CoreWeb.FunctionView do
     }
   end
 
-  def render("function_events_sinks.json", %{
-        data: %{function: function, events: events, sinks: sinks}
-      }) do
+  def function_events_sinks(%{function: function, events: events, sinks: sinks}) do
     successful_events = events |> Enum.count(fn e -> e == :ok end)
     failed_events = length(events) - successful_events
 
@@ -90,8 +89,8 @@ defmodule CoreWeb.FunctionView do
 
     %{
       name: function.name,
-      events: render_many(events, FunctionView, "event.json", as: :result),
-      sinks: render_many(sinks, FunctionView, "event.json", as: :result),
+      events: for(e <- events, do: event(e)),
+      sinks: for(s <- sinks, do: event(s)),
       events_metadata: %{
         successful: successful_events,
         failed: failed_events,
@@ -105,19 +104,17 @@ defmodule CoreWeb.FunctionView do
     }
   end
 
-  def render("function.json", %{function: function}) do
-    %{
-      name: function.name
-    }
+  def just_function(%Function{} = function) do
+    %{name: function.name}
   end
 
-  def render("event.json", %{result: :ok}) do
+  def event(:ok) do
     %{
       status: "success"
     }
   end
 
-  def render("event.json", %{result: {:error, err}}) do
+  def event({:error, err}) do
     %{
       status: "error",
       message: "#{inspect(err)}"

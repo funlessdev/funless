@@ -90,37 +90,37 @@ defmodule CoreWeb.FunctionControllerTest do
   describe "create function" do
     test "renders function when data without events/sinks is valid", %{conn: conn} do
       module = module_fixture()
-      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs)
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs)
       assert %{"name" => name} = json_response(conn, 201)["data"]
 
-      conn = get(conn, Routes.function_path(conn, :show, module.name, name))
+      conn = get(conn, ~p"/v1/fn/#{module.name}/#{name}")
       assert %{"name" => "some_name"} = json_response(conn, 200)["data"]
     end
 
     test "renders function when data with events is valid", %{conn: conn} do
       module = module_fixture()
 
-      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs_events)
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs_events)
       assert %{"name" => name} = json_response(conn, 201)["data"]
 
-      conn = get(conn, Routes.function_path(conn, :show, module.name, name))
+      conn = get(conn, ~p"/v1/fn/#{module.name}/#{name}")
       assert %{"name" => "some_name"} = json_response(conn, 200)["data"]
     end
 
     test "renders function when data with sinks is valid", %{conn: conn} do
       module = module_fixture()
 
-      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs_sinks)
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs_sinks)
       assert %{"name" => name} = json_response(conn, 201)["data"]
 
-      conn = get(conn, Routes.function_path(conn, :show, module.name, name))
+      conn = get(conn, ~p"/v1/fn/#{module.name}/#{name}")
       assert %{"name" => "some_name"} = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
       module = module_fixture()
 
-      conn = post(conn, Routes.function_path(conn, :create, module.name), @invalid_attrs)
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @invalid_attrs)
 
       assert json_response(conn, 400)["errors"] != %{}
     end
@@ -136,7 +136,7 @@ defmodule CoreWeb.FunctionControllerTest do
         {:error, :some_error}
       end)
 
-      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs_events)
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs_events)
 
       assert %{
                "name" => _name,
@@ -160,7 +160,7 @@ defmodule CoreWeb.FunctionControllerTest do
         {:error, :some_error}
       end)
 
-      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs_sinks)
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs_sinks)
 
       assert %{
                "name" => _name,
@@ -191,8 +191,7 @@ defmodule CoreWeb.FunctionControllerTest do
         {:error, :some_error}
       end)
 
-      conn =
-        post(conn, Routes.function_path(conn, :create, module.name), @create_attrs_events_sinks)
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs_events_sinks)
 
       assert %{
                "name" => _name,
@@ -211,16 +210,16 @@ defmodule CoreWeb.FunctionControllerTest do
     end
 
     test "error when module doesn't exist", %{conn: conn} do
-      conn = post(conn, Routes.function_path(conn, :create, "non_existing_module"), @create_attrs)
+      conn = post(conn, ~p"/v1/fn/non_existing_module", @create_attrs)
       assert json_response(conn, 404)["errors"] == %{"detail" => "Not Found"}
     end
 
     test "error when creating already existing function", %{conn: conn} do
       module = module_fixture()
-      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs)
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs)
       assert json_response(conn, 201)["data"] == %{"name" => "some_name"}
 
-      conn = post(conn, Routes.function_path(conn, :create, module.name), @create_attrs)
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs)
       assert json_response(conn, 409)["errors"] == %{"detail" => "Conflict"}
     end
   end
@@ -233,13 +232,12 @@ defmodule CoreWeb.FunctionControllerTest do
       function: %Function{name: function_name},
       module_name: module_name
     } do
-      conn =
-        put(conn, Routes.function_path(conn, :update, module_name, function_name), @update_attrs)
+      conn = put(conn, ~p"/v1/fn/#{module_name}/#{function_name}", @update_attrs)
 
       assert %{"name" => new_name} = json_response(conn, 200)["data"]
       assert new_name == @update_attrs.name
 
-      conn = get(conn, Routes.function_path(conn, :show, module_name, new_name))
+      conn = get(conn, ~p"/v1/fn/#{module_name}/#{new_name}")
       assert %{"name" => ^new_name} = json_response(conn, 200)["data"]
     end
 
@@ -248,7 +246,7 @@ defmodule CoreWeb.FunctionControllerTest do
       function: %Function{name: name},
       module_name: module_name
     } do
-      conn = put(conn, Routes.function_path(conn, :update, module_name, name), @invalid_attrs)
+      conn = put(conn, ~p"/v1/fn/#{module_name}/#{name}", @invalid_attrs)
 
       assert json_response(conn, 400)["errors"] != %{}
     end
@@ -266,12 +264,7 @@ defmodule CoreWeb.FunctionControllerTest do
         {:error, :some_error}
       end)
 
-      conn =
-        put(
-          conn,
-          Routes.function_path(conn, :update, module_name, name),
-          @update_attrs_events
-        )
+      conn = put(conn, ~p"/v1/fn/#{module_name}/#{name}", @update_attrs_events)
 
       assert %{
                "name" => _name,
@@ -297,12 +290,7 @@ defmodule CoreWeb.FunctionControllerTest do
         {:error, :some_error}
       end)
 
-      conn =
-        put(
-          conn,
-          Routes.function_path(conn, :update, module_name, name),
-          @update_attrs_sinks
-        )
+      conn = put(conn, ~p"/v1/fn/#{module_name}/#{name}", @update_attrs_sinks)
 
       assert %{
                "name" => _name,
@@ -338,7 +326,7 @@ defmodule CoreWeb.FunctionControllerTest do
       conn =
         put(
           conn,
-          Routes.function_path(conn, :update, module_name, name),
+          ~p"/v1/fn/#{module_name}/#{name}",
           @update_attrs_events_sinks
         )
 
@@ -367,10 +355,10 @@ defmodule CoreWeb.FunctionControllerTest do
       function: %Function{name: function_name},
       module_name: module_name
     } do
-      conn = delete(conn, Routes.function_path(conn, :delete, module_name, function_name))
+      conn = delete(conn, ~p"/v1/fn/#{module_name}/#{function_name}")
       assert response(conn, 204)
 
-      conn = get(conn, Routes.function_path(conn, :show, module_name, function_name))
+      conn = get(conn, ~p"/v1/fn/#{module_name}/#{function_name}")
       assert response(conn, 404)
     end
   end
@@ -388,7 +376,7 @@ defmodule CoreWeb.FunctionControllerTest do
       Core.Commands.Mock
       |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
 
-      conn = post(conn, Routes.function_path(conn, :invoke, module_name, function_name))
+      conn = post(conn, ~p"/v1/fn/#{module_name}/#{function_name}")
       assert response(conn, 200)
     end
 
@@ -402,10 +390,7 @@ defmodule CoreWeb.FunctionControllerTest do
       Core.Commands.Mock
       |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
 
-      conn =
-        post(conn, Routes.function_path(conn, :invoke, module_name, function_name),
-          args: %{name: "World"}
-        )
+      conn = post(conn, ~p"/v1/fn/#{module_name}/#{function_name}", args: %{name: "World"})
 
       assert response(conn, 200)
     end
@@ -420,7 +405,7 @@ defmodule CoreWeb.FunctionControllerTest do
       Core.Commands.Mock
       |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, :code_not_found} end)
 
-      conn = post(conn, Routes.function_path(conn, :invoke, module_name, function_name))
+      conn = post(conn, ~p"/v1/fn/#{module_name}/#{function_name}")
       assert response(conn, 200)
     end
 
@@ -431,19 +416,19 @@ defmodule CoreWeb.FunctionControllerTest do
     } do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [] end)
 
-      conn = post(conn, Routes.function_path(conn, :invoke, module_name, function_name))
+      conn = post(conn, ~p"/v1/fn/#{module_name}/#{function_name}")
       assert response(conn, 503)
     end
 
     test "renders error when function does not exist", %{conn: conn} do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, 0, fn -> [:worker@localhost] end)
-      conn = post(conn, Routes.function_path(conn, :invoke, "some_module", "no_function"))
+      conn = post(conn, ~p"/v1/fn/som_module/no_function")
       assert response(conn, 404)
     end
 
     test "renders error when module does not exist", %{conn: conn} do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, 0, fn -> [:worker@localhost] end)
-      conn = post(conn, Routes.function_path(conn, :invoke, "no_module", "some_function"))
+      conn = post(conn, ~p"/v1/fn/no_module/some_function")
       assert response(conn, 404)
     end
 
@@ -457,7 +442,7 @@ defmodule CoreWeb.FunctionControllerTest do
       Core.Commands.Mock
       |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, {:exec_error, "some reason"}} end)
 
-      conn = post(conn, Routes.function_path(conn, :invoke, module_name, function_name))
+      conn = post(conn, ~p"/v1/fn/#{module_name}/#{function_name}")
       assert response(conn, 422)
     end
   end
