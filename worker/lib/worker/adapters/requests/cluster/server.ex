@@ -47,4 +47,11 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
     spawn(Cluster, :invoke, [function, args, from])
     {:noreply, nil}
   end
+
+  @impl true
+  def handle_call({:set_long_name, name}, from, _state) do
+    Logger.info("Received name change request to #{name}.")
+    spawn(Cluster, :set_long_name, [name, from])
+    {:noreply, nil}
+  end
 end

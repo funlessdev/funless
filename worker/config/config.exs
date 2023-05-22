@@ -30,6 +30,7 @@ config :worker, Worker.Domain.Ports.Runtime.Supervisor,
   adapter: Worker.Adapters.Runtime.Wasm.Supervisor
 
 config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.Adapters.ResourceCache
+config :worker, Worker.Domain.Ports.NodeInfoStorage, adapter: Worker.Adapters.NodeInfoStorage
 
 config :os_mon,
   start_cpu_sup: true,

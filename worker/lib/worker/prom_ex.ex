@@ -36,7 +36,8 @@ defmodule Worker.PromEx do
 
       # Add your own PromEx metrics plugins
       # Worker.Users.PromExPlugin
-      Worker.PromEx.Plugins.OsMon
+      Worker.PromEx.Plugins.OsMon,
+      Worker.PromEx.Plugins.NodeInfo
     ]
   end
 
