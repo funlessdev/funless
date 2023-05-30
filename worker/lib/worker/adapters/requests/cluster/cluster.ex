@@ -17,7 +17,7 @@ defmodule Worker.Adapters.Requests.Cluster do
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
   alias Worker.Domain.InvokeFunction
-  alias Worker.Domain.TelemetryEvents
+  alias Worker.Domain.NodeInfo
 
   require Logger
 
@@ -40,7 +40,11 @@ defmodule Worker.Adapters.Requests.Cluster do
   end
 
   def set_long_name(name, from) do
-    TelemetryEvents.emit_node_info(name, nil) |> reply_to_core(from)
+    NodeInfo.update_node_info(name, nil) |> reply_to_core(from)
+  end
+
+  def set_tag(tag, from) do
+    NodeInfo.update_node_info(nil, tag) |> reply_to_core(from)
   end
 
   # reply should be either {:ok, result} or {:error, reason}

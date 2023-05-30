@@ -54,4 +54,11 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
     spawn(Cluster, :set_long_name, [name, from])
     {:noreply, nil}
   end
+
+  @impl true
+  def handle_call({:set_tag, tag}, from, _state) do
+    Logger.info("Received tag change request to #{tag}.")
+    spawn(Cluster, :set_tag, [tag, from])
+    {:noreply, nil}
+  end
 end
