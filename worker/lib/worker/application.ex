@@ -23,6 +23,7 @@ defmodule Worker.Application do
     topologies = Application.fetch_env!(:worker, :topologies)
 
     children = [
+      {Cachex, name: :node_info_cache},
       Worker.PromEx,
       {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
       {Adapters.Requests.Cluster.Server, []},
