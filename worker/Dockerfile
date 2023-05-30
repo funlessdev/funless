@@ -24,7 +24,7 @@ ARG MIX_ENV
 ENV MIX_ENV=${MIX_ENV}
 
 # By convention, /opt is typically used for applications
-WORKDIR /opt/app
+WORKDIR /opt
 
 # This step installs all the build tools we'll need
 RUN apk update && \
@@ -34,7 +34,9 @@ RUN apk update && \
     mix local.hex --force
 
 # This copies our app source code into the build container
-COPY . .
+COPY ./worker ./app
+COPY ./data ./data
+WORKDIR /opt/app
 
 RUN mix deps.get --only "${MIX_ENV}"
 RUN mix compile
@@ -68,6 +70,6 @@ RUN addgroup -g 1000 -S "${USER}" && adduser -s /bin/sh -u 1000 -G "${USER}" \
 # Everything from this line onwards will run in the context of the unprivileged user.
 USER "${USER}"
 
-COPY --chown="${USER}":"${USER}" --from=builder /opt/app/_build/${MIX_ENV}/rel/${COMPONENT}/ .
+COPY --chown="${USER}":"${USER}" --from=builder /opt/app/_build/${MIX_ENV}/rel/worker/ .
 
 CMD  ["sh", "-c", "bin/run"]
