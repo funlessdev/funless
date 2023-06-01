@@ -12,24 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Application do
-  @moduledoc false
-  alias Worker.Adapters
+defmodule Worker.Domain.Ports.NodeInfoStorage.Supervisor do
+  @moduledoc """
+  Supervisor for the Node Info storage. Mainly used to start the underlying cache/storage system.
+  """
+  use Supervisor
 
-  use Application
+  @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
+  @callback children() :: list()
+
+  defdelegate children(), to: @adapter
+
+  def start_link(args) do
+    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
+  end
 
   @impl true
-  def start(_type, _args) do
-    topologies = Application.fetch_env!(:worker, :topologies)
-
-    children = [
-      {Worker.Domain.Ports.NodeInfoStorage.Supervisor, []},
-      Worker.PromEx,
-      {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
-      {Adapters.Requests.Cluster.Server, []},
-      {Worker.Domain.Ports.Runtime.Supervisor, []}
-    ]
-
-    Supervisor.start_link(children, strategy: :rest_for_one)
+  def init(_args) do
+    Supervisor.init(children(), strategy: :one_for_one)
   end
 end

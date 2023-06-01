@@ -39,4 +39,18 @@ defmodule Worker.Domain.NodeInfo do
       :telemetry.execute(@node_info_event, %{long_name: name, tag: tag})
     end
   end
+
+  def set_node_info(name, tag) when name != nil and tag != nil do
+    with :ok <- NodeInfoStorage.insert("long_name", name),
+         :ok <- NodeInfoStorage.insert("tag", tag) do
+      :telemetry.execute(@node_info_event, %{long_name: name, tag: tag})
+    end
+  end
+
+  def get_node_info() do
+    with {:ok, name} <- NodeInfoStorage.get("long_name"),
+         {:ok, tag} <- NodeInfoStorage.get("tag") do
+      {:ok, name, tag}
+    end
+  end
 end

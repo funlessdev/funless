@@ -39,12 +39,16 @@ defmodule Worker.Adapters.Requests.Cluster do
     InvokeFunction.invoke(function, args) |> reply_to_core(from)
   end
 
-  def set_long_name(name, from) do
-    NodeInfo.update_node_info(name, nil) |> reply_to_core(from)
+  def set_info(name, tag, from) do
+    NodeInfo.set_node_info(name, tag) |> reply_to_core(from)
   end
 
-  def set_tag(tag, from) do
-    NodeInfo.update_node_info(nil, tag) |> reply_to_core(from)
+  def update_info(name, tag, from) do
+    NodeInfo.update_node_info(name, tag) |> reply_to_core(from)
+  end
+
+  def get_info(from) do
+    NodeInfo.get_node_info() |> reply_to_core(from)
   end
 
   # reply should be either {:ok, result} or {:error, reason}
