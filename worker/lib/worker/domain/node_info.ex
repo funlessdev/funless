@@ -22,28 +22,28 @@ defmodule Worker.Domain.NodeInfo do
   def update_node_info(name, nil) do
     with {:ok, tag} <- NodeInfoStorage.get("tag"),
          :ok <- NodeInfoStorage.update("long_name", name) do
-      :telemetry.execute(@node_info_event, %{long_name: name, tag: tag})
+      {:ok, name, tag}
     end
   end
 
   def update_node_info(nil, tag) do
     with {:ok, name} <- NodeInfoStorage.get("long_name"),
          :ok <- NodeInfoStorage.update("tag", tag) do
-      :telemetry.execute(@node_info_event, %{long_name: name, tag: tag})
+      {:ok, name, tag}
     end
   end
 
   def update_node_info(name, tag) do
     with :ok <- NodeInfoStorage.update("long_name", name),
          :ok <- NodeInfoStorage.update("tag", tag) do
-      :telemetry.execute(@node_info_event, %{long_name: name, tag: tag})
+      {:ok, name, tag}
     end
   end
 
   def set_node_info(name, tag) when name != nil and tag != nil do
     with :ok <- NodeInfoStorage.insert("long_name", name),
          :ok <- NodeInfoStorage.insert("tag", tag) do
-      :telemetry.execute(@node_info_event, %{long_name: name, tag: tag})
+      {:ok, name, tag}
     end
   end
 
