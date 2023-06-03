@@ -73,6 +73,7 @@ defmodule Core.Adapters.Telemetry.Collector do
   end
 
   @spec save_metrics(atom(), map()) :: :ok
+  # TODO: save a Data.Worker.t(), not Data.Worker.Metrics.t()
   defp save_metrics(worker, metrics) do
     current_metrics =
       case MetricsServer.get(worker) do

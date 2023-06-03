@@ -76,6 +76,7 @@ defmodule CoreWeb.FunctionControllerTest do
     Core.Cluster.Mock |> Mox.stub_with(Core.Adapters.Cluster.Test)
     Core.Connectors.Manager.Mock |> Mox.stub_with(Core.Adapters.Connectors.Test)
     Core.DataSinks.Manager.Mock |> Mox.stub_with(Core.Adapters.DataSinks.Test)
+    Core.Telemetry.Metrics.Mock |> Mox.stub_with(Core.Adapters.Telemetry.Test)
 
     user = Subjects.get_subject_by_name("guest")
 

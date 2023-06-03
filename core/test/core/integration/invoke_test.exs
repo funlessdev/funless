@@ -31,6 +31,9 @@ defmodule Core.InvokeTest do
       Core.DataSinks.Manager.Mock
       |> Mox.stub_with(Core.Adapters.DataSinks.Test)
 
+      Core.Telemetry.Metrics.Mock
+      |> Mox.stub_with(Core.Adapters.Telemetry.Test)
+
       create_function()
     end
 

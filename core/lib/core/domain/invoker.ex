@@ -88,11 +88,18 @@ defmodule Core.Domain.Invoker do
   @spec update_concurrent(atom(), number()) :: :ok
   def update_concurrent(worker, amount) do
     case Metrics.resources(worker) do
-      {:ok, res} ->
-        info = struct(Data.Worker, res)
-
+      {:ok, %Data.Worker{} = info} ->
         concurrent =
-          info |> Map.get(:concurrent_functions, 0) |> then(fn v -> max(0, v + amount) end)
+          info
+          |> Map.get(:concurrent_functions, 0)
+          |> then(fn v ->
+            if v == nil do
+              0
+            else
+              v
+            end
+          end)
+          |> then(fn v -> max(0, v + amount) end)
 
         Metrics.update(worker, info |> Map.put(:concurrent_functions, concurrent))
 

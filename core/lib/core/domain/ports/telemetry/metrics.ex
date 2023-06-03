@@ -20,13 +20,13 @@ defmodule Core.Domain.Ports.Telemetry.Metrics do
   @type worker :: atom()
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback resources(worker) :: {:ok, Data.Worker.Metrics.t()} | {:error, :not_found}
+  @callback resources(worker) :: {:ok, Data.Worker.t()} | {:error, :not_found}
   @callback update(worker, Data.Worker.t()) :: :ok | {:error, any}
 
   @doc """
   Function to obtain resource information on a specific worker.
   """
-  @spec resources(worker) :: {:ok, Data.Worker.Metrics.t()} | {:error, :not_found}
+  @spec resources(worker) :: {:ok, Data.Worker.t()} | {:error, :not_found}
   defdelegate resources(worker), to: @adapter
 
   @doc """
