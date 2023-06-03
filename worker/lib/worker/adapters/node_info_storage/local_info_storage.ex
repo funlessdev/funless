@@ -13,9 +13,12 @@
 # limitations under the License.
 
 defmodule Worker.Adapters.NodeInfoStorage.LocalInfoStorage do
+  @moduledoc """
+  Local storage adapter for node information (long_name and tag).
+  Uses Cachex to store this information both in-memory and on disk.
+  """
   @behaviour Worker.Domain.Ports.NodeInfoStorage
 
-  # TODO: use Cachex to store node info (disk+memory)
   @cache :node_info_cache
   @info_path :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:path)
 

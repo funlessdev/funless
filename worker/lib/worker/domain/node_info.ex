@@ -47,7 +47,7 @@ defmodule Worker.Domain.NodeInfo do
     end
   end
 
-  def get_node_info() do
+  def get_node_info do
     with {:ok, name} <- NodeInfoStorage.get("long_name"),
          {:ok, tag} <- NodeInfoStorage.get("tag") do
       {:ok, name, tag}
