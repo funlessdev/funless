@@ -21,10 +21,17 @@ defmodule Core.Domain.Ports.Telemetry.Metrics do
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @callback resources(worker) :: {:ok, Data.Worker.Metrics.t()} | {:error, :not_found}
+  @callback update(worker, Data.Worker.t()) :: :ok | {:error, any}
 
   @doc """
   Function to obtain resource information on a specific worker.
   """
   @spec resources(worker) :: {:ok, Data.Worker.Metrics.t()} | {:error, :not_found}
   defdelegate resources(worker), to: @adapter
+
+  @doc """
+  Function to update the information about a specific worker.
+  """
+  @spec update(worker, Data.Worker.t()) :: :ok | {:error, any}
+  defdelegate update(worker, metrics), to: @adapter
 end

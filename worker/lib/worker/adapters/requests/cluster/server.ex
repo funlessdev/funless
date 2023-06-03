@@ -61,4 +61,11 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
     spawn(Cluster, :set_tag, [tag, from])
     {:noreply, nil}
   end
+
+  @impl true
+  def handle_call(:get_info, from, _state) do
+    Logger.info("Received get info request.")
+    spawn(Cluster, :get_info, [from])
+    {:noreply, nil}
+  end
 end

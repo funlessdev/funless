@@ -31,6 +31,12 @@ defmodule Core.Adapters.Telemetry.Metrics do
     end
   end
 
+  @impl true
+  @spec update(any, Data.Worker.t()) :: :ok | {:error, any}
+  def update(worker, info) do
+    MetricsServer.insert(worker, info)
+  end
+
   defp retrieve_metrics(worker), do: MetricsServer.get(worker)
 
   defp extract_resources(:not_found), do: {:error, :not_found}

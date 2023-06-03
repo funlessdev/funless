@@ -34,6 +34,14 @@ defmodule Core.Adapters.Telemetry.Collector do
   @impl true
   def init(node) do
     Logger.info("Metrics Collector: started retrieving metrics of #{node}")
+
+    {long_name, tag} =
+      case GenServer.call({:worker, node}, :get_info) do
+        {:ok, n, t} -> {n, t}
+        _ -> {node, node}
+      end
+
+    MetricsServer.insert(node, %{long_name: long_name, tag: tag})
     send(self(), :pull)
     {:ok, node}
   end
@@ -66,9 +74,15 @@ defmodule Core.Adapters.Telemetry.Collector do
 
   @spec save_metrics(atom(), map()) :: :ok
   defp save_metrics(worker, metrics) do
+    current_metrics =
+      case MetricsServer.get(worker) do
+        :not_found -> %{}
+        m -> m
+      end
+
     if Map.has_key?(metrics, @os_mon_available_memory) do
       mem = metrics[@os_mon_available_memory]
-      MetricsServer.insert(worker, %{memory: mem})
+      MetricsServer.insert(worker, current_metrics |> Map.put(:memory, mem))
     end
 
     :ok
