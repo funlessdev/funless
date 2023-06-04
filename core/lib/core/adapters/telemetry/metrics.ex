@@ -23,11 +23,11 @@ defmodule Core.Adapters.Telemetry.Metrics do
   @impl true
   @spec resources(any) :: {:ok, Data.Worker.t()} | {:error, :not_found}
   def resources(worker) do
-    with {:ok, res} <-
+    with {:ok, %Data.Worker{} = res} <-
            worker
            |> retrieve_metrics
            |> extract_resources do
-      {:ok, struct(Data.Worker, res)}
+      {:ok, res}
     end
   end
 

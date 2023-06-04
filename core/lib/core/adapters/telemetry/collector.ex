@@ -21,9 +21,14 @@ defmodule Core.Adapters.Telemetry.Collector do
   require Logger
   alias Core.Adapters.Telemetry.MetricsServer
 
-  @prom_url_query "http://prometheus:9090/api/v1/query?query="
+  @prom_url_query "http://prometheus:9090/api/v1/query?"
   # @beam_memory_allocated "worker_prom_ex_beam_memory_allocated_bytes"
-  @os_mon_available_memory "worker_prom_ex_os_mon_resources_available_mem"
+  @os_mon_prefix "worker_prom_ex_os_mon_resources_"
+  @available_mem "available_mem"
+  @free_mem "free_mem"
+  @total_mem "total_mem"
+  @load_avg "load_avg"
+  @cpu_util "cpu_utilization"
 
   def start_link(node) do
     GenServer.start_link(__MODULE__, node,
@@ -41,7 +46,17 @@ defmodule Core.Adapters.Telemetry.Collector do
         _ -> {node, node}
       end
 
-    MetricsServer.insert(node, %{long_name: long_name, tag: tag})
+    MetricsServer.insert(
+      node,
+      struct(Data.Worker, %{
+        name: node,
+        long_name: long_name,
+        tag: tag,
+        resources: %Data.Worker.Metrics{},
+        concurrent_functions: 0
+      })
+    )
+
     send(self(), :pull)
     {:ok, node}
   end
@@ -58,7 +73,7 @@ defmodule Core.Adapters.Telemetry.Collector do
   """
   def retrieve(worker) do
     # Get the metrics from prometheus, next project: prometheus HTTP API client library in Elixir with Tesla
-    res = pull_metrics()
+    res = pull_metrics(worker)
 
     case res do
       {:ok, data} ->
@@ -75,16 +90,37 @@ defmodule Core.Adapters.Telemetry.Collector do
   @spec save_metrics(atom(), map()) :: :ok
   # TODO: save a Data.Worker.t(), not Data.Worker.Metrics.t()
   defp save_metrics(worker, metrics) do
-    current_metrics =
+    {current_info, current_metrics} =
       case MetricsServer.get(worker) do
-        :not_found -> %{}
-        m -> m
+        :not_found -> {struct(Data.Worker, %{name: worker}), %{}}
+        %Data.Worker{resources: %Data.Worker.Metrics{} = m} = w -> {w, Map.from_struct(m)}
       end
 
-    if Map.has_key?(metrics, @os_mon_available_memory) do
-      mem = metrics[@os_mon_available_memory]
-      MetricsServer.insert(worker, current_metrics |> Map.put(:memory, mem))
-    end
+    scraped_metrics =
+      %{
+        cpu: metrics |> Map.get(@os_mon_prefix <> @cpu_util),
+        memory:
+          %{
+            free: metrics |> Map.get(@os_mon_prefix <> @free_mem),
+            total: metrics |> Map.get(@os_mon_prefix <> @total_mem),
+            available: metrics |> Map.get(@os_mon_prefix <> @available_mem)
+          }
+          |> Map.filter(fn {_, v} -> v != nil end),
+        load_avg:
+          %{
+            l1: metrics |> Map.get(@os_mon_prefix <> @load_avg <> "1"),
+            l5: metrics |> Map.get(@os_mon_prefix <> @load_avg <> "5"),
+            l15: metrics |> Map.get(@os_mon_prefix <> @load_avg <> "15")
+          }
+          |> Map.filter(fn {_, v} -> v != nil end)
+      }
+      |> Map.filter(fn {_, v} -> v != nil end)
+
+    new_metrics = struct(Data.Worker.Metrics, Map.merge(current_metrics, scraped_metrics))
+
+    new_info = current_info |> Map.put(:resources, new_metrics)
+
+    MetricsServer.insert(worker, new_info)
 
     :ok
   end
@@ -104,10 +140,12 @@ defmodule Core.Adapters.Telemetry.Collector do
 
   defp parse_metrics(_), do: %{}
 
-  @spec pull_metrics() :: {:ok, map()} | {:error, any()}
-  defp pull_metrics do
-    prom_query = "#{@prom_url_query}#{@os_mon_available_memory}"
-    response = :httpc.request(:get, {prom_query, []}, [], [])
+  @spec pull_metrics(atom()) :: {:ok, map()} | {:error, any()}
+  defp pull_metrics(worker) do
+    prom_query = :uri_string.compose_query([{"query", "{node=\"#{Atom.to_string(worker)}\"}"}])
+    prom_uri = "#{@prom_url_query}#{prom_query}"
+
+    response = :httpc.request(:get, {prom_uri, []}, [], [])
 
     case response do
       {:ok, {_response_status, _headers, json_body}} ->
