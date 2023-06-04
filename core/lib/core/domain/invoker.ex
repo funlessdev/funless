@@ -90,16 +90,10 @@ defmodule Core.Domain.Invoker do
     case Metrics.resources(worker) do
       {:ok, %Data.Worker{} = info} ->
         concurrent =
-          info
-          |> Map.get(:concurrent_functions, 0)
-          |> then(fn v ->
-            if v == nil do
-              0
-            else
-              v
-            end
-          end)
-          |> then(fn v -> max(0, v + amount) end)
+          case info |> Map.get(:concurrent_functions, 0) do
+            nil -> max(0, amount)
+            v -> max(0, v + amount)
+          end
 
         Metrics.update(worker, info |> Map.put(:concurrent_functions, concurrent))
 
