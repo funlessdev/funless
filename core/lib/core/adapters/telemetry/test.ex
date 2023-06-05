@@ -25,7 +25,8 @@ defmodule Core.Adapters.Telemetry.Test do
          cpu: 1,
          load_avg: %{l1: 1, l5: 5, l15: 15},
          memory: %{free: 20, available: 10, total: 50}
-       }
+       },
+       concurrent_functions: 0
      })}
   end
 

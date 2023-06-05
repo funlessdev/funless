@@ -54,6 +54,28 @@ defmodule Core.InvokeTest do
       assert Invoker.invoke(pars) == {:ok, function.name}
     end
 
+    test "invoke should update concurrent functions before and after the function runs successfully",
+         %{
+           function: function,
+           module: module
+         } do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      {:ok, resources} = Core.Telemetry.Metrics.Mock.resources(:worker@localhost)
+      concurrent = resources |> Map.get(:concurrent_functions, 0)
+      res_before = resources |> Map.put(:concurrent_functions, concurrent + 1)
+      res_after = resources |> Map.put(:concurrent_functions, concurrent)
+
+      Core.Telemetry.Metrics.Mock
+      |> Mox.expect(:update, 1, fn _, ^res_before -> :ok end)
+
+      Core.Telemetry.Metrics.Mock
+      |> Mox.expect(:update, 1, fn _, ^res_after -> :ok end)
+
+      pars = %InvokeParams{function: function.name, module: module.name}
+      assert Invoker.invoke(pars) == {:ok, function.name}
+    end
+
     test "invoke should return {:error, err} when the invocation on worker encounter errors",
          %{
            function: function,
@@ -63,6 +85,31 @@ defmodule Core.InvokeTest do
 
       Core.Commands.Mock
       |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, {:exec_error, "some error"}} end)
+
+      pars = %InvokeParams{function: function.name, module: module.name}
+      assert Invoker.invoke(pars) == {:error, {:exec_error, "some error"}}
+    end
+
+    test "invoke should update concurrent functions before and after the function runs with errors",
+         %{
+           function: function,
+           module: module
+         } do
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
+
+      Core.Commands.Mock
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, {:exec_error, "some error"}} end)
+
+      {:ok, resources} = Core.Telemetry.Metrics.Mock.resources(:worker@localhost)
+      concurrent = resources |> Map.get(:concurrent_functions, 0)
+      res_before = resources |> Map.put(:concurrent_functions, concurrent + 1)
+      res_after = resources |> Map.put(:concurrent_functions, concurrent)
+
+      Core.Telemetry.Metrics.Mock
+      |> Mox.expect(:update, 1, fn _, ^res_before -> :ok end)
+
+      Core.Telemetry.Metrics.Mock
+      |> Mox.expect(:update, 1, fn _, ^res_after -> :ok end)
 
       pars = %InvokeParams{function: function.name, module: module.name}
       assert Invoker.invoke(pars) == {:error, {:exec_error, "some error"}}
