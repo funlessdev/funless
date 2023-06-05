@@ -12,9 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Mox.defmock(Worker.Provisioner.Mock, for: Worker.Domain.Ports.Runtime.Provisioner)
-Mox.defmock(Worker.Runner.Mock, for: Worker.Domain.Ports.Runtime.Runner)
-Mox.defmock(Worker.Cleaner.Mock, for: Worker.Domain.Ports.Runtime.Cleaner)
+defmodule Worker.Adapters.NodeInfoStorage.Test do
+  @moduledoc false
+  @behaviour Worker.Domain.Ports.NodeInfoStorage
 
-Mox.defmock(Worker.ResourceCache.Mock, for: Worker.Domain.Ports.ResourceCache)
-Mox.defmock(Worker.NodeInfoStorage.Mock, for: Worker.Domain.Ports.NodeInfoStorage)
+  @impl true
+  def get(_key) do
+    {:ok, Node.self() |> Atom.to_string()}
+  end
+
+  @impl true
+  def insert(_key, _value) do
+    :ok
+  end
+
+  @impl true
+  def update(_key, _value) do
+    :ok
+  end
+
+  @impl true
+  def delete(_key) do
+    :ok
+  end
+end

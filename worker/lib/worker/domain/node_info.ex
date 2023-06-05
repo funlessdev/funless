@@ -47,6 +47,14 @@ defmodule Worker.Domain.NodeInfo do
     end
   end
 
+  def set_node_info(nil, _) do
+    {:error, :no_long_name}
+  end
+
+  def set_node_info(_, nil) do
+    {:error, :no_tag}
+  end
+
   def get_node_info do
     with {:ok, name} <- NodeInfoStorage.get("long_name"),
          {:ok, tag} <- NodeInfoStorage.get("tag") do
