@@ -79,7 +79,7 @@ defmodule Core.Domain.Invoker do
   end
 
   @doc """
-  Updates the amount of concurrent in the worker metrics.
+  Updates the amount of concurrent functions in the worker metrics.
 
   ## Parameters
   - worker: the worker of which the metrics will be updated
