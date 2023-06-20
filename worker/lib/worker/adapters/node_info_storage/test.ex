@@ -12,26 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.Telemetry.Test do
+defmodule Worker.Adapters.NodeInfoStorage.Test do
   @moduledoc false
-  @behaviour Core.Domain.Ports.Telemetry.Metrics
+  @behaviour Worker.Domain.Ports.NodeInfoStorage
 
   @impl true
-  def resources(_worker) do
-    {:ok,
-     struct(Data.Worker, %{
-       name: :nonode@nohost,
-       resources: %Data.Worker.Metrics{
-         cpu: 1,
-         load_avg: %{l1: 1, l5: 5, l15: 15},
-         memory: %{free: 20, available: 10, total: 50}
-       },
-       concurrent_functions: 0
-     })}
+  def get(_key) do
+    {:ok, Node.self() |> Atom.to_string()}
   end
 
   @impl true
-  def update(_worker, _info) do
+  def insert(_key, _value) do
+    :ok
+  end
+
+  @impl true
+  def update(_key, _value) do
+    :ok
+  end
+
+  @impl true
+  def delete(_key) do
     :ok
   end
 end

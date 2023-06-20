@@ -43,7 +43,8 @@ defmodule Worker.PromEx.Plugins.OsMon do
           event_name: @os_mon_event,
           description: "The total amount of cpu utilization on the node.",
           measurement: :cpu,
-          unit: :native
+          unit: :native,
+          tags: [:node]
         ),
 
         # Capture the total cpu utilization of the entire node
@@ -52,7 +53,8 @@ defmodule Worker.PromEx.Plugins.OsMon do
           event_name: @os_mon_event,
           description: "The total amount of cpu utilization on the node.",
           measurement: :load_avg1,
-          unit: :native
+          unit: :native,
+          tags: [:node]
         ),
 
         # Capture the total cpu utilization of the entire node
@@ -61,7 +63,8 @@ defmodule Worker.PromEx.Plugins.OsMon do
           event_name: @os_mon_event,
           description: "The total amount of cpu utilization on the node.",
           measurement: :load_avg5,
-          unit: :native
+          unit: :native,
+          tags: [:node]
         ),
 
         # Capture the total cpu utilization of the entire node
@@ -70,7 +73,8 @@ defmodule Worker.PromEx.Plugins.OsMon do
           event_name: @os_mon_event,
           description: "The total amount of cpu utilization on the node.",
           measurement: :load_avg15,
-          unit: :native
+          unit: :native,
+          tags: [:node]
         ),
 
         # Capture the total cpu utilization of the entire node
@@ -79,7 +83,8 @@ defmodule Worker.PromEx.Plugins.OsMon do
           event_name: @os_mon_event,
           description: "The total amount of cpu utilization on the node.",
           measurement: :free_mem,
-          unit: :byte
+          unit: :byte,
+          tags: [:node]
         ),
 
         # Capture the total cpu utilization of the entire node
@@ -88,7 +93,8 @@ defmodule Worker.PromEx.Plugins.OsMon do
           event_name: @os_mon_event,
           description: "The total amount of cpu utilization on the node.",
           measurement: :available_mem,
-          unit: :byte
+          unit: :byte,
+          tags: [:node]
         ),
 
         # Capture the total cpu utilization of the entire node
@@ -97,7 +103,8 @@ defmodule Worker.PromEx.Plugins.OsMon do
           event_name: @os_mon_event,
           description: "The total amount of cpu utilization on the node.",
           measurement: :total_mem,
-          unit: :byte
+          unit: :byte,
+          tags: [:node]
         )
 
         # More memory metrics here
@@ -127,6 +134,6 @@ defmodule Worker.PromEx.Plugins.OsMon do
       total_mem: memory_stats[:system_total_memory]
     }
 
-    :telemetry.execute(@os_mon_event, node_resources, %{})
+    :telemetry.execute(@os_mon_event, node_resources, %{node: Node.self()})
   end
 end

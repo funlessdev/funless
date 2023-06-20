@@ -12,30 +12,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The directory Mix will write compiled artifacts to.
-/_build/
-
-# If you run "mix test --cover", coverage assets end up here.
-/cover/
-
-# The directory Mix downloads your dependencies sources to.
-/deps/
-
-# Where 3rd-party dependencies like ExDoc output generated docs.
-/doc/
-
 # Ignore .fetch files in case you like to edit your project deps locally.
-/.fetch
+.fetch
 
-# If the VM crashes, it generates a dump, let's ignore it too.
+# Umbrella
+apps/**/config/*.secret.exs
+apps/**/node_modules
+apps/**/priv/static
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose.yml
+
+# Secrets
+apps/*/priv/secrets/*
+!apps/*/priv/secrets/.keep
+
+# File types
+*.md
+Taskfile.yml
+tmp
 erl_crash.dump
+*.ez
+priv/static/
 
-# Also ignore archive artifacts (built via "mix archive.build").
+.git
+.tool-versions
+.gitignore
+
+
+# Common development/test artifacts
+**/cover/
+**/doc/
+**/test/
+**/tmp/
+.elixir_ls
+
+# Mix artifacts
+**/_build/
+**/deps/
 *.ez
 
-# Ignore package tarball (built via "mix hex.build").
-core-*.tar
-
-# Dialyzer
-/priv/plts/*.plt
-/priv/plts/*.plt.hash
+# Static artifacts - These should be fetched and built inside the Docker image
+/assets/node_modules/

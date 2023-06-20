@@ -36,6 +36,7 @@ defmodule RequestTest do
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
       Worker.Runner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Runner.Test)
       Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache.Test)
+      Worker.NodeInfoStorage.Mock |> Mox.stub_with(Worker.Adapters.NodeInfoStorage.Test)
 
       Application.stop(Cluster.Server)
       {:ok, pid} = GenServer.start(Cluster.Server, [])
@@ -64,6 +65,18 @@ defmodule RequestTest do
       reply = GenServer.call(pid, {:invoke, function})
 
       assert reply == {:ok, %{"result" => "test-output"}}
+    end
+
+    test "get_info, set_long_name and set_tag calls should return long_name and tag for the node when no error occurs",
+         %{
+           pid: pid
+         } do
+      {{:ok, long_name}, {:ok, tag}} =
+        {Worker.NodeInfoStorage.Mock.get("long_name"), Worker.NodeInfoStorage.Mock.get("tag")}
+
+      assert GenServer.call(pid, :get_info) == {:ok, long_name, tag}
+      assert GenServer.call(pid, {:set_tag, "new_tag"}) == {:ok, long_name, "new_tag"}
+      assert GenServer.call(pid, {:set_long_name, "new_long_name"}) == {:ok, "new_long_name", tag}
     end
   end
 end

@@ -25,7 +25,7 @@ defmodule Core.Adapters.Telemetry.MetricsServer do
   @metrics_ets_server :metrics_ets_server
   @ets_table :worker_resources
 
-  @spec get(atom()) :: map() | :not_found
+  @spec get(atom()) :: Data.Worker.t() | :not_found
   def get(worker_node) do
     case :ets.lookup(@ets_table, worker_node) do
       [{^worker_node, metrics}] -> metrics
@@ -33,7 +33,7 @@ defmodule Core.Adapters.Telemetry.MetricsServer do
     end
   end
 
-  @spec insert(atom(), map()) :: :ok
+  @spec insert(atom(), Data.Worker.t()) :: :ok
   def insert(worker_node, resources) do
     GenServer.call(@metrics_ets_server, {:insert, worker_node, resources})
   end

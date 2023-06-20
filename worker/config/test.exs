@@ -22,6 +22,7 @@ config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.ResourceCache
 config :worker, Worker.Domain.Ports.Runtime.Provisioner, adapter: Worker.Provisioner.Mock
 config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Runner.Mock
 config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Cleaner.Mock
+config :worker, Worker.Domain.Ports.NodeInfoStorage, adapter: Worker.NodeInfoStorage.Mock
 
 # --- Libcluster Configs ---
 config :worker,

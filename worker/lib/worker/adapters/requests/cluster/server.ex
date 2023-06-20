@@ -47,4 +47,25 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
     spawn(Cluster, :invoke, [function, args, from])
     {:noreply, nil}
   end
+
+  @impl true
+  def handle_call({:set_long_name, name}, from, _state) do
+    Logger.info("Received name change request to #{name}.")
+    spawn(Cluster, :update_info, [name, nil, from])
+    {:noreply, nil}
+  end
+
+  @impl true
+  def handle_call({:set_tag, tag}, from, _state) do
+    Logger.info("Received tag change request to #{tag}.")
+    spawn(Cluster, :update_info, [nil, tag, from])
+    {:noreply, nil}
+  end
+
+  @impl true
+  def handle_call(:get_info, from, _state) do
+    Logger.info("Received get info request.")
+    spawn(Cluster, :get_info, [from])
+    {:noreply, nil}
+  end
 end

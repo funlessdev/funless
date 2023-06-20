@@ -52,6 +52,7 @@ defmodule Worker.MixProject do
       {:prom_ex, "~> 1.8"},
       {:wasmex, "~> 0.8"},
       {:httpoison, "~> 2.0"},
+      {:cachex, "~> 3.6"},
 
       # Dev deps
       {:mox, "~> 1.0", only: :test},

@@ -23,6 +23,7 @@ defmodule Worker.Application do
     topologies = Application.fetch_env!(:worker, :topologies)
 
     children = [
+      {Worker.Domain.Ports.NodeInfoStorage.Supervisor, []},
       Worker.PromEx,
       {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
       {Adapters.Requests.Cluster.Server, []},

@@ -17,7 +17,16 @@ defmodule Core.Domain.Invoker do
   Provides functions to request function invocaiton.
   """
   require Logger
-  alias Core.Domain.{Functions, Nodes, Ports.Commands, Ports.DataSinks.Manager, Scheduler}
+
+  alias Core.Domain.{
+    Functions,
+    Nodes,
+    Ports.Commands,
+    Ports.DataSinks.Manager,
+    Ports.Telemetry.Metrics,
+    Scheduler
+  }
+
   alias Data.FunctionStruct
   alias Data.InvokeParams
   alias Data.InvokeResult
@@ -47,18 +56,49 @@ defmodule Core.Domain.Invoker do
 
     if Functions.exists_in_mod?(ivk_pars.function, ivk_pars.module) do
       with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select() do
-        case invoke_without_code(worker, ivk_pars) do
-          {:error, :code_not_found} ->
-            worker
-            |> invoke_with_code(ivk_pars)
-            |> save_to_sinks(ivk_pars.module, ivk_pars.function)
+        update_concurrent(worker, +1)
 
-          res ->
-            save_to_sinks(res, ivk_pars.module, ivk_pars.function)
-        end
+        out =
+          case invoke_without_code(worker, ivk_pars) do
+            {:error, :code_not_found} ->
+              worker
+              |> invoke_with_code(ivk_pars)
+              |> save_to_sinks(ivk_pars.module, ivk_pars.function)
+
+            res ->
+              save_to_sinks(res, ivk_pars.module, ivk_pars.function)
+          end
+
+        update_concurrent(worker, -1)
+
+        out
       end
     else
       {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Updates the amount of concurrent functions in the worker metrics.
+
+  ## Parameters
+  - worker: the worker of which the metrics will be updated
+  - amount: the number that will be summed to the amount of concurrent functions. Can be negative; the final amount has 0 as lower bound.
+  """
+  @spec update_concurrent(atom(), number()) :: :ok
+  def update_concurrent(worker, amount) do
+    case Metrics.resources(worker) do
+      {:ok, %Data.Worker{} = info} ->
+        concurrent =
+          case info |> Map.get(:concurrent_functions, 0) do
+            nil -> max(0, amount)
+            v -> max(0, v + amount)
+          end
+
+        Metrics.update(worker, info |> Map.put(:concurrent_functions, concurrent))
+
+      {:error, :not_found} ->
+        :ok
     end
   end
 

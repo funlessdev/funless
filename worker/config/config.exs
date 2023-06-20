@@ -31,6 +31,14 @@ config :worker, Worker.Domain.Ports.Runtime.Supervisor,
 
 config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.Adapters.ResourceCache
 
+config :worker, Worker.Domain.Ports.NodeInfoStorage,
+  adapter: Worker.Adapters.NodeInfoStorage.LocalInfoStorage
+
+config :worker, Worker.Domain.Ports.NodeInfoStorage.Supervisor,
+  adapter: Worker.Adapters.NodeInfoStorage.Supervisor
+
+config :worker, Worker.Adapters.NodeInfoStorage.LocalInfoStorage, path: "/tmp/node_info"
+
 config :os_mon,
   start_cpu_sup: true,
   start_memsup: true,

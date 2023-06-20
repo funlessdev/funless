@@ -12,26 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.Telemetry.Test do
-  @moduledoc false
-  @behaviour Core.Domain.Ports.Telemetry.Metrics
+defmodule Worker.Domain.Ports.NodeInfoStorage.Supervisor do
+  @moduledoc """
+  Supervisor for the Node Info storage. Mainly used to start the underlying cache/storage system.
+  """
+  use Supervisor
 
-  @impl true
-  def resources(_worker) do
-    {:ok,
-     struct(Data.Worker, %{
-       name: :nonode@nohost,
-       resources: %Data.Worker.Metrics{
-         cpu: 1,
-         load_avg: %{l1: 1, l5: 5, l15: 15},
-         memory: %{free: 20, available: 10, total: 50}
-       },
-       concurrent_functions: 0
-     })}
+  @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
+  @callback children() :: list()
+
+  defdelegate children(), to: @adapter
+
+  def start_link(args) do
+    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   @impl true
-  def update(_worker, _info) do
-    :ok
+  def init(_args) do
+    Supervisor.init(children(), strategy: :one_for_one)
   end
 end

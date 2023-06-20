@@ -17,6 +17,7 @@ defmodule Worker.Adapters.Requests.Cluster do
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
   alias Worker.Domain.InvokeFunction
+  alias Worker.Domain.NodeInfo
 
   require Logger
 
@@ -36,6 +37,18 @@ defmodule Worker.Adapters.Requests.Cluster do
   """
   def invoke(function, args, from) do
     InvokeFunction.invoke(function, args) |> reply_to_core(from)
+  end
+
+  def set_info(name, tag, from) do
+    NodeInfo.set_node_info(name, tag) |> reply_to_core(from)
+  end
+
+  def update_info(name, tag, from) do
+    NodeInfo.update_node_info(name, tag) |> reply_to_core(from)
+  end
+
+  def get_info(from) do
+    NodeInfo.get_node_info() |> reply_to_core(from)
   end
 
   # reply should be either {:ok, result} or {:error, reason}
