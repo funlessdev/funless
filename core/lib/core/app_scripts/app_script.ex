@@ -1,4 +1,7 @@
 defmodule Core.APPScripts.APP do
+  @moduledoc """
+  The APP script schema.
+  """
   use Ecto.Schema
   import Ecto.Changeset
 
