@@ -231,7 +231,26 @@ components:
                 total:
                   type: integer
                   description: The total amount of events that was passed
-
+    app_create_update:
+      type: object
+      properties:
+        name:
+          description: Name of the APP script
+          type: string
+        file:
+          type: string
+          format: binary
+          description: File with the APP script
+    single_app_result:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            name:
+              type: string
+            content:
+              type: string
     error:
       type: object
       required:
@@ -533,5 +552,81 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/invoke_result"
+        default:
+          $ref: "#/components/responses/unexpected_error"
+
+  /v1/app:
+    # GET /app
+    get:
+      summary: List current APP scripts
+      operationId: list_app
+      description: List all APP scripts
+      tags:
+        - app
+      responses:
+        "200":
+          description: An array of APP scripts names
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/module_names_result"
+        default:
+          $ref: "#/components/responses/unexpected_error"
+
+    # POST /app
+    post:
+      summary: Create new APP script
+      operationId: create_app
+      description: Create a new APP script
+      tags:
+        - app
+      requestBody:
+        description: APP to create
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/function_create_update"
+            encoding:
+              code:
+                contentType: application/octet-stream
+      responses:
+        "201":
+          $ref: "#/components/responses/null_response"
+        default:
+          $ref: "#/components/responses/unexpected_error"
+
+  /v1/app/{app_name}:
+    # GET /app/{app}
+    get:
+      summary: Show APP info
+      operationId: show_app_by_name
+      description: Get APP data (name, content of script)
+      tags:
+        - app
+      parameters:
+        - $ref: "#/components/parameters/module_name"
+      responses:
+        "200":
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/single_app_result"
+        default:
+          $ref: "#/components/responses/unexpected_error"
+
+      # DELETE /app/{app}
+    delete:
+      summary: Delete APP
+      operationId: delete_app
+      description: Delete single APP
+      tags:
+        - app
+      parameters:
+        - $ref: "#/components/parameters/module_name"
+      responses:
+        "200":
+          $ref: "#/components/responses/null_response"
         default:
           $ref: "#/components/responses/unexpected_error"

@@ -68,6 +68,12 @@ defmodule CoreWeb.Router do
 
     # Invoke function
     post("/fn/:module_name/:function_name", FunctionController, :invoke)
+
+    # APP scripts routes
+    get("/app", APPScriptController, :index)
+    post("/app", APPScriptController, :create)
+    get("/app/:app_name", APPScriptController, :show)
+    # delete("/app/:app_name", AppScriptController, :delete)
   end
 
   # Enable LiveDashboard in development
