@@ -16,7 +16,7 @@
 
 
 [![documentation](https://img.shields.io/website?label=Documentation&url=https%3A%2F%2Ffunless.dev)](https://funless.dev)
-![tests](https://github.com/funlessdev/funless/actions/workflows/ci.yml/badge.svg)
+![tests](https://github.com/funlessdev/funless/actions/workflows/core-ci.yml/badge.svg)
 [![release](https://badgen.net/github/release/funlessdev/funless)](https://github.com/funlessdev/funless/releases/)
 ![contributors](https://badgen.net/github/contributors/funlessdev/funless) 
 [![docker images](https://github.com/funlessdev/funless/actions/workflows/image-release.yml/badge.svg)](https://github.com/funlessdev/funless/packages)
