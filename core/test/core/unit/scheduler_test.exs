@@ -43,6 +43,15 @@ defmodule Core.Unit.SchedulerTest do
       assert workers == expected
     end
 
+    test "select should return a random worker when resources are not available" do
+      Core.Telemetry.Metrics.Mock |> Mox.expect(:resources, 2, fn _ -> {:error, :not_found} end)
+
+      w_nodes = [:worker1, :worker2]
+      workers = Scheduler.select(w_nodes)
+
+      assert workers == {:ok, :worker1} || workers == {:ok, :worker2}
+    end
+
     test "select should return worker with fewer memory utilization" do
       Core.Telemetry.Metrics.Mock
       |> expect(:resources, 2, fn w ->

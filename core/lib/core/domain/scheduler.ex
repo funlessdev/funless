@@ -41,13 +41,22 @@ defmodule Core.Domain.Scheduler do
 
     # Get the resources
     resources = Enum.map(workers, &Metrics.resources/1) |> Enum.filter(&match?({:ok, _}, &1))
-    # Couple worker -> {:ok, resources}
-    workers_resources = Enum.zip(workers, resources)
-    # Get the {worker, {:ok, resources}}, resource is just the allocated_bytes integer as of now
+
     w =
-      workers_resources
-      |> Enum.min_by(fn {_w, {:ok, r}} -> r end)
-      |> elem(0)
+      case resources do
+        [] ->
+          # If resources are unavailable for some reason, pick a random worker
+          Enum.random(workers)
+
+        [_ | _] ->
+          # Couple worker -> {:ok, resources}
+          workers_resources = Enum.zip(workers, resources)
+
+          # Get the {worker, {:ok, resources}}, resource is just the allocated_bytes integer as of now
+          workers_resources
+          |> Enum.min_by(fn {_w, {:ok, r}} -> r end)
+          |> elem(0)
+      end
 
     {:ok, w}
   end
