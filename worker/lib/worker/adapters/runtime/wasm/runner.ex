@@ -58,7 +58,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
           resource: wasm_module
         }
       ) do
-    Logger.info("Runner: Invoking #{mod}/#{name} with args #{inspect(args)}")
+    Logger.debug("Runner: Invoking #{mod}/#{name} with args #{inspect(args)}")
 
     # Spin up an agent to store the result of the invocation
     {:ok, result_agent} = Agent.start_link(fn -> %{error: nil, response: nil} end)
@@ -110,7 +110,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
   defp handle_wasm_messages(imports) do
     receive do
       {:returned_function_call, {:ok, result}, _} ->
-        Logger.info("Wasm: Function returned successfully: #{inspect(result)}}")
+        Logger.debug("Wasm: Function returned successfully: #{inspect(result)}}")
         {:ok, result}
 
       {:invoke_callback, namespace_name, import_name, context, params, token} ->
