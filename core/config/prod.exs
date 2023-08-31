@@ -17,7 +17,8 @@ import Config
 # tell logger to load a LoggerFileBackend processes
 config :logger,
   backends: [:console, {LoggerFileBackend, :info_log}],
-  format: "\n#####[$level] $time $metadata $message\n"
+  format: "\n#####[$level] $time $metadata $message\n",
+  level: :info
 
 # For production, don't forget to configure the url host
 # to something meaningful, Phoenix uses this information
