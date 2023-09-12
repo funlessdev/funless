@@ -17,8 +17,8 @@ defmodule Worker.Domain.InvokeFunction do
   Contains functions used to run function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
-  alias Worker.Domain.Ports.WaitForCode
   alias Worker.Domain.Ports.Runtime.Runner
+  alias Worker.Domain.Ports.WaitForCode
   alias Worker.Domain.ProvisionResource
 
   alias Data.FunctionStruct

@@ -28,6 +28,7 @@ defmodule Worker.Adapters.WaitForCode.Handler do
 
   @impl true
   def init(args) do
+    Logger.info("Starting GenServer waiting for code")
     {:ok, %{ivk_args: args}}
   end
 
