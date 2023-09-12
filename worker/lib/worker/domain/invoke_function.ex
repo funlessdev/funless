@@ -17,6 +17,7 @@ defmodule Worker.Domain.InvokeFunction do
   Contains functions used to run function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
+  alias Worker.Domain.Ports.WaitForCode
   alias Worker.Domain.Ports.Runtime.Runner
   alias Worker.Domain.ProvisionResource
 
@@ -45,8 +46,16 @@ defmodule Worker.Domain.InvokeFunction do
     f = struct(FunctionStruct, function)
     Logger.info("API: Invoking function #{mod}/#{name}")
 
-    with {:ok, resource} <- ProvisionResource.provision(f) do
-      Runner.run_function(function, args, resource)
+    case ProvisionResource.provision(f) do
+      {:ok, resource} ->
+        Runner.run_function(function, args, resource)
+
+      {:error, :code_not_found} ->
+        {:ok, pid} = WaitForCode.wait_for_code(args)
+        {:error, :code_not_found, pid}
+
+      {:error, err} ->
+        {:error, err}
     end
   end
 
