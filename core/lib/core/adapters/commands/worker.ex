@@ -25,9 +25,11 @@ defmodule Core.Adapters.Commands.Worker do
 
   # Possible replies:
   # {:ok, result}
-  # {:error, :code_not_found} in this case re-do the invocation passing the code
   # {:error, atom()} mainly from the worker nifs
   # {:error, {:exec_error, msg}} an error occurred during the execution of the function
+  # {:error, :code_not_found, pid()} in this case re-do the invocation passing the code.
+  #                                  The call should be sent to the given handler.
+  #                                  Only the send_invoke call should return this.
 
   @impl true
   def send_invoke(worker, name, mod, args) do
@@ -37,14 +39,15 @@ defmodule Core.Adapters.Commands.Worker do
 
     case GenServer.call(worker_addr, cmd, 30_000) do
       {:ok, result} -> {:ok, %InvokeResult{result: result}}
+      {:error, :code_not_found, handler} -> {:error, :code_not_found, handler}
       {:error, err} -> {:error, err}
     end
   end
 
   @impl true
-  def send_invoke_with_code(worker, %FunctionStruct{} = func, args) do
-    worker_addr = {:worker, worker}
-    cmd = {:invoke, func, args}
+  def send_invoke_with_code(worker, worker_handler, %FunctionStruct{code: _} = func) do
+    worker_addr = {worker_handler, worker}
+    cmd = {:invoke, func}
 
     Logger.info("Sending invoke with code #{func.module}/#{func.name} to #{inspect(worker_addr)}")
 
