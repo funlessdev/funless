@@ -23,8 +23,8 @@ defmodule Core.Domain.Ports.Commands do
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @callback send_invoke(atom(), String.t(), String.t(), map()) ::
-              {:ok, InvokeResult.t()} | {:error, :code_not_found} | {:error, any()}
-  @callback send_invoke_with_code(atom(), FunctionStruct.t(), map()) ::
+              {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | {:error, any()}
+  @callback send_invoke_with_code(atom(), pid(), FunctionStruct.t()) ::
               {:ok, InvokeResult.t()} | {:error, any()}
 
   @doc """
@@ -45,6 +45,6 @@ defmodule Core.Domain.Ports.Commands do
   and a function struct.
   """
   @spec send_invoke_with_code(atom(), pid(), FunctionStruct.t()) ::
-          {:ok, InvokeResult.t()} | {:error, String.t()}
+          {:ok, InvokeResult.t()} | {:error, any()}
   defdelegate send_invoke_with_code(worker, worker_handler, function), to: @adapter
 end

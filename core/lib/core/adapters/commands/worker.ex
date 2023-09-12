@@ -45,8 +45,8 @@ defmodule Core.Adapters.Commands.Worker do
   end
 
   @impl true
-  def send_invoke_with_code(worker, worker_handler, %FunctionStruct{code: _} = func) do
-    worker_addr = {worker_handler, worker}
+  def send_invoke_with_code(_worker, worker_handler, %FunctionStruct{code: _} = func) do
+    worker_addr = worker_handler
     cmd = {:invoke, func}
 
     Logger.info("Sending invoke with code #{func.module}/#{func.name} to #{inspect(worker_addr)}")
