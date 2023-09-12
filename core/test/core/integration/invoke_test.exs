@@ -164,7 +164,7 @@ defmodule Core.InvokeTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, :code_not_found, :somepid} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _ -> {:error, :code_not_found, self()} end)
 
       Core.Commands.Mock
       |> Mox.expect(:send_invoke_with_code, fn _worker, _handler, function ->

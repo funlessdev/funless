@@ -18,3 +18,4 @@ Mox.defmock(Worker.Cleaner.Mock, for: Worker.Domain.Ports.Runtime.Cleaner)
 
 Mox.defmock(Worker.ResourceCache.Mock, for: Worker.Domain.Ports.ResourceCache)
 Mox.defmock(Worker.NodeInfoStorage.Mock, for: Worker.Domain.Ports.NodeInfoStorage)
+Mox.defmock(Worker.WaitForCode.Mock, for: Worker.Domain.Ports.WaitForCode)
