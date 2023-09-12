@@ -36,6 +36,7 @@ defmodule InvokeTest do
       Worker.Runner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Runner.Test)
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Provisioner.Test)
       Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache.Test)
+      Worker.WaitForCode.Mock |> Mox.stub_with(Worker.Adapters.WaitForCode.Test)
       :ok
     end
 
@@ -68,6 +69,15 @@ defmodule InvokeTest do
       Worker.Provisioner.Mock |> Mox.expect(:provision, fn _ -> {:error, "creation error"} end)
 
       assert InvokeFunction.invoke(function) == {:error, "creation error"}
+    end
+
+    test "should return {:error, :code_not_found, pid} when the code is not found", %{
+      function: function
+    } do
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
+      Worker.Provisioner.Mock |> Mox.expect(:provision, fn _ -> {:error, :code_not_found} end)
+      assert {:error, :code_not_found, handler_pid} = InvokeFunction.invoke(function)
+      assert is_pid(handler_pid)
     end
   end
 end

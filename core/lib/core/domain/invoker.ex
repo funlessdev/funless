@@ -60,9 +60,9 @@ defmodule Core.Domain.Invoker do
 
         out =
           case invoke_without_code(worker, ivk_pars) do
-            {:error, :code_not_found} ->
+            {:error, :code_not_found, handler} ->
               worker
-              |> invoke_with_code(ivk_pars)
+              |> invoke_with_code(handler, ivk_pars)
               |> save_to_sinks(ivk_pars.module, ivk_pars.function)
 
             res ->
@@ -103,16 +103,16 @@ defmodule Core.Domain.Invoker do
   end
 
   @spec invoke_without_code(atom(), InvokeParams.t()) ::
-          {:ok, InvokeResult.t()} | {:error, :code_not_found} | invoke_errors()
+          {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | invoke_errors()
   def invoke_without_code(worker, ivk) do
     Logger.debug("Invoker: invoking #{ivk.module}/#{ivk.function} without code")
     # send invocation without code
     Commands.send_invoke(worker, ivk.function, ivk.module, ivk.args)
   end
 
-  @spec invoke_with_code(atom(), InvokeParams.t()) ::
+  @spec invoke_with_code(atom(), pid(), InvokeParams.t()) ::
           {:ok, InvokeResult.t()} | {:error, {:exec_error, any()}}
-  def invoke_with_code(worker, ivk) do
+  def invoke_with_code(worker, handler, ivk) do
     Logger.warn("Invoker: function not available in worker, re-invoking with code")
 
     case Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
@@ -124,7 +124,7 @@ defmodule Core.Domain.Invoker do
             code: f.code
           })
 
-        Commands.send_invoke_with_code(worker, func, ivk.args)
+        Commands.send_invoke_with_code(worker, handler, func)
 
       [] ->
         {:error, :not_found}

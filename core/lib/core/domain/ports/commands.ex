@@ -23,8 +23,8 @@ defmodule Core.Domain.Ports.Commands do
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @callback send_invoke(atom(), String.t(), String.t(), map()) ::
-              {:ok, InvokeResult.t()} | {:error, :code_not_found} | {:error, any()}
-  @callback send_invoke_with_code(atom(), FunctionStruct.t(), map()) ::
+              {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | {:error, any()}
+  @callback send_invoke_with_code(atom(), pid(), FunctionStruct.t()) ::
               {:ok, InvokeResult.t()} | {:error, any()}
 
   @doc """
@@ -32,16 +32,19 @@ defmodule Core.Domain.Ports.Commands do
   It requires a worker (a fully qualified name of another node with the :worker actor on) and function arguments can be empty.
   """
   @spec send_invoke(atom(), String.t(), String.t(), map()) ::
-          {:ok, InvokeResult.t()} | {:error, :code_not_found} | {:error, String.t()}
+          {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | {:error, any()}
   defdelegate send_invoke(worker, f_name, ns, args), to: @adapter
 
   @doc """
   Sends an invoke command to a worker passing a struct with the function name, module and the code (wasm file binary).
+  The command is sent directly to an handler PID in the Worker, which should have already received the
+  invoke_with_code request.
+  The arguments of the call are already saved Worker-side.
   The worker will store the wasm file in its cache, so subsequent invokes can be done without passing the code.
-  It requires a worker (a fully qualified name of another node with the :worker actor on), a function struct and
-  (optionally empty) function arguments.
+  It requires a worker (a fully qualified name of another node with the :worker actor on), a PID for the handler
+  and a function struct.
   """
-  @spec send_invoke_with_code(atom(), FunctionStruct.t(), map()) ::
-          {:ok, InvokeResult.t()} | {:error, String.t()}
-  defdelegate send_invoke_with_code(worker, function, args), to: @adapter
+  @spec send_invoke_with_code(atom(), pid(), FunctionStruct.t()) ::
+          {:ok, InvokeResult.t()} | {:error, any()}
+  defdelegate send_invoke_with_code(worker, worker_handler, function), to: @adapter
 end

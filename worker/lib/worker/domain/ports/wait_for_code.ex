@@ -12,10 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Mox.defmock(Worker.Provisioner.Mock, for: Worker.Domain.Ports.Runtime.Provisioner)
-Mox.defmock(Worker.Runner.Mock, for: Worker.Domain.Ports.Runtime.Runner)
-Mox.defmock(Worker.Cleaner.Mock, for: Worker.Domain.Ports.Runtime.Cleaner)
+defmodule Worker.Domain.Ports.WaitForCode do
+  @moduledoc """
+  Handles invocations where the code was not found. The underlying adapter should implement a GenServer.
+  """
+  @callback wait_for_code(map()) :: {:ok, pid()} | {:error, any}
 
-Mox.defmock(Worker.ResourceCache.Mock, for: Worker.Domain.Ports.ResourceCache)
-Mox.defmock(Worker.NodeInfoStorage.Mock, for: Worker.Domain.Ports.NodeInfoStorage)
-Mox.defmock(Worker.WaitForCode.Mock, for: Worker.Domain.Ports.WaitForCode)
+  @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
+
+  @doc """
+  Waits for the invocation with code to be sent by the Core. Should spawn a GenServer.
+  """
+  @spec wait_for_code(map()) :: {:ok, pid()} | {:error, any}
+  defdelegate wait_for_code(args), to: @adapter
+end

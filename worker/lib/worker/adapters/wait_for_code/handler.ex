@@ -12,19 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.Commands.Test do
-  @moduledoc false
-  @behaviour Core.Domain.Ports.Commands
+defmodule Worker.Adapters.WaitForCode.Handler do
+  @moduledoc """
+  Implements GenServer behaviour. Waits for the missing code of functions after
+  a previous attempt at invocation.
+  """
+  alias Data.FunctionStruct
+  alias Worker.Domain.InvokeFunction
+  use GenServer
+  require Logger
 
-  alias Data.InvokeResult
-
-  @impl true
-  def send_invoke(_worker, name, _ns, _args) do
-    {:ok, %InvokeResult{result: name}}
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args)
   end
 
   @impl true
-  def send_invoke_with_code(_worker, _handler, function) do
-    {:ok, %InvokeResult{result: function.name}}
+  def init(args) do
+    Logger.info("Starting GenServer waiting for code")
+    {:ok, %{ivk_args: args}}
+  end
+
+  @impl true
+  def handle_call({:invoke, %FunctionStruct{code: _} = function}, _from, %{ivk_args: args}) do
+    {:stop, :normal, InvokeFunction.invoke(function, args), %{}}
   end
 end

@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Mox.defmock(Worker.Provisioner.Mock, for: Worker.Domain.Ports.Runtime.Provisioner)
-Mox.defmock(Worker.Runner.Mock, for: Worker.Domain.Ports.Runtime.Runner)
-Mox.defmock(Worker.Cleaner.Mock, for: Worker.Domain.Ports.Runtime.Cleaner)
+defmodule Worker.Adapters.WaitForCode do
+  @moduledoc """
+    Implements WaitForCode behaviour. Simply spawns the Handler GenServer
+    when wait_for_code/1 is called.
+  """
+  alias Worker.Adapters.WaitForCode.Handler
+  @behaviour Worker.Domain.Ports.WaitForCode
 
-Mox.defmock(Worker.ResourceCache.Mock, for: Worker.Domain.Ports.ResourceCache)
-Mox.defmock(Worker.NodeInfoStorage.Mock, for: Worker.Domain.Ports.NodeInfoStorage)
-Mox.defmock(Worker.WaitForCode.Mock, for: Worker.Domain.Ports.WaitForCode)
+  def wait_for_code(args) do
+    GenServer.start(Handler, args)
+  end
+end

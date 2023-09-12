@@ -20,6 +20,8 @@ config :logger, :console,
   metadata: [:request_id, :file, :line]
 
 # --- Worker Configs ---
+config :worker, Worker.Domain.Ports.WaitForCode, adapter: Worker.Adapters.WaitForCode
+
 config :worker, Worker.Domain.Ports.Runtime.Provisioner,
   adapter: Worker.Adapters.Runtime.Wasm.Provisioner
 
