@@ -18,6 +18,8 @@ defmodule Core.Domain.Invoker do
   """
   require Logger
 
+  alias Data.FunctionMetadata
+
   alias Core.Domain.{
     Functions,
     Nodes,
@@ -51,30 +53,40 @@ defmodule Core.Domain.Invoker do
   - {:error, {:exec_error, msg}} if the worker returned an error.
   """
   @spec invoke(InvokeParams.t()) :: {:ok, InvokeResult.t()} | invoke_errors()
-  def invoke(ivk_pars) do
-    Logger.info("Invoker: invocation for #{ivk_pars.module}/#{ivk_pars.function} requested")
+  def invoke(ivk) do
+    Logger.info("Invoker: invocation for #{ivk.module}/#{ivk.function} requested")
 
-    if Functions.exists_in_mod?(ivk_pars.function, ivk_pars.module) do
-      with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select() do
-        update_concurrent(worker, +1)
+    case Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
+      [f] ->
+        func =
+          struct(FunctionStruct, %{
+            name: ivk.function,
+            module: ivk.module,
+            code: f.code,
+            metadata: struct(FunctionMetadata)
+          })
 
-        out =
-          case invoke_without_code(worker, ivk_pars) do
-            {:error, :code_not_found, handler} ->
-              worker
-              |> invoke_with_code(handler, ivk_pars)
-              |> save_to_sinks(ivk_pars.module, ivk_pars.function)
+        with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select(func) do
+          update_concurrent(worker, +1)
 
-            res ->
-              save_to_sinks(res, ivk_pars.module, ivk_pars.function)
-          end
+          out =
+            case invoke_without_code(worker, ivk) do
+              {:error, :code_not_found, handler} ->
+                worker
+                |> invoke_with_code(handler, ivk, func)
+                |> save_to_sinks(ivk.module, ivk.function)
 
-        update_concurrent(worker, -1)
+              res ->
+                save_to_sinks(res, ivk.module, ivk.function)
+            end
 
-        out
-      end
-    else
-      {:error, :not_found}
+          update_concurrent(worker, -1)
+
+          out
+        end
+
+      [] ->
+        {:error, :not_found}
     end
   end
 
@@ -110,25 +122,11 @@ defmodule Core.Domain.Invoker do
     Commands.send_invoke(worker, ivk.function, ivk.module, ivk.args)
   end
 
-  @spec invoke_with_code(atom(), pid(), InvokeParams.t()) ::
+  @spec invoke_with_code(atom(), pid(), InvokeParams.t(), FunctionStruct.t()) ::
           {:ok, InvokeResult.t()} | {:error, {:exec_error, any()}}
-  def invoke_with_code(worker, handler, ivk) do
+  def invoke_with_code(worker, handler, _, func) do
     Logger.warn("Invoker: function not available in worker, re-invoking with code")
-
-    case Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
-      [f] ->
-        func =
-          struct(FunctionStruct, %{
-            name: ivk.function,
-            module: ivk.module,
-            code: f.code
-          })
-
-        Commands.send_invoke_with_code(worker, handler, func)
-
-      [] ->
-        {:error, :not_found}
-    end
+    Commands.send_invoke_with_code(worker, handler, func)
   end
 
   @spec save_to_sinks({:error, any} | {:ok, InvokeResult.t()}, String.t(), String.t()) ::

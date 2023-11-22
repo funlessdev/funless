@@ -17,6 +17,7 @@ defmodule Core.Domain.Scheduler do
   Scheduler for the funless platform. It is used to choose a worker to run a function.
   """
 
+  alias Core.Domain.Policies.SchedulingPolicy
   alias Core.Domain.Ports.Telemetry.Metrics
   require Logger
 
@@ -25,39 +26,42 @@ defmodule Core.Domain.Scheduler do
   @doc """
   Receives a list of workers and chooses one which can be used for invocation.
   """
-  @spec select(list()) :: {:ok, worker_atom()} | {:error, :no_workers}
-  def select([]) do
+  @spec select([worker_atom()], Data.FunctionStruct.t()) ::
+          {:ok, worker_atom()} | {:error, :no_workers} | {:error, :no_valid_workers}
+  def select([], _) do
     Logger.warn("Scheduler: tried selection with NO workers")
     {:error, :no_workers}
   end
 
-  def select([w]) do
+  def select([w], _) do
     Logger.info("Scheduler: selection with only one worker #{inspect(w)}")
     {:ok, w}
   end
 
-  def select(workers) do
+  def select(workers, function) do
     Logger.info("Scheduler: selection with #{length(workers)} workers")
 
     # Get the resources
-    resources = Enum.map(workers, &Metrics.resources/1) |> Enum.filter(&match?({:ok, _}, &1))
+    resources =
+      Enum.map(workers, &Metrics.resources/1)
+      |> Enum.filter(&match?({:ok, _}, &1))
+      |> Enum.map(&elem(&1, 1))
 
-    w =
-      case resources do
-        [] ->
-          # If resources are unavailable for some reason, pick a random worker
-          Enum.random(workers)
+    case resources do
+      [] ->
+        # If resources are unavailable for some reason, pick a random worker
+        {:ok, Enum.random(workers)}
 
-        [_ | _] ->
-          # Couple worker -> {:ok, resources}
-          workers_resources = Enum.zip(workers, resources)
-
-          # Get the {worker, {:ok, resources}}, resource is just the allocated_bytes integer as of now
-          workers_resources
-          |> Enum.min_by(fn {_w, {:ok, r}} -> r end)
-          |> elem(0)
-      end
-
-    {:ok, w}
+      [_ | _] ->
+        # This will be expanded to allow use of multiple policies (depending on function metadata)
+        case SchedulingPolicy.select(
+               %Data.Configurations.Empty{},
+               resources,
+               function
+             ) do
+          {:ok, wrk} -> {:ok, wrk.name}
+          {:error, err} -> {:error, err}
+        end
+    end
   end
 end
