@@ -33,11 +33,6 @@ defmodule Core.Domain.Scheduler do
     {:error, :no_workers}
   end
 
-  def select([w], _) do
-    Logger.info("Scheduler: selection with only one worker #{inspect(w)}")
-    {:ok, w}
-  end
-
   def select(workers, function) do
     Logger.info("Scheduler: selection with #{length(workers)} workers")
 
@@ -46,6 +41,8 @@ defmodule Core.Domain.Scheduler do
       Enum.map(workers, &Metrics.resources/1)
       |> Enum.filter(&match?({:ok, _}, &1))
       |> Enum.map(&elem(&1, 1))
+
+    IO.puts("here #{inspect(workers)}")
 
     case resources do
       [] ->
