@@ -40,9 +40,9 @@ defmodule Core.Application do
       ## Core Children
       Core.Repo,
       Core.SubjectsRepo,
+      {Core.Adapters.Telemetry.Supervisor, []},
       {Cluster.Supervisor, [topologies, [name: Core.ClusterSupervisor]]},
       {Core.Adapters.Subjects.Cache, []},
-      {Core.Adapters.Telemetry.Supervisor, []},
       {Core.Adapters.Connectors.Supervisor, []},
       {Core.Adapters.DataSinks.Supervisor, []}
     ]
