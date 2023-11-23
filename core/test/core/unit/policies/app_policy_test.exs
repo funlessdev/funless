@@ -471,7 +471,23 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       assert app_impl.select(script, [], function) == {:error, :no_workers}
     end
 
-    test "select should return {:error, :no_valid_workers} when given a non-empty worker list, but finding no valid workers" do
+    test "select should return {:error, :no_valid_workers} when given a non-empty worker list, but finding no valid workers",
+         %{impl: app_impl, script: script, function: function, workers: [wrk1, wrk2, _]} do
+      wrk1 =
+        wrk1
+        |> Map.put(:resources, %Metrics{
+          memory: %{available: 0, total: 256}
+        })
+
+      wrk2 =
+        wrk2
+        |> Map.put(:resources, %Metrics{
+          memory: %{available: 0, total: 256}
+        })
+
+      invalidate_workers = [wrk1, wrk2]
+
+      assert app_impl.select(script, invalidate_workers, function) == {:error, :no_valid_workers}
     end
 
     test "select should return {:error, :no_matching_tag} when the function's tag is not found in the script and default tag is undefined",
