@@ -58,13 +58,12 @@ defmodule Core.Domain.Invoker do
 
     case Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
       [f] ->
-        func =
-          struct(FunctionStruct, %{
-            name: ivk.function,
-            module: ivk.module,
-            code: f.code,
-            metadata: struct(FunctionMetadata)
-          })
+        func = %FunctionStruct{
+          name: ivk.function,
+          module: ivk.module,
+          code: f.code,
+          metadata: struct(FunctionMetadata, %{})
+        }
 
         with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select(func) do
           update_concurrent(worker, +1)

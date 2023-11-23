@@ -42,8 +42,6 @@ defmodule Core.Domain.Scheduler do
       |> Enum.filter(&match?({:ok, _}, &1))
       |> Enum.map(&elem(&1, 1))
 
-    IO.puts("here #{inspect(workers)}")
-
     case resources do
       [] ->
         # If resources are unavailable for some reason, pick a random worker
