@@ -25,7 +25,7 @@ defmodule Worker.Domain.Ports.ResourceCache do
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @doc """
-  Retrieve the resource associated to the given function name and module.
+  Retrieve the resource associated with the given function name and module.
 
   ### Parameters
   - `function_name` - The name of the function.
@@ -39,10 +39,10 @@ defmodule Worker.Domain.Ports.ResourceCache do
   defdelegate get(function_name, module), to: @adapter
 
   @doc """
-  Inserts a resource into the ResourceCache associated to a function.
+  Inserts a resource into the ResourceCache associated with a function.
 
   ### Parameters
-  - `function_name` - The name of the function to associate the runtime with.
+  - `function_name` - The name of the function to associate the resource with.
   - `module` - The module of the function.
   - `resource` - The ExecutionResource of the function to be inserted.
 
@@ -51,13 +51,13 @@ defmodule Worker.Domain.Ports.ResourceCache do
   - `{:error, err}` - If an error occurred and the resource could not be inserted.
   """
   @spec insert(String.t(), String.t(), ExecutionResource.t()) :: :ok | {:error, any}
-  defdelegate insert(function_name, module, runtime), to: @adapter
+  defdelegate insert(function_name, module, resource), to: @adapter
 
   @doc """
   Removes the resource associated with a function from the ResourceCache.
 
   ### Parameters
-  - `function_name` - The name of the function that the runtime is associated with.
+  - `function_name` - The name of the function that the resource is associated with.
   - `module` - The module of the function.
 
   ### Returns

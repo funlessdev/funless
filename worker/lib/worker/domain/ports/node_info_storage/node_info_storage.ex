@@ -24,7 +24,7 @@ defmodule Worker.Domain.Ports.NodeInfoStorage do
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @doc """
-  Retrieve the value associated to the given key.
+  Retrieve the value associated with the given key.
 
   ### Parameters
   - `key` - Identifier (e.g. long_name, tag).
@@ -38,7 +38,7 @@ defmodule Worker.Domain.Ports.NodeInfoStorage do
   defdelegate get(key), to: @adapter
 
   @doc """
-  Insert a new value associated to the given key.
+  Insert a new value associated with the given key.
 
   ### Parameters
   - `key` - Identifier (e.g. long_name, tag). Must be a string.
@@ -53,7 +53,7 @@ defmodule Worker.Domain.Ports.NodeInfoStorage do
   defdelegate insert(key, value), to: @adapter
 
   @doc """
-  Update the value associated to the given (existing) key.
+  Update the value associated with the given (existing) key.
 
   ### Parameters
   - `key` - Identifier (e.g. long_name, tag). Must be a string.
