@@ -19,6 +19,7 @@ config :logger, level: :warn, backends: []
 
 # --- Worker Configs ---
 config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.ResourceCache.Mock
+config :worker, Worker.Domain.Ports.RawResourceStorage, adapter: Worker.RawResourceStorage.Mock
 config :worker, Worker.Domain.Ports.Runtime.Provisioner, adapter: Worker.Provisioner.Mock
 config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Runner.Mock
 config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Cleaner.Mock
