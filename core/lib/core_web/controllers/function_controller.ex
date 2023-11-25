@@ -15,12 +15,19 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
+  alias Data.FunctionStruct
+  alias Core.Domain.Nodes
+  alias Core.Domain.WorkerResourceHandler
   alias Core.Domain.DataSink
   alias Core.Domain.{Events, Functions, Invoker, Modules}
   alias Core.Schemas.Function
   alias Data.InvokeParams
 
   require Logger
+
+  @store_on_create :core
+                   |> Application.compile_env!(__MODULE__)
+                   |> Keyword.fetch!(:store_on_create)
 
   action_fallback(CoreWeb.FallbackController)
 
@@ -53,6 +60,9 @@ defmodule CoreWeb.FunctionController do
     events_req = params |> Map.get("events", nil) |> parse_requested_events_sinks()
     sinks_req = params |> Map.get("sinks", nil) |> parse_requested_events_sinks()
 
+    # wait for all workers to receive the code; true by default
+    wait_for_workers = params |> Map.get("wait_for_workers", true)
+
     if events_req == :error or sinks_req == :error do
       Logger.error("Function Controller: received invalid JSON. Aborting function creation.")
       {:error, :bad_params}
@@ -69,6 +79,9 @@ defmodule CoreWeb.FunctionController do
 
             event_results = Events.connect_events(fn_name, module_name, events_req)
             sinks_results = DataSink.plug_data_sinks(fn_name, module_name, sinks_req)
+
+            send_function_to_workers(fn_name, module_name, code)
+            |> do_wait_for_workers(wait_for_workers)
 
             {status, render_params} =
               build_render_params(%{function: function}, event_results, sinks_results, :created)
@@ -175,5 +188,35 @@ defmodule CoreWeb.FunctionController do
      render_params
      |> Map.put(:events, events)
      |> Map.put(:sinks, sinks)}
+  end
+
+  defp send_function_to_workers(function_name, module, code) do
+    if @store_on_create == "true" do
+      workers = Nodes.worker_nodes()
+
+      function =
+        struct(FunctionStruct, %{
+          name: function_name,
+          module: module,
+          code: code
+        })
+
+      Task.async_stream(workers, fn wrk -> WorkerResourceHandler.store_function(wrk, function) end)
+    else
+      []
+    end
+  end
+
+  defp do_wait_for_workers(stream, "true") do
+    {_pid, ref} = Process.spawn(fn -> Stream.run(stream) end, [:monitor])
+
+    receive do
+      {:DOWN, ^ref, _, _, _} ->
+        :ok
+    end
+  end
+
+  defp do_wait_for_workers(stream, _) do
+    Stream.run(stream)
   end
 end

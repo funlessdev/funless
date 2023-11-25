@@ -30,6 +30,9 @@ config :core, Core.Domain.Ports.Connectors.Manager, adapter: Core.Adapters.Conne
 config :core, Core.Domain.Ports.DataSinks.Manager, adapter: Core.Adapters.DataSinks.Manager
 config :core, Core.Domain.Ports.SubjectCache, adapter: Core.Adapters.Subjects.Cache
 
+config :core, CoreWeb.FunctionController,
+  store_on_create: System.get_env("STORE_ON_CREATE") || "true"
+
 config :core,
   ecto_repos: [Core.Repo, Core.SubjectsRepo]
 

@@ -27,4 +27,9 @@ defmodule Core.Adapters.Commands.Test do
   def send_invoke_with_code(_worker, _handler, function) do
     {:ok, %InvokeResult{result: function.name}}
   end
+
+  @impl true
+  def send_store_function(_worker, _func) do
+    :ok
+  end
 end

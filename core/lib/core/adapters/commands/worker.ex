@@ -56,4 +56,16 @@ defmodule Core.Adapters.Commands.Worker do
       {:error, err} -> {:error, err}
     end
   end
+
+  @impl true
+  def send_store_function(worker, %FunctionStruct{} = function) do
+    worker_addr = {:worker, worker}
+    cmd = {:store_function, function}
+
+    Logger.info(
+      "Sending store_function for #{function.module}/#{function.name} to #{inspect(worker_addr)}"
+    )
+
+    GenServer.call(worker_addr, cmd, 60_000)
+  end
 end

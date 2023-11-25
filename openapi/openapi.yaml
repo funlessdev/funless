@@ -145,6 +145,10 @@ components:
           type: string
           format: binary
           description: File with the code of the function
+        wait_for_workers:
+          description: Whether to wait for all workers to receive the code of the function. If false, the request returns as soon as the creation request terminates.
+          type: boolean
+          default: true
         events:
           description: Events that can trigger the function
           type: array
