@@ -61,7 +61,7 @@ defmodule Worker.Domain.ProvisionResource do
   @spec cache_resource({:ok, ExecutionResource.t()} | {:error, any()}, String.t(), String.t()) ::
           {:ok, ExecutionResource.t()} | {:error, any}
   defp cache_resource({:error, :code_not_found}, _, _) do
-    Logger.warn("API: requesting resource from core...")
+    Logger.warn("API: resource not found...")
     {:error, :code_not_found}
   end
 

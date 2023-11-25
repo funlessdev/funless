@@ -121,7 +121,8 @@ defmodule Worker.Adapters.RawResourceStorage do
     end
   end
 
-  defp do_insert(process_name, function_name, module, resource) do
+  @spec do_insert(String.t(), String.t(), String.t(), binary()) :: :ok | {:error, any()}
+  def do_insert(process_name, function_name, module, resource) do
     case Registry.register(@registry, process_name, nil) do
       {:ok, _} ->
         file_path = get_file_path(function_name, module)
@@ -195,7 +196,8 @@ defmodule Worker.Adapters.RawResourceStorage do
     end
   end
 
-  defp do_delete(process_name, function_name, module) do
+  @spec do_delete(String.t(), String.t(), String.t()) :: :ok | {:error, any()}
+  def do_delete(process_name, function_name, module) do
     case Registry.register(@registry, process_name, nil) do
       {:ok, _} ->
         file_path = get_file_path(function_name, module)

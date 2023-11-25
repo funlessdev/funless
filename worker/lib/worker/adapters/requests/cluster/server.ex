@@ -78,5 +78,6 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
       ) do
     Logger.info("Received store function request for function #{mod}/#{fun}")
     spawn(Cluster, :store_function, [f, from])
+    {:noreply, nil}
   end
 end

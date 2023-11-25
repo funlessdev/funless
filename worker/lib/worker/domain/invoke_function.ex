@@ -70,6 +70,7 @@ defmodule Worker.Domain.InvokeFunction do
         {:error, :code_not_found, pid}
 
       raw_resource ->
+        Logger.info("API: Raw resource found locally, provisioning...")
         f = f |> Map.put(:code, raw_resource)
         {:ok, resource} = ProvisionResource.provision(f)
         Runner.run_function(f, args, resource)
