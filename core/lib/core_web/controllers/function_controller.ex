@@ -15,12 +15,18 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
-  alias Data.FunctionStruct
-  alias Core.Domain.Nodes
-  alias Core.Domain.WorkerResourceHandler
-  alias Core.Domain.DataSink
-  alias Core.Domain.{Events, Functions, Invoker, Modules}
+  alias Core.Domain.{
+    DataSink,
+    Events,
+    Functions,
+    Invoker,
+    Modules,
+    Nodes,
+    WorkerResourceHandler
+  }
+
   alias Core.Schemas.Function
+  alias Data.FunctionStruct
   alias Data.InvokeParams
 
   require Logger
@@ -76,7 +82,8 @@ defmodule CoreWeb.FunctionController do
             event_results = Events.connect_events(fn_name, module_name, events_req)
             sinks_results = DataSink.plug_data_sinks(fn_name, module_name, sinks_req)
 
-            send_function_to_workers(fn_name, module_name, code)
+            store_on_create()
+            |> send_function_to_workers(fn_name, module_name, code)
             |> do_wait_for_workers(wait_for_workers)
 
             {status, render_params} =
@@ -186,23 +193,27 @@ defmodule CoreWeb.FunctionController do
      |> Map.put(:sinks, sinks)}
   end
 
-  defp send_function_to_workers(function_name, module, code) do
-    if store_on_create() do
-      workers = Nodes.worker_nodes()
+  defp send_function_to_workers(true, function_name, module, code) do
+    workers = Nodes.worker_nodes()
 
-      function =
-        struct(FunctionStruct, %{
-          name: function_name,
-          module: module,
-          code: code
-        })
+    function =
+      struct(FunctionStruct, %{
+        name: function_name,
+        module: module,
+        code: code
+      })
 
-      Logger.info("Function controller: sending code to workers")
+    Logger.info("Function controller: sending code to workers")
 
-      Task.async_stream(workers, fn wrk -> WorkerResourceHandler.store_function(wrk, function) end)
-    else
-      []
-    end
+    Task.async_stream(workers, fn wrk -> WorkerResourceHandler.store_function(wrk, function) end)
+  end
+
+  defp send_function_to_workers(false, _, _, _) do
+    []
+  end
+
+  defp do_wait_for_workers([], _) do
+    :ok
   end
 
   defp do_wait_for_workers(stream, true) do
@@ -210,11 +221,8 @@ defmodule CoreWeb.FunctionController do
 
     receive do
       {:DOWN, ^ref, _, _, _} ->
+        Logger.info("Function controller: code sent to all workers")
         :ok
-    end
-
-    if store_on_create() do
-      Logger.info("Function controller: code sent to all workers")
     end
   end
 
