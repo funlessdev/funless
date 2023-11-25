@@ -25,10 +25,6 @@ defmodule CoreWeb.FunctionController do
 
   require Logger
 
-  @store_on_create :core
-                   |> Application.compile_env!(__MODULE__)
-                   |> Keyword.fetch!(:store_on_create)
-
   action_fallback(CoreWeb.FallbackController)
 
   def show(conn, %{"module_name" => mod_name, "function_name" => name}) do
@@ -191,7 +187,7 @@ defmodule CoreWeb.FunctionController do
   end
 
   defp send_function_to_workers(function_name, module, code) do
-    if @store_on_create == "true" do
+    if store_on_create() do
       workers = Nodes.worker_nodes()
 
       function =
@@ -201,22 +197,34 @@ defmodule CoreWeb.FunctionController do
           code: code
         })
 
+      Logger.info("Function controller: sending code to workers")
+
       Task.async_stream(workers, fn wrk -> WorkerResourceHandler.store_function(wrk, function) end)
     else
       []
     end
   end
 
-  defp do_wait_for_workers(stream, "true") do
+  defp do_wait_for_workers(stream, true) do
     {_pid, ref} = Process.spawn(fn -> Stream.run(stream) end, [:monitor])
 
     receive do
       {:DOWN, ^ref, _, _, _} ->
         :ok
     end
+
+    if store_on_create() do
+      Logger.info("Function controller: code sent to all workers")
+    end
   end
 
-  defp do_wait_for_workers(stream, _) do
+  defp do_wait_for_workers(stream, false) do
     Stream.run(stream)
+  end
+
+  defp store_on_create do
+    :core
+    |> Application.fetch_env!(:store_on_create)
+    |> then(fn v -> String.downcase(v) == "true" end)
   end
 end
