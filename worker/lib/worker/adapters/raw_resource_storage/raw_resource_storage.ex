@@ -126,14 +126,17 @@ defmodule Worker.Adapters.RawResourceStorage do
       {:ok, _} ->
         file_path = get_file_path(function_name, module)
 
-        if File.exists?(file_path) do
-          # nothing to do (in the future we should update)
-          :ok
-        else
-          case File.write(file_path, resource) do
-            :ok -> :ok
-            {:error, err} -> exit({:error, err})
+        result =
+          if File.exists?(file_path) do
+            # nothing to do (in the future we should update)
+            :ok
+          else
+            File.write(file_path, resource)
           end
+
+        case result do
+          :ok -> :ok
+          {:error, err} -> exit({:error, err})
         end
 
       {:error, err} ->
