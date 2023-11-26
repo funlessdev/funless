@@ -18,7 +18,6 @@ defmodule Worker.Adapters.RawResourceStorage do
     Raw resources (i.e. binaries) are saved in files.
   """
 
-  # TODO: we don't handle any exit reason, we only handle our errors; should actually handle abnormal exits
   # TODO: better error handling in get(), now every error is translated to "resource not found"
   @behaviour Worker.Domain.Ports.RawResourceStorage
 
@@ -51,11 +50,14 @@ defmodule Worker.Adapters.RawResourceStorage do
         ref = Process.monitor(pid)
 
         receive do
+          {:DOWN, ^ref, _, _, :normal} ->
+            do_get(function_name, module)
+
           {:DOWN, ^ref, _, _, {:error, _}} ->
             :resource_not_found
 
-          {:DOWN, ^ref, _, _, _} ->
-            do_get(function_name, module)
+          {:DOWN, ^ref, _, _, _reason} ->
+            :resource_not_found
         end
     end
   end
@@ -113,11 +115,14 @@ defmodule Worker.Adapters.RawResourceStorage do
       end
 
     receive do
+      {:DOWN, ^insert_ref, _, _, :normal} ->
+        :ok
+
       {:DOWN, ^insert_ref, _, _, {:error, err}} ->
         {:error, err}
 
-      {:DOWN, ^insert_ref, _, _, _} ->
-        :ok
+      {:DOWN, ^insert_ref, _, _, reason} ->
+        {:error, reason}
     end
   end
 
@@ -188,11 +193,14 @@ defmodule Worker.Adapters.RawResourceStorage do
       end
 
     receive do
+      {:DOWN, ^delete_ref, _, _, :normal} ->
+        :ok
+
       {:DOWN, ^delete_ref, _, _, {:error, err}} ->
         {:error, err}
 
-      {:DOWN, ^delete_ref, _, _, _} ->
-        :ok
+      {:DOWN, ^delete_ref, _, _, reason} ->
+        {:error, reason}
     end
   end
 

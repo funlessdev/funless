@@ -223,6 +223,13 @@ defmodule CoreWeb.FunctionController do
       {:DOWN, ^ref, _, _, _} ->
         Logger.info("Function controller: code sent to all workers")
         :ok
+
+      {:DOWN, ^ref, _, _, reason} ->
+        Logger.warn(
+          "Something went wrong while sending code to all workers (process exited with reason #{reason})"
+        )
+
+        :ok
     end
   end
 
