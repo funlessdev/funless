@@ -25,6 +25,8 @@ config :worker, Worker.Domain.Ports.Runtime.Runner, adapter: Worker.Runner.Mock
 config :worker, Worker.Domain.Ports.Runtime.Cleaner, adapter: Worker.Cleaner.Mock
 config :worker, Worker.Domain.Ports.NodeInfoStorage, adapter: Worker.NodeInfoStorage.Mock
 
+config :worker, Worker.Adapters.RawResourceStorage, prefix: "/tmp/funless/test/"
+
 # --- Libcluster Configs ---
 config :worker,
   topologies: [
