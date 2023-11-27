@@ -53,6 +53,9 @@ defmodule Worker.Adapters.RawResourceStorage do
           {:DOWN, ^ref, _, _, :normal} ->
             do_get(function_name, module)
 
+          {:DOWN, ^ref, _, _, :noproc} ->
+            do_get(function_name, module)
+
           {:DOWN, ^ref, _, _, {:error, _}} ->
             :resource_not_found
 
@@ -116,6 +119,9 @@ defmodule Worker.Adapters.RawResourceStorage do
 
     receive do
       {:DOWN, ^insert_ref, _, _, :normal} ->
+        :ok
+
+      {:DOWN, ^insert_ref, _, _, :noproc} ->
         :ok
 
       {:DOWN, ^insert_ref, _, _, {:error, err}} ->
@@ -196,6 +202,9 @@ defmodule Worker.Adapters.RawResourceStorage do
       {:DOWN, ^delete_ref, _, _, :normal} ->
         :ok
 
+      {:DOWN, ^delete_ref, _, _, :noproc} ->
+        :ok
+
       {:DOWN, ^delete_ref, _, _, {:error, err}} ->
         {:error, err}
 
@@ -212,6 +221,7 @@ defmodule Worker.Adapters.RawResourceStorage do
 
         case File.rm(file_path) do
           :ok -> :ok
+          {:error, :enoent} -> :ok
           {:error, err} -> exit({:error, err})
         end
 
@@ -221,6 +231,6 @@ defmodule Worker.Adapters.RawResourceStorage do
   end
 
   defp get_file_path(function_name, module) do
-    @file_prefix <> "#{module}_#{function_name}"
+    Path.join([@file_prefix, "#{module}_#{function_name}"])
   end
 end
