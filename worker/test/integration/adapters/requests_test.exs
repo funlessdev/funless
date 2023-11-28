@@ -14,6 +14,7 @@
 
 defmodule RequestTest do
   use ExUnit.Case
+  alias Data.FunctionStruct
   alias Worker.Adapters.Requests.Cluster
   import Mox, only: [verify_on_exit!: 1, set_mox_global: 1]
 
@@ -24,8 +25,7 @@ defmodule RequestTest do
     function = %{
       name: "hellojs",
       module: "_",
-      image: "nodejs",
-      code: "console.log(\"hello\")"
+      code: "code"
     }
 
     %{function: function}
@@ -37,6 +37,7 @@ defmodule RequestTest do
       Worker.Runner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Runner.Test)
       Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache.Test)
       Worker.NodeInfoStorage.Mock |> Mox.stub_with(Worker.Adapters.NodeInfoStorage.Test)
+      Worker.RawResourceStorage.Mock |> Mox.stub_with(Worker.Adapters.RawResourceStorage.Test)
 
       Application.stop(Cluster.Server)
       {:ok, pid} = GenServer.start(Cluster.Server, [])
@@ -77,6 +78,19 @@ defmodule RequestTest do
       assert GenServer.call(pid, :get_info) == {:ok, long_name, tag}
       assert GenServer.call(pid, {:set_tag, "new_tag"}) == {:ok, long_name, "new_tag"}
       assert GenServer.call(pid, {:set_long_name, "new_long_name"}) == {:ok, "new_long_name", tag}
+    end
+
+    test "store_resource calls should try to store a raw resource and return :ok when no error occurs",
+         %{
+           pid: pid
+         } do
+      Worker.RawResourceStorage.Mock
+      |> Mox.expect(:insert, fn "fn", "mod", <<0, 0, 0>> -> :ok end)
+
+      assert GenServer.call(
+               pid,
+               {:store_function, %FunctionStruct{name: "fn", module: "mod", code: <<0, 0, 0>>}}
+             ) == :ok
     end
   end
 end
