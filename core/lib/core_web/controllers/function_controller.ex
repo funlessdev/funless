@@ -234,7 +234,8 @@ defmodule CoreWeb.FunctionController do
   end
 
   defp do_wait_for_workers(stream, false) do
-    Stream.run(stream)
+    _ = Process.spawn(fn -> do_wait_for_workers(stream, true) end, [])
+    :ok
   end
 
   defp store_on_create do

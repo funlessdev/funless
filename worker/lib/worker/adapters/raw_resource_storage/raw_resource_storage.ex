@@ -18,7 +18,6 @@ defmodule Worker.Adapters.RawResourceStorage do
     Raw resources (i.e. binaries) are saved in files.
   """
 
-  # TODO: better error handling in get(), now every error is translated to "resource not found"
   @behaviour Worker.Domain.Ports.RawResourceStorage
 
   @file_prefix :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:prefix)
