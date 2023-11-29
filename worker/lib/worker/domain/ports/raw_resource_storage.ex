@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Domain.Ports.ResourceCache do
+defmodule Worker.Domain.Ports.RawResourceStorage do
   @moduledoc """
-  Port for keeping track of execution resources associated with a function, module tuple.
+  Port for storing raw binaries of resources associated with a function, module tuple.
+  For storage of initialized/compiled resources, see ResourceCache.
   """
-  alias Data.ExecutionResource
 
-  @callback get(String.t(), String.t()) :: ExecutionResource.t() | :resource_not_found
-  @callback insert(String.t(), String.t(), ExecutionResource.t()) :: :ok | {:error, any}
+  @callback get(String.t(), String.t()) :: binary() | :resource_not_found
+  @callback insert(String.t(), String.t(), binary()) :: :ok | {:error, any}
   @callback delete(String.t(), String.t()) :: :ok | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
@@ -32,10 +32,10 @@ defmodule Worker.Domain.Ports.ResourceCache do
   - `module` - The module of the function.
 
   ### Returns
-  - `ExecutionResource.t()` - The resource of the given function name if found.
+  - `binary()` - The raw resource associated with the function.
   - `:resource_not_found` - If the resource is not found.
   """
-  @spec get(String.t(), String.t()) :: ExecutionResource.t() | :resource_not_found
+  @spec get(String.t(), String.t()) :: binary() | :resource_not_found
   defdelegate get(function_name, module), to: @adapter
 
   @doc """
@@ -44,17 +44,17 @@ defmodule Worker.Domain.Ports.ResourceCache do
   ### Parameters
   - `function_name` - The name of the function to associate the resource with.
   - `module` - The module of the function.
-  - `resource` - The ExecutionResource of the function to be inserted.
+  - `resource` - The raw resource (i.e. binary) of the function to be inserted.
 
   ### Returns
   - `:ok` - If the resource was inserted.
   - `{:error, err}` - If an error occurred and the resource could not be inserted.
   """
-  @spec insert(String.t(), String.t(), ExecutionResource.t()) :: :ok | {:error, any}
+  @spec insert(String.t(), String.t(), binary()) :: :ok | {:error, any}
   defdelegate insert(function_name, module, resource), to: @adapter
 
   @doc """
-  Removes the resource associated with a function from the ResourceCache.
+  Removes the raw resource associated with a function from the storage.
 
   ### Parameters
   - `function_name` - The name of the function that the resource is associated with.

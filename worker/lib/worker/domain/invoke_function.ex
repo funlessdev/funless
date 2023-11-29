@@ -17,6 +17,7 @@ defmodule Worker.Domain.InvokeFunction do
   Contains functions used to run function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
 
+  alias Worker.Domain.Ports.RawResourceStorage
   alias Worker.Domain.Ports.Runtime.Runner
   alias Worker.Domain.Ports.WaitForCode
   alias Worker.Domain.ProvisionResource
@@ -51,8 +52,7 @@ defmodule Worker.Domain.InvokeFunction do
         Runner.run_function(function, args, resource)
 
       {:error, :code_not_found} ->
-        {:ok, pid} = WaitForCode.wait_for_code(args)
-        {:error, :code_not_found, pid}
+        invoke_no_code(f, args)
 
       {:error, err} ->
         {:error, err}
@@ -60,4 +60,20 @@ defmodule Worker.Domain.InvokeFunction do
   end
 
   def invoke(_, _), do: {:error, :bad_params}
+
+  @spec invoke_no_code(Data.FunctionStruct.t(), map()) ::
+          {:error, any()} | {:ok, any()} | {:error, :code_not_found, pid()}
+  def invoke_no_code(%FunctionStruct{name: name, module: mod} = f, args) do
+    case RawResourceStorage.get(name, mod) do
+      :resource_not_found ->
+        {:ok, pid} = WaitForCode.wait_for_code(args)
+        {:error, :code_not_found, pid}
+
+      raw_resource ->
+        Logger.info("API: Raw resource found locally, provisioning...")
+        f = f |> Map.put(:code, raw_resource)
+        {:ok, resource} = ProvisionResource.provision(f)
+        Runner.run_function(f, args, resource)
+    end
+  end
 end

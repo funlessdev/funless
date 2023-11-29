@@ -19,6 +19,7 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
     All calls return immediately without replying, delegating the required work to Requests.Cluster functions.
   """
   use GenServer, restart: :permanent
+  alias Data.FunctionStruct
   alias Worker.Adapters.Requests.Cluster
 
   require Logger
@@ -66,6 +67,17 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
   def handle_call(:get_info, from, _state) do
     Logger.info("Received get info request.")
     spawn(Cluster, :get_info, [from])
+    {:noreply, nil}
+  end
+
+  @impl true
+  def handle_call(
+        {:store_function, %FunctionStruct{name: fun, module: mod, code: _} = f},
+        from,
+        _state
+      ) do
+    Logger.info("Received store function request for function #{mod}/#{fun}")
+    spawn(Cluster, :store_function, [f, from])
     {:noreply, nil}
   end
 end

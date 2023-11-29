@@ -24,6 +24,7 @@ defmodule Worker.Application do
 
     children = [
       {Worker.Domain.Ports.NodeInfoStorage.Supervisor, []},
+      {Registry, keys: :unique, name: Worker.Adapters.RawResourceStorage.Registry},
       Worker.PromEx,
       {Cluster.Supervisor, [topologies, [name: Worker.ClusterSupervisor]]},
       {Adapters.Requests.Cluster.Server, []},

@@ -37,7 +37,7 @@ defmodule Core.Adapters.Commands.Worker do
     cmd = {:invoke, %{name: name, module: mod}, args}
     Logger.info("Sending invoke for #{mod}/#{name} to #{inspect(worker_addr)}")
 
-    case GenServer.call(worker_addr, cmd, 30_000) do
+    case GenServer.call(worker_addr, cmd, 60_000) do
       {:ok, result} -> {:ok, %InvokeResult{result: result}}
       {:error, :code_not_found, handler} -> {:error, :code_not_found, handler}
       {:error, err} -> {:error, err}
@@ -51,9 +51,21 @@ defmodule Core.Adapters.Commands.Worker do
 
     Logger.info("Sending invoke with code #{func.module}/#{func.name} to #{inspect(worker_addr)}")
 
-    case GenServer.call(worker_addr, cmd, 30_000) do
+    case GenServer.call(worker_addr, cmd, 60_000) do
       {:ok, result} -> {:ok, %InvokeResult{result: result}}
       {:error, err} -> {:error, err}
     end
+  end
+
+  @impl true
+  def send_store_function(worker, %FunctionStruct{} = function) do
+    worker_addr = {:worker, worker}
+    cmd = {:store_function, function}
+
+    Logger.info(
+      "Sending store_function for #{function.module}/#{function.name} to #{inspect(worker_addr)}"
+    )
+
+    GenServer.call(worker_addr, cmd, 60_000)
   end
 end

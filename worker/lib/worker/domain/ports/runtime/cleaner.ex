@@ -14,7 +14,7 @@
 
 defmodule Worker.Domain.Ports.Runtime.Cleaner do
   @moduledoc """
-  Port for runtime removal.
+  Port for ExecutionResource removal.
   """
   alias Data.ExecutionResource
 
@@ -23,7 +23,7 @@ defmodule Worker.Domain.Ports.Runtime.Cleaner do
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
   @doc """
-  Cleans up the resources from the host system associated to a particular function.
+  Cleans up the resources from the host system associated with a particular function.
 
   ### Parameters
   - `resource` - The ExecutionResource.t() to be removed.

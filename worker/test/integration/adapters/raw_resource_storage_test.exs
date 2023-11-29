@@ -12,36 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Integration.ResourceCacheTest do
+defmodule Integration.Adapters.RawResourceStorageTest do
   use ExUnit.Case
   alias Data.ExecutionResource
-  alias Worker.Adapters.ResourceCache
+  alias Worker.Adapters.RawResourceStorage
   import Mox, only: [verify_on_exit!: 1]
+
+  @file_prefix :worker |> Application.compile_env!(RawResourceStorage) |> Keyword.fetch!(:prefix)
 
   setup :verify_on_exit!
 
+  setup_all do
+    File.mkdir_p(@file_prefix)
+    on_exit(fn -> File.rm_rf!(@file_prefix) end)
+  end
+
   test "get returns an empty :resource_not_found when no resource stored" do
-    result = ResourceCache.get("test-no-runtime", "fake-ns")
+    result = RawResourceStorage.get("test-no-runtime", "fake-ns")
     assert result == :resource_not_found
   end
 
-  test "insert adds a {function_name, module} resource to the cache" do
-    runtime = %ExecutionResource{resource: "runtime"}
+  test "insert saves a retrievable binary to the storage" do
+    raw_resource = <<1, 2, 3, 4>>
 
-    ResourceCache.insert("test", "ns", runtime)
-    assert ResourceCache.get("test", "ns") == runtime
-    ResourceCache.delete("test", "ns")
+    assert RawResourceStorage.insert("test", "ns", raw_resource) == :ok
+    assert RawResourceStorage.get("test", "ns") == raw_resource
+    RawResourceStorage.delete("test", "ns")
   end
 
-  test "delete removes a {function_name, ns} resource couple from the storage" do
+  test "delete removes a binary from the storage" do
     runtime = %ExecutionResource{resource: "runtime"}
-    ResourceCache.insert("test-delete", "ns", runtime)
-    ResourceCache.delete("test-delete", "ns")
-    assert ResourceCache.get("test-delete", "ns") == :resource_not_found
+    RawResourceStorage.insert("test-delete", "ns", runtime)
+    RawResourceStorage.delete("test-delete", "ns")
+    assert RawResourceStorage.get("test-delete", "ns") == :resource_not_found
   end
 
   test "delete on empty storage does nothing" do
-    result = ResourceCache.delete("test", "ns")
+    result = RawResourceStorage.delete("test", "ns")
     assert result == :ok
   end
 end

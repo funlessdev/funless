@@ -28,7 +28,7 @@ defmodule Worker.Adapters.ResourceCache do
   @resource_cache_table :resource_cache
 
   @doc """
-  Retrieve a resource from the cache, associated to a function name and a module.
+  Retrieve a resource from the cache, associated with a function name and a module.
 
   ## Parameters
   - `function_name`: the name of the function
@@ -47,7 +47,7 @@ defmodule Worker.Adapters.ResourceCache do
   end
 
   @doc """
-  Store a resource in the cache, associated to a function name and a module.
+  Store a resource in the cache, associated with a function name and a module.
 
   ## Parameters
   - `function_name`: the name of the function
@@ -63,7 +63,7 @@ defmodule Worker.Adapters.ResourceCache do
   end
 
   @doc """
-  Remove a resource from the cache, associated to a function name and a module.
+  Remove a resource from the cache, associated with a function name and a module.
 
   ## Parameters
   - `function_name`: the name of the function

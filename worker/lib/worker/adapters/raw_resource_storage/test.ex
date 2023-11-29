@@ -12,11 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Mox.defmock(Worker.Provisioner.Mock, for: Worker.Domain.Ports.Runtime.Provisioner)
-Mox.defmock(Worker.Runner.Mock, for: Worker.Domain.Ports.Runtime.Runner)
-Mox.defmock(Worker.Cleaner.Mock, for: Worker.Domain.Ports.Runtime.Cleaner)
+defmodule Worker.Adapters.RawResourceStorage.Test do
+  @moduledoc false
+  @behaviour Worker.Domain.Ports.RawResourceStorage
 
-Mox.defmock(Worker.ResourceCache.Mock, for: Worker.Domain.Ports.ResourceCache)
-Mox.defmock(Worker.RawResourceStorage.Mock, for: Worker.Domain.Ports.RawResourceStorage)
-Mox.defmock(Worker.NodeInfoStorage.Mock, for: Worker.Domain.Ports.NodeInfoStorage)
-Mox.defmock(Worker.WaitForCode.Mock, for: Worker.Domain.Ports.WaitForCode)
+  @impl true
+  def get(_name, _mod) do
+    <<0>>
+  end
+
+  @impl true
+  def insert(_name, _mod, _resource) do
+    :ok
+  end
+
+  @impl true
+  def delete(_name, _mod) do
+    :ok
+  end
+end

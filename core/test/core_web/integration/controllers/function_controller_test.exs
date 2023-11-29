@@ -25,51 +25,45 @@ defmodule CoreWeb.FunctionControllerTest do
     code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
     name: "some_name"
   }
-  @create_attrs_events %{
-    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
-    name: "some_name",
-    events:
-      "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]"
-  }
-  @create_attrs_sinks %{
-    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
-    name: "some_name",
-    sinks:
-      "[{\"type\": \"mongodb\", \"params\": {}}, {\"type\": \"another_one\", \"params\": {}}]"
-  }
-  @create_attrs_events_sinks %{
-    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
-    name: "some_name",
-    events:
-      "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]",
-    sinks:
-      "[{\"type\": \"mongodb\", \"params\": {}}, {\"type\": \"another_one\", \"params\": {}}]"
-  }
+  @create_attrs_events @create_attrs
+                       |> Map.put(
+                         :events,
+                         "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]"
+                       )
+
+  @create_attrs_sinks @create_attrs
+                      |> Map.put(
+                        :sinks,
+                        "[{\"type\": \"mongodb\", \"params\": {}}, {\"type\": \"another_one\", \"params\": {}}]"
+                      )
+
+  @create_attrs_events_sinks @create_attrs_events |> Map.merge(@create_attrs_sinks)
+
+  @create_attrs_wait_for_workers @create_attrs |> Map.put(:wait_for_workers, true)
+  @create_attrs_no_wait_for_workers @create_attrs |> Map.put(:wait_for_workers, false)
+
   @update_attrs %{
     code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
     name: "some_updated_name"
   }
-  @update_attrs_events %{
-    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
-    name: "some_updated_name",
-    events:
-      "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]"
-  }
-  @update_attrs_sinks %{
-    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
-    name: "some_updated_name",
-    sinks:
-      "[{\"type\": \"mongodb\", \"params\": {}}, {\"type\": \"another_one\", \"params\": {}}]"
-  }
-  @update_attrs_events_sinks %{
-    code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
-    name: "some_updated_name",
-    events:
-      "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]",
-    sinks:
-      "[{\"type\": \"mongodb\", \"params\": {}}, {\"type\": \"another_one\", \"params\": {}}]"
-  }
+
+  @update_attrs_events @update_attrs
+                       |> Map.put(
+                         :events,
+                         "[{\"type\": \"mqtt\", \"params\": {}}, {\"type\": \"rabbitmq\", \"params\": {}}, {\"type\": \"rabbitmq\",\"params\": {}}]"
+                       )
+
+  @update_attrs_sinks @update_attrs
+                      |> Map.put(
+                        :sinks,
+                        "[{\"type\": \"mongodb\", \"params\": {}}, {\"type\": \"another_one\", \"params\": {}}]"
+                      )
+
+  @update_attrs_events_sinks @update_attrs_events |> Map.merge(@update_attrs_sinks)
+
   @invalid_attrs %{code: nil, name: nil}
+
+  setup :set_mox_from_context
 
   setup %{conn: conn} do
     Core.Commands.Mock |> Mox.stub_with(Core.Adapters.Commands.Test)
@@ -116,6 +110,75 @@ defmodule CoreWeb.FunctionControllerTest do
 
       conn = get(conn, ~p"/v1/fn/#{module.name}/#{name}")
       assert %{"name" => "some_name"} = json_response(conn, 200)["data"]
+    end
+
+    test "renders function, sends code and waits for it to be sent when wait_for_workers is true",
+         %{conn: conn} do
+      # TODO
+      module = module_fixture()
+
+      Core.Cluster.Mock
+      |> Mox.expect(:all_nodes, fn ->
+        [:worker1@localhost, :worker2@localhost, :worker3@localhost]
+      end)
+
+      Core.Commands.Mock |> Mox.expect(:send_store_function, 3, fn _, _ -> :timer.sleep(1500) end)
+
+      {elapsed, conn} =
+        :timer.tc(fn -> post(conn, ~p"/v1/fn/#{module.name}", @create_attrs_wait_for_workers) end)
+
+      assert elapsed >= 1500 * 1000
+
+      assert %{"name" => name} = json_response(conn, 201)["data"]
+
+      conn = get(conn, ~p"/v1/fn/#{module.name}/#{name}")
+      assert %{"name" => "some_name"} = json_response(conn, 200)["data"]
+    end
+
+    test "renders function, sends code and doesn't wait when wait_for_workers is false", %{
+      conn: conn
+    } do
+      # TODO
+      module = module_fixture()
+
+      Core.Cluster.Mock
+      |> Mox.expect(:all_nodes, fn ->
+        [:worker1@localhost, :worker2@localhost, :worker3@localhost]
+      end)
+
+      Core.Commands.Mock |> Mox.expect(:send_store_function, 3, fn _, _ -> :timer.sleep(1500) end)
+
+      task =
+        Task.async(fn ->
+          post(conn, ~p"/v1/fn/#{module.name}", @create_attrs_no_wait_for_workers)
+        end)
+
+      conn = Task.await(task, 500)
+
+      assert %{"name" => name} = json_response(conn, 201)["data"]
+
+      conn = get(conn, ~p"/v1/fn/#{module.name}/#{name}")
+      assert %{"name" => "some_name"} = json_response(conn, 200)["data"]
+    end
+
+    test "renders function and doesn't send code when store_on_create env is false", %{conn: conn} do
+      module = module_fixture()
+
+      Core.Cluster.Mock |> Mox.expect(:all_nodes, 0, fn -> [] end)
+      Core.Commands.Mock |> Mox.expect(:send_store_function, 0, fn _, _ -> :ok end)
+
+      store_on_create_old =
+        :core
+        |> Application.fetch_env!(:store_on_create)
+
+      Application.put_env(:core, :store_on_create, "false")
+
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs_wait_for_workers)
+      assert %{"name" => name} = json_response(conn, 201)["data"]
+      conn = get(conn, ~p"/v1/fn/#{module.name}/#{name}")
+      assert %{"name" => "some_name"} = json_response(conn, 200)["data"]
+
+      Application.put_env(:core, :store_on_create, store_on_create_old)
     end
 
     test "renders errors when data is invalid", %{conn: conn} do

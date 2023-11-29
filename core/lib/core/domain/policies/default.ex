@@ -27,14 +27,21 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.Empty do
       |> Enum.filter(fn %Data.Worker{resources: %{memory: %{available: available}}} ->
         c <= available
       end)
-      |> Enum.max_by(fn %Data.Worker{resources: %{memory: %{available: available}}} ->
-        available
-      end)
+      |> Enum.max_by(
+        fn %Data.Worker{resources: %{memory: %{available: available}}} ->
+          available
+        end,
+        fn -> nil end
+      )
 
     case selected_worker do
       nil -> {:error, :no_valid_workers}
       %Data.Worker{} = wrk -> {:ok, wrk}
     end
+  end
+
+  def select(%Empty{}, _, %Data.FunctionStruct{metadata: nil}) do
+    {:error, :no_function_metadata}
   end
 
   def select(%Empty{}, [], _) do

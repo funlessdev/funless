@@ -15,9 +15,18 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
-  alias Core.Domain.DataSink
-  alias Core.Domain.{Events, Functions, Invoker, Modules}
+  alias Core.Domain.{
+    DataSink,
+    Events,
+    Functions,
+    Invoker,
+    Modules,
+    Nodes,
+    WorkerResourceHandler
+  }
+
   alias Core.Schemas.Function
+  alias Data.FunctionStruct
   alias Data.InvokeParams
 
   require Logger
@@ -53,6 +62,9 @@ defmodule CoreWeb.FunctionController do
     events_req = params |> Map.get("events", nil) |> parse_requested_events_sinks()
     sinks_req = params |> Map.get("sinks", nil) |> parse_requested_events_sinks()
 
+    # wait for all workers to receive the code; true by default
+    wait_for_workers = params |> Map.get("wait_for_workers", true)
+
     if events_req == :error or sinks_req == :error do
       Logger.error("Function Controller: received invalid JSON. Aborting function creation.")
       {:error, :bad_params}
@@ -69,6 +81,10 @@ defmodule CoreWeb.FunctionController do
 
             event_results = Events.connect_events(fn_name, module_name, events_req)
             sinks_results = DataSink.plug_data_sinks(fn_name, module_name, sinks_req)
+
+            store_on_create()
+            |> send_function_to_workers(fn_name, module_name, code)
+            |> do_wait_for_workers(wait_for_workers)
 
             {status, render_params} =
               build_render_params(%{function: function}, event_results, sinks_results, :created)
@@ -175,5 +191,56 @@ defmodule CoreWeb.FunctionController do
      render_params
      |> Map.put(:events, events)
      |> Map.put(:sinks, sinks)}
+  end
+
+  defp send_function_to_workers(true, function_name, module, code) do
+    workers = Nodes.worker_nodes()
+
+    function =
+      struct(FunctionStruct, %{
+        name: function_name,
+        module: module,
+        code: code
+      })
+
+    Logger.info("Function controller: sending code to workers")
+
+    Task.async_stream(workers, fn wrk -> WorkerResourceHandler.store_function(wrk, function) end)
+  end
+
+  defp send_function_to_workers(false, _, _, _) do
+    []
+  end
+
+  defp do_wait_for_workers([], _) do
+    :ok
+  end
+
+  defp do_wait_for_workers(stream, true) do
+    {_pid, ref} = Process.spawn(fn -> Stream.run(stream) end, [:monitor])
+
+    receive do
+      {:DOWN, ^ref, _, _, _} ->
+        Logger.info("Function controller: code sent to all workers")
+        :ok
+
+      {:DOWN, ^ref, _, _, reason} ->
+        Logger.warn(
+          "Something went wrong while sending code to all workers (process exited with reason #{reason})"
+        )
+
+        :ok
+    end
+  end
+
+  defp do_wait_for_workers(stream, false) do
+    _ = Process.spawn(fn -> do_wait_for_workers(stream, true) end, [])
+    :ok
+  end
+
+  defp store_on_create do
+    :core
+    |> Application.fetch_env!(:store_on_create)
+    |> then(fn v -> String.downcase(v) == "true" end)
   end
 end

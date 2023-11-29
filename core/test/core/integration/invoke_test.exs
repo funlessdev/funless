@@ -16,7 +16,7 @@ defmodule Core.InvokeTest do
   use CoreWeb.ConnCase
 
   alias Core.Domain.Invoker
-  alias Data.{FunctionStruct, InvokeParams, InvokeResult}
+  alias Data.{FunctionMetadata, FunctionStruct, InvokeParams, InvokeResult}
 
   import Core.{FunctionsFixtures, ModulesFixtures}
 
@@ -174,7 +174,8 @@ defmodule Core.InvokeTest do
       f_out = %FunctionStruct{
         name: function.name,
         module: module.name,
-        code: function.code
+        code: function.code,
+        metadata: struct(FunctionMetadata, %{})
       }
 
       pars = %InvokeParams{function: function.name, module: module.name}

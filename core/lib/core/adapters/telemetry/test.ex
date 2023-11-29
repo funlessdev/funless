@@ -17,10 +17,10 @@ defmodule Core.Adapters.Telemetry.Test do
   @behaviour Core.Domain.Ports.Telemetry.Metrics
 
   @impl true
-  def resources(_worker) do
+  def resources(worker) do
     {:ok,
      struct(Data.Worker, %{
-       name: :nonode@nohost,
+       name: worker,
        resources: %Data.Worker.Metrics{
          cpu: 1,
          load_avg: %{l1: 1, l5: 5, l15: 15},

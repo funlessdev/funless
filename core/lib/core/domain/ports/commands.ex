@@ -26,6 +26,8 @@ defmodule Core.Domain.Ports.Commands do
               {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | {:error, any()}
   @callback send_invoke_with_code(atom(), pid(), FunctionStruct.t()) ::
               {:ok, InvokeResult.t()} | {:error, any()}
+  @callback send_store_function(atom(), FunctionStruct.t()) ::
+              :ok | {:error, :invalid_input} | {:error, any()}
 
   @doc """
   Sends an invoke command to a worker passing the function name, module and args.
@@ -47,4 +49,13 @@ defmodule Core.Domain.Ports.Commands do
   @spec send_invoke_with_code(atom(), pid(), FunctionStruct.t()) ::
           {:ok, InvokeResult.t()} | {:error, any()}
   defdelegate send_invoke_with_code(worker, worker_handler, function), to: @adapter
+
+  @doc """
+  Sends a store_function command to a worker, passing a function struct, containing (at least) the function's name, module and code.
+  The worker will store the wasm file locally (generally as a raw resource, without initializing).
+  It requires a worker (a fully qualified name of another node with the :worker actor on) and a functions struct.
+  """
+  @spec send_store_function(atom(), FunctionStruct.t()) ::
+          :ok | {:error, :invalid_input} | {:error, any()}
+  defdelegate send_store_function(worker, function), to: @adapter
 end

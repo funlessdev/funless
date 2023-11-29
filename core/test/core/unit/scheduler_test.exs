@@ -16,6 +16,10 @@ defmodule Core.Unit.SchedulerTest do
   use ExUnit.Case, async: true
 
   alias Core.Domain.Scheduler
+  alias Data.FunctionMetadata
+  alias Data.FunctionStruct
+  alias Data.Worker
+  alias Data.Worker.Metrics
 
   import Mox
 
@@ -24,45 +28,56 @@ defmodule Core.Unit.SchedulerTest do
   describe "Scheduler" do
     setup do
       Core.Telemetry.Metrics.Mock |> Mox.stub_with(Core.Adapters.Telemetry.Test)
-      :ok
+
+      func =
+        struct(FunctionStruct, %{
+          name: "fn",
+          module: "mod",
+          metadata: struct(FunctionMetadata, %{})
+        })
+
+      %{func: func}
     end
 
-    test "select should return the worker when list has only one element" do
+    test "select should return the worker when list has only one element", %{func: func} do
       expected = {:ok, :worker}
       w_nodes = [:worker]
-      workers = Scheduler.select(w_nodes)
+      workers = Scheduler.select(w_nodes, func)
 
       assert workers == expected
     end
 
-    test "select should return :no_workers when empty list" do
+    test "select should return :no_workers when empty list", %{func: func} do
       expected = {:error, :no_workers}
       w_nodes = []
-      workers = Scheduler.select(w_nodes)
+      workers = Scheduler.select(w_nodes, func)
 
       assert workers == expected
     end
 
-    test "select should return a random worker when resources are not available" do
+    test "select should return a random worker when resources are not available", %{func: func} do
       Core.Telemetry.Metrics.Mock |> Mox.expect(:resources, 2, fn _ -> {:error, :not_found} end)
 
       w_nodes = [:worker1, :worker2]
-      workers = Scheduler.select(w_nodes)
+      workers = Scheduler.select(w_nodes, func)
 
       assert workers == {:ok, :worker1} || workers == {:ok, :worker2}
     end
 
-    test "select should return worker with fewer memory utilization" do
+    test "select should return worker with highest available memory", %{func: func} do
       Core.Telemetry.Metrics.Mock
       |> expect(:resources, 2, fn w ->
         case w do
-          :worker1 -> {:ok, 10}
-          :worker2 -> {:ok, 5}
+          :worker1 ->
+            {:ok, %Worker{name: :worker1, resources: %Metrics{memory: %{available: 10}}}}
+
+          :worker2 ->
+            {:ok, %Worker{name: :worker2, resources: %Metrics{memory: %{available: 5}}}}
         end
       end)
 
-      selected = Scheduler.select([:worker1, :worker2])
-      assert selected == {:ok, :worker2}
+      selected = Scheduler.select([:worker1, :worker2], func)
+      assert selected == {:ok, :worker1}
     end
   end
 end

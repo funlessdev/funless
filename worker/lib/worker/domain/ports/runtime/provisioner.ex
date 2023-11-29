@@ -14,7 +14,7 @@
 
 defmodule Worker.Domain.Ports.Runtime.Provisioner do
   @moduledoc """
-  Port for runtime creation.
+  Port for ExecutionResource creation.
   """
 
   alias Data.ExecutionResource
@@ -25,16 +25,16 @@ defmodule Worker.Domain.Ports.Runtime.Provisioner do
   @callback provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}
 
   @doc """
-  Provisions a runtime for the given function and module.
-  It first tries to retrieve it from the cache, if missing it can either create a new one or return :runtime_not_found,
+  Provisions an ExecutionResource for the given function and module.
+  It first tries to retrieve it from the cache, if missing it can either create a new one or return :code_not_found,
   depending on the adapter.
 
   ## Parameters
   - function: a struct with all the fields required by Data.FunctionStruct
 
   ## Returns
-  - `{:ok, runtime}` if the runtime is found or created.any()
-  - `{:error, :runtime_not_found} if the runtime was not in the cache and it won't attempt to create one.
+  - `{:ok, resource}` if the resource is found or created
+  - `{:error, :code_not_found} if the resource was not in the cache and it won't attempt to create one.
   - `{:error, err}` if any error is encountered
   """
   @spec provision(FunctionStruct.t()) :: {:ok, ExecutionResource.t()} | {:error, any()}

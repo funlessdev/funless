@@ -16,18 +16,19 @@ defmodule Worker.Adapters.Requests.Cluster do
   @moduledoc """
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
+  alias Data.FunctionStruct
   alias Worker.Domain.InvokeFunction
   alias Worker.Domain.NodeInfo
+  alias Worker.Domain.StoreResource
 
   require Logger
 
   @doc """
     Runs the given `function` using the underlying InvokeFunction.invoke() from the domain.
-    It uses the runtime associated with the function from the cache, if it exists.
-    If the runtime does not exist, it is provisioned and then run.
+    It uses the ExecutionResource associated with the function from the cache, if it exists.
+    If the resource does not exist, it is provisioned and then used.
 
-    The provisioner might request the runtime from the core
-    if no runtime is found, creates the required runtime and runs the function.
+    The provisioner might request the resource from the core, if it's unable to create it on its own.
     Any error encountered by the API calls is forwarded to the sender.
 
     ## Parameters
@@ -49,6 +50,10 @@ defmodule Worker.Adapters.Requests.Cluster do
 
   def get_info(from) do
     NodeInfo.get_node_info() |> reply_to_core(from)
+  end
+
+  def store_function(%FunctionStruct{} = f, from) do
+    StoreResource.store_function(f) |> reply_to_core(from)
   end
 
   # reply should be either {:ok, result} or {:error, reason}
