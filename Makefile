@@ -28,7 +28,7 @@ build-core-image:
 ## Compile worker docker image
 build-worker-image: 
 	cd worker
-	docker build --build-arg --build-arg MIX_ENV="prod" -t worker .
+	docker build --build-arg MIX_ENV="prod" -t worker .
 
 ## Run credo --strict
 credo-core: 
