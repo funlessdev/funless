@@ -17,17 +17,17 @@ defmodule Worker.Adapters.RawResourceStorage.Test do
   @behaviour Worker.Domain.Ports.RawResourceStorage
 
   @impl true
-  def get(_name, _mod) do
+  def get(_name, _mod, _hash) do
     <<0>>
   end
 
   @impl true
-  def insert(_name, _mod, _resource) do
+  def insert(_name, _mod, _hash, _resource) do
     :ok
   end
 
   @impl true
-  def delete(_name, _mod) do
+  def delete(_name, _mod, _hash) do
     :ok
   end
 end
