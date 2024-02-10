@@ -18,9 +18,9 @@ defmodule Worker.Domain.Ports.ResourceCache do
   """
   alias Data.ExecutionResource
 
-  @callback get(String.t(), String.t()) :: ExecutionResource.t() | :resource_not_found
-  @callback insert(String.t(), String.t(), ExecutionResource.t()) :: :ok | {:error, any}
-  @callback delete(String.t(), String.t()) :: :ok | {:error, any}
+  @callback get(String.t(), String.t(), binary()) :: ExecutionResource.t() | :resource_not_found
+  @callback insert(String.t(), String.t(), binary(), ExecutionResource.t()) :: :ok | {:error, any}
+  @callback delete(String.t(), String.t(), binary()) :: :ok | {:error, any}
 
   @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
@@ -30,13 +30,14 @@ defmodule Worker.Domain.Ports.ResourceCache do
   ### Parameters
   - `function_name` - The name of the function.
   - `module` - The module of the function.
+  - `hash`: the hash of the non-compiled code of the function.
 
   ### Returns
   - `ExecutionResource.t()` - The resource of the given function name if found.
   - `:resource_not_found` - If the resource is not found.
   """
-  @spec get(String.t(), String.t()) :: ExecutionResource.t() | :resource_not_found
-  defdelegate get(function_name, module), to: @adapter
+  @spec get(String.t(), String.t(), binary()) :: ExecutionResource.t() | :resource_not_found
+  defdelegate get(function_name, module, hash), to: @adapter
 
   @doc """
   Inserts a resource into the ResourceCache associated with a function.
@@ -50,8 +51,8 @@ defmodule Worker.Domain.Ports.ResourceCache do
   - `:ok` - If the resource was inserted.
   - `{:error, err}` - If an error occurred and the resource could not be inserted.
   """
-  @spec insert(String.t(), String.t(), ExecutionResource.t()) :: :ok | {:error, any}
-  defdelegate insert(function_name, module, resource), to: @adapter
+  @spec insert(String.t(), String.t(), binary(), ExecutionResource.t()) :: :ok | {:error, any}
+  defdelegate insert(function_name, module, hash, resource), to: @adapter
 
   @doc """
   Removes the resource associated with a function from the ResourceCache.
@@ -64,6 +65,6 @@ defmodule Worker.Domain.Ports.ResourceCache do
   - `:ok` - If the resource was removed.
   - `{:error, err}` - If an error occurred and the resource could not be removed.
   """
-  @spec delete(String.t(), String.t()) :: :ok | {:error, any}
-  defdelegate delete(function_name, module), to: @adapter
+  @spec delete(String.t(), String.t(), binary()) :: :ok | {:error, any}
+  defdelegate delete(function_name, module, hash), to: @adapter
 end

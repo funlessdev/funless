@@ -18,17 +18,17 @@ defmodule Worker.Adapters.ResourceCache.Test do
   alias Data.ExecutionResource
 
   @impl true
-  def get(_function_name, _module) do
+  def get(_function_name, _module, _hash) do
     %ExecutionResource{resource: "runtime"}
   end
 
   @impl true
-  def insert(_name, _ns, _runtime) do
+  def insert(_name, _ns, _hash, _runtime) do
     :ok
   end
 
   @impl true
-  def delete(_name, _ns) do
+  def delete(_name, _ns, _hash) do
     :ok
   end
 end
