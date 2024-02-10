@@ -21,14 +21,16 @@ defmodule Data.FunctionStruct do
       - name: function name
       - module: function module
       - code: function code binary
+      - hash: sha3-256 hash of the function code binary
       - metadata: additional information about the function
   """
   @type t :: %__MODULE__{
           module: String.t(),
           name: String.t(),
           code: binary(),
+          hash: binary(),
           metadata: Data.FunctionMetadata.t()
         }
   @enforce_keys [:name, :module]
-  defstruct [:name, :module, :code, :metadata]
+  defstruct [:name, :module, :code, :hash, :metadata]
 end
