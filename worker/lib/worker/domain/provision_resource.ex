@@ -41,13 +41,13 @@ defmodule Worker.Domain.ProvisionResource do
   """
   @spec provision(FunctionStruct.t()) ::
           {:ok, ExecutionResource.t()} | {:error, :code_not_found} | {:error, any}
-  def provision(%{name: name, module: mod} = f) do
+  def provision(%{name: name, module: mod, hash: hash} = f) do
     Logger.info("API: Provisioning #{mod}/#{name} execution resource")
 
-    case ResourceCache.get(name, mod) do
+    case ResourceCache.get(name, mod, hash) do
       :resource_not_found ->
         Logger.warn("API: Resource not found in cache, creating one...")
-        Provisioner.provision(f) |> cache_resource(name, mod)
+        Provisioner.provision(f) |> cache_resource(name, mod, hash)
 
       resource ->
         Logger.info("API: Resource found in cache")
@@ -57,18 +57,23 @@ defmodule Worker.Domain.ProvisionResource do
 
   def provision(_), do: {:error, :bad_params}
 
-  @dialyzer {:nowarn_function, [cache_resource: 3]}
-  @spec cache_resource({:ok, ExecutionResource.t()} | {:error, any()}, String.t(), String.t()) ::
+  @dialyzer {:nowarn_function, [cache_resource: 4]}
+  @spec cache_resource(
+          {:ok, ExecutionResource.t()} | {:error, any()},
+          String.t(),
+          String.t(),
+          binary()
+        ) ::
           {:ok, ExecutionResource.t()} | {:error, any}
-  defp cache_resource({:error, :code_not_found}, _, _) do
+  defp cache_resource({:error, :code_not_found}, _, _, _) do
     Logger.warn("API: resource not found...")
     {:error, :code_not_found}
   end
 
-  defp cache_resource({:error, err}, _, _), do: {:error, err}
+  defp cache_resource({:error, err}, _, _, _), do: {:error, err}
 
-  defp cache_resource({:ok, resource}, fname, ns) do
-    case ResourceCache.insert(fname, ns, resource) do
+  defp cache_resource({:ok, resource}, fname, ns, hash) do
+    case ResourceCache.insert(fname, ns, hash, resource) do
       :ok ->
         Logger.info("API: Resource for {#{fname}, #{ns}} added to cache")
         {:ok, resource}

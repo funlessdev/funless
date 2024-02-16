@@ -24,7 +24,7 @@ defmodule Worker.Domain.StoreResource do
     Stores the given function's code as-is.
 
     ## Parameters
-      - `%{...}`: Data.FunctionStruct, including at least the function's name, module and code
+      - `%{...}`: Data.FunctionStruct, including at least the function's name, module, hash and code
 
     ## Returns
       - `:ok` if the resource was inserted successfully
@@ -32,8 +32,8 @@ defmodule Worker.Domain.StoreResource do
       - `{:error, err}` if any other error occurred during insertion
   """
   @spec store_function(FunctionStruct.t()) :: :ok | {:error, :invalid_input} | {:error, any()}
-  def store_function(%FunctionStruct{name: name, module: module, code: code}) do
-    RawResourceStorage.insert(name, module, code)
+  def store_function(%FunctionStruct{name: name, module: module, code: code, hash: hash}) do
+    RawResourceStorage.insert(name, module, hash, code)
   end
 
   def store_function(_) do

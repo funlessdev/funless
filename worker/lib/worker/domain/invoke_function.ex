@@ -43,7 +43,7 @@ defmodule Worker.Domain.InvokeFunction do
 
   def invoke(%{__struct__: _s} = f, args), do: invoke(Map.from_struct(f), args)
 
-  def invoke(%{name: name, module: mod} = function, args) do
+  def invoke(%{name: name, module: mod, hash: _hash} = function, args) do
     f = struct(FunctionStruct, function)
     Logger.info("API: Invoking function #{mod}/#{name}")
 
@@ -63,8 +63,8 @@ defmodule Worker.Domain.InvokeFunction do
 
   @spec invoke_no_code(Data.FunctionStruct.t(), map()) ::
           {:error, any()} | {:ok, any()} | {:error, :code_not_found, pid()}
-  def invoke_no_code(%FunctionStruct{name: name, module: mod} = f, args) do
-    case RawResourceStorage.get(name, mod) do
+  def invoke_no_code(%FunctionStruct{name: name, module: mod, hash: hash} = f, args) do
+    case RawResourceStorage.get(name, mod, hash) do
       :resource_not_found ->
         {:ok, pid} = WaitForCode.wait_for_code(args)
         {:error, :code_not_found, pid}

@@ -16,6 +16,7 @@ defmodule Worker.Domain.CleanupResource do
   @moduledoc """
   Contains functions used to remove function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
+  alias Worker.Adapters.RawResourceStorage
   alias Data.FunctionStruct
   alias Worker.Domain.Ports.ResourceCache
   alias Worker.Domain.Ports.Runtime.Cleaner
@@ -27,24 +28,60 @@ defmodule Worker.Domain.CleanupResource do
     the adapter Cleaner is executed.
 
     ## Parameters
-      - function: the FunctionStruct containing the function information (name and module)
+      - function: the FunctionStruct containing the function information (name, module and hash)
 
     ## Returns
       - :ok if the resource is found and removed successfully;
-      - {:error, err} if an error is encountered while removing the resource.
+      - {:error, err} if the same error is encountered while removing the resource from
+        ResourceCache and RawResourceStorage;
+      - {:error, {{:cache, res1}, {:raw_storage, res2}}} if ResourceCache and RawResourceStorage returned
+        two different values on cleanup.
   """
-  @spec cleanup(FunctionStruct.t()) :: :ok | {:error, any}
+  @spec cleanup(FunctionStruct.t()) ::
+          :ok | {:error, {{:cache, any()}, {:raw_storage, any()}}} | {:error, any()}
   def cleanup(%{__struct__: _s} = function), do: cleanup(Map.from_struct(function))
 
-  def cleanup(%{name: fname, module: ns} = _function) do
-    with resource when resource != :resource_not_found <- ResourceCache.get(fname, ns),
+  def cleanup(%{name: _fname, module: _mod, hash: _hash} = function) do
+    cleanup_cache_result = cleanup_cache(function)
+    cleanup_raw_result = cleanup_raw(function)
+    cleanup_return(cleanup_cache_result, cleanup_raw_result)
+  end
+
+  defp cleanup_cache(%{name: fname, module: mod, hash: hash} = _function) do
+    with resource when resource != :resource_not_found <- ResourceCache.get(fname, mod, hash),
          :ok <- Cleaner.cleanup(resource),
-         :ok <- ResourceCache.delete(fname, ns) do
-      Logger.info("API: Resource for function #{fname} in module #{ns} deleted")
+         :ok <- ResourceCache.delete(fname, mod, hash) do
+      Logger.info("API: Resource for function #{fname} in module #{mod} deleted")
       :ok
     else
       :resource_not_found -> {:error, :resource_not_found}
       err -> err
     end
+  end
+
+  defp cleanup_raw(%{name: fname, module: mod, hash: hash} = _function) do
+    case RawResourceStorage.delete(fname, mod, hash) do
+      :ok ->
+        Logger.info("API: Raw resource for function #{fname} in module #{mod} deleted")
+        :ok
+
+      {:error, :enoent} ->
+        {:error, :resource_not_found}
+
+      err ->
+        err
+    end
+  end
+
+  defp cleanup_return(:ok, :ok) do
+    :ok
+  end
+
+  defp cleanup_return({:error, err}, {:error, err}) do
+    {:error, err}
+  end
+
+  defp cleanup_return(cache_result, raw_result) do
+    {:error, {{:cache, cache_result}, {:raw_storage, raw_result}}}
   end
 end

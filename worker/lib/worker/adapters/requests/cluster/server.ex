@@ -72,12 +72,30 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
 
   @impl true
   def handle_call(
-        {:store_function, %FunctionStruct{name: fun, module: mod, code: _} = f},
+        {:store_function, %FunctionStruct{name: fun, module: mod, code: _, hash: _} = f},
         from,
         _state
       ) do
     Logger.info("Received store function request for function #{mod}/#{fun}")
     spawn(Cluster, :store_function, [f, from])
+    {:noreply, nil}
+  end
+
+  @impl true
+  def handle_call({:delete_function, name, module, hash}, from, _state) do
+    Logger.info("Received delete function request for function #{module}/#{name}")
+    spawn(Cluster, :delete_function, [name, module, hash, from])
+    {:noreply, nil}
+  end
+
+  def handle_call(
+        {:update_function, prev_hash,
+         %FunctionStruct{name: fun, module: mod, code: _, hash: _} = f},
+        from,
+        _state
+      ) do
+    Logger.info("Received update function request for function #{mod}/#{fun}")
+    spawn(Cluster, :update_function, [prev_hash, f, from])
     {:noreply, nil}
   end
 end
