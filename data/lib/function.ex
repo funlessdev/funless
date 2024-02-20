@@ -31,6 +31,6 @@ defmodule Data.FunctionStruct do
           hash: binary(),
           metadata: Data.FunctionMetadata.t()
         }
-  @enforce_keys [:name, :module]
+  @enforce_keys [:name, :module, :hash]
   defstruct [:name, :module, :code, :hash, :metadata]
 end

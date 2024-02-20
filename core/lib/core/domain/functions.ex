@@ -82,7 +82,7 @@ defmodule Core.Domain.Functions do
         join: m in Module,
         on: f.module_id == m.id,
         where: m.name == ^mod_name and f.name == ^fun_name,
-        select: %Function{id: f.id, name: f.name, module_id: f.module_id}
+        select: %Function{id: f.id, name: f.name, module_id: f.module_id, hash: f.hash}
       )
 
     Repo.all(q)
@@ -107,7 +107,7 @@ defmodule Core.Domain.Functions do
         join: m in Module,
         on: f.module_id == m.id,
         where: m.name == ^mod_name and f.name == ^fun_name,
-        select: %Function{code: f.code}
+        select: %Function{code: f.code, hash: f.hash}
       )
 
     Repo.all(q)

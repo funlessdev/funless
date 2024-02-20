@@ -58,18 +58,20 @@ defmodule Core.Domain.Invoker do
 
     case Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
       [f] ->
-        func = %FunctionStruct{
-          name: ivk.function,
-          module: ivk.module,
-          code: f.code,
-          metadata: struct(FunctionMetadata, %{})
-        }
+        func =
+          struct(FunctionStruct, %{
+            name: ivk.function,
+            module: ivk.module,
+            code: f.code,
+            hash: f.hash,
+            metadata: struct(FunctionMetadata, %{})
+          })
 
         with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select(func) do
           update_concurrent(worker, +1)
 
           out =
-            case invoke_without_code(worker, ivk) do
+            case invoke_without_code(worker, ivk, f.hash) do
               {:error, :code_not_found, handler} ->
                 worker
                 |> invoke_with_code(handler, ivk, func)
@@ -113,12 +115,12 @@ defmodule Core.Domain.Invoker do
     end
   end
 
-  @spec invoke_without_code(atom(), InvokeParams.t()) ::
+  @spec invoke_without_code(atom(), InvokeParams.t(), binary()) ::
           {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | invoke_errors()
-  def invoke_without_code(worker, ivk) do
+  def invoke_without_code(worker, ivk, hash) do
     Logger.debug("Invoker: invoking #{ivk.module}/#{ivk.function} without code")
     # send invocation without code
-    Commands.send_invoke(worker, ivk.function, ivk.module, ivk.args)
+    Commands.send_invoke(worker, ivk.function, ivk.module, hash, ivk.args)
   end
 
   @spec invoke_with_code(atom(), pid(), InvokeParams.t(), FunctionStruct.t()) ::

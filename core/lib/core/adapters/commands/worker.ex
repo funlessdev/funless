@@ -32,9 +32,9 @@ defmodule Core.Adapters.Commands.Worker do
   #                                  Only the send_invoke call should return this.
 
   @impl true
-  def send_invoke(worker, name, mod, args) do
+  def send_invoke(worker, name, mod, hash, args) do
     worker_addr = {:worker, worker}
-    cmd = {:invoke, %{name: name, module: mod}, args}
+    cmd = {:invoke, %{name: name, module: mod, hash: hash}, args}
     Logger.info("Sending invoke for #{mod}/#{name} to #{inspect(worker_addr)}")
 
     case GenServer.call(worker_addr, cmd, 60_000) do
@@ -45,7 +45,7 @@ defmodule Core.Adapters.Commands.Worker do
   end
 
   @impl true
-  def send_invoke_with_code(_worker, worker_handler, %FunctionStruct{code: _} = func) do
+  def send_invoke_with_code(_worker, worker_handler, %FunctionStruct{code: _, hash: _} = func) do
     worker_addr = worker_handler
     cmd = {:invoke, func}
 
@@ -67,5 +67,42 @@ defmodule Core.Adapters.Commands.Worker do
     )
 
     GenServer.call(worker_addr, cmd, 60_000)
+  end
+
+  @impl true
+  def send_delete_function(worker, name, mod, hash) do
+    worker_addr = {:worker, worker}
+    cmd = {:delete_function, name, mod, hash}
+
+    Logger.info("Sending delete_function for #{mod}/#{name} to #{inspect(worker_addr)}")
+
+    GenServer.call(worker_addr, cmd, 60_000)
+  end
+
+  @impl true
+  def send_update_function(worker, prev_hash, %FunctionStruct{} = function) do
+    worker_addr = {:worker, worker}
+    cmd = {:update_function, prev_hash, function}
+
+    Logger.info(
+      "Sending update_function for #{function.module}/#{function.name} to #{inspect(worker_addr)}"
+    )
+
+    GenServer.call(worker_addr, cmd, 60_000)
+  end
+
+  @impl true
+  def send_to_multiple_workers(workers, command, args) do
+    Logger.info("Sending command multiple workers")
+    stream = Task.async_stream(workers, fn wrk -> apply(command, [wrk | args]) end)
+    Process.spawn(fn -> Stream.run(stream) end, [])
+    :ok
+  end
+
+  @impl true
+  def send_to_multiple_workers_sync(workers, command, args) do
+    Logger.info("Sending command multiple workers and waiting for response")
+    stream = Task.async_stream(workers, fn wrk -> apply(command, [wrk | args]) end)
+    Enum.reduce(stream, [], fn response, acc -> [response | acc] end)
   end
 end

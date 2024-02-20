@@ -19,7 +19,7 @@ defmodule Core.Adapters.Commands.Test do
   alias Data.InvokeResult
 
   @impl true
-  def send_invoke(_worker, name, _ns, _args) do
+  def send_invoke(_worker, name, _ns, _hash, _args) do
     {:ok, %InvokeResult{result: name}}
   end
 
@@ -31,5 +31,25 @@ defmodule Core.Adapters.Commands.Test do
   @impl true
   def send_store_function(_worker, _func) do
     :ok
+  end
+
+  @impl true
+  def send_delete_function(_worker, _func, _mod, _hash) do
+    :ok
+  end
+
+  @impl true
+  def send_update_function(_worker, _prev_hash, _func) do
+    :ok
+  end
+
+  @impl true
+  def send_to_multiple_workers(_workers, _func, _args) do
+    :ok
+  end
+
+  @impl true
+  def send_to_multiple_workers_sync(_workers, _func, _args) do
+    []
   end
 end
