@@ -24,6 +24,8 @@ defmodule Worker.Adapters.RawResourceStorage do
   @process_prefix "file_writer_"
   @registry Worker.Adapters.RawResourceStorage.Registry
 
+  require Elixir.Logger
+
   @doc """
 
   Gets the saved raw resource, if available and if it matches the given hash.
@@ -156,11 +158,16 @@ defmodule Worker.Adapters.RawResourceStorage do
     end
   end
 
+  defp check_and_save(path, nil) do
+    Logger.warn("RawResourceStorage: trying to save on #{path} but content is nil!")
+  end
+
   defp check_and_save(path, content) do
     if File.exists?(path) do
       # nothing to do (in the future we should update)
       :ok
     else
+      Logger.info("RawResourceStorage: saving #{path}")
       File.write(path, content)
     end
   end
@@ -230,7 +237,8 @@ defmodule Worker.Adapters.RawResourceStorage do
          file_path <- get_file_path(function_name, module),
          hash_path <- get_hash_path(function_name, module),
          {:ok, resource_hash} <- File.read(hash_path),
-         :ok <- check_and_delete(file_path, resource_hash, hash) do
+         :ok <- check_and_delete(file_path, resource_hash, hash),
+         :ok <- check_and_delete(hash_path, resource_hash, hash) do
       :ok
     else
       {:error, err} ->
@@ -240,6 +248,8 @@ defmodule Worker.Adapters.RawResourceStorage do
 
   defp check_and_delete(path, saved_hash, hash) do
     if saved_hash == hash do
+      Logger.info("RawResourceStorage: deleting #{path}")
+
       case File.rm(path) do
         :ok -> :ok
         {:error, :enoent} -> :ok
