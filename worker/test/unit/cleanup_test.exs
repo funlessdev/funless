@@ -24,8 +24,8 @@ defmodule CleanupTest do
     function = %{
       name: "test-cleanup-fn",
       module: "mod",
-      image: "nodejs",
-      code: "console.log(\"hello\")"
+      code: "code",
+      hash: <<0, 0, 0>>
     }
 
     %{function: function}
@@ -35,30 +35,46 @@ defmodule CleanupTest do
     setup do
       Worker.Cleaner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Cleaner.Test)
       Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache.Test)
+      Worker.RawResourceStorage.Mock |> Mox.stub_with(Worker.Adapters.RawResourceStorage.Test)
       :ok
     end
 
-    test "cleanup should call cleaner and resource cache delete when a resource is found for the given function",
+    test "cleanup should call cleaner, resource cache delete and raw resource delete when a resource is found for the given function in both storages",
          %{function: function} do
-      Worker.Cleaner.Mock |> Mox.expect(:cleanup, &Worker.Adapters.Runtime.Cleaner.Test.cleanup/1)
-
-      Worker.ResourceCache.Mock
-      |> Mox.expect(:delete, &Worker.Adapters.ResourceCache.Test.delete/2)
-
       assert CleanupResource.cleanup(function) == :ok
     end
 
-    test "cleanup should return {:error, :resource_not_found} when no resource is found for the given function",
+    test "cleanup should return {:error, :resource_not_found} when no resource is found for the given function in both storages",
          %{function: function} do
-      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _, _ -> :resource_not_found end)
+      Worker.RawResourceStorage.Mock |> Mox.expect(:delete, fn _, _, _ -> {:error, :enoent} end)
 
       assert CleanupResource.cleanup(function) == {:error, :resource_not_found}
     end
 
-    test "cleanup should return error when ResourceCache fails to delete", %{function: function} do
-      Worker.ResourceCache.Mock |> Mox.expect(:delete, fn _, _ -> {:error, "error"} end)
+    test "cleanup should return both results when the resource is not found in either storage",
+         %{function: function} do
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _, _ -> :resource_not_found end)
 
-      assert CleanupResource.cleanup(function) == {:error, "error"}
+      Worker.RawResourceStorage.Mock
+      |> Mox.expect(:delete, &Worker.Adapters.RawResourceStorage.Test.delete/3)
+
+      assert CleanupResource.cleanup(function) ==
+               {:error, {{:cache, {:error, :resource_not_found}}, {:raw_storage, :ok}}}
+    end
+
+    test "cleanup should return error when ResourceCache fails to delete in either storage", %{
+      function: function
+    } do
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _, _ -> :resource_not_found end)
+
+      Worker.RawResourceStorage.Mock
+      |> Mox.expect(:delete, fn _, _, _ -> {:error, "different error"} end)
+
+      assert CleanupResource.cleanup(function) ==
+               {:error,
+                {{:cache, {:error, :resource_not_found}},
+                 {:raw_storage, {:error, "different error"}}}}
     end
   end
 end

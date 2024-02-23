@@ -21,27 +21,30 @@ defmodule Integration.ResourceCacheTest do
   setup :verify_on_exit!
 
   test "get returns an empty :resource_not_found when no resource stored" do
-    result = ResourceCache.get("test-no-runtime", "fake-ns")
+    result = ResourceCache.get("test-no-runtime", "fake-ns", <<0, 0, 0>>)
     assert result == :resource_not_found
   end
 
   test "insert adds a {function_name, module} resource to the cache" do
     runtime = %ExecutionResource{resource: "runtime"}
+    hash = <<1, 1, 1>>
 
-    ResourceCache.insert("test", "ns", runtime)
-    assert ResourceCache.get("test", "ns") == runtime
-    ResourceCache.delete("test", "ns")
+    ResourceCache.insert("test", "ns", hash, runtime)
+    assert ResourceCache.get("test", "ns", hash) == runtime
+    ResourceCache.delete("test", "ns", hash)
   end
 
   test "delete removes a {function_name, ns} resource couple from the storage" do
     runtime = %ExecutionResource{resource: "runtime"}
-    ResourceCache.insert("test-delete", "ns", runtime)
-    ResourceCache.delete("test-delete", "ns")
-    assert ResourceCache.get("test-delete", "ns") == :resource_not_found
+    hash = <<1, 1, 1>>
+
+    ResourceCache.insert("test-delete", "ns", hash, runtime)
+    ResourceCache.delete("test-delete", "ns", hash)
+    assert ResourceCache.get("test-delete", "ns", hash) == :resource_not_found
   end
 
   test "delete on empty storage does nothing" do
-    result = ResourceCache.delete("test", "ns")
+    result = ResourceCache.delete("test", "ns", <<0, 0, 0>>)
     assert result == :ok
   end
 end

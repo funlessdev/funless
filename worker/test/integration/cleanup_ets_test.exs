@@ -27,28 +27,29 @@ defmodule Integration.CleanupEtsTest do
     setup do
       Worker.Cleaner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Cleaner.Test)
       Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache)
+      Worker.RawResourceStorage.Mock |> Mox.stub_with(Worker.Adapters.RawResourceStorage.Test)
       :ok
     end
 
     test "cleanup should remove resource from cache when successfull" do
-      function = %{name: "fn", module: "ns", image: "", code: ""}
+      function = %{name: "fn", module: "ns", hash: <<0, 0, 0>>, code: ""}
 
       resource = %ExecutionResource{resource: "a-resource"}
 
-      ResourceCache.insert("fn", "ns", resource)
-      assert ResourceCache.get("fn", "ns") == resource
+      ResourceCache.insert("fn", "ns", function.hash, resource)
+      assert ResourceCache.get("fn", "ns", function.hash) == resource
 
       assert CleanupResource.cleanup(function) == :ok
-      assert ResourceCache.get("fn", "ns") == :resource_not_found
+      assert ResourceCache.get("fn", "ns", function.hash) == :resource_not_found
     end
 
     test "cleanup should call cleaner passing it the resource from the cache" do
-      function = %{name: "fn", module: "ns", image: "", code: ""}
+      function = %{name: "fn", module: "ns", hash: <<0, 0, 0>>, code: ""}
 
       resource = %ExecutionResource{resource: "a-resource"}
 
-      ResourceCache.insert("fn", "ns", resource)
-      assert ResourceCache.get("fn", "ns") == resource
+      ResourceCache.insert("fn", "ns", function.hash, resource)
+      assert ResourceCache.get("fn", "ns", function.hash) == resource
 
       # If we are not passing the resource to the cleaner, this will fail
       # I don't know how to expect a certain parameter to be passed to a function, so this will do
@@ -58,9 +59,11 @@ defmodule Integration.CleanupEtsTest do
     end
 
     test "cleanup should return resource_not_found when not found" do
-      function = %{name: "fn", module: "ns", image: "", code: ""}
+      Worker.RawResourceStorage.Mock |> Mox.expect(:delete, fn _, _, _ -> {:error, :enoent} end)
 
-      assert ResourceCache.get("fn", "ns") == :resource_not_found
+      function = %{name: "fn", module: "ns", hash: <<0, 0, 0>>, code: ""}
+
+      assert ResourceCache.get("fn", "ns", function.hash) == :resource_not_found
       assert CleanupResource.cleanup(function) == {:error, :resource_not_found}
     end
   end

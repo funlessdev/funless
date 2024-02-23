@@ -68,6 +68,6 @@ defmodule Worker.Domain.Ports.RawResourceStorage do
   - `:ok` - If the resource was removed.
   - `{:error, err}` - If an error occurred and the resource could not be removed.
   """
-  @spec delete(String.t(), String.t(), binary()) :: :ok | {:error, any}
+  @spec delete(String.t(), String.t(), binary()) :: :ok | {:error, :enoent} | {:error, any}
   defdelegate delete(function_name, module, hash), to: @adapter
 end

@@ -24,7 +24,8 @@ defmodule InvokeTest do
     function = %{
       name: "test-ivk-fn",
       module: "_",
-      code: "code"
+      code: "code",
+      hash: <<0, 0, 0>>
     }
 
     %{function: function}
@@ -54,7 +55,7 @@ defmodule InvokeTest do
 
     test "should call provision when no resource for execution is found for the given function",
          %{function: function} do
-      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _, _ -> :resource_not_found end)
       Worker.Provisioner.Mock |> Mox.expect(:provision, fn _ -> {:ok, %{}} end)
 
       # Output from the test default
@@ -65,8 +66,8 @@ defmodule InvokeTest do
          %{function: function} do
       function = function |> Map.delete(:code)
 
-      Worker.ResourceCache.Mock |> Mox.expect(:get, 2, fn _, _ -> :resource_not_found end)
-      Worker.RawResourceStorage.Mock |> Mox.expect(:get, fn _, _ -> <<0, 0, 0>> end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, 2, fn _, _, _ -> :resource_not_found end)
+      Worker.RawResourceStorage.Mock |> Mox.expect(:get, fn _, _, _ -> <<0, 0, 0>> end)
 
       Worker.Provisioner.Mock
       |> Mox.expect(:provision, 2, fn
@@ -80,7 +81,7 @@ defmodule InvokeTest do
 
     test "should return {:error, err} when no resource is available and its creation fails",
          %{function: function} do
-      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _, _ -> :resource_not_found end)
 
       Worker.Provisioner.Mock |> Mox.expect(:provision, fn _ -> {:error, "creation error"} end)
 
@@ -91,9 +92,9 @@ defmodule InvokeTest do
          %{
            function: function
          } do
-      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, fn _, _, _ -> :resource_not_found end)
       Worker.Provisioner.Mock |> Mox.expect(:provision, fn _ -> {:error, :code_not_found} end)
-      Worker.RawResourceStorage.Mock |> Mox.expect(:get, fn _, _ -> :resource_not_found end)
+      Worker.RawResourceStorage.Mock |> Mox.expect(:get, fn _, _, _ -> :resource_not_found end)
       assert {:error, :code_not_found, handler_pid} = InvokeFunction.invoke(function)
       assert is_pid(handler_pid)
     end

@@ -16,8 +16,8 @@ defmodule Worker.Domain.CleanupResource do
   @moduledoc """
   Contains functions used to remove function runtimes. Side effects (e.g. docker interaction) are delegated to ports and adapters.
   """
-  alias Worker.Adapters.RawResourceStorage
   alias Data.FunctionStruct
+  alias Worker.Domain.Ports.RawResourceStorage
   alias Worker.Domain.Ports.ResourceCache
   alias Worker.Domain.Ports.Runtime.Cleaner
 
