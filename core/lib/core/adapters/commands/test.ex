@@ -42,14 +42,4 @@ defmodule Core.Adapters.Commands.Test do
   def send_update_function(_worker, _prev_hash, _func) do
     :ok
   end
-
-  @impl true
-  def send_to_multiple_workers(_workers, _func, _args) do
-    :ok
-  end
-
-  @impl true
-  def send_to_multiple_workers_sync(_workers, _func, _args) do
-    []
-  end
 end

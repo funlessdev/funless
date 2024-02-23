@@ -64,6 +64,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       function = %FunctionStruct{
         name: "test-func",
         module: "test-mod",
+        hash: <<0, 0, 0>>,
         metadata: %FunctionMetadata{
           capacity: 128
         }
@@ -93,6 +94,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       function = %FunctionStruct{
         name: "test-func",
         module: "test-mod",
+        hash: <<0, 0, 0>>,
         metadata: %FunctionMetadata{
           capacity: 128
         }
@@ -122,6 +124,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       function = %FunctionStruct{
         name: "test-func",
         module: "test-mod",
+        hash: <<0, 0, 0>>,
         metadata: %FunctionMetadata{
           capacity: 128
         }
@@ -151,6 +154,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       function = %FunctionStruct{
         name: "test-func",
         module: "test-mod",
+        hash: <<0, 0, 0>>,
         metadata: %FunctionMetadata{
           capacity: 128
         }
@@ -239,6 +243,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       function = %FunctionStruct{
         name: "test-func",
         module: "test-mod",
+        hash: <<0, 0, 0>>,
         metadata: %FunctionMetadata{
           capacity: 128,
           tag: "test-tag"
@@ -310,6 +315,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       function = %FunctionStruct{
         name: "test-func",
         module: "test-mod",
+        hash: <<0, 0, 0>>,
         metadata: %FunctionMetadata{
           tag: "non-existent-tag",
           capacity: 128
@@ -495,6 +501,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       function = %FunctionStruct{
         name: "test-func",
         module: "test-mod",
+        hash: <<0, 0, 0>>,
         metadata: %FunctionMetadata{
           tag: "non-existent-tag",
           capacity: 128
@@ -508,7 +515,8 @@ defmodule Core.Unit.Policies.AppPolicyTest do
          %{impl: app_impl, workers: workers, script: script} do
       function = %FunctionStruct{
         name: "test-func",
-        module: "test-mod"
+        module: "test-mod",
+        hash: <<0, 0, 0>>
       }
 
       assert app_impl.select(script, workers, function) ==

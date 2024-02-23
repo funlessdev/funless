@@ -32,10 +32,6 @@ defmodule Core.Domain.Ports.Commands do
               :ok | {:error, any()}
   @callback send_update_function(atom(), binary(), FunctionStruct.t()) :: :ok | {:error, any()}
 
-  @callback send_to_multiple_workers([atom()], fun(), [any()]) :: :ok
-
-  @callback send_to_multiple_workers_sync([atom()], fun(), [any()]) :: [any()]
-
   @doc """
   Sends an invoke command to a worker passing the function name, module, hash and args.
   It requires a worker (a fully qualified name of another node with the :worker actor on) and function arguments can be empty.
@@ -89,15 +85,28 @@ defmodule Core.Domain.Ports.Commands do
   Sends one of the commands defined in this behaviour to all specified workers, without waiting for them to respond.
   It requires a list of workers, the function to call for all workers, and the arguments for the function.
   It should immediately return :ok.
+
+  This is a default implementation for this Port,
+  and at the time of writing there's no need to make it overridable.
   """
   @spec send_to_multiple_workers([atom()], fun(), [any()]) :: :ok
-  defdelegate send_to_multiple_workers(workers, command, args), to: @adapter
+  def send_to_multiple_workers(workers, command, args) do
+    stream = Task.async_stream(workers, fn wrk -> apply(command, [wrk | args]) end)
+    Process.spawn(fn -> Stream.run(stream) end, [])
+    :ok
+  end
 
   @doc """
   Sends one of the commands defined in this behaviour to all specified workers, and waits for their response.
   It requires a list of workers, the function to call for all workers, and the arguments for the function.
   It returns a list with the response of each of the workers.
+
+  This is a default implementation for this Port,
+  and at the time of writing there's no need to make it overridable.
   """
   @spec send_to_multiple_workers_sync([atom()], fun(), [any()]) :: [any()]
-  defdelegate send_to_multiple_workers_sync(workers, command, args), to: @adapter
+  def send_to_multiple_workers_sync(workers, command, args) do
+    stream = Task.async_stream(workers, fn wrk -> apply(command, [wrk | args]) end)
+    Enum.reduce(stream, [], fn response, acc -> [response | acc] end)
+  end
 end

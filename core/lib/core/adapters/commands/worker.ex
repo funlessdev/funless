@@ -90,19 +90,4 @@ defmodule Core.Adapters.Commands.Worker do
 
     GenServer.call(worker_addr, cmd, 60_000)
   end
-
-  @impl true
-  def send_to_multiple_workers(workers, command, args) do
-    Logger.info("Sending command multiple workers")
-    stream = Task.async_stream(workers, fn wrk -> apply(command, [wrk | args]) end)
-    Process.spawn(fn -> Stream.run(stream) end, [])
-    :ok
-  end
-
-  @impl true
-  def send_to_multiple_workers_sync(workers, command, args) do
-    Logger.info("Sending command multiple workers and waiting for response")
-    stream = Task.async_stream(workers, fn wrk -> apply(command, [wrk | args]) end)
-    Enum.reduce(stream, [], fn response, acc -> [response | acc] end)
-  end
 end
