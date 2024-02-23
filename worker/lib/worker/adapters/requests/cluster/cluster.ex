@@ -16,12 +16,12 @@ defmodule Worker.Adapters.Requests.Cluster do
   @moduledoc """
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
-  alias Worker.Adapters.RawResourceStorage
-  alias Worker.Domain.ProvisionResource
-  alias Worker.Domain.CleanupResource
   alias Data.FunctionStruct
+  alias Worker.Adapters.RawResourceStorage
+  alias Worker.Domain.CleanupResource
   alias Worker.Domain.InvokeFunction
   alias Worker.Domain.NodeInfo
+  alias Worker.Domain.ProvisionResource
   alias Worker.Domain.StoreResource
 
   require Logger
@@ -81,9 +81,8 @@ defmodule Worker.Adapters.Requests.Cluster do
          :ok,
          %FunctionStruct{name: fun, module: mod, code: code, hash: hash} = function
        ) do
-    with {:ok, _} <- ProvisionResource.provision(function),
-         :ok <- RawResourceStorage.insert(fun, mod, hash, code) do
-      :ok
+    with {:ok, _} <- ProvisionResource.provision(function) do
+      RawResourceStorage.insert(fun, mod, hash, code)
     end
   end
 
