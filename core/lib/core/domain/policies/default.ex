@@ -15,6 +15,9 @@
 defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.Empty do
   alias Data.Configurations.Empty
 
+  # select the worker with the highest available memory; if no memory information is available, it's treated as 0
+  # NOTE: we choose to include workers for which we have no data,
+  # since otherwise in situations where e.g. Prometheus is down, we would always have no workers
   @spec select(Empty.t(), [Data.Worker.t()], Data.FunctionStruct.t()) ::
           {:ok, Data.Worker.t()} | {:error, :no_workers} | {:error, :no_valid_workers}
   def select(
@@ -24,12 +27,14 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.Empty do
       ) do
     selected_worker =
       workers
-      |> Enum.filter(fn %Data.Worker{resources: %{memory: %{available: available}}} ->
-        c <= available
+      |> Enum.filter(fn
+        %Data.Worker{resources: %{memory: %{available: available}}} -> c <= available
+        %Data.Worker{} -> true
       end)
       |> Enum.max_by(
-        fn %Data.Worker{resources: %{memory: %{available: available}}} ->
-          available
+        fn
+          %Data.Worker{resources: %{memory: %{available: available}}} -> available
+          %Data.Worker{} -> 0
         end,
         fn -> nil end
       )

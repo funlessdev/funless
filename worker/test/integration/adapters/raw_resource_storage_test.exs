@@ -28,27 +28,39 @@ defmodule Integration.Adapters.RawResourceStorageTest do
   end
 
   test "get returns an empty :resource_not_found when no resource stored" do
-    result = RawResourceStorage.get("test-no-runtime", "fake-ns")
+    result = RawResourceStorage.get("test-no-runtime", "fake-ns", <<0, 0, 0>>)
     assert result == :resource_not_found
+  end
+
+  test "get returns an empty :resource_not_found when name/module match, but not hash" do
+    raw_resource = <<1, 2, 3, 4>>
+    hash = <<0, 0, 0>>
+
+    assert RawResourceStorage.insert("test", "ns", hash, raw_resource) == :ok
+    result = RawResourceStorage.get("test", "ns", <<1, 1, 1>>)
+    assert result == :resource_not_found
+    RawResourceStorage.delete("test", "ns", hash)
   end
 
   test "insert saves a retrievable binary to the storage" do
     raw_resource = <<1, 2, 3, 4>>
+    hash = <<0, 0, 0>>
 
-    assert RawResourceStorage.insert("test", "ns", raw_resource) == :ok
-    assert RawResourceStorage.get("test", "ns") == raw_resource
-    RawResourceStorage.delete("test", "ns")
+    assert RawResourceStorage.insert("test", "ns", hash, raw_resource) == :ok
+    assert RawResourceStorage.get("test", "ns", hash) == raw_resource
+    RawResourceStorage.delete("test", "ns", hash)
   end
 
   test "delete removes a binary from the storage" do
     runtime = %ExecutionResource{resource: "runtime"}
-    RawResourceStorage.insert("test-delete", "ns", runtime)
-    RawResourceStorage.delete("test-delete", "ns")
-    assert RawResourceStorage.get("test-delete", "ns") == :resource_not_found
+    hash = <<0, 0, 0>>
+    RawResourceStorage.insert("test-delete", "ns", hash, runtime)
+    RawResourceStorage.delete("test-delete", "ns", hash)
+    assert RawResourceStorage.get("test-delete", "ns", hash) == :resource_not_found
   end
 
-  test "delete on empty storage does nothing" do
-    result = RawResourceStorage.delete("test", "ns")
-    assert result == :ok
+  test "delete on empty storage returns {:error, :enoent}" do
+    result = RawResourceStorage.delete("test", "ns", <<0, 0, 0>>)
+    assert result == {:error, :enoent}
   end
 end

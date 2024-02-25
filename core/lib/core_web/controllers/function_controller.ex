@@ -15,14 +15,15 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
+  alias Core.Domain.Ports.Commands
+
   alias Core.Domain.{
     DataSink,
     Events,
     Functions,
     Invoker,
     Modules,
-    Nodes,
-    WorkerResourceHandler
+    Nodes
   }
 
   alias Core.Schemas.Function
@@ -59,52 +60,61 @@ defmodule CoreWeb.FunctionController do
           "code" => %Plug.Upload{path: tmp_path}
         } = params
       ) do
-    events_req = params |> Map.get("events", nil) |> parse_requested_events_sinks()
-    sinks_req = params |> Map.get("sinks", nil) |> parse_requested_events_sinks()
-
     # wait for all workers to receive the code; true by default
-    wait_for_workers = params |> Map.get("wait_for_workers", true)
+    with {:ok, events_req} <-
+           params |> Map.get("events", nil) |> parse_requested_events_sinks(),
+         {:ok, sinks_req} <- params |> Map.get("sinks", nil) |> parse_requested_events_sinks(),
+         {:ok, code} <- File.read(tmp_path),
+         {:ok, module} <- Modules.get_module_by_name(module_name),
+         {:ok, %Function{} = function} <-
+           %{"name" => fn_name, "code" => code}
+           |> Map.put_new("module_id", module.id)
+           |> Functions.create_function() do
+      wait_for_workers = params |> Map.get("wait_for_workers", true)
+      Logger.info("Function Controller: function #{module_name}/#{fn_name} created successfully.")
 
-    if events_req == :error or sinks_req == :error do
-      Logger.error("Function Controller: received invalid JSON. Aborting function creation.")
-      {:error, :bad_params}
-    else
-      with {:ok, code} <- File.read(tmp_path),
-           {:ok, module} <- Modules.get_module_by_name(module_name) do
-        case %{"name" => fn_name, "code" => code}
-             |> Map.put_new("module_id", module.id)
-             |> Functions.create_function() do
-          {:ok, %Function{} = function} ->
-            Logger.info(
-              "Function Controller: function #{module_name}/#{fn_name} created successfully."
-            )
+      event_results = Events.connect_events(fn_name, module_name, events_req)
+      sinks_results = DataSink.plug_data_sinks(fn_name, module_name, sinks_req)
 
-            event_results = Events.connect_events(fn_name, module_name, events_req)
-            sinks_results = DataSink.plug_data_sinks(fn_name, module_name, sinks_req)
+      if store_on_create() do
+        workers = Nodes.worker_nodes()
 
-            store_on_create()
-            |> send_function_to_workers(fn_name, module_name, code)
-            |> do_wait_for_workers(wait_for_workers)
+        func_struct =
+          struct(FunctionStruct, %{
+            name: fn_name,
+            module: module_name,
+            code: code,
+            hash: function.hash
+          })
 
-            {status, render_params} =
-              build_render_params(%{function: function}, event_results, sinks_results, :created)
-
-            conn
-            |> put_status(status)
-            |> render(:show, render_params)
-
-          {:error, %{errors: [function_module_index_constraint: {"has already been taken", _}]}} ->
-            Logger.error("Function Controller: #{module_name}/#{fn_name} already exists.")
-            {:error, :conflict}
-
-          e ->
-            Logger.error(
-              "Function Controller: error while creating #{module_name}/#{fn_name}: #{inspect(e)}."
-            )
-
-            e
+        if wait_for_workers do
+          Commands.send_to_multiple_workers_sync(workers, &Commands.send_store_function/2, [
+            func_struct
+          ])
+        else
+          Commands.send_to_multiple_workers(workers, &Commands.send_store_function/2, [
+            func_struct
+          ])
         end
       end
+
+      {status, render_params} =
+        build_render_params(%{function: function}, event_results, sinks_results, :created)
+
+      conn
+      |> put_status(status)
+      |> render(:show, render_params)
+    else
+      {:error, %{errors: [function_module_index_constraint: {"has already been taken", _}]}} ->
+        Logger.error("Function Controller: #{module_name}/#{fn_name} already exists.")
+        {:error, :conflict}
+
+      e ->
+        Logger.error(
+          "Function Controller: error while creating #{module_name}/#{fn_name}: #{inspect(e)}."
+        )
+
+        e
     end
   end
 
@@ -121,27 +131,46 @@ defmodule CoreWeb.FunctionController do
           "name" => new_name
         } = params
       ) do
-    events_req = params |> Map.get("events", nil) |> parse_requested_events_sinks()
-    sinks_req = params |> Map.get("sinks", nil) |> parse_requested_events_sinks()
+    with {:ok, events_req} <- params |> Map.get("events", nil) |> parse_requested_events_sinks(),
+         {:ok, sinks_req} <- params |> Map.get("sinks", nil) |> parse_requested_events_sinks(),
+         {:ok, code} <- File.read(tmp_path),
+         {:ok, %Function{} = function} <- retrieve_fun_in_mod(fn_name, module_name),
+         {:ok, %Function{} = function} <-
+           Functions.update_function(function, %{"name" => new_name, "code" => code}) do
+      # wait for all workers to receive the code; true by default
+      wait_for_workers = params |> Map.get("wait_for_workers", true)
+      event_results = Events.update_events(fn_name, module_name, events_req)
+      sinks_results = DataSink.update_data_sinks(fn_name, module_name, sinks_req)
 
-    if events_req == :error or sinks_req == :error do
-      Logger.error("Function Controller: received invalid JSON. Aborting function update.")
-      {:error, :bad_params}
-    else
-      with {:ok, code} <- File.read(tmp_path),
-           {:ok, %Function{} = function} <- retrieve_fun_in_mod(fn_name, module_name),
-           {:ok, %Function{} = function} <-
-             Functions.update_function(function, %{"name" => new_name, "code" => code}) do
-        event_results = Events.update_events(fn_name, module_name, events_req)
-        sinks_results = DataSink.update_data_sinks(fn_name, module_name, sinks_req)
+      workers = Nodes.worker_nodes()
+      prev_hash = function.hash
 
-        {status, render_params} =
-          build_render_params(%{function: function}, event_results, sinks_results)
+      func_struct =
+        struct(FunctionStruct, %{
+          name: fn_name,
+          module: module_name,
+          code: code,
+          hash: function.hash
+        })
 
-        conn
-        |> put_status(status)
-        |> render(:show, render_params)
+      if wait_for_workers do
+        Commands.send_to_multiple_workers_sync(workers, &Commands.send_update_function/3, [
+          prev_hash,
+          func_struct
+        ])
+      else
+        Commands.send_to_multiple_workers(workers, &Commands.send_update_function/3, [
+          prev_hash,
+          func_struct
+        ])
       end
+
+      {status, render_params} =
+        build_render_params(%{function: function}, event_results, sinks_results)
+
+      conn
+      |> put_status(status)
+      |> render(:show, render_params)
     end
   end
 
@@ -154,6 +183,19 @@ defmodule CoreWeb.FunctionController do
          {:ok, %Function{}} <- Functions.delete_function(function),
          :ok <- Events.disconnect_events(name, mod_name),
          :ok <- DataSink.unplug_data_sink(name, mod_name) do
+      # wait for all workers to receive the code; true by default
+      workers = Nodes.worker_nodes()
+
+      # Delete requests do not wait for a response, since we are being optimistic anyway
+      # (create-invoke-delete requests can interleave, resulting in the old version of a function being invoked)
+      # Therefore, there is not point in adding extra waiting time.
+      # We rely on the function's hash to ensure it's the latest version on the worker's side
+      Commands.send_to_multiple_workers(workers, &Commands.send_delete_function/4, [
+        name,
+        mod_name,
+        function.hash
+      ])
+
       send_resp(conn, :no_content, "")
     end
   end
@@ -166,13 +208,18 @@ defmodule CoreWeb.FunctionController do
     end
   end
 
-  @spec parse_requested_events_sinks(String.t() | nil) :: term() | nil | :error
-  defp parse_requested_events_sinks(s) when is_nil(s) or s == "", do: nil
+  @spec parse_requested_events_sinks(String.t() | nil) ::
+          {:ok, nil} | {:ok, term()} | {:error, :bad_params}
+  defp parse_requested_events_sinks(s) when is_nil(s) or s == "", do: {:ok, nil}
 
   defp parse_requested_events_sinks(s) do
     case Jason.decode(s) do
-      {:ok, e} -> e
-      {:error, _} -> :error
+      {:ok, e} ->
+        {:ok, e}
+
+      {:error, _} ->
+        Logger.error("Function Controller: received invalid JSON while parsing events and sinks.")
+        {:error, :bad_params}
     end
   end
 
@@ -191,51 +238,6 @@ defmodule CoreWeb.FunctionController do
      render_params
      |> Map.put(:events, events)
      |> Map.put(:sinks, sinks)}
-  end
-
-  defp send_function_to_workers(true, function_name, module, code) do
-    workers = Nodes.worker_nodes()
-
-    function =
-      struct(FunctionStruct, %{
-        name: function_name,
-        module: module,
-        code: code
-      })
-
-    Logger.info("Function controller: sending code to workers")
-
-    Task.async_stream(workers, fn wrk -> WorkerResourceHandler.store_function(wrk, function) end)
-  end
-
-  defp send_function_to_workers(false, _, _, _) do
-    []
-  end
-
-  defp do_wait_for_workers([], _) do
-    :ok
-  end
-
-  defp do_wait_for_workers(stream, true) do
-    {_pid, ref} = Process.spawn(fn -> Stream.run(stream) end, [:monitor])
-
-    receive do
-      {:DOWN, ^ref, _, _, _} ->
-        Logger.info("Function controller: code sent to all workers")
-        :ok
-
-      {:DOWN, ^ref, _, _, reason} ->
-        Logger.warn(
-          "Something went wrong while sending code to all workers (process exited with reason #{reason})"
-        )
-
-        :ok
-    end
-  end
-
-  defp do_wait_for_workers(stream, false) do
-    _ = Process.spawn(fn -> do_wait_for_workers(stream, true) end, [])
-    :ok
   end
 
   defp store_on_create do

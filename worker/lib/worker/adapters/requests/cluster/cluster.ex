@@ -17,8 +17,11 @@ defmodule Worker.Adapters.Requests.Cluster do
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
   alias Data.FunctionStruct
+  alias Worker.Adapters.RawResourceStorage
+  alias Worker.Domain.CleanupResource
   alias Worker.Domain.InvokeFunction
   alias Worker.Domain.NodeInfo
+  alias Worker.Domain.ProvisionResource
   alias Worker.Domain.StoreResource
 
   require Logger
@@ -54,6 +57,54 @@ defmodule Worker.Adapters.Requests.Cluster do
 
   def store_function(%FunctionStruct{} = f, from) do
     StoreResource.store_function(f) |> reply_to_core(from)
+  end
+
+  def delete_function(name, module, hash, from) do
+    function = struct(FunctionStruct, %{name: name, module: module, hash: hash})
+
+    function
+    |> CleanupResource.cleanup()
+    |> reply_to_core(from)
+  end
+
+  def update_function(
+        prev_hash,
+        %FunctionStruct{name: _, module: _, code: _, hash: _} = function,
+        from
+      ) do
+    CleanupResource.cleanup(function |> Map.put(:hash, prev_hash))
+    |> do_update_function(function)
+    |> reply_to_core(from)
+  end
+
+  defp do_update_function(
+         :ok,
+         %FunctionStruct{name: fun, module: mod, code: code, hash: hash} = function
+       ) do
+    with {:ok, _} <- ProvisionResource.provision(function) do
+      RawResourceStorage.insert(fun, mod, hash, code)
+    end
+  end
+
+  defp do_update_function(
+         {:error, {{:cache, :ok}, {:raw_storage, _}}},
+         %FunctionStruct{} = function
+       ) do
+    ProvisionResource.provision(function)
+  end
+
+  defp do_update_function(
+         {:error, {{:cache, _}, {:raw_storage, :ok}}},
+         %FunctionStruct{name: fun, module: mod, code: code, hash: hash}
+       ) do
+    RawResourceStorage.insert(fun, mod, hash, code)
+  end
+
+  defp do_update_function(
+         {:error, err},
+         _
+       ) do
+    {:error, err}
   end
 
   # reply should be either {:ok, result} or {:error, reason}

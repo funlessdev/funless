@@ -17,8 +17,6 @@ defmodule Worker.Domain.NodeInfo do
   """
   alias Worker.Domain.Ports.NodeInfoStorage
 
-  @node_info_event [:prom_ex, :plugin, :node_info, :labels]
-
   def update_node_info(name, nil) do
     with {:ok, tag} <- NodeInfoStorage.get("tag"),
          :ok <- NodeInfoStorage.update("long_name", name) do

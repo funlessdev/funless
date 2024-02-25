@@ -29,19 +29,21 @@ defmodule Worker.Adapters.ResourceCache do
 
   @doc """
   Retrieve a resource from the cache, associated with a function name and a module.
+  Checks if the retrieved resource matches the given hash; if it doesn't, it's ignored.
 
   ## Parameters
   - `function_name`: the name of the function
   - `module`: the module of the function
+  - `hash`: the hash of the non-compiled code of the function.
 
   ## Returns
   - `resource` if the resource is found;
   - `:resource_not_found` if the resource is not found.
   """
   @impl true
-  def get(function_name, module) do
+  def get(function_name, module, hash) do
     case :ets.lookup(@resource_cache_table, {function_name, module}) do
-      [{{^function_name, ^module}, resource}] -> resource
+      [{{^function_name, ^module}, {^hash, resource}}] -> resource
       _ -> :resource_not_found
     end
   end
@@ -58,8 +60,8 @@ defmodule Worker.Adapters.ResourceCache do
   - `:ok`
   """
   @impl true
-  def insert(function_name, module, resource) do
-    GenServer.call(@resource_cache_server, {:insert, function_name, module, resource})
+  def insert(function_name, module, hash, resource) do
+    GenServer.call(@resource_cache_server, {:insert, function_name, module, hash, resource})
   end
 
   @doc """
@@ -73,8 +75,8 @@ defmodule Worker.Adapters.ResourceCache do
   - `:ok`
   """
   @impl true
-  def delete(function_name, module) do
-    GenServer.call(@resource_cache_server, {:delete, function_name, module})
+  def delete(function_name, module, hash) do
+    GenServer.call(@resource_cache_server, {:delete, function_name, module, hash})
   end
 
   # GenServer callbacks
@@ -90,14 +92,14 @@ defmodule Worker.Adapters.ResourceCache do
   end
 
   @impl true
-  def handle_call({:insert, function_name, module, runtime}, _from, table) do
-    :ets.insert(table, {{function_name, module}, runtime})
+  def handle_call({:insert, function_name, module, hash, runtime}, _from, table) do
+    :ets.insert(table, {{function_name, module}, {hash, runtime}})
     {:reply, :ok, table}
   end
 
   @impl true
-  def handle_call({:delete, function_name, module}, _from, table) do
-    :ets.delete(table, {function_name, module})
+  def handle_call({:delete, function_name, module, hash}, _from, table) do
+    :ets.match_delete(table, {{function_name, module}, {hash, :_}})
     {:reply, :ok, table}
   end
 end

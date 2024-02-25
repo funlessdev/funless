@@ -32,9 +32,9 @@ defmodule Core.Adapters.Commands.Worker do
   #                                  Only the send_invoke call should return this.
 
   @impl true
-  def send_invoke(worker, name, mod, args) do
+  def send_invoke(worker, name, mod, hash, args) do
     worker_addr = {:worker, worker}
-    cmd = {:invoke, %{name: name, module: mod}, args}
+    cmd = {:invoke, %{name: name, module: mod, hash: hash}, args}
     Logger.info("Sending invoke for #{mod}/#{name} to #{inspect(worker_addr)}")
 
     case GenServer.call(worker_addr, cmd, 60_000) do
@@ -45,7 +45,7 @@ defmodule Core.Adapters.Commands.Worker do
   end
 
   @impl true
-  def send_invoke_with_code(_worker, worker_handler, %FunctionStruct{code: _} = func) do
+  def send_invoke_with_code(_worker, worker_handler, %FunctionStruct{code: _, hash: _} = func) do
     worker_addr = worker_handler
     cmd = {:invoke, func}
 
@@ -64,6 +64,28 @@ defmodule Core.Adapters.Commands.Worker do
 
     Logger.info(
       "Sending store_function for #{function.module}/#{function.name} to #{inspect(worker_addr)}"
+    )
+
+    GenServer.call(worker_addr, cmd, 60_000)
+  end
+
+  @impl true
+  def send_delete_function(worker, name, mod, hash) do
+    worker_addr = {:worker, worker}
+    cmd = {:delete_function, name, mod, hash}
+
+    Logger.info("Sending delete_function for #{mod}/#{name} to #{inspect(worker_addr)}")
+
+    GenServer.call(worker_addr, cmd, 60_000)
+  end
+
+  @impl true
+  def send_update_function(worker, prev_hash, %FunctionStruct{} = function) do
+    worker_addr = {:worker, worker}
+    cmd = {:update_function, prev_hash, function}
+
+    Logger.info(
+      "Sending update_function for #{function.module}/#{function.name} to #{inspect(worker_addr)}"
     )
 
     GenServer.call(worker_addr, cmd, 60_000)

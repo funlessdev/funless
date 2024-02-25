@@ -22,6 +22,7 @@ defmodule Core.Schemas.Function do
   schema "functions" do
     field(:code, :binary)
     field(:name, :string)
+    field(:hash, :binary)
 
     timestamps()
 
@@ -39,7 +40,22 @@ defmodule Core.Schemas.Function do
     |> validate_required([:name, :code, :module_id])
     |> validate_format(:name, regex, message: msg)
     |> validate_length(:name, min: 1, max: 160)
+    |> insert_hash()
     |> unique_constraint(:function_module_index_constraint, name: :function_module_index)
     |> foreign_key_constraint(:module_id)
+  end
+
+  defp insert_hash(changeset) do
+    case changeset do
+      %Ecto.Changeset{valid?: true, changes: %{code: code}} ->
+        put_change(changeset, :hash, create_hash(code))
+
+      _ ->
+        changeset
+    end
+  end
+
+  defp create_hash(code) do
+    :crypto.hash(:sha3_256, code)
   end
 end

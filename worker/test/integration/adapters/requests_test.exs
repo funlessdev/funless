@@ -25,7 +25,8 @@ defmodule RequestTest do
     function = %{
       name: "hellojs",
       module: "_",
-      code: "code"
+      code: "code",
+      hash: <<0, 0, 0>>
     }
 
     %{function: function}
@@ -48,7 +49,7 @@ defmodule RequestTest do
       pid: pid,
       function: function
     } do
-      Worker.ResourceCache.Mock |> Mox.expect(:get, 1, fn _, _ -> :resource_not_found end)
+      Worker.ResourceCache.Mock |> Mox.expect(:get, 1, fn _, _, _ -> :resource_not_found end)
 
       Worker.Provisioner.Mock
       |> Mox.expect(:provision, &Worker.Adapters.Runtime.Provisioner.Test.provision/1)
@@ -85,11 +86,12 @@ defmodule RequestTest do
            pid: pid
          } do
       Worker.RawResourceStorage.Mock
-      |> Mox.expect(:insert, fn "fn", "mod", <<0, 0, 0>> -> :ok end)
+      |> Mox.expect(:insert, fn "fn", "mod", <<0, 0, 0>>, <<0, 0, 0>> -> :ok end)
 
       assert GenServer.call(
                pid,
-               {:store_function, %FunctionStruct{name: "fn", module: "mod", code: <<0, 0, 0>>}}
+               {:store_function,
+                %FunctionStruct{name: "fn", module: "mod", code: <<0, 0, 0>>, hash: <<0, 0, 0>>}}
              ) == :ok
     end
   end

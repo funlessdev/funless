@@ -12,22 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.RawResourceStorage.Test do
-  @moduledoc false
-  @behaviour Worker.Domain.Ports.RawResourceStorage
+defmodule Core.Repo.Migrations.AddFunctionsCodeHash do
+  use Ecto.Migration
 
-  @impl true
-  def get(_name, _mod, _hash) do
-    <<0>>
-  end
-
-  @impl true
-  def insert(_name, _mod, _hash, _resource) do
-    :ok
-  end
-
-  @impl true
-  def delete(_name, _mod, _hash) do
-    :ok
+  def change do
+    alter table(:functions) do
+      add :hash, :binary
+    end
   end
 end

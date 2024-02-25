@@ -22,20 +22,23 @@ defmodule Core.Domain.Ports.Commands do
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback send_invoke(atom(), String.t(), String.t(), map()) ::
+  @callback send_invoke(atom(), String.t(), String.t(), binary(), map()) ::
               {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | {:error, any()}
   @callback send_invoke_with_code(atom(), pid(), FunctionStruct.t()) ::
               {:ok, InvokeResult.t()} | {:error, any()}
   @callback send_store_function(atom(), FunctionStruct.t()) ::
               :ok | {:error, :invalid_input} | {:error, any()}
+  @callback send_delete_function(atom(), String.t(), String.t(), binary()) ::
+              :ok | {:error, any()}
+  @callback send_update_function(atom(), binary(), FunctionStruct.t()) :: :ok | {:error, any()}
 
   @doc """
-  Sends an invoke command to a worker passing the function name, module and args.
+  Sends an invoke command to a worker passing the function name, module, hash and args.
   It requires a worker (a fully qualified name of another node with the :worker actor on) and function arguments can be empty.
   """
-  @spec send_invoke(atom(), String.t(), String.t(), map()) ::
+  @spec send_invoke(atom(), String.t(), String.t(), binary(), map()) ::
           {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | {:error, any()}
-  defdelegate send_invoke(worker, f_name, ns, args), to: @adapter
+  defdelegate send_invoke(worker, f_name, ns, hash, args), to: @adapter
 
   @doc """
   Sends an invoke command to a worker passing a struct with the function name, module and the code (wasm file binary).
@@ -58,4 +61,52 @@ defmodule Core.Domain.Ports.Commands do
   @spec send_store_function(atom(), FunctionStruct.t()) ::
           :ok | {:error, :invalid_input} | {:error, any()}
   defdelegate send_store_function(worker, function), to: @adapter
+
+  @doc """
+  Sends a delete_function command to a worker, passing the function's name and module.
+  The worker should delete the function's code stored locally (both raw and pre-compiled).
+  It requires a worker, the function's name, the function's module, and a hash of the function code,
+  to ensure the targeted version hasn't already been updated.
+  """
+  @spec send_delete_function(atom(), String.t(), String.t(), binary()) :: :ok | {:error, any()}
+  defdelegate send_delete_function(worker, f_name, f_mod, hash), to: @adapter
+
+  @doc """
+  Sends an update_function command to a worker, passing a function struct containing (at least) the function's name and module.
+  The worker will substitute the local version of the function with the new one. In case the pre-compiled code was already cached, the new version
+  will be pre-compiled and cached instead.
+  It requires a worker (a fully qualified name of another node with the :worker actor on),
+  the hash of the previous version of the function, and a function struct.
+  """
+  @spec send_update_function(atom(), binary(), FunctionStruct.t()) :: :ok | {:error, any()}
+  defdelegate send_update_function(worker, prev_hash, function), to: @adapter
+
+  @doc """
+  Sends one of the commands defined in this behaviour to all specified workers, without waiting for them to respond.
+  It requires a list of workers, the function to call for all workers, and the arguments for the function.
+  It should immediately return :ok.
+
+  This is a default implementation for this Port,
+  and at the time of writing there's no need to make it overridable.
+  """
+  @spec send_to_multiple_workers([atom()], fun(), [any()]) :: :ok
+  def send_to_multiple_workers(workers, command, args) do
+    stream = Task.async_stream(workers, fn wrk -> apply(command, [wrk | args]) end)
+    Process.spawn(fn -> Stream.run(stream) end, [])
+    :ok
+  end
+
+  @doc """
+  Sends one of the commands defined in this behaviour to all specified workers, and waits for their response.
+  It requires a list of workers, the function to call for all workers, and the arguments for the function.
+  It returns a list with the response of each of the workers.
+
+  This is a default implementation for this Port,
+  and at the time of writing there's no need to make it overridable.
+  """
+  @spec send_to_multiple_workers_sync([atom()], fun(), [any()]) :: [any()]
+  def send_to_multiple_workers_sync(workers, command, args) do
+    stream = Task.async_stream(workers, fn wrk -> apply(command, [wrk | args]) end)
+    Enum.reduce(stream, [], fn response, acc -> [response | acc] end)
+  end
 end

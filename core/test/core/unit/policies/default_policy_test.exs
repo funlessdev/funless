@@ -68,6 +68,7 @@ defmodule Core.Unit.Policies.DefaultPolicyTest do
       function = %FunctionStruct{
         name: "test-func",
         module: "test-mod",
+        hash: <<0, 0, 0>>,
         metadata: %FunctionMetadata{
           capacity: 128
         }
@@ -116,7 +117,8 @@ defmodule Core.Unit.Policies.DefaultPolicyTest do
          %{impl: def_impl, workers: workers} do
       function = %FunctionStruct{
         name: "test-func",
-        module: "test-mod"
+        module: "test-mod",
+        hash: <<0, 0, 0>>
       }
 
       assert def_impl.select(%Empty{}, workers, function) ==

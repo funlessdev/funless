@@ -27,10 +27,14 @@ defmodule Integration.Adapters.WasmTest do
       Worker.Provisioner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Wasm.Provisioner)
       Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache)
 
+      code = File.read!("test/fixtures/not_impl.wasm")
+      hash = :crypto.hash(:sha3_256, code)
+
       function = %Data.FunctionStruct{
         name: "test-function",
         module: "test-module",
-        code: File.read!("test/fixtures/not_impl.wasm")
+        code: code,
+        hash: hash
       }
 
       {:ok, function: function}
@@ -64,22 +68,34 @@ defmodule Integration.Adapters.WasmTest do
       Worker.ResourceCache.Mock |> Mox.stub_with(Worker.Adapters.ResourceCache)
       Worker.Runner.Mock |> Mox.stub_with(Worker.Adapters.Runtime.Wasm.Runner)
 
+      code = File.read!("test/fixtures/not_impl.wasm")
+      hash = :crypto.hash(:sha3_256, code)
+
       err_function = %Data.FunctionStruct{
         name: "err_function",
         module: "testmodule",
-        code: File.read!("test/fixtures/not_impl.wasm")
+        code: code,
+        hash: hash
       }
+
+      code = File.read!("test/fixtures/hello_name.wasm")
+      hash = :crypto.hash(:sha3_256, code)
 
       hello_function = %Data.FunctionStruct{
         name: "hello_function",
         module: "testmodule",
-        code: File.read!("test/fixtures/hello_name.wasm")
+        code: code,
+        hash: hash
       }
+
+      code = File.read!("test/fixtures/rs_http.wasm")
+      hash = :crypto.hash(:sha3_256, code)
 
       http_function = %Data.FunctionStruct{
         name: "http_function",
         module: "testmodule",
-        code: File.read!("test/fixtures/rs_http.wasm")
+        code: code,
+        hash: hash
       }
 
       {:ok,
