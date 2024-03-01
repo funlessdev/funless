@@ -12,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.Runtime.Wasm.Supervisor do
+defmodule Worker.Adapters.ResourceCache.Supervisor do
   @moduledoc """
-  Supervisor for the wasmtime runtime. It implements the behaviour of Ports.Runtime.Supervisor to define the children to supervise.
+  Supervisor for the Cachex ResourceCache.
+  It implements the behaviour of Ports.ResourceCache.Supervisor to define the children to supervise.
+  Starts Cachex.
   """
-  @behaviour Worker.Domain.Ports.Runtime.Supervisor
+  @behaviour Worker.Domain.Ports.ResourceCache.Supervisor
+  @cache :resource_cache
 
   @impl true
   def children do
     [
-      {Worker.Adapters.Runtime.Wasm.Engine, []}
+      {Cachex, name: @cache}
     ]
   end
 end
