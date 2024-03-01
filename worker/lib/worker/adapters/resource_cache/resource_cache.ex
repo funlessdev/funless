@@ -38,8 +38,13 @@ defmodule Worker.Adapters.ResourceCache do
   @impl true
   def get(function_name, module, hash) do
     case Cachex.get(@cache, {function_name, module, hash}) do
-      {:ok, resource} when resource != nil -> resource
-      _ -> :resource_not_found
+      {:ok, resource} when resource != nil ->
+        Cachex.touch(@cache, {function_name, module, hash})
+        Cachex.refresh(@cache, {function_name, module, hash})
+        resource
+
+      _ ->
+        :resource_not_found
     end
   end
 
@@ -56,11 +61,17 @@ defmodule Worker.Adapters.ResourceCache do
   """
   @impl true
   def insert(function_name, module, hash, resource) do
+    {entry_ttl, _} =
+      :worker
+      |> Application.fetch_env!(__MODULE__)
+      |> Keyword.fetch!(:cachex_ttl)
+      |> Integer.parse()
+
     Cachex.transaction(@cache, [{function_name, module, hash}], fn worker ->
       key = {function_name, module, hash}
 
       if Cachex.get(worker, key) == {:ok, nil} do
-        Cachex.put(@cache, key, resource)
+        Cachex.put(@cache, key, resource, ttl: :timer.minutes(entry_ttl))
       end
     end)
 

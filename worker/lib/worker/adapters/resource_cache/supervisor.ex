@@ -18,13 +18,30 @@ defmodule Worker.Adapters.ResourceCache.Supervisor do
   It implements the behaviour of Ports.ResourceCache.Supervisor to define the children to supervise.
   Starts Cachex.
   """
+  require Cachex.Spec
   @behaviour Worker.Domain.Ports.ResourceCache.Supervisor
+
   @cache :resource_cache
 
   @impl true
   def children do
+    {size_limit, _} =
+      :worker
+      |> Application.fetch_env!(__MODULE__)
+      |> Keyword.fetch!(:cachex_limit)
+      |> Integer.parse()
+
     [
-      {Cachex, name: @cache}
+      # TODO: LRW eviction policy; max N entries (N comes from env_var, default 10); in the future, implement own memory-based policy
+      {Cachex,
+       name: @cache,
+       limit:
+         Cachex.Spec.limit(
+           size: size_limit,
+           policy: Cachex.Policy.LRW,
+           reclaim: 0.5,
+           options: [batch_size: 100, frequency: 1000]
+         )}
     ]
   end
 end
