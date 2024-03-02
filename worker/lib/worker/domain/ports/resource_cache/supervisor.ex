@@ -12,16 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Worker.Adapters.Runtime.Wasm.Supervisor do
+defmodule Worker.Domain.Ports.ResourceCache.Supervisor do
   @moduledoc """
-  Supervisor for the wasmtime runtime. It implements the behaviour of Ports.Runtime.Supervisor to define the children to supervise.
+  Supervisor for the ResourceCache. Mainly used to start the underlying cache/storage system.
   """
-  @behaviour Worker.Domain.Ports.Runtime.Supervisor
+  use Supervisor
+
+  @adapter :worker |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
+  @callback children() :: list()
+
+  defdelegate children(), to: @adapter
+
+  def start_link(args) do
+    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
+  end
 
   @impl true
-  def children do
-    [
-      {Worker.Adapters.Runtime.Wasm.Engine, []}
-    ]
+  def init(_args) do
+    Supervisor.init(children(), strategy: :one_for_one)
   end
 end

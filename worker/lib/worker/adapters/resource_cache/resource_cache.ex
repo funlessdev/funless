@@ -20,12 +20,7 @@ defmodule Worker.Adapters.ResourceCache do
     The {function_name, module} couples are the keys that point to ExecutionResources.
   """
   @behaviour Worker.Domain.Ports.ResourceCache
-
-  use GenServer, restart: :permanent
-  require Logger
-
-  @resource_cache_server :resource_cache_server
-  @resource_cache_table :resource_cache
+  @cache :resource_cache
 
   @doc """
   Retrieve a resource from the cache, associated with a function name and a module.
@@ -42,9 +37,14 @@ defmodule Worker.Adapters.ResourceCache do
   """
   @impl true
   def get(function_name, module, hash) do
-    case :ets.lookup(@resource_cache_table, {function_name, module}) do
-      [{{^function_name, ^module}, {^hash, resource}}] -> resource
-      _ -> :resource_not_found
+    case Cachex.get(@cache, {function_name, module, hash}) do
+      {:ok, resource} when resource != nil ->
+        Cachex.touch(@cache, {function_name, module, hash})
+        Cachex.refresh(@cache, {function_name, module, hash})
+        resource
+
+      _ ->
+        :resource_not_found
     end
   end
 
@@ -61,7 +61,21 @@ defmodule Worker.Adapters.ResourceCache do
   """
   @impl true
   def insert(function_name, module, hash, resource) do
-    GenServer.call(@resource_cache_server, {:insert, function_name, module, hash, resource})
+    {entry_ttl, _} =
+      :worker
+      |> Application.fetch_env!(__MODULE__)
+      |> Keyword.fetch!(:cachex_ttl)
+      |> Integer.parse()
+
+    Cachex.transaction(@cache, [{function_name, module, hash}], fn worker ->
+      key = {function_name, module, hash}
+
+      if Cachex.get(worker, key) == {:ok, nil} do
+        Cachex.put(@cache, key, resource, ttl: :timer.minutes(entry_ttl))
+      end
+    end)
+
+    :ok
   end
 
   @doc """
@@ -76,30 +90,15 @@ defmodule Worker.Adapters.ResourceCache do
   """
   @impl true
   def delete(function_name, module, hash) do
-    GenServer.call(@resource_cache_server, {:delete, function_name, module, hash})
-  end
+    Cachex.transaction(@cache, [{function_name, module, hash}], fn worker ->
+      key = {function_name, module, hash}
 
-  # GenServer callbacks
-  def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: @resource_cache_server)
-  end
+      case Cachex.get(worker, key) do
+        {:ok, r} when r != nil -> Cachex.del(@cache, key)
+        _ -> :ok
+      end
+    end)
 
-  @impl true
-  def init(_args) do
-    table = :ets.new(@resource_cache_table, [:set, :named_table, :protected])
-    Logger.info("Resource Cache: started")
-    {:ok, table}
-  end
-
-  @impl true
-  def handle_call({:insert, function_name, module, hash, runtime}, _from, table) do
-    :ets.insert(table, {{function_name, module}, {hash, runtime}})
-    {:reply, :ok, table}
-  end
-
-  @impl true
-  def handle_call({:delete, function_name, module, hash}, _from, table) do
-    :ets.match_delete(table, {{function_name, module}, {hash, :_}})
-    {:reply, :ok, table}
+    :ok
   end
 end

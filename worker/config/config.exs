@@ -33,6 +33,9 @@ config :worker, Worker.Domain.Ports.Runtime.Supervisor,
 
 config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.Adapters.ResourceCache
 
+config :worker, Worker.Domain.Ports.ResourceCache.Supervisor,
+  adapter: Worker.Adapters.ResourceCache.Supervisor
+
 config :worker, Worker.Domain.Ports.RawResourceStorage,
   adapter: Worker.Adapters.RawResourceStorage
 
