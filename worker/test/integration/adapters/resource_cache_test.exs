@@ -47,4 +47,42 @@ defmodule Integration.ResourceCacheTest do
     result = ResourceCache.delete("test", "ns", <<0, 0, 0>>)
     assert result == :ok
   end
+
+  # we test this on the default value of 5 entries for :cachex_limit
+  # to overwrite this, we would need to insert the value before the application starts
+  # (since it's read directly in the ResourceCache Supervisor)
+  test "oldest keys are evicted when the cache contains more than :cachex_limit entries" do
+    runtime1 = %ExecutionResource{resource: "runtime1"}
+    hash1 = <<1, 1, 1>>
+    runtime2 = %ExecutionResource{resource: "runtime2"}
+    hash2 = <<2, 2, 2>>
+    runtime3 = %ExecutionResource{resource: "runtime3"}
+    hash3 = <<3, 3, 3>>
+    runtime4 = %ExecutionResource{resource: "runtime4"}
+    hash4 = <<4, 4, 4>>
+    runtime5 = %ExecutionResource{resource: "runtime5"}
+    hash5 = <<5, 5, 5>>
+    runtime6 = %ExecutionResource{resource: "runtime6"}
+    hash6 = <<6, 6, 6>>
+
+    ResourceCache.insert("test-threshold1", "ns", hash1, runtime1)
+    :timer.sleep(200)
+    ResourceCache.insert("test-threshold2", "ns", hash2, runtime2)
+    :timer.sleep(200)
+    ResourceCache.insert("test-threshold3", "ns", hash3, runtime3)
+    :timer.sleep(200)
+    ResourceCache.insert("test-threshold4", "ns", hash4, runtime4)
+    :timer.sleep(200)
+    ResourceCache.insert("test-threshold5", "ns", hash5, runtime5)
+    :timer.sleep(200)
+    ResourceCache.insert("test-threshold6", "ns", hash6, runtime6)
+    :timer.sleep(2000)
+
+    assert ResourceCache.get("test-threshold1", "ns", hash1) == :resource_not_found
+    assert ResourceCache.get("test-threshold2", "ns", hash2) == :resource_not_found
+    assert ResourceCache.get("test-threshold3", "ns", hash3) == runtime3
+    assert ResourceCache.get("test-threshold4", "ns", hash4) == runtime4
+    assert ResourceCache.get("test-threshold5", "ns", hash5) == runtime5
+    assert ResourceCache.get("test-threshold6", "ns", hash6) == runtime6
+  end
 end
