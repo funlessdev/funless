@@ -17,7 +17,9 @@ import Config
 config :iex, default_prompt: ">>>"
 
 config :worker, Worker.Adapters.ResourceCache.Supervisor,
-  cachex_limit: System.get_env("RESOURCE_CACHE_ENTRY_LIMIT") || "5",
+  cachex_limit: System.get_env("RESOURCE_CACHE_ENTRY_LIMIT") || "5"
+
+config :worker, Worker.Adapters.ResourceCache,
   cachex_ttl: System.get_env("RESOURCHE_CACHE_TTL_MINUTES") || "45"
 
 if config_env() == :prod do
