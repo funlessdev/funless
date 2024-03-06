@@ -14,6 +14,81 @@
   ~ limitations under the License.
 -->
 
+## v0.9.0 (2024-03-06)
+
+### Feat
+
+- **core**: add prometheus_host env var
+- **worker**: add ResourceCache time-based and entry-based eviction
+- **worker**: migrate ResourceCache to cachex
+- **core**: handle function hash in delete/invoke/create/update
+- **worker**: handle function hashes in invoke/delete/update
+- **worker**: handle hash in ResourceCache
+- **worker**: handle hash in RawResourceStorage
+- **core**: add hash field to functions
+- **core**: store function code after creation
+- **worker**: add raw resource lookup in invoke
+- **worker**: add store_resource endpoint
+- **worker**: add raw resource storage port, adapter and mock
+- **core**: rewrite scheduler using SchedulingPolicy module
+- add create and get endpoints for app scripts
+- add APP script migration and schema
+- add APP script endpoints
+- add push/scrape for all metrics on prometheus
+- **worker**: add concurrent functions count in invoke
+- add node name exchange at monitoring start
+- **worker**: remove node_info telemetry; add node_info at setup time
+- **worker**: add cachex to handle node info
+- **worker**: add telemetry and cluster request for node info
+- **core**: add empty config data type and default scheduler
+- **policies**: add app-based scheduling algorithm
+- **data**: add function metadata struct; add missing data docs
+- **core**: add app parser; add scheduling_policy protocol
+- expand worker data type; refactor worker metrics as struct
+
+### Fix
+
+- **Makefile**: remove extra --build-arg
+- **worker**: correctly set ResourceCache env
+- **worker**: handle saved hash removal in delete
+- **worker**: handle :noproc monitor msg in raw storage
+- improve error handling when storing functions
+- **worker**: fix broken store_function call
+- **core**: move store_on_create to runtime config
+- **core**: handle EmptyError in default policy select
+- **core**: increase invocation timeout
+- **core**: start telemetry supervisor before libcluster
+- **core**: handle dialyzer errors
+- **worker**: declass args log from info to debug
+- remove debug logs in prod
+- **core**: handle missing resources case in scheduler
+- update link for core ci badge in readme
+- **worker**: fix broken function call
+- license header
+- **policies**: add missing capacity check on workers in app/default policies
+- **parsers**: handle block errors and atom loading in app
+
+### Refactor
+
+- **worker**: fix linter warnings
+- **worker**: remove unused definition
+- **core**: improve store_on_create handling
+- **core**: remove one-worker case in scheduling
+- **worker**: add ephemeral genserver to handle invocations with missing code
+- **core**: remove double sending of args in invoke/invoke_with_code
+- **core**: fix credo warnings
+- remove views and update with verified routes
+- **core**: migrate to phx 1.7
+- turn into monorepo and clean up files
+- **data**: move data to its own project
+- **core**: move core to its own project
+- **worker**: move worker app into its own project
+- **policies**: handle credo and typing issues in app
+- **policies**: add missing typespec and function arg in app schedule()
+- **policies**: simplify app scheduling pipeline
+- handle dialyzer warnings
+- **policies**: remove inefficient enum; refactor with to case
+
 ## v0.8.0 (2023-04-04)
 
 ### Feat

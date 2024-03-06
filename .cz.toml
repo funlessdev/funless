@@ -15,7 +15,7 @@
 [tool]
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.8.0"
+version = "0.9.0"
 tag_format = "v$version"
 annotated_tag = true
 version_files = ["core/mix.exs", "worker/mix.exs", "data/mix.exs"]
