@@ -21,7 +21,7 @@ defmodule Core.Adapters.Telemetry.Collector do
   require Logger
   alias Core.Adapters.Telemetry.MetricsServer
 
-  @prom_url_query "http://prometheus:9090/api/v1/query?"
+  @prom_url_query "/api/v1/query?"
   # @beam_memory_allocated "worker_prom_ex_beam_memory_allocated_bytes"
   @os_mon_prefix "worker_prom_ex_os_mon_resources_"
   @available_mem "available_mem"
@@ -141,8 +141,9 @@ defmodule Core.Adapters.Telemetry.Collector do
 
   @spec pull_metrics(atom()) :: {:ok, map()} | {:error, any()}
   defp pull_metrics(worker) do
+    prom_host = Application.fetch_env!(:core, :prometheus_host)
     prom_query = :uri_string.compose_query([{"query", "{node=\"#{Atom.to_string(worker)}\"}"}])
-    prom_uri = "#{@prom_url_query}#{prom_query}"
+    prom_uri = "http://#{prom_host}:9090#{@prom_url_query}#{prom_query}"
 
     response = :httpc.request(:get, {prom_uri, []}, [], [])
 
