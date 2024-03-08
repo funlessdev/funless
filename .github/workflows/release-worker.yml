@@ -24,7 +24,6 @@ env:
   otp-version: 25
   elixir-version: 1.14
 
-  
 defaults:
   run:
     working-directory: worker
@@ -97,7 +96,7 @@ jobs:
       - name: Create Mix Release
         shell: bash
         run: |
-          mix release ${{ matrix.release-name }}
+          mix release
           cd _build/${{ env.MIX_ENV }}/rel/${{ matrix.release-name }}
           tar -czvf ${{ matrix.release-tarball }} bin erts-* lib releases
           mv ${{ matrix.release-tarball }} ../../../../
