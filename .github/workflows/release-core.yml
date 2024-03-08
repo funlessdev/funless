@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-14]
+        os: [ubuntu-22.04, windows-2022]
         include:
           - os: ubuntu-22.04
             rust-target: x86_64-unknown-linux-gnu
@@ -45,10 +45,6 @@ jobs:
           - os: windows-2022
             rust-target: x86_64-pc-windows-gnu
             release-tarball: core-x86_64-windows.tar.gz
-            release-name: core
-          - os: macos-14
-            rust-target: x86_64-apple-darwin
-            release-tarball: core-x86_64-macos.tar.gz
             release-name: core
 
     runs-on: ${{ matrix.os }}
