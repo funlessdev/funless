@@ -36,17 +36,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-11]
+        os: [ubuntu-22.04, windows-2022, macos-14]
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             rust-target: x86_64-unknown-linux-gnu
             release-tarball: core-x86_64-linux.tar.gz
             release-name: core
-          - os: windows-2019
+          - os: windows-2022
             rust-target: x86_64-pc-windows-gnu
             release-tarball: core-x86_64-windows.tar.gz
             release-name: core
-          - os: macos-11
+          - os: macos-14
             rust-target: x86_64-apple-darwin
             release-tarball: core-x86_64-macos.tar.gz
             release-name: core
@@ -95,17 +95,19 @@ jobs:
 
       - name: Create Mix Release
         shell: bash
+        run: mix release
+
+      - name: Create Tarball
+        working-directory: core/_build/${{ env.MIX_ENV }}/rel/${{ matrix.release-name }}
+        shell: bash
         run: |
-          mix release 
-          cd _build/${{ env.MIX_ENV }}/rel/${{ matrix.release-name }}
           tar -czvf ${{ matrix.release-tarball }} bin erts-* lib releases
-          mv ${{ matrix.release-tarball }} ../../../../
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.release-tarball }}
-          path: ${{ matrix.release-tarball }}
+          path: core/_build/${{ env.MIX_ENV }}/rel/${{ matrix.release-name }}
 
   github-release:
     if: startswith(github.ref, 'refs/tags/') # Only run on tag push
