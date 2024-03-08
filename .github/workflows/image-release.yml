@@ -54,7 +54,7 @@ jobs:
           file: core/Dockerfile
           push: true
           tags: ghcr.io/funlessdev/core:latest,ghcr.io/funlessdev/core:${{ env.VERSION }}
-          platforms: linux/amd64,linux/arm64/v8
+          platforms: linux/amd64
           build-args: MIX_ENV=prod
 
       - name: Build and push Worker
@@ -64,5 +64,5 @@ jobs:
           file: worker/Dockerfile
           push: true
           tags: ghcr.io/funlessdev/worker:latest,ghcr.io/funlessdev/worker:${{ env.VERSION }}
-          platforms: linux/amd64,linux/arm64/v8
+          platforms: linux/amd64
           build-args: MIX_ENV=prod
