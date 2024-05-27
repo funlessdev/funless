@@ -19,10 +19,26 @@ defmodule Data.FunctionMetadata do
   ## Fields
     - tag: a string containing the function's tag. Can be anything, generally used with custom scheduling policies or metrics.
     - capacity: the amount of memory this function requires to be allocated on a worker
+    - params: a list of strings, representing the names of the parameters of the function, ordered
+    - main_func: the main function to be called in the function
+    - miniSL_services:
+                a list of tuples, containing the methods, URLs and request/response fields of
+                declared services.
+                The input fields will be encoded in a JSON payload (field : value), in order.
+                The output fields work the same as the :params field in this struct.
+                Each input/output field is itself a tuple {field_name, field_type}.
+                Currently used for the miniSL language.
+                The list must contain the services in order of declaration in the function.
   """
+  @type param :: {String.t(), :int | :float | :bool | :string | :array}
+  @type svc :: {:get | :post | :put | :delete, String.t(), [param()], [param()]}
+
   @type t :: %__MODULE__{
           tag: String.t(),
-          capacity: integer()
+          capacity: integer(),
+          params: [String.t()],
+          main_func: String.t(),
+          miniSL_services: [svc()]
         }
-  defstruct tag: nil, capacity: -1
+  defstruct tag: nil, capacity: -1, params: [], main_func: nil, miniSL_services: []
 end
