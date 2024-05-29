@@ -59,7 +59,8 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
         %ExecutionResource{
           resource: wasm_module
         }
-      ) do
+      )
+      when metadata != nil do
     Logger.debug("Runner: Invoking #{mod}/#{name} with args #{inspect(args)}")
 
     # Spin up an agent to store the result of the invocation
@@ -74,6 +75,17 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
     # Stop the agent
     Agent.stop(result_agent)
     res
+  end
+
+  @impl true
+  def run_function(
+        %FunctionStruct{name: _name, module: _mod} = function,
+        args,
+        %ExecutionResource{
+          resource: _wasm_module
+        } = resource
+      ) do
+    run_function(function |> Map.put(:metadata, %FunctionMetadata{}), args, resource)
   end
 
   defp perform_invocation(wasm_module, input_args, agent, %FunctionMetadata{} = metadata) do
