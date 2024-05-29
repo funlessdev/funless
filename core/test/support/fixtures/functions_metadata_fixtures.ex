@@ -21,11 +21,11 @@ defmodule Core.FunctionsMetadataFixtures do
   @doc """
   Generate a function_metadata.
   """
-  def functions_metadata_fixture(function_id, attrs \\ %{}) do
+  def function_metadata_fixture(function_id, attrs \\ %{}) do
     {:ok, function_metadata} =
       attrs
       |> Enum.into(%{
-        capacity: 42,
+        capacity: 0,
         tag: "some tag",
         function_id: function_id
       })

@@ -18,7 +18,7 @@ defmodule Core.InvokeTest do
   alias Core.Domain.Invoker
   alias Data.{FunctionMetadata, FunctionStruct, InvokeParams, InvokeResult}
 
-  import Core.{FunctionsFixtures, ModulesFixtures}
+  import Core.{FunctionsFixtures, FunctionsMetadataFixtures, ModulesFixtures}
 
   describe "Invoker" do
     setup do
@@ -40,7 +40,8 @@ defmodule Core.InvokeTest do
     defp create_function do
       module = module_fixture()
       function = function_fixture(module.id)
-      %{function: function, module: module}
+      metadata = function_metadata_fixture(function.id)
+      %{function: function, module: module, metadata: metadata}
     end
 
     test "invoke should return {:ok, result} when there is at least a worker and no error occurs",
@@ -161,7 +162,8 @@ defmodule Core.InvokeTest do
     test "invoke should retry the invocation with the code if the worker returns :code_not_found",
          %{
            function: function,
-           module: module
+           module: module,
+           metadata: metadata
          } do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
@@ -178,7 +180,7 @@ defmodule Core.InvokeTest do
         module: module.name,
         code: function.code,
         hash: function.hash,
-        metadata: struct(FunctionMetadata, %{})
+        metadata: %FunctionMetadata{tag: metadata.tag, capacity: metadata.capacity}
       }
 
       pars = %InvokeParams{function: function.name, module: module.name}

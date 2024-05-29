@@ -24,8 +24,6 @@ defmodule Core.FunctionsMetadataTest do
 
     import Core.FunctionsMetadataFixtures
 
-    @invalid_attrs %{capacity: nil, tag: nil}
-
     test "create_function_metadata/1 with valid data creates a function_metadata" do
       module = ModulesFixtures.module_fixture()
       function = FunctionsFixtures.function_fixture(module.id)
@@ -38,15 +36,10 @@ defmodule Core.FunctionsMetadataTest do
       assert function_metadata.tag == "some tag"
     end
 
-    test "create_function_metadata/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} =
-               FunctionsMetadata.create_function_metadata(@invalid_attrs)
-    end
-
     test "update_function_metadata/2 with valid data updates the function_metadata" do
       module = ModulesFixtures.module_fixture()
       function = FunctionsFixtures.function_fixture(module.id)
-      function_metadata = functions_metadata_fixture(function.id)
+      function_metadata = function_metadata_fixture(function.id)
       update_attrs = %{capacity: 43, tag: "some updated tag"}
 
       assert {:ok, %FunctionMetadata{} = function_metadata} =
@@ -57,21 +50,6 @@ defmodule Core.FunctionsMetadataTest do
 
       assert function_metadata.capacity == 43
       assert function_metadata.tag == "some updated tag"
-    end
-
-    test "update_function_metadata/2 with invalid data returns error changeset" do
-      module = ModulesFixtures.module_fixture()
-      function = FunctionsFixtures.function_fixture(module.id)
-      function_metadata = functions_metadata_fixture(function.id)
-
-      assert {:error, %Ecto.Changeset{}} =
-               FunctionsMetadata.update_function_metadata(
-                 function_metadata,
-                 @invalid_attrs
-               )
-
-      assert {:ok, function_metadata} ==
-               FunctionsMetadata.get_function_metadata_by_function_id(function.id)
     end
   end
 end

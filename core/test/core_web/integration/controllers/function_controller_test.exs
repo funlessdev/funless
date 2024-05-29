@@ -16,7 +16,7 @@ defmodule CoreWeb.FunctionControllerTest do
   use CoreWeb.ConnCase
 
   require Logger
-  import Core.{FunctionsFixtures, ModulesFixtures}
+  import Core.{FunctionsFixtures, FunctionsMetadataFixtures, ModulesFixtures}
 
   alias Core.Domain.Subjects
   alias Core.Schemas.Function
@@ -38,6 +38,12 @@ defmodule CoreWeb.FunctionControllerTest do
                       )
 
   @create_attrs_events_sinks @create_attrs_events |> Map.merge(@create_attrs_sinks)
+
+  @create_attrs_metadata @create_attrs
+                         |> Map.put(
+                           :metadata,
+                           "{\"tag\": \"some_tag\", \"capacity\": 128}"
+                         )
 
   @create_attrs_wait_for_workers @create_attrs |> Map.put(:wait_for_workers, true)
   @create_attrs_no_wait_for_workers @create_attrs |> Map.put(:wait_for_workers, false)
@@ -106,6 +112,15 @@ defmodule CoreWeb.FunctionControllerTest do
       module = module_fixture()
 
       conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs_sinks)
+      assert %{"name" => name} = json_response(conn, 201)["data"]
+
+      conn = get(conn, ~p"/v1/fn/#{module.name}/#{name}")
+      assert %{"name" => "some_name"} = json_response(conn, 200)["data"]
+    end
+
+    test "renders function when data with metadata is valid", %{conn: conn} do
+      module = module_fixture()
+      conn = post(conn, ~p"/v1/fn/#{module.name}", @create_attrs_metadata)
       assert %{"name" => name} = json_response(conn, 201)["data"]
 
       conn = get(conn, ~p"/v1/fn/#{module.name}/#{name}")
@@ -514,6 +529,7 @@ defmodule CoreWeb.FunctionControllerTest do
   defp create_function(_) do
     module = module_fixture()
     function = function_fixture(module.id)
+    _metadata = function_metadata_fixture(function.id)
     %{function: function, module_name: module.name}
   end
 end
