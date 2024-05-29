@@ -42,9 +42,9 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
   @wasm_invoke "__invoke"
   @exec_timeout 60_000
 
+  alias Data.ExecutionResource
   alias Data.FunctionMetadata
   alias Data.FunctionStruct
-  alias Data.ExecutionResource
   alias Worker.Adapters.Runtime.Wasm.Engine
   alias Worker.Adapters.Runtime.Wasm.Imports
 
