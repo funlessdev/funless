@@ -31,7 +31,7 @@ defmodule Core.Schemas.FunctionMetadata do
   def changeset(function_metadata, attrs) do
     function_metadata
     |> cast(attrs, [:tag, :capacity, :function_id])
-    |> validate_required([:tag, :capacity, :function_id])
+    |> validate_required([:function_id])
     |> unique_constraint(:function_id)
     |> foreign_key_constraint(:function_id)
   end

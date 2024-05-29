@@ -15,8 +15,6 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
-  alias Core.Domain.Ports.Commands
-
   alias Core.Domain.{
     DataSink,
     Events,
@@ -25,6 +23,10 @@ defmodule CoreWeb.FunctionController do
     Modules,
     Nodes
   }
+
+  alias Core.Domain.Ports.Commands
+  alias Core.FunctionsMetadata
+  alias Core.Schemas.FunctionMetadata
 
   alias Core.Schemas.Function
   alias Data.FunctionStruct
@@ -40,6 +42,8 @@ defmodule CoreWeb.FunctionController do
     end
   end
 
+  # TODO: handle scheduling policy + script
+  # TODO: InvokeParams should include the name and language of the configuration script, if any
   def invoke(conn, %{"module_name" => mod_name, "function_name" => fun_name} = params) do
     ivk = %InvokeParams{
       function: fun_name,
@@ -64,12 +68,18 @@ defmodule CoreWeb.FunctionController do
     with {:ok, events_req} <-
            params |> Map.get("events", nil) |> parse_requested_events_sinks(),
          {:ok, sinks_req} <- params |> Map.get("sinks", nil) |> parse_requested_events_sinks(),
+         {:ok, metadata} <- params |> Map.get("metadata", nil) |> parse_metadata(),
          {:ok, code} <- File.read(tmp_path),
          {:ok, module} <- Modules.get_module_by_name(module_name),
          {:ok, %Function{} = function} <-
            %{"name" => fn_name, "code" => code}
            |> Map.put_new("module_id", module.id)
-           |> Functions.create_function() do
+           |> Functions.create_function(),
+         {:ok, _} <-
+           metadata
+           |> Map.from_struct()
+           |> Map.put_new(:function_id, function.id)
+           |> FunctionsMetadata.create_function_metadata() do
       wait_for_workers = params |> Map.get("wait_for_workers", true)
       Logger.info("Function Controller: function #{module_name}/#{fn_name} created successfully.")
 
@@ -84,7 +94,8 @@ defmodule CoreWeb.FunctionController do
             name: fn_name,
             module: module_name,
             code: code,
-            hash: function.hash
+            hash: function.hash,
+            metadata: metadata
           })
 
         if wait_for_workers do
@@ -133,10 +144,15 @@ defmodule CoreWeb.FunctionController do
       ) do
     with {:ok, events_req} <- params |> Map.get("events", nil) |> parse_requested_events_sinks(),
          {:ok, sinks_req} <- params |> Map.get("sinks", nil) |> parse_requested_events_sinks(),
+         {:ok, new_metadata} <- params |> Map.get("metadata", nil) |> parse_metadata(),
          {:ok, code} <- File.read(tmp_path),
          {:ok, %Function{} = function} <- retrieve_fun_in_mod(fn_name, module_name),
          {:ok, %Function{} = function} <-
-           Functions.update_function(function, %{"name" => new_name, "code" => code}) do
+           Functions.update_function(function, %{"name" => new_name, "code" => code}),
+         {:ok, %FunctionMetadata{} = metadata} <-
+           FunctionsMetadata.get_function_metadata_by_function_id(function.id),
+         {:ok, _} <-
+           FunctionsMetadata.update_function_metadata(metadata, new_metadata |> Map.from_struct()) do
       # wait for all workers to receive the code; true by default
       wait_for_workers = params |> Map.get("wait_for_workers", true)
       event_results = Events.update_events(fn_name, module_name, events_req)
@@ -219,6 +235,23 @@ defmodule CoreWeb.FunctionController do
 
       {:error, _} ->
         Logger.error("Function Controller: received invalid JSON while parsing events and sinks.")
+        {:error, :bad_params}
+    end
+  end
+
+  defp parse_metadata(m) when is_nil(m) or m == "", do: {:ok, %Data.FunctionMetadata{}}
+
+  defp parse_metadata(m) do
+    case Jason.decode(m) do
+      {:ok, json_metadata} ->
+        metadata = struct(Data.FunctionMetadata, json_metadata)
+        {:ok, metadata}
+
+      {:error, _} ->
+        Logger.error(
+          "Function Controller: received invalid JSON while parsing function metadata."
+        )
+
         {:error, :bad_params}
     end
   end
