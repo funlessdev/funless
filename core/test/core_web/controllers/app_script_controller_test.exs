@@ -43,16 +43,16 @@ defmodule CoreWeb.APPScriptControllerTest do
 
   describe "index" do
     test "lists all app scripts", %{conn: conn} do
-      conn = get(conn, ~p"/v1/app")
+      conn = get(conn, ~p"/v1/scripts/app")
       assert json_response(conn, 200)["data"] == []
     end
   end
 
   describe "create app_script" do
     test "renders app_script when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"/v1/app", app_script: @create_attrs)
+      conn = post(conn, ~p"/v1/scripts/app", app_script: @create_attrs)
       assert %{"name" => name} = json_response(conn, 201)["data"]
-      conn = get(conn, ~p"/v1/app/#{name}")
+      conn = get(conn, ~p"/v1/scripts/app/#{name}")
 
       assert %{
                "name" => "some name",
@@ -61,7 +61,7 @@ defmodule CoreWeb.APPScriptControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, ~p"/v1/app", app_script: @invalid_attrs)
+      conn = post(conn, ~p"/v1/scripts/app", app_script: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
@@ -70,7 +70,7 @@ defmodule CoreWeb.APPScriptControllerTest do
     setup [:create_app_script]
 
     test "renders app_script", %{conn: conn, app_script: %{name: name}} do
-      conn = get(conn, ~p"/v1/app/#{name}")
+      conn = get(conn, ~p"/v1/scripts/app/#{name}")
 
       assert %{
                "name" => "some name",
