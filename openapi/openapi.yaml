@@ -137,6 +137,8 @@ components:
             language:
               description: Language of the configuration script.
               type: string
+              enum: [app, none]
+              default: none
             script:
               description: Name of the configuration script.
               type: string
