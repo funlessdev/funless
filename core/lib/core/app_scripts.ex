@@ -19,7 +19,7 @@ defmodule Core.APPScripts do
   import Ecto.Query, warn: false
   alias Core.Repo
 
-  alias Core.APPScripts.APP
+  alias Core.Schemas.APPScripts.APP
 
   @doc """
   Returns the list of app_scripts.

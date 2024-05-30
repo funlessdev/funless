@@ -17,7 +17,7 @@ defmodule Core.APPScriptsTest do
   alias Core.APPScripts
 
   describe "app_scripts" do
-    alias Core.APPScripts.APP
+    alias Core.Schemas.APPScripts.APP
 
     import Core.APPScriptsFixtures
 

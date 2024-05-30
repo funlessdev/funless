@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 defmodule CoreWeb.APPScriptJSON do
-  alias Core.APPScripts.APP
+  alias Core.Schemas.APPScripts.APP
 
   @doc """
   Renders a list of app_scripts.

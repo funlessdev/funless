@@ -15,7 +15,7 @@ defmodule CoreWeb.APPScriptController do
   use CoreWeb, :controller
 
   alias Core.APPScripts
-  alias Core.APPScripts.APP
+  alias Core.Schemas.APPScripts.APP
 
   action_fallback(CoreWeb.FallbackController)
 
