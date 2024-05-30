@@ -20,12 +20,19 @@ defmodule Data.InvokeParams do
       - module: function module
       - function: function name
       - args: function arguments
+      - config: configuration structure to be used in scheduling
   """
   @type t :: %__MODULE__{
           module: String.t(),
           function: String.t(),
-          args: map()
+          args: map(),
+          config: Data.Configurations.APP.t() | Data.Configurations.Empty.t()
         }
   @enforce_keys [:function]
-  defstruct [:function, module: "_", args: %{}]
+  defstruct [
+    :function,
+    module: "_",
+    args: %{},
+    config: %Data.Configurations.Empty{}
+  ]
 end

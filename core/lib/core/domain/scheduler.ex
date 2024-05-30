@@ -22,18 +22,21 @@ defmodule Core.Domain.Scheduler do
   require Logger
 
   @type worker_atom :: atom()
+  @type configuration :: Data.Configurations.Empty.t() | Data.Configurations.APP.t()
 
   @doc """
   Receives a list of workers and chooses one which can be used for invocation.
   """
-  @spec select([worker_atom()], Data.FunctionStruct.t()) ::
+  @spec select([worker_atom()], Data.FunctionStruct.t(), configuration()) ::
           {:ok, worker_atom()} | {:error, :no_workers} | {:error, :no_valid_workers}
-  def select([], _) do
+  def select([], _, _) do
     Logger.warn("Scheduler: tried selection with NO workers")
     {:error, :no_workers}
   end
 
-  def select(workers, function) do
+  # NOTE: if we move this to a NIF, we should only pass
+  # configuration information (to avoid serialising all parameters)
+  def select(workers, function, config) do
     Logger.info("Scheduler: selection with #{length(workers)} workers")
 
     # Get the resources
@@ -48,9 +51,8 @@ defmodule Core.Domain.Scheduler do
         {:ok, Enum.random(workers)}
 
       [_ | _] ->
-        # This will be expanded to allow use of multiple policies (depending on function metadata)
         case SchedulingPolicy.select(
-               %Data.Configurations.Empty{},
+               config,
                resources,
                function
              ) do

@@ -16,12 +16,14 @@ defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
   alias Core.Domain.{
+    APPScripts,
     DataSink,
     Events,
     Functions,
     Invoker,
     Modules,
-    Nodes
+    Nodes,
+    Policies
   }
 
   alias Core.Domain.Ports.Commands
@@ -45,10 +47,26 @@ defmodule CoreWeb.FunctionController do
   # TODO: handle scheduling policy + script
   # TODO: InvokeParams should include the name and language of the configuration script, if any
   def invoke(conn, %{"module_name" => mod_name, "function_name" => fun_name} = params) do
+    config =
+      case params |> Map.get("scheduling") do
+        nil ->
+          %Data.Configurations.Empty{}
+
+        %{"language" => "none"} ->
+          %Data.Configurations.Empty{}
+
+        %{"language" => "app", "script" => script_name} ->
+          # TODO: structure must be integrated in Ecto Schema,
+          # we shouldn't parse the script with each invocation
+          script = APPScripts.get_app_script_by_name(script_name)
+          script |> Policies.Parsers.APP.parse()
+      end
+
     ivk = %InvokeParams{
       function: fun_name,
       module: mod_name,
-      args: params["args"] || %{}
+      args: params["args"] || %{},
+      config: config
     }
 
     with {:ok, res} <- Invoker.invoke(ivk) do

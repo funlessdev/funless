@@ -18,6 +18,7 @@ defmodule Core.Domain.Invoker do
   """
   require Logger
 
+  alias Core.FunctionsMetadata
   alias Data.FunctionMetadata
 
   alias Core.Domain.{
@@ -56,36 +57,38 @@ defmodule Core.Domain.Invoker do
   def invoke(ivk) do
     Logger.info("Invoker: invocation for #{ivk.module}/#{ivk.function} requested")
 
-    case Functions.get_code_by_name_in_mod!(ivk.function, ivk.module) do
-      [f] ->
-        func =
-          struct(FunctionStruct, %{
-            name: ivk.function,
-            module: ivk.module,
-            code: f.code,
-            hash: f.hash,
-            metadata: struct(FunctionMetadata, %{})
-          })
+    with [f] <- Functions.get_by_name_in_mod!(ivk.function, ivk.module),
+         {:ok, metadata} <- FunctionsMetadata.get_function_metadata_by_function_id(f.id) do
+      func =
+        struct(FunctionStruct, %{
+          name: ivk.function,
+          module: ivk.module,
+          hash: f.hash,
+          code: nil,
+          metadata: struct(FunctionMetadata, %{tag: metadata.tag, capacity: metadata.capacity})
+        })
 
-        with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select(func) do
-          update_concurrent(worker, +1)
+      with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select(func, ivk.config) do
+        update_concurrent(worker, +1)
 
-          out =
-            case invoke_without_code(worker, ivk, f.hash) do
-              {:error, :code_not_found, handler} ->
-                worker
-                |> invoke_with_code(handler, ivk, func)
-                |> save_to_sinks(ivk.module, ivk.function)
+        out =
+          case invoke_without_code(worker, ivk, f.hash) do
+            {:error, :code_not_found, handler} ->
+              [%{code: code}] = Functions.get_code_by_name_in_mod!(ivk.function, ivk.module)
 
-              res ->
-                save_to_sinks(res, ivk.module, ivk.function)
-            end
+              worker
+              |> invoke_with_code(handler, ivk, func |> Map.put(:code, code))
+              |> save_to_sinks(ivk.module, ivk.function)
 
-          update_concurrent(worker, -1)
+            res ->
+              save_to_sinks(res, ivk.module, ivk.function)
+          end
 
-          out
-        end
+        update_concurrent(worker, -1)
 
+        out
+      end
+    else
       [] ->
         {:error, :not_found}
     end

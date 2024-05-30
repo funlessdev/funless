@@ -24,6 +24,7 @@ defmodule CoreWeb.APPScriptController do
     render(conn, :index, app_scripts: app_scripts)
   end
 
+  # TODO: parse APP script on creation and store struct as map
   def create(conn, %{"app_script" => app_script_params}) do
     with {:ok, %APP{} = app_script} <- APPScripts.create_app_script(app_script_params) do
       conn
