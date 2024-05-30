@@ -27,7 +27,7 @@ defmodule Core.APPScriptsFixtures do
         name: "some name",
         script: "some script"
       })
-      |> Core.APPScripts.create_app_script()
+      |> Core.Domain.APPScripts.create_app_script()
 
     app_script
   end

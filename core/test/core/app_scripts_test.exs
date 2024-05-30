@@ -14,7 +14,7 @@
 defmodule Core.APPScriptsTest do
   use Core.DataCase
 
-  alias Core.APPScripts
+  alias Core.Domain.APPScripts
 
   describe "app_scripts" do
     alias Core.Schemas.APPScripts.APP
