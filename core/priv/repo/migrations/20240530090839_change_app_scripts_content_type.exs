@@ -1,4 +1,4 @@
-# Copyright 2023 Giuseppe De Palma, Matteo Trentin
+# Copyright 2024 Giuseppe De Palma, Matteo Trentin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,25 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Schemas.APPScripts.APP do
-  @moduledoc """
-  The APP script schema.
-  """
-  use Ecto.Schema
-  import Ecto.Changeset
+defmodule Core.Repo.Migrations.ChangeAppScriptsContentType do
+  use Ecto.Migration
 
-  schema "app_scripts" do
-    field(:name, :string)
-    field(:script, :map)
-
-    timestamps()
-  end
-
-  @doc false
-  def changeset(app_script, attrs) do
-    app_script
-    |> cast(attrs, [:name, :script])
-    |> validate_required([:name, :script])
-    |> unique_constraint(:name)
+  def change do
+    alter table(:app_scripts) do
+      remove :script
+      add :script, :map
+    end
   end
 end

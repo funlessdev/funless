@@ -227,4 +227,27 @@ defmodule Core.Domain.Policies.Parsers.APP do
   def parse_block(_) do
     {:error, :no_block_workers}
   end
+
+  @doc """
+  Converts a given APP script struct to a simple map.
+  """
+  @spec parse(Data.Configurations.APP.t()) :: map()
+  def to_map(app_script) do
+    %{tags: tags} = outer_map = Map.from_struct(app_script)
+
+    tag_maps =
+      tags
+      |> Map.new(fn {k, v} -> {k, v |> Map.from_struct() |> blocks_to_maps()} end)
+
+    outer_map |> Map.put(:tags, tag_maps)
+  end
+
+  @spec blocks_to_maps(Data.Configurations.APP.Tag.t()) :: map()
+  defp blocks_to_maps(%{blocks: blocks} = tag_map) do
+    block_maps =
+      blocks
+      |> Enum.map(&Map.from_struct(&1))
+
+    tag_map |> Map.put(:blocks, block_maps)
+  end
 end

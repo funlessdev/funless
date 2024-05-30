@@ -15,6 +15,7 @@ defmodule CoreWeb.APPScriptController do
   use CoreWeb, :controller
 
   alias Core.Domain.APPScripts
+  alias Core.Domain.Policies.Parsers
   alias Core.Schemas.APPScripts.APP
 
   action_fallback(CoreWeb.FallbackController)
@@ -25,8 +26,14 @@ defmodule CoreWeb.APPScriptController do
   end
 
   # TODO: parse APP script on creation and store struct as map
-  def create(conn, %{"app_script" => app_script_params}) do
-    with {:ok, %APP{} = app_script} <- APPScripts.create_app_script(app_script_params) do
+  def create(conn, %{"name" => script_name, "file" => %Plug.Upload{path: tmp_path}}) do
+    with {:ok, app_script_string} <- File.read(tmp_path),
+         {:ok, app_script} <- Parsers.APP.parse(app_script_string),
+         {:ok, %APP{} = app_script} <-
+           APPScripts.create_app_script(%{
+             name: script_name,
+             script: app_script |> Parsers.APP.to_map()
+           }) do
       conn
       |> put_status(:created)
       |> render(:show, app_script: app_script)

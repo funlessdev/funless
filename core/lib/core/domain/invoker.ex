@@ -91,6 +91,9 @@ defmodule Core.Domain.Invoker do
     else
       [] ->
         {:error, :not_found}
+
+      e ->
+        e
     end
   end
 
