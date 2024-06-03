@@ -25,7 +25,6 @@ defmodule CoreWeb.APPScriptController do
     render(conn, :index, app_scripts: app_scripts)
   end
 
-  # TODO: parse APP script on creation and store struct as map
   def create(conn, %{"name" => script_name, "file" => %Plug.Upload{path: tmp_path}}) do
     with {:ok, app_script_string} <- File.read(tmp_path),
          {:ok, app_script} <- Parsers.APP.parse(app_script_string),

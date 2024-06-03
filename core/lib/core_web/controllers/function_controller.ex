@@ -53,9 +53,8 @@ defmodule CoreWeb.FunctionController do
           %Data.Configurations.Empty{}
 
         %{"language" => "app", "script" => script_name} ->
-          script =
-            APPScripts.get_app_script_by_name(script_name)
-            |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
+          %{name: ^script_name, script: script} = APPScripts.get_app_script_by_name(script_name)
+          script = script |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
 
           struct(Data.Configurations.APP, script)
       end
