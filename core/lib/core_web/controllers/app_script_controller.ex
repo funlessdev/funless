@@ -39,6 +39,10 @@ defmodule CoreWeb.APPScriptController do
     end
   end
 
+  def create(_, _) do
+    {:error, :bad_params}
+  end
+
   def show(conn, %{"app_name" => name}) do
     app_script = APPScripts.get_app_script_by_name(name)
     render(conn, :show, app_script: app_script)

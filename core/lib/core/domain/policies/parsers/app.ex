@@ -29,6 +29,8 @@ defmodule Core.Domain.Policies.Parsers.APP do
     :ok
   end
 
+  # TODO: use JSON schema to check whether the script is well-formed
+
   @doc """
   Parses a given YAML string and builds the relevant APP configuration from it.
 
@@ -231,7 +233,7 @@ defmodule Core.Domain.Policies.Parsers.APP do
   @doc """
   Converts a given APP script struct to a simple map.
   """
-  @spec parse(Data.Configurations.APP.t()) :: map()
+  @spec to_map(Data.Configurations.APP.t()) :: map()
   def to_map(app_script) do
     %{tags: tags} = outer_map = Map.from_struct(app_script)
 
@@ -249,5 +251,47 @@ defmodule Core.Domain.Policies.Parsers.APP do
       |> Enum.map(&Map.from_struct(&1))
 
     tag_map |> Map.put(:blocks, block_maps)
+  end
+
+  @doc """
+  Builds an APP script from a map with string keys (assuming it has the correct structure).
+  """
+  @spec from_string_keys(map()) :: Data.Configurations.APP.t() | {:error, :unknown_construct}
+  def from_string_keys(%{"tags" => tags}) do
+    atom_tags = tags |> Map.new(fn {k, v} -> {k, v |> tag_from_string_keys} end)
+    %Data.Configurations.APP{tags: atom_tags}
+  end
+
+  def from_string_keys(_) do
+    {:error, :unknown_construct}
+  end
+
+  defp tag_from_string_keys(%{"blocks" => blocks, "followup" => followup}) do
+    atom_followup = followup |> String.to_existing_atom()
+    atom_blocks = blocks |> Enum.map(&block_from_string_keys/1)
+    %Data.Configurations.APP.Tag{blocks: atom_blocks, followup: atom_followup}
+  end
+
+  defp block_from_string_keys(%{
+         "affinity" => %{"affinity" => affinity, "antiaffinity" => antiaffinity},
+         "invalidate" => invalidate,
+         "strategy" => strategy,
+         "workers" => workers
+       }) do
+    atom_invalidate =
+      invalidate
+      |> Map.new(fn {k, v} ->
+        case v do
+          "infinity" -> {String.to_existing_atom(k), :infinity}
+          val -> {String.to_existing_atom(k), val}
+        end
+      end)
+
+    %Data.Configurations.APP.Block{
+      affinity: %{affinity: affinity, antiaffinity: antiaffinity},
+      invalidate: atom_invalidate,
+      strategy: String.to_existing_atom(strategy),
+      workers: workers
+    }
   end
 end

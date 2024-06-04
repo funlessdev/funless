@@ -22,7 +22,8 @@ defmodule CoreWeb.FunctionController do
     Functions,
     Invoker,
     Modules,
-    Nodes
+    Nodes,
+    Policies.Parsers
   }
 
   alias Core.Domain.Ports.Commands
@@ -54,9 +55,8 @@ defmodule CoreWeb.FunctionController do
 
         %{"language" => "app", "script" => script_name} ->
           %{name: ^script_name, script: script} = APPScripts.get_app_script_by_name(script_name)
-          script = script |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
 
-          struct(Data.Configurations.APP, script)
+          Parsers.APP.from_string_keys(script)
       end
 
     ivk = %InvokeParams{
