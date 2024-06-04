@@ -144,5 +144,77 @@ defmodule Core.Unit.Policies.Parsers.AppParserTest do
               }} ===
                Parsers.APP.parse(script)
     end
+
+    test "to_map should return the APP struct and its nested struct as a single map" do
+      script = File.read!("test/support/fixtures/APP/producer_consumer.yml")
+      {:ok, parsed_script} = Parsers.APP.parse(script)
+
+      assert %{
+               tags: %{
+                 "producer" => %{
+                   blocks: [
+                     %{
+                       affinity: %{affinity: ["consumer"], antiaffinity: ["heavy"]},
+                       workers: ["worker1", "worker2"],
+                       strategy: :random,
+                       invalidate: %{
+                         capacity_used: :infinity,
+                         max_concurrent_invocations: :infinity
+                       }
+                     }
+                   ],
+                   followup: :fail
+                 },
+                 "consumer" => %{
+                   blocks: [
+                     %{
+                       affinity: %{affinity: ["producer"], antiaffinity: ["heavy"]},
+                       workers: ["worker1", "worker2"],
+                       strategy: :random,
+                       invalidate: %{
+                         capacity_used: :infinity,
+                         max_concurrent_invocations: :infinity
+                       }
+                     },
+                     %{
+                       affinity: %{affinity: [], antiaffinity: ["heavy"]},
+                       workers: ["worker1", "worker2"],
+                       strategy: :random,
+                       invalidate: %{
+                         capacity_used: :infinity,
+                         max_concurrent_invocations: :infinity
+                       }
+                     }
+                   ],
+                   followup: :fail
+                 },
+                 "heavy" => %{
+                   blocks: [
+                     %{
+                       affinity: %{affinity: [], antiaffinity: []},
+                       workers: ["worker1", "worker2"],
+                       strategy: :random,
+                       invalidate: %{
+                         capacity_used: :infinity,
+                         max_concurrent_invocations: :infinity
+                       }
+                     }
+                   ],
+                   followup: :fail
+                 }
+               }
+             } ===
+               Parsers.APP.to_map(parsed_script)
+    end
+
+    test "from_string_keys should return an APP struct when fed a map with string keys" do
+      script = File.read!("test/support/fixtures/APP/producer_consumer.yml")
+      {:ok, parsed_script} = Parsers.APP.parse(script)
+
+      string_keys_script =
+        parsed_script |> Parsers.APP.to_map() |> Jason.encode!() |> Jason.decode!()
+
+      assert parsed_script === Parsers.APP.from_string_keys(string_keys_script)
+    end
   end
 end

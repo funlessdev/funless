@@ -23,22 +23,32 @@ defmodule Core.APPScriptsTest do
 
     @invalid_attrs %{name: nil, script: nil}
 
-    test "list_app_scripts/0 returns all app_scripts" do
+    test "list_app_scripts/0 returns all app_scripts, with string keys instead of atoms" do
       app_script = app_script_fixture()
-      assert APPScripts.list_app_scripts() == [app_script]
+      %{script: script_content} = app_script
+
+      assert APPScripts.list_app_scripts() == [
+               app_script
+               |> Map.put(:script, script_content |> Jason.encode!() |> Jason.decode!())
+             ]
     end
 
-    test "get_app_script!/1 returns the app_script with given id" do
+    test "get_app_script!/1 returns the app_script with given id, with string keys instead of atoms" do
       app_script = app_script_fixture()
-      assert APPScripts.get_app_script!(app_script.id) == app_script
+      %{script: script_content} = app_script
+
+      assert APPScripts.get_app_script!(app_script.id) ==
+               app_script
+               |> Map.put(:script, script_content |> Jason.encode!() |> Jason.decode!())
     end
 
     test "create_app_script/1 with valid data creates a app_script" do
-      valid_attrs = %{name: "some name", script: "some script"}
+      %{script: script_content} = app_script_fixture()
+      valid_attrs = %{name: "some name", script: script_content}
 
       assert {:ok, %APP{} = app_script} = APPScripts.create_app_script(valid_attrs)
       assert app_script.name == "some name"
-      assert app_script.script == "some script"
+      assert app_script.script == script_content
     end
 
     test "create_app_script/1 with invalid data returns error changeset" do
@@ -47,20 +57,26 @@ defmodule Core.APPScriptsTest do
 
     test "update_app_script/2 with valid data updates the app_script" do
       app_script = app_script_fixture()
-      update_attrs = %{name: "some updated name", script: "some updated script"}
+      %{script: script_content} = app_script
+      update_attrs = %{name: "some updated name", script: script_content}
 
       assert {:ok, %APP{} = app_script} = APPScripts.update_app_script(app_script, update_attrs)
       assert app_script.name == "some updated name"
-      assert app_script.script == "some updated script"
+      assert app_script.script == script_content
     end
 
     test "update_app_script/2 with invalid data returns error changeset" do
       app_script = app_script_fixture()
+      %{script: script_content} = app_script
+
+      stored_app_script =
+        app_script |> Map.put(:script, script_content |> Jason.encode!() |> Jason.decode!())
 
       assert {:error, %Ecto.Changeset{}} =
                APPScripts.update_app_script(app_script, @invalid_attrs)
 
-      assert app_script == APPScripts.get_app_script!(app_script.id)
+      assert stored_app_script ==
+               APPScripts.get_app_script!(app_script.id)
     end
 
     test "delete_app_script/1 deletes the app_script" do

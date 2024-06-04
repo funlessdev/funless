@@ -195,7 +195,7 @@ defmodule Integration.Adapters.WasmTest do
              } = get_result
 
       assert %{
-               "status" => "200",
+               "status" => "201",
                "payload" => %{
                  "title" => "product-fl",
                  "id" => _
