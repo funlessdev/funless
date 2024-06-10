@@ -29,8 +29,6 @@ defmodule Core.Domain.Policies.Parsers.APP do
     :ok
   end
 
-  # TODO: use JSON schema to check whether the script is well-formed
-
   @doc """
   Parses a given YAML string and builds the relevant APP configuration from it.
 
