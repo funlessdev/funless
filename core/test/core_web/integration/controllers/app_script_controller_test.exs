@@ -20,13 +20,10 @@ defmodule CoreWeb.APPScriptControllerTest do
   alias Ecto.Adapters.SQL.Sandbox
 
   @create_attrs %{
-    name: "some name",
-    script: "some script"
+    file: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/APP/example.yml"},
+    name: "some_name"
   }
-  # @update_attrs %{
-  #   name: "some updated name",
-  #   script: "some updated script"
-  # }
+
   @invalid_attrs %{name: nil, script: nil}
 
   setup %{conn: conn} do
@@ -43,39 +40,76 @@ defmodule CoreWeb.APPScriptControllerTest do
 
   describe "index" do
     test "lists all app scripts", %{conn: conn} do
-      conn = get(conn, ~p"/v1/app")
+      conn = get(conn, ~p"/v1/scripts/app")
       assert json_response(conn, 200)["data"] == []
     end
   end
 
   describe "create app_script" do
     test "renders app_script when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"/v1/app", app_script: @create_attrs)
+      conn = post(conn, ~p"/v1/scripts/app", @create_attrs)
       assert %{"name" => name} = json_response(conn, 201)["data"]
-      conn = get(conn, ~p"/v1/app/#{name}")
+      conn = get(conn, ~p"/v1/scripts/app/#{name}")
 
       assert %{
-               "name" => "some name",
-               "script" => "some script"
+               "name" => "some_name",
+               "script" => %{
+                 "tags" => %{
+                   "tag_a" => %{
+                     "blocks" => [
+                       %{
+                         "affinity" => %{"affinity" => [], "antiaffinity" => []},
+                         "invalidate" => %{
+                           "capacity_used" => "infinity",
+                           "max_concurrent_invocations" => "infinity"
+                         },
+                         "strategy" => "best-first",
+                         "workers" => ["worker1", "worker2"]
+                       }
+                     ],
+                     "followup" => "fail"
+                   },
+                   "tag_b" => %{
+                     "blocks" => [
+                       %{
+                         "affinity" => %{"affinity" => [], "antiaffinity" => []},
+                         "invalidate" => %{
+                           "capacity_used" => "infinity",
+                           "max_concurrent_invocations" => "infinity"
+                         },
+                         "strategy" => "random",
+                         "workers" => ["worker1", "worker2", "worker3"]
+                       }
+                     ],
+                     "followup" => "fail"
+                   }
+                 }
+               }
              } = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, ~p"/v1/app", app_script: @invalid_attrs)
-      assert json_response(conn, 422)["errors"] != %{}
+      conn = post(conn, ~p"/v1/scripts/app", @invalid_attrs)
+      assert json_response(conn, 400)["errors"] != %{}
     end
   end
 
   describe "get single app script" do
     setup [:create_app_script]
 
-    test "renders app_script", %{conn: conn, app_script: %{name: name}} do
-      conn = get(conn, ~p"/v1/app/#{name}")
+    test "renders app_script", %{conn: conn, app_script: %{name: name} = script} do
+      conn = get(conn, ~p"/v1/scripts/app/#{name}")
 
-      assert %{
-               "name" => "some name",
-               "script" => "some script"
-             } = json_response(conn, 200)["data"]
+      json_script =
+        script
+        |> Map.delete(:__meta__)
+        |> Map.delete(:inserted_at)
+        |> Map.delete(:updated_at)
+        |> Map.from_struct()
+        |> Jason.encode!()
+        |> Jason.decode!()
+
+      assert ^json_script = json_response(conn, 200)["data"]
     end
   end
 

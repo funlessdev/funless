@@ -36,35 +36,44 @@ defmodule Core.Unit.SchedulerTest do
           metadata: struct(FunctionMetadata, %{})
         })
 
-      %{func: func}
+      %{func: func, config: %Data.Configurations.Empty{}}
     end
 
-    test "select should return the worker when list has only one element", %{func: func} do
+    test "select should return the worker when list has only one element", %{
+      func: func,
+      config: config
+    } do
       expected = {:ok, :worker}
       w_nodes = [:worker]
-      workers = Scheduler.select(w_nodes, func)
+      workers = Scheduler.select(w_nodes, func, config)
 
       assert workers == expected
     end
 
-    test "select should return :no_workers when empty list", %{func: func} do
+    test "select should return :no_workers when empty list", %{func: func, config: config} do
       expected = {:error, :no_workers}
       w_nodes = []
-      workers = Scheduler.select(w_nodes, func)
+      workers = Scheduler.select(w_nodes, func, config)
 
       assert workers == expected
     end
 
-    test "select should return a random worker when resources are not available", %{func: func} do
+    test "select should return a random worker when resources are not available", %{
+      func: func,
+      config: config
+    } do
       Core.Telemetry.Metrics.Mock |> Mox.expect(:resources, 2, fn _ -> {:error, :not_found} end)
 
       w_nodes = [:worker1, :worker2]
-      workers = Scheduler.select(w_nodes, func)
+      workers = Scheduler.select(w_nodes, func, config)
 
       assert workers == {:ok, :worker1} || workers == {:ok, :worker2}
     end
 
-    test "select should return worker with highest available memory", %{func: func} do
+    test "select should return worker with highest available memory", %{
+      func: func,
+      config: config
+    } do
       Core.Telemetry.Metrics.Mock
       |> expect(:resources, 2, fn w ->
         case w do
@@ -76,7 +85,7 @@ defmodule Core.Unit.SchedulerTest do
         end
       end)
 
-      selected = Scheduler.select([:worker1, :worker2], func)
+      selected = Scheduler.select([:worker1, :worker2], func, config)
       assert selected == {:ok, :worker1}
     end
   end

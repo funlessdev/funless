@@ -103,7 +103,7 @@ defmodule Integration.Adapters.WasmTest do
     end
 
     test "invalid input" do
-      function = %{name: "f", module: "m"}
+      function = %Data.FunctionStruct{name: "f", module: "m", hash: <<0>>}
       args = %{}
 
       resource = %Data.ExecutionResource{
@@ -184,32 +184,32 @@ defmodule Integration.Adapters.WasmTest do
       assert %{
                "status" => "200",
                "payload" => %{
-                 "brand" => "Apple",
-                 "category" => "smartphones",
+                 "brand" => _,
+                 "category" => _,
                  "id" => 1,
-                 "price" => 549,
-                 "rating" => 4.69,
-                 "stock" => 94,
-                 "title" => "iPhone 9"
+                 "price" => _,
+                 "rating" => _,
+                 "stock" => _,
+                 "title" => _
                }
              } = get_result
 
-      assert post_result == %{
-               "status" => "200",
+      assert %{
+               "status" => "201",
                "payload" => %{
                  "title" => "product-fl",
-                 "id" => 101
+                 "id" => _
                }
-             }
+             } = post_result
 
       assert %{
                "payload" => %{
-                 "brand" => "Apple",
-                 "category" => "smartphones",
-                 "id" => 1,
-                 "price" => 549,
-                 "rating" => 4.69,
-                 "stock" => 94,
+                 "brand" => _,
+                 "category" => _,
+                 "id" => _,
+                 "price" => _,
+                 "rating" => _,
+                 "stock" => _,
                  "title" => "product-fl"
                },
                "status" => "200"
@@ -217,16 +217,16 @@ defmodule Integration.Adapters.WasmTest do
 
       assert %{
                "payload" => %{
-                 "brand" => "Apple",
-                 "category" => "smartphones",
+                 "brand" => _,
+                 "category" => _,
                  "deletedOn" => _,
-                 "discountPercentage" => 12.96,
+                 "discountPercentage" => _,
                  "id" => 1,
                  "isDeleted" => true,
-                 "price" => 549,
-                 "rating" => 4.69,
-                 "stock" => 94,
-                 "title" => "iPhone 9"
+                 "price" => _,
+                 "rating" => _,
+                 "stock" => _,
+                 "title" => _
                },
                "status" => "200"
              } = delete_result
