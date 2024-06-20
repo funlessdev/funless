@@ -70,9 +70,9 @@ defmodule CoreWeb.Router do
     post("/fn/:module_name/:function_name", FunctionController, :invoke)
 
     # APP scripts routes
-    get("/app", APPScriptController, :index)
-    post("/app", APPScriptController, :create)
-    get("/app/:app_name", APPScriptController, :show)
+    get("/scripts/app", APPScriptController, :index)
+    post("/scripts/app", APPScriptController, :create)
+    get("/scripts/app/:app_name", APPScriptController, :show)
     # delete("/app/:app_name", AppScriptController, :delete)
   end
 

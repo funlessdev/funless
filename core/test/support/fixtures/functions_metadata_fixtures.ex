@@ -1,4 +1,4 @@
-# Copyright 2023 Giuseppe De Palma, Matteo Trentin
+# Copyright 2024 Giuseppe De Palma, Matteo Trentin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,27 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-defmodule Core.APPScriptsFixtures do
+
+defmodule Core.FunctionsMetadataFixtures do
   @moduledoc """
   This module defines test helpers for creating
-  entities via the `Core.APPScripts` context.
+  entities via the `Core.FunctionMetadata` context.
   """
-  alias Core.Domain.APPScripts
-  alias Core.Domain.Policies.Parsers.APP
 
   @doc """
-  Generate a app_script.
+  Generate a function_metadata.
   """
-  def app_script_fixture(_attrs \\ %{}) do
-    script = File.read!("test/support/fixtures/APP/example.yml")
-    {:ok, parsed_script} = APP.parse(script)
-
-    {:ok, app_script} =
-      APPScripts.create_app_script(%{
-        name: "examplescript",
-        script: parsed_script |> APP.to_map()
+  def function_metadata_fixture(function_id, attrs \\ %{}) do
+    {:ok, function_metadata} =
+      attrs
+      |> Enum.into(%{
+        capacity: 0,
+        tag: "some tag",
+        function_id: function_id
       })
+      |> Core.FunctionsMetadata.create_function_metadata()
 
-    app_script
+    function_metadata
   end
 end

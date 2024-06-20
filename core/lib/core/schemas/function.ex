@@ -16,6 +16,7 @@ defmodule Core.Schemas.Function do
   @moduledoc """
   The Function schema.
   """
+  alias Core.Schemas.FunctionMetadata
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -27,6 +28,8 @@ defmodule Core.Schemas.Function do
     timestamps()
 
     belongs_to(:module, Core.Schemas.Module, foreign_key: :module_id)
+
+    has_one(:metadata, FunctionMetadata, on_delete: :delete_all)
   end
 
   @doc false

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-defmodule Core.APPScripts do
+defmodule Core.Domain.APPScripts do
   @moduledoc """
   The APPScripts context.
   """
@@ -19,7 +19,7 @@ defmodule Core.APPScripts do
   import Ecto.Query, warn: false
   alias Core.Repo
 
-  alias Core.APPScripts.APP
+  alias Core.Schemas.APPScripts.APP
 
   @doc """
   Returns the list of app_scripts.

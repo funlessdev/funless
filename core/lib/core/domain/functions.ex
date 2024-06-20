@@ -76,6 +76,7 @@ defmodule Core.Domain.Functions do
       []
 
   """
+  @spec get_by_name_in_mod!(String.t(), String.t()) :: [any()]
   def get_by_name_in_mod!(fun_name, mod_name) do
     q =
       from(f in Function,

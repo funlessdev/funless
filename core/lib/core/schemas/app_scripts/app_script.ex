@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.APPScripts.APP do
+defmodule Core.Schemas.APPScripts.APP do
   @moduledoc """
   The APP script schema.
   """
@@ -21,7 +21,7 @@ defmodule Core.APPScripts.APP do
 
   schema "app_scripts" do
     field(:name, :string)
-    field(:script, :string)
+    field(:script, :map)
 
     timestamps()
   end

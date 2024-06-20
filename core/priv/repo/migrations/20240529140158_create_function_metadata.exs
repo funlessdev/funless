@@ -1,4 +1,4 @@
-# Copyright 2023 Giuseppe De Palma, Matteo Trentin
+# Copyright 2024 Giuseppe De Palma, Matteo Trentin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,28 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-defmodule CoreWeb.APPScriptJSON do
-  alias Core.Schemas.APPScripts.APP
 
-  @doc """
-  Renders a list of app_scripts.
-  """
-  def index(%{app_scripts: app_scripts}) do
-    %{data: for(app_script <- app_scripts, do: data(app_script))}
-  end
+defmodule Core.Repo.Migrations.CreateFunctionMetadata do
+  use Ecto.Migration
 
-  @doc """
-  Renders a single app_script.
-  """
-  def show(%{app_script: app_script}) do
-    %{data: data(app_script)}
-  end
+  def change do
+    create table(:function_metadata) do
+      add :tag, :string
+      add :capacity, :integer
+      add :function_id, references(:functions, on_delete: :nothing), null: false
 
-  defp data(%APP{} = app_script) do
-    %{
-      id: app_script.id,
-      name: app_script.name,
-      script: app_script.script
-    }
+      timestamps()
+    end
+
+    create unique_index(:function_metadata, [:function_id])
   end
 end

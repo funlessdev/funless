@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-openapi: 3.0.2
+openapi: 3.1.0
 info:
   title: FunLess Platfom API
   description: The API for the FunLess Platform
@@ -128,6 +128,20 @@ components:
       properties:
         args:
           type: object
+        scheduling:
+          description: >
+            Language and name of the script that will be used for the scheduling policy. 
+            If empty, the default policy is used.
+          type: object
+          properties:
+            language:
+              description: Language of the configuration script.
+              type: string
+              enum: [app, none]
+              default: none
+            script:
+              description: Name of the configuration script.
+              type: string
 
     invoke_result:
       type: object
@@ -149,6 +163,17 @@ components:
           description: Whether to wait for all workers to receive the code of the function. If false, the request returns as soon as the creation request terminates.
           type: boolean
           default: true
+        metadata:
+          description: Additional function metadata for the platform
+          type: object
+          properties:
+            tag:
+              description: A tag, identifying the function. Used in several configuration languages.
+              type: string
+            capacity:
+              description: Amount of memory required by the function, in KB. Defaults to 64.
+              type: integer
+              default: 64
         events:
           description: Events that can trigger the function
           type: array
@@ -244,7 +269,7 @@ components:
         file:
           type: string
           format: binary
-          description: File with the APP script
+          description: File containing the APP script
     single_app_result:
       type: object
       properties:
@@ -559,7 +584,7 @@ paths:
         default:
           $ref: "#/components/responses/unexpected_error"
 
-  /v1/app:
+  /v1/scripts/app:
     # GET /app
     get:
       summary: List current APP scripts
@@ -590,7 +615,7 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/function_create_update"
+              $ref: "#/components/schemas/app_create_update"
             encoding:
               code:
                 contentType: application/octet-stream
@@ -600,7 +625,7 @@ paths:
         default:
           $ref: "#/components/responses/unexpected_error"
 
-  /v1/app/{app_name}:
+  /v1/scripts/app/{app_name}:
     # GET /app/{app}
     get:
       summary: Show APP info
@@ -624,7 +649,7 @@ paths:
     delete:
       summary: Delete APP
       operationId: delete_app
-      description: Delete single APP
+      description: Delete single APP script
       tags:
         - app
       parameters:
