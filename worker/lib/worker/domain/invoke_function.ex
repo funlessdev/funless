@@ -49,7 +49,7 @@ defmodule Worker.Domain.InvokeFunction do
 
     case ProvisionResource.provision(f) do
       {:ok, resource} ->
-        Runner.run_function(function, args, resource)
+        Runner.run_function(f, args, resource)
 
       {:error, :code_not_found} ->
         invoke_no_code(f, args)

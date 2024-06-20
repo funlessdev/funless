@@ -43,6 +43,8 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
   @exec_timeout 60_000
 
   alias Data.ExecutionResource
+  alias Data.FunctionMetadata
+  alias Data.FunctionStruct
   alias Worker.Adapters.Runtime.Wasm.Engine
   alias Worker.Adapters.Runtime.Wasm.Imports
 
@@ -52,19 +54,20 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
 
   @impl true
   def run_function(
-        %{name: name, module: mod},
+        %FunctionStruct{name: name, module: mod, metadata: metadata},
         args,
         %ExecutionResource{
           resource: wasm_module
         }
-      ) do
+      )
+      when metadata != nil do
     Logger.debug("Runner: Invoking #{mod}/#{name} with args #{inspect(args)}")
 
     # Spin up an agent to store the result of the invocation
     {:ok, result_agent} = Agent.start_link(fn -> %{error: nil, response: nil} end)
 
     res =
-      perform_invocation(wasm_module, args, result_agent)
+      perform_invocation(wasm_module, args, result_agent, metadata)
       |> parse_return(result_agent)
 
     Logger.debug("Runner: returning result #{inspect(res)}")
@@ -74,7 +77,18 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
     res
   end
 
-  defp perform_invocation(wasm_module, input_args, agent) do
+  @impl true
+  def run_function(
+        %FunctionStruct{name: _name, module: _mod} = function,
+        args,
+        %ExecutionResource{
+          resource: _wasm_module
+        } = resource
+      ) do
+    run_function(function |> Map.put(:metadata, %FunctionMetadata{}), args, resource)
+  end
+
+  defp perform_invocation(wasm_module, input_args, agent, %FunctionMetadata{} = metadata) do
     parsed_input = Jason.encode!(input_args)
 
     Logger.debug(
@@ -93,30 +107,139 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
       # if it succeeeds, set guest_response, return 0
       Logger.debug("Runner: Invoking exported #{@wasm_invoke}")
 
-      Wasmex.Instance.call_exported_function(
-        store,
-        instance,
-        @wasm_invoke,
-        [
-          byte_size(parsed_input)
-        ],
-        {self(), :from}
-      )
-
-      handle_wasm_messages(imports)
+      if Wasmex.Instance.function_export_exists(store, instance, @wasm_invoke) do
+        call_wasm_invoke(store, instance, parsed_input, metadata, imports)
+      else
+        call_main_func(store, instance, input_args, metadata, imports)
+      end
     end
   end
 
-  defp handle_wasm_messages(imports) do
+  defp call_wasm_invoke(store, instance, parsed_input, metadata, imports) do
+    Wasmex.Instance.call_exported_function(
+      store,
+      instance,
+      @wasm_invoke,
+      [
+        byte_size(parsed_input)
+      ],
+      {self(), :from}
+    )
+
+    handle_wasm_messages(imports, metadata, 0)
+  end
+
+  defp call_main_func(
+         store,
+         instance,
+         input_args,
+         %FunctionMetadata{main_func: main_func, params: []} = metadata,
+         imports
+       )
+       when is_list(input_args) do
+    {translated_args, last_ptr} =
+      input_args
+      |> Enum.reduce({[], 0}, fn value, {translated_vals, last_ptr} ->
+        {translated_val, new_ptr} = translate_argument(value, store, instance, last_ptr)
+        {translated_val ++ translated_vals, new_ptr}
+      end)
+
+    translated_args = translated_args |> Enum.reverse()
+
+    Wasmex.Instance.call_exported_function(
+      store,
+      instance,
+      main_func,
+      [last_ptr + 65_536 | translated_args],
+      {self(), :from}
+    )
+
+    handle_wasm_messages(imports, metadata, last_ptr)
+  end
+
+  defp call_main_func(
+         store,
+         instance,
+         input_args,
+         %FunctionMetadata{main_func: main_func, params: [_ | _] = params_names} = metadata,
+         imports
+       )
+       when is_map(input_args) do
+    {translated_args, last_ptr} =
+      params_names
+      |> Enum.reduce({[], 0}, fn name, {translated_vals, last_ptr} ->
+        value = input_args |> Map.get(name)
+        {translated_val, new_ptr} = translate_argument(value, store, instance, last_ptr)
+        {translated_val ++ translated_vals, new_ptr}
+      end)
+
+    translated_args = translated_args |> Enum.reverse()
+
+    Wasmex.Instance.call_exported_function(
+      store,
+      instance,
+      main_func,
+      [last_ptr + 65_536 | translated_args],
+      {self(), :from}
+    )
+
+    handle_wasm_messages(imports, metadata, last_ptr)
+  end
+
+  defp translate_argument(value, store, instance, last_ptr) when is_binary(value) do
+    {:ok, memory} = Wasmex.Instance.memory(store, instance)
+    len = byte_size(value)
+    Wasmex.Memory.write_binary(store, memory, last_ptr, value)
+    {[len, last_ptr], last_ptr + len}
+  end
+
+  defp translate_argument(value, store, instance, last_ptr) when is_list(value) do
+    {:ok, memory} = Wasmex.Instance.memory(store, instance)
+    bin_value = value |> Enum.into(<<>>, fn x -> <<x::32>> end)
+    len = byte_size(bin_value)
+    Wasmex.Memory.write_binary(store, memory, last_ptr, bin_value)
+    {[len, last_ptr], last_ptr + len}
+  end
+
+  defp translate_argument(value, _store, _instance, last_ptr) when is_boolean(value) do
+    if value == true do
+      {[1], last_ptr}
+    else
+      {[0], last_ptr}
+    end
+  end
+
+  defp translate_argument(value, _store, _instance, last_ptr)
+       when is_integer(value) or is_float(value) do
+    {[value], last_ptr}
+  end
+
+  # NOTE: last_ptr is a temporary solution to handle the miniSL case of string responses.
+  # miniSL gives us the pointer to the response (which will hold str_ptr and str_len), but no
+  # information as to where the string itself is allocated. We use last_ptr to have an idea
+  # of where we can allocate (between last_ptr and the first miniSL allocation we have 64K of free memory).
+  # This will be very likely changed in the future, or limited to the specific miniSL case to avoid confusion
+  # in the code.
+  defp handle_wasm_messages(imports, %FunctionMetadata{} = metadata, last_ptr) do
     receive do
       {:returned_function_call, {:ok, result}, _} ->
-        Logger.debug("Wasm: Function returned successfully: #{inspect(result)}}")
+        Logger.debug("Wasm: Function returned successfully: #{inspect(result)}")
         {:ok, result}
 
       {:invoke_callback, namespace_name, import_name, context, params, token} ->
         Logger.debug("Runner: requested invocation of import #{namespace_name}: #{import_name}")
-        invoke_import_fn(namespace_name, import_name, context, params, token, imports)
-        handle_wasm_messages(imports)
+
+        invoke_import_fn(
+          namespace_name,
+          import_name,
+          context |> Map.put(:last_ptr, last_ptr),
+          params,
+          metadata,
+          token,
+          imports
+        )
+
+        handle_wasm_messages(imports, metadata, last_ptr)
 
       value ->
         Logger.error("Runner: WebAssembly runtime failed to run function: #{inspect(value)}")
@@ -131,6 +254,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
          import_name,
          context,
          params,
+         %FunctionMetadata{} = metadata,
          token,
          imports
        ) do
@@ -139,7 +263,8 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
         context,
         %{
           memory: Wasmex.Memory.__wrap_resource__(Map.get(context, :memory)),
-          caller: Wasmex.StoreOrCaller.__wrap_resource__(Map.get(context, :caller))
+          caller: Wasmex.StoreOrCaller.__wrap_resource__(Map.get(context, :caller)),
+          metadata: metadata
         }
       )
 
@@ -150,6 +275,7 @@ defmodule Worker.Adapters.Runtime.Wasm.Runner do
           |> Map.get(namespace_name, %{})
           |> Map.get(import_name)
 
+        # either use special case for HTTP request, or change context to include function metadata
         {true, apply(callback, [context | params])}
       rescue
         e in RuntimeError -> {false, e.message}
