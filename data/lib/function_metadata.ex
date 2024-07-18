@@ -20,7 +20,7 @@ defmodule Data.FunctionMetadata do
     - tag: a string containing the function's tag. Can be anything, generally used with custom scheduling policies or metrics.
     - capacity: the amount of memory this function requires to be allocated on a worker
     - params: a list of strings, representing the names of the parameters of the function, ordered
-    - main_func: the main function to be called in the function
+    - main_func: the name of the main function to be called when invoking
     - miniSL_services:
                 a list of tuples, containing the methods, URLs and request/response fields of
                 declared services.
