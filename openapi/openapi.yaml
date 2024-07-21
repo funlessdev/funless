@@ -659,3 +659,79 @@ paths:
           $ref: "#/components/responses/null_response"
         default:
           $ref: "#/components/responses/unexpected_error"
+
+  /v1/scripts/capp:
+    # GET /capp
+    get:
+      summary: List current cAPP scripts
+      operationId: list_capp
+      description: List all cAPP scripts
+      tags:
+        - capp
+      responses:
+        "200":
+          description: An array of cAPP scripts names
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/module_names_result"
+        default:
+          $ref: "#/components/responses/unexpected_error"
+
+    # POST /capp
+    post:
+      summary: Create new cAPP script
+      operationId: create_capp
+      description: Create a new cAPP script
+      tags:
+        - capp
+      requestBody:
+        description: cAPP to create
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/app_create_update"
+            encoding:
+              code:
+                contentType: application/octet-stream
+      responses:
+        "201":
+          $ref: "#/components/responses/null_response"
+        default:
+          $ref: "#/components/responses/unexpected_error"
+
+  /v1/scripts/capp/{capp_name}:
+    # GET /capp/{capp}
+    get:
+      summary: Show cAPP info
+      operationId: show_capp_by_name
+      description: Get cAPP data (name, content of script)
+      tags:
+        - capp
+      parameters:
+        - $ref: "#/components/parameters/module_name"
+      responses:
+        "200":
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/single_app_result"
+        default:
+          $ref: "#/components/responses/unexpected_error"
+
+      # DELETE /capp/{capp}
+    delete:
+      summary: Delete cAPP
+      operationId: delete_capp
+      description: Delete single cAPP script
+      tags:
+        - capp
+      parameters:
+        - $ref: "#/components/parameters/module_name"
+      responses:
+        "200":
+          $ref: "#/components/responses/null_response"
+        default:
+          $ref: "#/components/responses/unexpected_error"
