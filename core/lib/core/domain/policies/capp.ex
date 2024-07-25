@@ -132,7 +132,8 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
           | rest
         ],
         workers,
-        %Data.FunctionStruct{metadata: %{miniSL_services: svc}} = function
+        %Data.FunctionStruct{metadata: %{miniSL_services: svc, miniSL_equation: equation}} =
+          function
       ) do
     filtered_workers =
       block_workers
@@ -181,10 +182,6 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
                 %Data.Worker{resources: nil} = w ->
                   {w, urls |> Enum.map(fn _ -> @unknown_latency end)}
               end)
-
-            # TODO: extract equation from function metadata
-            # PLACEHOLDER
-            equation = {}
 
             total_latencies =
               worker_latencies

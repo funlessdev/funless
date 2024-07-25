@@ -29,6 +29,8 @@ defmodule Data.FunctionMetadata do
                 Each input/output field is itself a tuple {field_name, field_type}.
                 Currently used for the miniSL language.
                 The list must contain the services in order of declaration in the function.
+    - miniSL_equation:
+                A tuple representing the (parsed) associated cost equation of a miniSL program.
   """
   @type param :: {String.t(), :int | :float | :bool | :string | :array}
   @type svc :: {:get | :post | :put | :delete, String.t(), [param()], [param()]}
@@ -38,7 +40,13 @@ defmodule Data.FunctionMetadata do
           capacity: integer(),
           params: [String.t()],
           main_func: String.t(),
-          miniSL_services: [svc()]
+          miniSL_services: [svc()],
+          miniSL_equation: tuple()
         }
-  defstruct tag: nil, capacity: -1, params: [], main_func: nil, miniSL_services: []
+  defstruct tag: nil,
+            capacity: -1,
+            params: [],
+            main_func: nil,
+            miniSL_services: [],
+            miniSL_equation: {}
 end
