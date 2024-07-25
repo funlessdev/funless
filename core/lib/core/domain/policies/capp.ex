@@ -16,6 +16,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
   @moduledoc """
   Implementation of the SchedulingPolicy protocol for the CAPP datatype.
   """
+  alias Core.Domain.Policies.Support.CappEquations
   alias Data.Configurations.CAPP
   alias Data.Configurations.CAPP.Block
   alias Data.Configurations.CAPP.Tag
@@ -165,9 +166,43 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
             )
 
           :min_strategy ->
-            # TODO: use calculated total latency
             urls = svc |> Enum.map(fn {_method, url, _request, _response} -> url end)
-            {:ok, Enum.random(wrk)}
+
+            # map each worker to a list of latencies for each URL
+            worker_latencies =
+              wrk
+              |> Enum.map(fn
+                %Data.Worker{resources: %{latencies: %{} = latencies}} = w ->
+                  {w, urls |> Enum.map(fn url -> Map.get(latencies, url, @unknown_latency) end)}
+
+                %Data.Worker{resources: %{latencies: nil}} = w ->
+                  {w, urls |> Enum.map(fn _ -> @unknown_latency end)}
+
+                %Data.Worker{resources: nil} = w ->
+                  {w, urls |> Enum.map(fn _ -> @unknown_latency end)}
+              end)
+
+            # TODO: extract equation from function metadata
+            # PLACEHOLDER
+            equation = {}
+
+            total_latencies =
+              worker_latencies
+              |> Enum.map(fn {w, lats} ->
+                # map each latency to a variable, identified by a letter
+                # i.e "A" => latency at index 0; "B" => latency at index 1; ...
+                vars =
+                  lats
+                  |> Enum.with_index(0)
+                  |> Enum.map(fn {latency, index} -> {<<65 + index::utf8>>, latency} end)
+                  |> Enum.into(%{})
+
+                {w, CappEquations.evaluate(equation, vars)}
+              end)
+
+            {selected, _} = total_latencies |> Enum.min_by(fn {_, lat} -> lat end)
+
+            {:ok, selected}
         end
     end
   end
