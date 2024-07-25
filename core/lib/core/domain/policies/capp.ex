@@ -135,6 +135,8 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
         %Data.FunctionStruct{metadata: %{miniSL_services: svc, miniSL_equation: equation}} =
           function
       ) do
+    urls = svc |> Enum.map(fn {_method, url, _request, _response} -> url end)
+
     filtered_workers =
       block_workers
       |> Enum.flat_map(fn w ->
@@ -143,23 +145,56 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
           wrk -> [wrk]
         end
       end)
-      |> Enum.filter(fn w ->
-        is_valid?(w, function, invalidate_capacity, invalidate_invocations, invalidate_latency)
+      |> Enum.map(fn
+        # map each worker to a list of latencies towards services
+        %Data.Worker{resources: %{latencies: %{} = latencies}} = w ->
+          {w, urls |> Enum.map(fn url -> Map.get(latencies, url, @unknown_latency) end)}
+
+        %Data.Worker{resources: %{latencies: nil}} = w ->
+          {w, urls |> Enum.map(fn _ -> @unknown_latency end)}
+
+        %Data.Worker{resources: nil} = w ->
+          {w, urls |> Enum.map(fn _ -> @unknown_latency end)}
+      end)
+      |> Enum.map(fn {w, lats} ->
+        # map each latency to a variable, identified by a letter
+        # i.e "A" => latency at index 0; "B" => latency at index 1; ...
+        vars =
+          lats
+          |> Enum.with_index(0)
+          |> Enum.map(fn {latency, index} -> {<<65 + index::utf8>>, latency} end)
+          |> Enum.into(%{})
+
+        # map each worker to the total latency towards the services, according to the equation
+        {w, CappEquations.evaluate(equation, vars)}
+      end)
+      |> Enum.filter(fn {w, latency} ->
+        # filter based on max_latency as well
+        is_valid?(
+          {w, latency},
+          function,
+          invalidate_capacity,
+          invalidate_invocations,
+          invalidate_latency
+        )
       end)
 
     case filtered_workers do
       [] ->
         schedule_on_blocks(rest, workers, function)
 
-      [h | _] = wrk ->
+      [{h, _} | _] = wrk_latencies ->
         case strategy do
           :"best-first" ->
             {:ok, h}
 
           :random ->
+            wrk = wrk_latencies |> Enum.map(&elem(&1, 0))
             {:ok, Enum.random(wrk)}
 
           :platform ->
+            wrk = wrk_latencies |> Enum.map(&elem(&1, 0))
+
             Core.Domain.Policies.SchedulingPolicy.select(
               %Data.Configurations.Empty{},
               wrk,
@@ -167,37 +202,9 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
             )
 
           :min_strategy ->
-            urls = svc |> Enum.map(fn {_method, url, _request, _response} -> url end)
-
             # map each worker to a list of latencies for each URL
-            worker_latencies =
-              wrk
-              |> Enum.map(fn
-                %Data.Worker{resources: %{latencies: %{} = latencies}} = w ->
-                  {w, urls |> Enum.map(fn url -> Map.get(latencies, url, @unknown_latency) end)}
 
-                %Data.Worker{resources: %{latencies: nil}} = w ->
-                  {w, urls |> Enum.map(fn _ -> @unknown_latency end)}
-
-                %Data.Worker{resources: nil} = w ->
-                  {w, urls |> Enum.map(fn _ -> @unknown_latency end)}
-              end)
-
-            total_latencies =
-              worker_latencies
-              |> Enum.map(fn {w, lats} ->
-                # map each latency to a variable, identified by a letter
-                # i.e "A" => latency at index 0; "B" => latency at index 1; ...
-                vars =
-                  lats
-                  |> Enum.with_index(0)
-                  |> Enum.map(fn {latency, index} -> {<<65 + index::utf8>>, latency} end)
-                  |> Enum.into(%{})
-
-                {w, CappEquations.evaluate(equation, vars)}
-              end)
-
-            {selected, _} = total_latencies |> Enum.min_by(fn {_, lat} -> lat end)
+            {selected, _} = wrk_latencies |> Enum.min_by(fn {_, lat} -> lat end)
 
             {:ok, selected}
         end
@@ -213,46 +220,47 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
   The basic validity check consists in ensuring that the worker has enough available memory to host the function, given its capacity.
 
   ## Parameters
-  - w: a Data.Worker struct, with defined memory metrics and amount of concurrent functions.
-  - function: a Data.FunctionStruct struct, with the necessary function information. It must contain function metadata, specifically its capacity.
-  - invalidate_capacity: either a number or the :infinity atom, it's the maximum memory (percentage relative to the total worker memory) that can
+  - {w, latency}: a Data.Worker struct, with defined memory metrics and amount of concurrent functions,
+                  and its associated total latency towards services.
+  - function: a Data.FunctionStruct struct, with the necessary function information.
+              It must contain function metadata, specifically its capacity.
+  - invalidate_capacity: either a number or the :infinity atom, it's the maximum memory
+                        (percentage relative to the total worker memory) that can
                         be occupied in the worker, before it is considered invalid.
-  - invalidate_invocations: either a number or the :infinity atom, it's the maximum number of concurrent functions the worker can host before being considered invalid.
+  - invalidate_invocations: either a number or the :infinity atom, it's the maximum number of
+                            concurrent functions the worker can host before being considered invalid.
 
   ## Returns
   - true if the worker can host the function, given the conditions
   - false otherwise
   """
   @spec is_valid?(
-          Data.Worker.t(),
+          {Data.Worker.t(), number()},
           Data.FunctionStruct.t(),
           number() | :infinity,
           number() | :infinity,
           number() | :infinity
         ) :: boolean
   def is_valid?(
-        %Data.Worker{
-          concurrent_functions: c,
-          resources: %Data.Worker.Metrics{
-            memory: %{available: available, total: total}
-          }
-        } = _w,
+        {%Data.Worker{
+           concurrent_functions: c,
+           resources: %Data.Worker.Metrics{
+             memory: %{available: available, total: total}
+           }
+         } = _w, latency},
         %Data.FunctionStruct{
           metadata: %Data.FunctionMetadata{
-            capacity: function_capacity,
-            miniSL_services: svc
+            capacity: function_capacity
           }
         },
         invalidate_capacity,
         invalidate_invocations,
         invalidate_latency
       ) do
-    # TODO: consider calculated max_latency
-    urls = svc |> Enum.map(fn {_method, url, _request, _response} -> url end)
-
     function_capacity <= available and
       (invalidate_invocations == :infinity or c < invalidate_invocations) and
       (invalidate_capacity == :infinity or
-         (total - available + function_capacity) / total * 100 <= invalidate_capacity)
+         (total - available + function_capacity) / total * 100 <= invalidate_capacity) and
+      (invalidate_latency == :infinity or latency <= invalidate_latency)
   end
 end
