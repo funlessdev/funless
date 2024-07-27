@@ -145,29 +145,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
           wrk -> [wrk]
         end
       end)
-      |> Enum.map(fn
-        # map each worker to a list of latencies towards services
-        %Data.Worker{resources: %{latencies: %{} = latencies}} = w ->
-          {w, urls |> Enum.map(fn url -> Map.get(latencies, url, @unknown_latency) end)}
-
-        %Data.Worker{resources: %{latencies: nil}} = w ->
-          {w, urls |> Enum.map(fn _ -> @unknown_latency end)}
-
-        %Data.Worker{resources: nil} = w ->
-          {w, urls |> Enum.map(fn _ -> @unknown_latency end)}
-      end)
-      |> Enum.map(fn {w, lats} ->
-        # map each latency to a variable, identified by a letter
-        # i.e "A" => latency at index 0; "B" => latency at index 1; ...
-        vars =
-          lats
-          |> Enum.with_index(0)
-          |> Enum.map(fn {latency, index} -> {<<65 + index::utf8>>, latency} end)
-          |> Enum.into(%{})
-
-        # map each worker to the total latency towards the services, according to the equation
-        {w, CappEquations.evaluate(equation, vars)}
-      end)
+      |> get_worker_latencies(urls, equation)
       |> Enum.filter(fn {w, latency} ->
         # filter based on max_latency as well
         is_valid?(
@@ -189,8 +167,8 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
             {:ok, h}
 
           :random ->
-            wrk = wrk_latencies |> Enum.map(&elem(&1, 0))
-            {:ok, Enum.random(wrk)}
+            {wrk, _} = wrk_latencies |> Enum.random()
+            {:ok, wrk}
 
           :platform ->
             wrk = wrk_latencies |> Enum.map(&elem(&1, 0))
@@ -201,7 +179,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
               function
             )
 
-          :min_strategy ->
+          :min_latency ->
             # map each worker to a list of latencies for each URL
 
             {selected, _} = wrk_latencies |> Enum.min_by(fn {_, lat} -> lat end)
@@ -262,5 +240,49 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
       (invalidate_capacity == :infinity or
          (total - available + function_capacity) / total * 100 <= invalidate_capacity) and
       (invalidate_latency == :infinity or latency <= invalidate_latency)
+  end
+
+  @doc """
+  Helper function, returns a list of tuples {worker, latency},
+  associating each worker with its total computed latency towards the service urls (of a function).
+  ## Parameters
+  - workers: list of workers with associated metrics (latencies, specifically).
+  - urls: a list of strings, containing the urls of all services used by the function.
+  - equation: a tuple, produced by Core.Domain.Policies.Support.CappEquations.parse().
+              Represents the cost equation associated with the function.
+  - unknown_latency: value to be used when a latency cannot be found for a worker.
+
+  ## Returns
+  - A list of tuples {worker, latency}, where the workers are in the same order as the ones in input,
+    and the latencies are the associated total computed latencies.
+  """
+  @spec get_worker_latencies([Data.Worker.t()], [String.t()], tuple(), number()) :: [
+          {Data.Worker.t(), number()}
+        ]
+  def get_worker_latencies(workers, urls, equation, unknown_latency \\ @unknown_latency) do
+    workers
+    |> Enum.map(fn
+      # map each worker to a list of latencies towards services
+      %Data.Worker{resources: %{latencies: %{} = latencies}} = w ->
+        {w, urls |> Enum.map(fn url -> Map.get(latencies, url, unknown_latency) end)}
+
+      %Data.Worker{resources: %{latencies: nil}} = w ->
+        {w, urls |> Enum.map(fn _ -> unknown_latency end)}
+
+      %Data.Worker{resources: nil} = w ->
+        {w, urls |> Enum.map(fn _ -> unknown_latency end)}
+    end)
+    |> Enum.map(fn {w, lats} ->
+      # map each latency to a variable, identified by a letter
+      # i.e "A" => latency at index 0; "B" => latency at index 1; ...
+      vars =
+        lats
+        |> Enum.with_index(0)
+        |> Enum.map(fn {latency, index} -> {<<65 + index::utf8>>, latency} end)
+        |> Enum.into(%{})
+
+      # map each worker to the total latency towards the services, according to the equation
+      {w, CappEquations.evaluate(equation, vars)}
+    end)
   end
 end
