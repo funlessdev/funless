@@ -20,11 +20,13 @@ defmodule Data.Worker.Metrics do
     - cpu: percentage of cpu currently in use
     - load_avg: load average over 1, 5 and 15 minutes
     - memory: free, available and total RAM in the system
+    - latencies: map from URLs to latency of each (e.g. %{"https://example.com/" => 56})
   """
   @type t :: %__MODULE__{
           cpu: number(),
           load_avg: %{l1: number(), l5: number(), l15: number()},
-          memory: %{free: number(), available: number(), total: number()}
+          memory: %{free: number(), available: number(), total: number()},
+          latencies: %{String.t() => number()}
         }
-  defstruct [:cpu, :load_avg, :memory]
+  defstruct [:cpu, :load_avg, :memory, :latencies]
 end
