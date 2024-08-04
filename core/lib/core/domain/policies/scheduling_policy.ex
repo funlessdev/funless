@@ -21,7 +21,7 @@ defprotocol Core.Domain.Policies.SchedulingPolicy do
   @doc """
     Should select a worker from a list of workers, given a specific configuration.
   """
-  @spec select(t, [Data.Worker.t()], Data.FunctionStruct.t()) ::
+  @spec select(t, [Data.Worker.t()], Data.FunctionStruct.t(), map()) ::
           {:ok, Data.Worker.t()} | {:error, any}
-  def select(configuration, workers, function)
+  def select(configuration, workers, function, args)
 end

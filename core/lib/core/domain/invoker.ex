@@ -68,7 +68,7 @@ defmodule Core.Domain.Invoker do
           metadata: struct(FunctionMetadata, %{tag: metadata.tag, capacity: metadata.capacity})
         })
 
-      with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select(func, ivk.config) do
+      with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select(func, ivk.config, ivk.args) do
         update_concurrent(worker, +1)
 
         out =
