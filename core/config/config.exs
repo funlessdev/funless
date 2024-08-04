@@ -30,6 +30,8 @@ config :core, Core.Domain.Ports.Connectors.Manager, adapter: Core.Adapters.Conne
 config :core, Core.Domain.Ports.DataSinks.Manager, adapter: Core.Adapters.DataSinks.Manager
 config :core, Core.Domain.Ports.SubjectCache, adapter: Core.Adapters.Subjects.Cache
 
+config :core, Core.Domain.Ports.PubsService, adapter: Core.Adapters.PubsService
+
 config :core,
   ecto_repos: [Core.Repo, Core.SubjectsRepo]
 

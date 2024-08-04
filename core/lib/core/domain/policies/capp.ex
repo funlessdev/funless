@@ -17,6 +17,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
   Implementation of the SchedulingPolicy protocol for the CAPP datatype.
   """
   alias Core.Domain.Policies.Support.CappEquations
+  alias Core.Domain.Ports.PubsService
   alias Data.Configurations.CAPP
   alias Data.Configurations.CAPP.Block
   alias Data.Configurations.CAPP.Tag
@@ -37,6 +38,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
   - configuration: an APP script (Data.Configurations.APP), generally obtained through parsing using the Core.Domain.Policies.Parsers.APP module.
   - workers: a list of Data.Worker structs, each with relevant worker metrics.
   - function: a Data.FunctionStruct struct, with the necessary function information. It must contain function metadata, specifically a tag and a capacity.
+  - args: the function's input parameters
 
   ## Returns
   - {:ok, wrk} if a suitable worker was found, with `wrk` being the worker.
@@ -46,12 +48,13 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
   - {:error, :no_function_metadata} if the given FunctionStruct does not include the necessary metadata (i.e. tag, capacity).
   - {:error, :invalid_input} if the given input was invalid in any other way (e.g. wrong types).
   """
-  @spec select(CAPP.t(), [Data.Worker.t()], Data.FunctionStruct.t()) ::
+  @spec select(CAPP.t(), [Data.Worker.t()], Data.FunctionStruct.t(), map()) ::
           {:ok, Data.Worker.t()} | select_errors()
   def select(
         %CAPP{tags: tags} = _configuration,
         [_ | _] = workers,
-        %Data.FunctionStruct{metadata: %{tag: tag_name, capacity: _function_capacity}} = function
+        %Data.FunctionStruct{metadata: %{tag: tag_name, capacity: _function_capacity}} = function,
+        args
       ) do
     default = tags |> Map.get("default")
     tag = tags |> Map.get(tag_name, default)
@@ -60,14 +63,14 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
       %Tag{blocks: [_ | _] = blocks, followup: followup} ->
         mapped_workers = workers |> Map.new(fn %Data.Worker{long_name: n} = w -> {n, w} end)
 
-        case schedule_on_blocks(blocks, mapped_workers, function) do
+        case schedule_on_blocks(blocks, mapped_workers, function, args) do
           {:error, :no_valid_workers}
           when followup == :fail or (followup == :default and is_nil(default)) ->
             {:error, :no_valid_workers}
 
           {:error, :no_valid_workers} when followup == :default ->
             %Tag{blocks: [_ | _] = default_blocks} = default
-            schedule_on_blocks(default_blocks, mapped_workers, function)
+            schedule_on_blocks(default_blocks, mapped_workers, function, args)
 
           {:ok, %Data.Worker{} = wrk} ->
             {:ok, wrk}
@@ -78,15 +81,15 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
     end
   end
 
-  def select(%CAPP{tags: _}, [], _) do
+  def select(%CAPP{tags: _}, [], _, _) do
     {:error, :no_workers}
   end
 
-  def select(%CAPP{tags: _}, _, %Data.FunctionStruct{metadata: nil}) do
+  def select(%CAPP{tags: _}, _, %Data.FunctionStruct{metadata: nil}, _) do
     {:error, :no_function_metadata}
   end
 
-  def select(_, _, _) do
+  def select(_, _, _, _) do
     {:error, :invalid_input}
   end
 
@@ -102,7 +105,12 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
   - {:ok, wrk} if a suitable worker was found, with `wrk` being the worker.
   - {:error, :no_valid_workers} if no suitable worker was found (but a non-empty list of workers was given in input).
   """
-  @spec schedule_on_blocks([Block.t()], %{String.t() => Data.Worker.t()}, Data.FunctionStruct.t()) ::
+  @spec schedule_on_blocks(
+          [Block.t()],
+          %{String.t() => Data.Worker.t()},
+          Data.FunctionStruct.t(),
+          map()
+        ) ::
           {:ok, Data.Worker.t()} | {:error, :no_valid_workers}
   def schedule_on_blocks(
         [
@@ -112,10 +120,11 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
           | rest
         ],
         workers,
-        function
+        function,
+        args
       ) do
     new_block = block |> Map.put(:workers, workers |> Map.keys())
-    schedule_on_blocks([new_block | rest], workers, function)
+    schedule_on_blocks([new_block | rest], workers, function, args)
   end
 
   def schedule_on_blocks(
@@ -132,10 +141,24 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
           | rest
         ],
         workers,
-        %Data.FunctionStruct{metadata: %{miniSL_services: svc, miniSL_equation: equation}} =
-          function
+        %Data.FunctionStruct{
+          metadata: %{miniSL_services: svc, miniSL_equation: [main_eq | equations]}
+        } = function,
+        args
       ) do
     urls = svc |> Enum.map(fn {_method, url, _request, _response} -> url end)
+
+    # TODO:
+    r = ~r/^eq\(main\([\w,]*\),\w*,\[([\w\(,\)]+\))\],\[[\w,]*\]\)\.$/
+    [^main_eq | [inner_block]] = Regex.run(r, main_eq)
+
+    new_inner_block =
+      args
+      |> Enum.reduce(inner_block, fn {k, v}, block -> String.replace(block, k, to_string(v)) end)
+
+    new_equations = [main_eq |> String.replace(inner_block, new_inner_block) | equations]
+
+    {:ok, equation} = PubsService.compute_upper_bound(new_equations)
 
     filtered_workers =
       block_workers
@@ -176,7 +199,8 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
             Core.Domain.Policies.SchedulingPolicy.select(
               %Data.Configurations.Empty{},
               wrk,
-              function
+              function,
+              %{}
             )
 
           :min_latency ->
