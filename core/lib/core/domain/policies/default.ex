@@ -20,10 +20,13 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.Empty do
   # since otherwise in situations where e.g. Prometheus is down, we would always have no workers
   @spec select(Empty.t(), [Data.Worker.t()], Data.FunctionStruct.t()) ::
           {:ok, Data.Worker.t()} | {:error, :no_workers} | {:error, :no_valid_workers}
+  def select(config, workers, function, args \\ %{})
+
   def select(
         %Empty{},
         [_ | _] = workers,
-        %Data.FunctionStruct{metadata: %Data.FunctionMetadata{capacity: c}}
+        %Data.FunctionStruct{metadata: %Data.FunctionMetadata{capacity: c}},
+        _
       ) do
     selected_worker =
       workers
@@ -45,11 +48,11 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.Empty do
     end
   end
 
-  def select(%Empty{}, _, %Data.FunctionStruct{metadata: nil}) do
+  def select(%Empty{}, _, %Data.FunctionStruct{metadata: nil}, _) do
     {:error, :no_function_metadata}
   end
 
-  def select(%Empty{}, [], _) do
+  def select(%Empty{}, [], _, _) do
     {:error, :no_workers}
   end
 end
