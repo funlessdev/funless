@@ -34,6 +34,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
   - configuration: an APP script (Data.Configurations.APP), generally obtained through parsing using the Core.Domain.Policies.Parsers.APP module.
   - workers: a list of Data.Worker structs, each with relevant worker metrics.
   - function: a Data.FunctionStruct struct, with the necessary function information. It must contain function metadata, specifically a tag and a capacity.
+  - args: not used
 
   ## Returns
   - {:ok, wrk} if a suitable worker was found, with `wrk` being the worker.
@@ -43,12 +44,15 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
   - {:error, :no_function_metadata} if the given FunctionStruct does not include the necessary metadata (i.e. tag, capacity).
   - {:error, :invalid_input} if the given input was invalid in any other way (e.g. wrong types).
   """
-  @spec select(APP.t(), [Data.Worker.t()], Data.FunctionStruct.t()) ::
+  @spec select(APP.t(), [Data.Worker.t()], Data.FunctionStruct.t(), map()) ::
           {:ok, Data.Worker.t()} | select_errors()
+  def select(config, workers, function, args \\ %{})
+
   def select(
         %APP{tags: tags} = _configuration,
         [_ | _] = workers,
-        %Data.FunctionStruct{metadata: %{tag: tag_name, capacity: _function_capacity}} = function
+        %Data.FunctionStruct{metadata: %{tag: tag_name, capacity: _function_capacity}} = function,
+        _
       ) do
     default = tags |> Map.get("default")
     tag = tags |> Map.get(tag_name, default)
@@ -75,15 +79,15 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
     end
   end
 
-  def select(%APP{tags: _}, [], _) do
+  def select(%APP{tags: _}, [], _, _) do
     {:error, :no_workers}
   end
 
-  def select(%APP{tags: _}, _, %Data.FunctionStruct{metadata: nil}) do
+  def select(%APP{tags: _}, _, %Data.FunctionStruct{metadata: nil}, _) do
     {:error, :no_function_metadata}
   end
 
-  def select(_, _, _) do
+  def select(_, _, _, _) do
     {:error, :invalid_input}
   end
 
@@ -158,7 +162,8 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
             Core.Domain.Policies.SchedulingPolicy.select(
               %Data.Configurations.Empty{},
               wrk,
-              function
+              function,
+              %{}
             )
         end
     end

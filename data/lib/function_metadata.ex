@@ -30,7 +30,7 @@ defmodule Data.FunctionMetadata do
                 Currently used for the miniSL language.
                 The list must contain the services in order of declaration in the function.
     - miniSL_equation:
-                A tuple representing the (parsed) associated cost equation of a miniSL program.
+                An array of strings, containing the function's equations (ordered).
   """
   @type param :: {String.t(), :int | :float | :bool | :string | :array}
   @type svc :: {:get | :post | :put | :delete, String.t(), [param()], [param()]}
@@ -41,7 +41,7 @@ defmodule Data.FunctionMetadata do
           params: [String.t()],
           main_func: String.t(),
           miniSL_services: [svc()],
-          miniSL_equation: tuple()
+          miniSL_equation: [String.t()]
         }
   defstruct tag: nil,
             capacity: -1,

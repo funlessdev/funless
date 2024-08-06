@@ -36,7 +36,7 @@ defmodule Core.Domain.Scheduler do
 
   # NOTE: if we move this to a NIF, we should only pass
   # configuration information (to avoid serialising all parameters)
-  def select(workers, function, config) do
+  def select(workers, function, config, args \\ %{}) do
     Logger.info("Scheduler: selection with #{length(workers)} workers")
 
     # Get the resources
@@ -54,7 +54,8 @@ defmodule Core.Domain.Scheduler do
         case SchedulingPolicy.select(
                config,
                resources,
-               function
+               function,
+               args
              ) do
           {:ok, wrk} -> {:ok, wrk.name}
           {:error, err} -> {:error, err}
