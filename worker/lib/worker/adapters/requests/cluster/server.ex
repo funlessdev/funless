@@ -20,6 +20,7 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
   """
   use GenServer, restart: :permanent
   alias Data.FunctionStruct
+  alias Data.ServiceMetadataStruct
   alias Worker.Adapters.Requests.Cluster
 
   require Logger
@@ -96,6 +97,17 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
       ) do
     Logger.info("Received update function request for function #{mod}/#{fun}")
     spawn(Cluster, :update_function, [prev_hash, f, from])
+    {:noreply, nil}
+  end
+
+  @impl true
+  def handle_call(
+        {:monitor_service, %ServiceMetadataStruct{name: name, endpoint: ep} = s},
+        from,
+        _state
+      ) do
+    Logger.info("Received monitor service request for service #{name} at endpoint: #{ep}")
+    spawn(Cluster, :monitor_service, [s, from])
     {:noreply, nil}
   end
 end

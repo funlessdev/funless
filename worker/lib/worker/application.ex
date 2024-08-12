@@ -23,7 +23,10 @@ defmodule Worker.Application do
     topologies = Application.fetch_env!(:worker, :topologies)
 
     children = [
+      {DynamicSupervisor,
+       name: Worker.Domain.ServiceMonitoring.ServicePingerSupervisor, strategy: :one_for_one},
       {Worker.Domain.Ports.NodeInfoStorage.Supervisor, []},
+      {Worker.Domain.Ports.ExternalServiceStorage.Supervisor, []},
       {Worker.Domain.Ports.ResourceCache.Supervisor, []},
       {Registry, keys: :unique, name: Worker.Adapters.RawResourceStorage.Registry},
       Worker.PromEx,
