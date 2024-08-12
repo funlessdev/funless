@@ -3,8 +3,8 @@ defmodule Core.ExternalServicesData.ServiceMetadata do
   import Ecto.Changeset
 
   schema "service_metadata" do
-    field :name, :string
-    field :endpoint, :string
+    field(:name, :string)
+    field(:endpoint, :string)
 
     timestamps()
   end
@@ -14,5 +14,6 @@ defmodule Core.ExternalServicesData.ServiceMetadata do
     service_metadata
     |> cast(attrs, [:name, :endpoint])
     |> validate_required([:name, :endpoint])
+    |> unique_constraint(:name)
   end
 end

@@ -20,6 +20,7 @@ defmodule Core.Adapters.Commands.Worker do
   require Logger
   alias Data.FunctionStruct
   alias Data.InvokeResult
+  alias Data.ServiceMetadataStruct
 
   @behaviour Core.Domain.Ports.Commands
 
@@ -87,6 +88,16 @@ defmodule Core.Adapters.Commands.Worker do
     Logger.info(
       "Sending update_function for #{function.module}/#{function.name} to #{inspect(worker_addr)}"
     )
+
+    GenServer.call(worker_addr, cmd, 60_000)
+  end
+
+  @impl true
+  def send_monitor_service(worker, %ServiceMetadataStruct{} = service) do
+    worker_addr = {:worker, worker}
+    cmd = {:monitor_service, service}
+
+    Logger.info("Sending monitor_service for '#{service.name}' to #{inspect(worker_addr)}")
 
     GenServer.call(worker_addr, cmd, 60_000)
   end

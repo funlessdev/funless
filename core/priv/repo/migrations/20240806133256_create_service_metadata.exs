@@ -8,5 +8,7 @@ defmodule Core.Repo.Migrations.CreateServiceMetadata do
 
       timestamps()
     end
+
+    create unique_index(:service_metadata, [:name])
   end
 end

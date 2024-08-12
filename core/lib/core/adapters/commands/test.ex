@@ -42,4 +42,9 @@ defmodule Core.Adapters.Commands.Test do
   def send_update_function(_worker, _prev_hash, _func) do
     :ok
   end
+
+  @impl true
+  def send_monitor_service(_worker, _service) do
+    :ok
+  end
 end
