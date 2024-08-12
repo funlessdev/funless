@@ -22,12 +22,12 @@ build-core-image:
 	docker build \
 	-f core/Dockerfile \
 	--build-arg SECRET_KEY_BASE=local-make-secret \
-	--build-arg MIX_ENV="dev" \
+	--build-arg MIX_ENV="prod" \
 	-t core .
 
 ## Compile worker docker image
 build-worker-image: 
-	docker build -f worker/Dockerfile --build-arg MIX_ENV="dev" -t worker .
+	docker build -f worker/Dockerfile --build-arg MIX_ENV="prod" -t worker .
 
 ## Run credo --strict
 credo-core: 
