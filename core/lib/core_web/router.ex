@@ -76,10 +76,6 @@ defmodule CoreWeb.Router do
     # delete("/app/:app_name", AppScriptController, :delete)
 
     # cAPP routes
-    get("/capp/services", ServiceMetadataController, :index)
-    post("/capp/services", ServiceMetadataController, :create)
-    delete("/capp/services/:id", ServiceMetadataController, :delete)
-
     get("/capp", CAPPScriptController, :index)
     post("/capp", CAPPScriptController, :create)
     get("/capp/:app_name", CAPPScriptController, :show)

@@ -42,12 +42,12 @@ defmodule Worker.PromEx.Plugins.ServicesMon do
       {__MODULE__, :execute_latency_metrics, []},
       [
         last_value(
-          metric_prefix ++ [:services],
+          metric_prefix ++ [:services, :latency],
           event_name: @latency_event,
           description: "The latency of the external services.",
           measurement: :latency,
           unit: :milliseconds,
-          tags: [:node]
+          tags: [:node, :service]
         )
       ]
     )
@@ -57,17 +57,9 @@ defmodule Worker.PromEx.Plugins.ServicesMon do
   def execute_latency_metrics() do
     {:ok, keys} = ExternalServiceStorage.keys()
 
-    all_latencies =
-      Enum.reduce(keys, %{}, fn key, acc ->
-        {:ok, value} = ExternalServiceStorage.get(key)
-        Map.put(acc, key, value)
-      end)
-
-    latency_measurements =
-      %{latency: all_latencies}
-
-    Logger.info("Latency measurements: #{inspect(latency_measurements)}")
-
-    :telemetry.execute(@latency_event, latency_measurements, %{node: Node.self()})
+    Enum.each(keys, fn svc ->
+      {:ok, value} = ExternalServiceStorage.get(svc)
+      :telemetry.execute(@latency_event, %{latency: value}, %{node: Node.self(), service: svc})
+    end)
   end
 end

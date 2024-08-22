@@ -80,6 +80,8 @@ defmodule CoreWeb.FunctionController do
         } = params
       ) do
     # wait for all workers to receive the code; true by default
+    Logger.info("Function Controller: received params #{inspect(params)}.")
+
     with {:ok, events_req} <-
            params |> Map.get("events", nil) |> parse_requested_events_sinks(),
          {:ok, sinks_req} <- params |> Map.get("sinks", nil) |> parse_requested_events_sinks(),
@@ -96,7 +98,18 @@ defmodule CoreWeb.FunctionController do
            |> Map.put_new(:function_id, function.id)
            |> FunctionsMetadata.create_function_metadata() do
       wait_for_workers = params |> Map.get("wait_for_workers", true)
-      Logger.info("Function Controller: function #{module_name}/#{fn_name} created successfully.")
+
+      Logger.info(
+        "Function Controller: #{module_name}/#{fn_name} created successfully with metadata #{inspect(metadata)}."
+      )
+
+      Commands.send_to_multiple_workers_sync(
+        Nodes.worker_nodes(),
+        &Commands.send_monitor_service/2,
+        [
+          metadata.miniSL_services
+        ]
+      )
 
       event_results = Events.connect_events(fn_name, module_name, events_req)
       sinks_results = DataSink.plug_data_sinks(fn_name, module_name, sinks_req)
@@ -257,9 +270,22 @@ defmodule CoreWeb.FunctionController do
   defp parse_metadata(m) when is_nil(m) or m == "", do: {:ok, %Data.FunctionMetadata{}}
 
   defp parse_metadata(m) do
+    Logger.info("Function Controller: received metadata #{inspect(m)}. Parsing...")
+
     case Jason.decode(m) do
       {:ok, json_metadata} ->
-        metadata = struct(Data.FunctionMetadata, json_metadata)
+        Logger.info("Decoded metadata: #{inspect(json_metadata)}.")
+        # metadata = struct!(Data.FunctionMetadata, json_metadata) Not working for some reason
+        metadata = %Data.FunctionMetadata{
+          tag: Map.get(json_metadata, "tag", nil),
+          capacity: Map.get(json_metadata, "capacity", -1),
+          params: Map.get(json_metadata, "params", []),
+          main_func: Map.get(json_metadata, "main_func", nil),
+          miniSL_services: Map.get(json_metadata, "miniSL_services", []),
+          miniSL_equation: Map.get(json_metadata, "miniSL_equation", [])
+        }
+
+        Logger.info("Created metadata struct: #{inspect(metadata)}.")
         {:ok, metadata}
 
       {:error, _} ->

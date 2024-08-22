@@ -21,23 +21,28 @@ defmodule Worker.Domain.ServiceMonitoring.MonitorService do
   alias Worker.Domain.ServiceMonitoring.ServicePingerSupervisor
   alias Worker.Domain.ServiceMonitoring.ServicePinger
 
-  alias Data.ServiceMetadataStruct
-
   @interval 10000
 
-  @spec add_service(nil | Data.ServiceMetadataStruct.t()) ::
-          {:error, term() | :no_service} | :ok
-  def add_service(%ServiceMetadataStruct{} = s) do
-    Logger.info("Starting service pinger for #{s.name}")
+  def add_services(svcs) do
+    Logger.info("Starting service pinger for #{inspect(svcs)}")
 
+    Enum.each(svcs, fn svc ->
+      case start_service_pinger(svc) do
+        {:ok, _pid} ->
+          :ok
+
+        {:error, err} ->
+          Logger.error("Error starting service pinger for #{svc}: #{inspect(err)}")
+          {:error, err}
+      end
+    end)
+  end
+
+  def start_service_pinger(svc) do
     DynamicSupervisor.start_child(
       ServicePingerSupervisor,
-      {ServicePinger, {s.name, s.endpoint, @interval}}
+      {ServicePinger, {svc, @interval}}
     )
-    |> case do
-      {:ok, _pid} -> :ok
-      {:error, err} -> {:error, err}
-    end
   end
 
   def add_service(nil) do

@@ -85,7 +85,7 @@ defmodule Core.Domain.Ports.Commands do
   defdelegate send_update_function(worker, prev_hash, function), to: @adapter
 
   # TODO write doc
-  @spec send_monitor_service(atom(), ServiceMetadataStruct.t()) :: :ok | {:error, any()}
+  @spec send_monitor_service(atom(), [String.t()]) :: :ok | {:error, any()}
   defdelegate send_monitor_service(worker, service), to: @adapter
 
   @doc """

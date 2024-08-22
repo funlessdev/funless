@@ -7,30 +7,28 @@ defmodule Worker.Domain.ServiceMonitoring.ServicePinger do
 
   # Public API
 
-  def start_link({name, url, interval_ms}) do
-    Logger.info(
-      "Pinger for '#{name}', with url: '#{url}' with interval: #{interval_ms} ms started"
-    )
+  def start_link({url, interval_ms}) do
+    Logger.info("Pinger for: '#{url}' with interval: #{interval_ms} ms started")
 
-    GenServer.start_link(__MODULE__, {name, url, interval_ms}, name: String.to_atom(name))
+    GenServer.start_link(__MODULE__, {url, interval_ms}, name: String.to_atom(url))
   end
 
-  def get_latency(name) do
-    GenServer.call(String.to_atom(name), :get_latency)
+  def get_latency(url) do
+    GenServer.call(String.to_atom(url), :get_latency)
   end
 
   # GenServer Callbacks
 
   @impl true
-  def init({name, url, interval_ms}) do
+  def init({url, interval_ms}) do
     schedule_ping(interval_ms)
-    {:ok, %{name: name, url: url, interval_ms: interval_ms, last_latency: nil}}
+    {:ok, %{url: url, interval_ms: interval_ms, last_latency: nil}}
   end
 
   @impl true
   def handle_info(:ping, state) do
     latency = ping_service(state.url)
-    ExternalServiceStorage.upsert(state.name, latency)
+    ExternalServiceStorage.upsert(state.url, latency)
     schedule_ping(state.interval_ms)
 
     {:noreply, %{state | last_latency: latency}}

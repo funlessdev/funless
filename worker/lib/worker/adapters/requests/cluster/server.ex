@@ -102,12 +102,12 @@ defmodule Worker.Adapters.Requests.Cluster.Server do
 
   @impl true
   def handle_call(
-        {:monitor_service, %ServiceMetadataStruct{name: name, endpoint: ep} = s},
+        {:monitor_services, services},
         from,
         _state
       ) do
-    Logger.info("Received monitor service request for service #{name} at endpoint: #{ep}")
-    spawn(Cluster, :monitor_service, [s, from])
+    Logger.info("Received monitor services request.")
+    spawn(Cluster, :monitor_services, [services, from])
     {:noreply, nil}
   end
 end

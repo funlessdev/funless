@@ -17,7 +17,6 @@ defmodule Worker.Adapters.Requests.Cluster do
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
   alias Data.FunctionStruct
-  alias Data.ServiceMetadataStruct
 
   alias Worker.Adapters.RawResourceStorage
   alias Worker.Domain.CleanupResource
@@ -80,9 +79,9 @@ defmodule Worker.Adapters.Requests.Cluster do
     |> reply_to_core(from)
   end
 
-  def monitor_service(%ServiceMetadataStruct{} = service, from) do
-    Logger.debug("Adding service to monitor: #{inspect(service)}")
-    MonitorService.add_service(service) |> reply_to_core(from)
+  def monitor_services(services, from) do
+    Logger.info("Adding services to monitor: #{inspect(services)}")
+    MonitorService.add_services(services) |> reply_to_core(from)
   end
 
   defp do_update_function(
