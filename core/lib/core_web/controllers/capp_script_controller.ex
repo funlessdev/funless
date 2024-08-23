@@ -22,17 +22,18 @@ defmodule CoreWeb.CAPPScriptController do
 
   def index(conn, _params) do
     scripts = CAPPScripts.list_capp_scripts()
-    render(conn, :index, app_scripts: scripts)
+    render(conn, :index, capp_scripts: scripts)
   end
 
   def create(conn, %{"name" => script_name, "file" => %Plug.Upload{path: tmp_path}}) do
     with {:ok, capp_script_string} <- File.read(tmp_path),
-         {:ok, capp_script} <- Parsers.APP.parse(capp_script_string),
+         {:ok, capp_script} <- Parsers.CAPP.parse(capp_script_string),
          {:ok, %CAPP{} = script} <-
            CAPPScripts.create_capp_script(%{
              name: script_name,
              # TODO: change to a cAPP parser
-             script: capp_script |> Parsers.APP.to_map()
+             # TODO to_map ?
+             script: capp_script
            }) do
       conn
       |> put_status(:created)

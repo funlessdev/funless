@@ -12,39 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule Core.Adapters.Commands.Test do
+defmodule Worker.Adapters.ExternalServiceStorage.Test do
   @moduledoc false
-  @behaviour Core.Domain.Ports.Commands
-
-  alias Data.InvokeResult
+  @behaviour Worker.Domain.Ports.ExternalServiceStorage
 
   @impl true
-  def send_invoke(_worker, name, _ns, _hash, _args) do
-    {:ok, %InvokeResult{result: name}}
+  def get(_key) do
+    {:ok, Node.self() |> Atom.to_string()}
   end
 
   @impl true
-  def send_invoke_with_code(_worker, _handler, function) do
-    {:ok, %InvokeResult{result: function.name}}
-  end
-
-  @impl true
-  def send_store_function(_worker, _func) do
+  def insert(_key, _value) do
     :ok
   end
 
   @impl true
-  def send_delete_function(_worker, _func, _mod, _hash) do
+  def update(_key, _value) do
     :ok
   end
 
   @impl true
-  def send_update_function(_worker, _prev_hash, _func) do
+  def upsert(_key, _value) do
     :ok
   end
 
   @impl true
-  def send_monitor_service(_worker, _service) do
+  def keys() do
+    {:ok, []}
+  end
+
+  @impl true
+  def delete(_key) do
     :ok
   end
 end

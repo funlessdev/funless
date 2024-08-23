@@ -19,6 +19,7 @@ defmodule Core.Domain.Ports.Commands do
 
   alias Data.FunctionStruct
   alias Data.InvokeResult
+  alias Data.ServiceMetadataStruct
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
@@ -31,6 +32,8 @@ defmodule Core.Domain.Ports.Commands do
   @callback send_delete_function(atom(), String.t(), String.t(), binary()) ::
               :ok | {:error, any()}
   @callback send_update_function(atom(), binary(), FunctionStruct.t()) :: :ok | {:error, any()}
+
+  @callback send_monitor_service(atom(), ServiceMetadataStruct.t()) :: :ok | {:error, any()}
 
   @doc """
   Sends an invoke command to a worker passing the function name, module, hash and args.
@@ -80,6 +83,10 @@ defmodule Core.Domain.Ports.Commands do
   """
   @spec send_update_function(atom(), binary(), FunctionStruct.t()) :: :ok | {:error, any()}
   defdelegate send_update_function(worker, prev_hash, function), to: @adapter
+
+  # TODO write doc
+  @spec send_monitor_service(atom(), [String.t()]) :: :ok | {:error, any()}
+  defdelegate send_monitor_service(worker, service), to: @adapter
 
   @doc """
   Sends one of the commands defined in this behaviour to all specified workers, without waiting for them to respond.

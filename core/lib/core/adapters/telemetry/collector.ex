@@ -95,6 +95,8 @@ defmodule Core.Adapters.Telemetry.Collector do
         %Data.Worker{resources: %Data.Worker.Metrics{} = m} = w -> {w, Map.from_struct(m)}
       end
 
+    Logger.info("Received metrics for #{worker}: #{inspect(metrics)}")
+
     scraped_metrics =
       %{
         cpu: metrics |> Map.get(@os_mon_prefix <> @cpu_util),
@@ -111,7 +113,8 @@ defmodule Core.Adapters.Telemetry.Collector do
             l5: metrics |> Map.get(@os_mon_prefix <> @load_avg <> "5"),
             l15: metrics |> Map.get(@os_mon_prefix <> @load_avg <> "15")
           }
-          |> Map.filter(fn {_, v} -> v != nil end)
+          |> Map.filter(fn {_, v} -> v != nil end),
+        latencies: metrics |> Map.get("latencies")
       }
       |> Map.filter(fn {_, v} -> v != nil end)
 
@@ -121,13 +124,18 @@ defmodule Core.Adapters.Telemetry.Collector do
 
     MetricsServer.insert(worker, new_info)
 
+    Logger.info("Metrics Collector: saved metrics for #{worker}, #{inspect(new_metrics)}")
     :ok
   end
 
   @spec parse_metrics(map()) :: map()
   defp parse_metrics(%{"data" => %{"result" => result_list}, "status" => "success"}) do
-    Enum.reduce(result_list, %{}, fn result, acc ->
+    parsed_res = %{"latencies" => %{}}
+    Enum.reduce(result_list, parsed_res, fn result, acc ->
       case result do
+        %{"metric" => %{"service" => svc}, "value" => [_, value]} ->
+          put_in(acc, ["latencies", svc], value)
+
         %{"metric" => %{"__name__" => name}, "value" => [_, value]} ->
           Map.put(acc, name, value)
 

@@ -45,6 +45,12 @@ config :worker, Worker.Domain.Ports.NodeInfoStorage,
 config :worker, Worker.Domain.Ports.NodeInfoStorage.Supervisor,
   adapter: Worker.Adapters.NodeInfoStorage.Supervisor
 
+config :worker, Worker.Domain.Ports.ExternalServiceStorage,
+  adapter: Worker.Adapters.ExternalServiceStorage.LocalServiceStorage
+
+config :worker, Worker.Domain.Ports.ExternalServiceStorage.Supervisor,
+  adapter: Worker.Adapters.ExternalServiceStorage.Supervisor
+
 config :worker, Worker.Adapters.NodeInfoStorage.LocalInfoStorage, path: "/tmp/node_info"
 config :worker, Worker.Adapters.RawResourceStorage, prefix: "/tmp/funless/"
 

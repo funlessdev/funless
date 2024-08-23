@@ -17,12 +17,14 @@ defmodule Worker.Adapters.Requests.Cluster do
   Contains functions exposing the Worker API to other processes/nodes in the cluster.
   """
   alias Data.FunctionStruct
+
   alias Worker.Adapters.RawResourceStorage
   alias Worker.Domain.CleanupResource
   alias Worker.Domain.InvokeFunction
   alias Worker.Domain.NodeInfo
   alias Worker.Domain.ProvisionResource
   alias Worker.Domain.StoreResource
+  alias Worker.Domain.ServiceMonitoring.MonitorService
 
   require Logger
 
@@ -75,6 +77,11 @@ defmodule Worker.Adapters.Requests.Cluster do
     CleanupResource.cleanup(function |> Map.put(:hash, prev_hash))
     |> do_update_function(function)
     |> reply_to_core(from)
+  end
+
+  def monitor_services(services, from) do
+    Logger.info("Adding services to monitor: #{inspect(services)}")
+    MonitorService.add_services(services) |> reply_to_core(from)
   end
 
   defp do_update_function(
