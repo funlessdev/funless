@@ -18,6 +18,8 @@ config :iex, default_prompt: ">>>"
 
 config :core, store_on_create: System.get_env("STORE_ON_CREATE") || "true"
 config :core, prometheus_host: System.get_env("PROMETHEUS_HOST") || "prometheus"
+config :core, pubs_url: System.get_env("PUBS_URL") || "http://fl-pubs-service"
+config :core, pubs_port: System.get_env("PUBS_PORT") || "5000"
 
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the

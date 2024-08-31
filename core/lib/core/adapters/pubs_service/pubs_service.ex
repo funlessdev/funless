@@ -20,12 +20,39 @@ defmodule Core.Adapters.PubsService do
   @behaviour Core.Domain.Ports.PubsService
 
   @impl true
-  def compute_upper_bound(_equations) do
-    {:ok, ""}
+  def compute_upper_bound(equations) do
+    pubs_url = Application.fetch_env!(:core, :pubs_url)
+    pubs_port = Application.fetch_env!(:core, :pubs_port)
+
+    response =
+      :httpc.request(
+        :post,
+        {"#{pubs_url}/:#{pubs_port}", [], ~c"application/json", equations},
+        [],
+        []
+      )
+
+    case response do
+      {:ok, {_response_status, _headers, body}} ->
+        {:ok, body}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @impl true
-  def get_equation(_function_name, _function_code) do
-    {:ok, ""}
+  def get_equation(function_name, _function_code) do
+    pubs_url = Application.fetch_env!(:core, :pubs_url)
+    pubs_port = Application.fetch_env!(:core, :pubs_port)
+    response = :httpc.request(:get, {"#{pubs_url}/#{function_name}:#{pubs_port}", []}, [], [])
+
+    case response do
+      {:ok, {_response_status, _headers, body}} ->
+        {:ok, body}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 end
