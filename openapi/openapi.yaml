@@ -174,6 +174,58 @@ components:
               description: Amount of memory required by the function, in KB. Defaults to 64.
               type: integer
               default: 64
+            params:
+              description: A list of parameter names for the function, ordered (e.g. if f(a,b,c), the list is ["a","b","c"]).
+              type: array
+              items:
+                type: string
+            main_func:
+              description: The function's main entrypoint (if it's not "__invoke").
+              type: string
+            miniSL_equation:
+              description: List of miniSL cost equations associated with the function.
+              type: array
+              items:
+                type: string
+            miniSL_services:
+              description: List of miniSL services declared in the function, in order of declaration.
+              type: array
+              items:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    enum: ["get", "post", "put", "delete"]
+                    description: Method with which the service is contacted.
+                  url:
+                    type: string
+                    description: Service's URL.
+                  request_fields:
+                    type: array
+                    description: >
+                      Array of parameters, in the form {'s_name':n, 's_type':t}. 
+                      These are the service's request fields.
+                    items:
+                      type: object
+                      properties:
+                        s_name:
+                          type: string
+                        s_type:
+                          type: string
+                          enum: ["int", "float", "bool", "string", "array"]
+                  response_fields:
+                    type: array
+                    description: >
+                      Array of parameters, in the form {'s_name':n, 's_type':t}. 
+                      These are the service's response fields.
+                    items:
+                      type: object
+                      properties:
+                        s_name:
+                          type: string
+                        s_type:
+                          type: string
+                          enum: ["int", "float", "bool", "string", "array"]
         events:
           description: Events that can trigger the function
           type: array

@@ -222,4 +222,67 @@ defmodule Core.Domain.Policies.Parsers.CAPP do
   def parse_block(_) do
     {:error, :no_block_workers}
   end
+
+  @doc """
+  Converts a given cAPP script struct to a simple map.
+  """
+  @spec to_map(Data.Configurations.CAPP.t()) :: map()
+  def to_map(capp_script) do
+    %{tags: tags} = outer_map = Map.from_struct(capp_script)
+
+    tag_maps =
+      tags
+      |> Map.new(fn {k, v} -> {k, v |> Map.from_struct() |> blocks_to_maps()} end)
+
+    outer_map |> Map.put(:tags, tag_maps)
+  end
+
+  @spec blocks_to_maps(Data.Configurations.CAPP.Tag.t()) :: map()
+  defp blocks_to_maps(%{blocks: blocks} = tag_map) do
+    block_maps =
+      blocks
+      |> Enum.map(&Map.from_struct(&1))
+
+    tag_map |> Map.put(:blocks, block_maps)
+  end
+
+  @doc """
+  Builds a cAPP script from a map with string keys (assuming it has the correct structure).
+  """
+  @spec from_string_keys(map()) :: Data.Configurations.CAPP.t() | {:error, :unknown_construct}
+  def from_string_keys(%{"tags" => tags}) do
+    atom_tags = tags |> Map.new(fn {k, v} -> {k, v |> tag_from_string_keys} end)
+    %Data.Configurations.CAPP{tags: atom_tags}
+  end
+
+  def from_string_keys(_) do
+    {:error, :unknown_construct}
+  end
+
+  defp tag_from_string_keys(%{"blocks" => blocks, "followup" => followup}) do
+    atom_followup = followup |> String.to_existing_atom()
+    atom_blocks = blocks |> Enum.map(&block_from_string_keys/1)
+    %Data.Configurations.CAPP.Tag{blocks: atom_blocks, followup: atom_followup}
+  end
+
+  defp block_from_string_keys(%{
+         "invalidate" => invalidate,
+         "strategy" => strategy,
+         "workers" => workers
+       }) do
+    atom_invalidate =
+      invalidate
+      |> Map.new(fn {k, v} ->
+        case v do
+          "infinity" -> {String.to_existing_atom(k), :infinity}
+          val -> {String.to_existing_atom(k), val}
+        end
+      end)
+
+    %Data.Configurations.CAPP.Block{
+      invalidate: atom_invalidate,
+      strategy: String.to_existing_atom(strategy),
+      workers: workers
+    }
+  end
 end

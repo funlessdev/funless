@@ -15,6 +15,8 @@
 defmodule CoreWeb.FunctionController do
   use CoreWeb, :controller
 
+  alias Core.Domain.CAPPScripts
+
   alias Core.Domain.{
     APPScripts,
     DataSink,
@@ -57,6 +59,11 @@ defmodule CoreWeb.FunctionController do
           %{name: ^script_name, script: script} = APPScripts.get_app_script_by_name(script_name)
 
           Parsers.APP.from_string_keys(script)
+
+        %{"language" => "capp", "script" => script_name} ->
+          %{name: ^script_name, script: script} = CAPPScripts.get_capp_script_by_name(script_name)
+
+          Parsers.CAPP.from_string_keys(script)
       end
 
     ivk = %InvokeParams{
@@ -281,7 +288,8 @@ defmodule CoreWeb.FunctionController do
           capacity: Map.get(json_metadata, "capacity", -1),
           params: Map.get(json_metadata, "params", []),
           main_func: Map.get(json_metadata, "main_func", nil),
-          miniSL_services: Map.get(json_metadata, "miniSL_services", []),
+          miniSL_services:
+            Map.get(json_metadata, "miniSL_services", []) |> Enum.map(&parse_svc(&1)),
           miniSL_equation: Map.get(json_metadata, "miniSL_equation", [])
         }
 
@@ -295,6 +303,22 @@ defmodule CoreWeb.FunctionController do
 
         {:error, :bad_params}
     end
+  end
+
+  defp parse_svc(s) do
+    {
+      s |> Map.get("method", "get") |> String.to_existing_atom(),
+      s |> Map.get("url", ""),
+      s |> Map.get("request_fields", []) |> Enum.map(&parse_params(&1)),
+      s |> Map.get("response_fields", []) |> Enum.map(&parse_params(&1))
+    }
+  end
+
+  defp parse_params(%{"s_name" => n, "s_type" => t}) do
+    {
+      n,
+      t |> String.to_existing_atom()
+    }
   end
 
   defp build_render_params(render_params, events, sinks, default_status \\ :ok) do
