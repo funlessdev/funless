@@ -35,8 +35,28 @@ defmodule Core.FunctionsMetadata do
 
   """
   def create_function_metadata(attrs \\ %{}) do
+    svc =
+      attrs
+      |> Map.get(:miniSL_services, [])
+      |> Enum.map(fn {method, url, req, res} ->
+        %{
+          "method" => method |> Atom.to_string(),
+          "url" => url,
+          "req" =>
+            req
+            |> Enum.map(fn {name, type} ->
+              %{"s_name" => name, "s_type" => type |> Atom.to_string()}
+            end),
+          "res" =>
+            res
+            |> Enum.map(fn {name, type} ->
+              %{"s_name" => name, "s_type" => type |> Atom.to_string()}
+            end)
+        }
+      end)
+
     %FunctionMetadata{}
-    |> FunctionMetadata.changeset(attrs)
+    |> FunctionMetadata.changeset(attrs |> Map.put(:miniSL_services, svc))
     |> Repo.insert()
   end
 
@@ -66,8 +86,34 @@ defmodule Core.FunctionsMetadata do
   """
   def get_function_metadata_by_function_id(function_id) do
     case Repo.get_by(FunctionMetadata, function_id: function_id) do
-      nil -> {:error, :not_found}
-      m -> {:ok, m}
+      nil ->
+        {:error, :not_found}
+
+      m ->
+        svc =
+          m
+          |> Map.get("miniSL_services", [])
+          |> Enum.map(fn %{
+                           "method" => method,
+                           "url" => url,
+                           "req" => req,
+                           "res" => res
+                         } ->
+            {
+              method |> String.to_existing_atom(),
+              url,
+              req
+              |> Enum.map(fn %{"s_name" => name, "s_type" => type} ->
+                {name, type |> String.to_existing_atom()}
+              end),
+              res
+              |> Enum.map(fn %{"s_name" => name, "s_type" => type} ->
+                {name, type |> String.to_existing_atom()}
+              end)
+            }
+          end)
+
+        {:ok, m |> Map.put("miniSL_services", svc)}
     end
   end
 end

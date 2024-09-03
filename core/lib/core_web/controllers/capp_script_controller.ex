@@ -35,7 +35,7 @@ defmodule CoreWeb.CAPPScriptController do
            }) do
       conn
       |> put_status(:created)
-      |> render(:show, app_script: script)
+      |> render(:show, capp_script: script)
     end
   end
 

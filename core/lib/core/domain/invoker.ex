@@ -59,13 +59,22 @@ defmodule Core.Domain.Invoker do
 
     with [f] <- Functions.get_by_name_in_mod!(ivk.function, ivk.module),
          {:ok, metadata} <- FunctionsMetadata.get_function_metadata_by_function_id(f.id) do
+      IO.inspect(metadata)
+
       func =
         struct(FunctionStruct, %{
           name: ivk.function,
           module: ivk.module,
           hash: f.hash,
           code: nil,
-          metadata: struct(FunctionMetadata, %{tag: metadata.tag, capacity: metadata.capacity})
+          metadata:
+            struct(FunctionMetadata, %{
+              tag: metadata.tag,
+              capacity: metadata.capacity,
+              params: metadata.params,
+              miniSL_services: metadata.miniSL_services,
+              main_func: metadata.main_func
+            })
         })
 
       with {:ok, worker} <- Nodes.worker_nodes() |> Scheduler.select(func, ivk.config, ivk.args) do
