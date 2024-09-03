@@ -17,13 +17,14 @@ defmodule Core.Domain.Ports.Commands do
   Port for sending commands to workers.
   """
 
+  alias Data.FunctionMetadata
   alias Data.FunctionStruct
   alias Data.InvokeResult
   alias Data.ServiceMetadataStruct
 
   @adapter :core |> Application.compile_env!(__MODULE__) |> Keyword.fetch!(:adapter)
 
-  @callback send_invoke(atom(), String.t(), String.t(), binary(), map()) ::
+  @callback send_invoke(atom(), String.t(), String.t(), binary(), map(), FunctionMetadata.t()) ::
               {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | {:error, any()}
   @callback send_invoke_with_code(atom(), pid(), FunctionStruct.t()) ::
               {:ok, InvokeResult.t()} | {:error, any()}
@@ -39,9 +40,9 @@ defmodule Core.Domain.Ports.Commands do
   Sends an invoke command to a worker passing the function name, module, hash and args.
   It requires a worker (a fully qualified name of another node with the :worker actor on) and function arguments can be empty.
   """
-  @spec send_invoke(atom(), String.t(), String.t(), binary(), map()) ::
+  @spec send_invoke(atom(), String.t(), String.t(), binary(), map(), FunctionMetadata.t()) ::
           {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | {:error, any()}
-  defdelegate send_invoke(worker, f_name, ns, hash, args), to: @adapter
+  defdelegate send_invoke(worker, f_name, ns, hash, args, metadata), to: @adapter
 
   @doc """
   Sends an invoke command to a worker passing a struct with the function name, module and the code (wasm file binary).

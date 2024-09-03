@@ -30,6 +30,7 @@ defmodule Core.Domain.Invoker do
     Scheduler
   }
 
+  alias Data.FunctionMetadata
   alias Data.FunctionStruct
   alias Data.InvokeParams
   alias Data.InvokeResult
@@ -80,7 +81,7 @@ defmodule Core.Domain.Invoker do
         update_concurrent(worker, +1)
 
         out =
-          case invoke_without_code(worker, ivk, f.hash) do
+          case invoke_without_code(worker, ivk, f.hash, func.metadata) do
             {:error, :code_not_found, handler} ->
               [%{code: code}] = Functions.get_code_by_name_in_mod!(ivk.function, ivk.module)
 
@@ -129,12 +130,12 @@ defmodule Core.Domain.Invoker do
     end
   end
 
-  @spec invoke_without_code(atom(), InvokeParams.t(), binary()) ::
+  @spec invoke_without_code(atom(), InvokeParams.t(), binary(), FunctionMetadata.t()) ::
           {:ok, InvokeResult.t()} | {:error, :code_not_found, pid()} | invoke_errors()
-  def invoke_without_code(worker, ivk, hash) do
+  def invoke_without_code(worker, ivk, hash, metadata \\ %FunctionMetadata{}) do
     Logger.debug("Invoker: invoking #{ivk.module}/#{ivk.function} without code")
     # send invocation without code
-    Commands.send_invoke(worker, ivk.function, ivk.module, hash, ivk.args)
+    Commands.send_invoke(worker, ivk.function, ivk.module, hash, ivk.args, metadata)
   end
 
   @spec invoke_with_code(atom(), pid(), InvokeParams.t(), FunctionStruct.t()) ::

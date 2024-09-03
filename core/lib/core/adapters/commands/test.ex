@@ -19,7 +19,7 @@ defmodule Core.Adapters.Commands.Test do
   alias Data.InvokeResult
 
   @impl true
-  def send_invoke(_worker, name, _ns, _hash, _args) do
+  def send_invoke(_worker, name, _ns, _hash, _args, _metadata \\ {}) do
     {:ok, %InvokeResult{result: name}}
   end
 
