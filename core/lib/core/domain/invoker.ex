@@ -59,8 +59,6 @@ defmodule Core.Domain.Invoker do
 
     with [f] <- Functions.get_by_name_in_mod!(ivk.function, ivk.module),
          {:ok, metadata} <- FunctionsMetadata.get_function_metadata_by_function_id(f.id) do
-      IO.inspect(metadata)
-
       func =
         struct(FunctionStruct, %{
           name: ivk.function,
@@ -73,7 +71,8 @@ defmodule Core.Domain.Invoker do
               capacity: metadata.capacity,
               params: metadata.params,
               miniSL_services: metadata.miniSL_services,
-              main_func: metadata.main_func
+              main_func: metadata.main_func,
+              miniSL_equation: metadata.miniSL_equation
             })
         })
 

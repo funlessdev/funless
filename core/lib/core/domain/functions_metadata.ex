@@ -92,7 +92,7 @@ defmodule Core.FunctionsMetadata do
       m ->
         svc =
           m
-          |> Map.get("miniSL_services", [])
+          |> Map.get(:miniSL_services, [])
           |> Enum.map(fn %{
                            "method" => method,
                            "url" => url,
@@ -113,7 +113,7 @@ defmodule Core.FunctionsMetadata do
             }
           end)
 
-        {:ok, m |> Map.put("miniSL_services", svc)}
+        {:ok, m |> Map.put(:miniSL_services, svc)}
     end
   end
 end

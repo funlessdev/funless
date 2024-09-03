@@ -148,8 +148,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
       ) do
     urls = svc |> Enum.map(fn {_method, url, _request, _response} -> url end)
 
-    # TODO:
-    r = ~r/^eq\(main\([\w,]*\),\w*,\[([\w\(,\)]+\))\],\[[\w,]*\]\)\.$/
+    r = ~r/^^eq\(main\([\w,]*\),[\w\(\)]*,\[([\w\(,\)]+\))\],\[[\w,]*\]\)\.$/
     [^main_eq | [inner_block]] = Regex.run(r, main_eq)
 
     new_inner_block =
@@ -159,6 +158,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
     new_equations = [main_eq |> String.replace(inner_block, new_inner_block) | equations]
 
     {:ok, equation} = PubsService.compute_upper_bound(new_equations)
+    equation = equation |> CappEquations.tokenize() |> CappEquations.parse()
 
     filtered_workers =
       block_workers
