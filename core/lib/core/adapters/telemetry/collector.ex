@@ -131,13 +131,16 @@ defmodule Core.Adapters.Telemetry.Collector do
   @spec parse_metrics(map()) :: map()
   defp parse_metrics(%{"data" => %{"result" => result_list}, "status" => "success"}) do
     parsed_res = %{"latencies" => %{}}
+
     Enum.reduce(result_list, parsed_res, fn result, acc ->
       case result do
         %{"metric" => %{"service" => svc}, "value" => [_, value]} ->
-          put_in(acc, ["latencies", svc], value)
+          {float_val, _} = Float.parse(value)
+          put_in(acc, ["latencies", svc], float_val)
 
         %{"metric" => %{"__name__" => name}, "value" => [_, value]} ->
-          Map.put(acc, name, value)
+          {float_val, _} = Float.parse(value)
+          Map.put(acc, name, float_val)
 
         _ ->
           acc
