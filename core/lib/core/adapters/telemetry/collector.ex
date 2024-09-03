@@ -129,7 +129,8 @@ defmodule Core.Adapters.Telemetry.Collector do
     Enum.reduce(result_list, %{}, fn result, acc ->
       case result do
         %{"metric" => %{"__name__" => name}, "value" => [_, value]} ->
-          Map.put(acc, name, value)
+          {float_val, _} = Float.parse(value)
+          Map.put(acc, name, float_val)
 
         _ ->
           acc
