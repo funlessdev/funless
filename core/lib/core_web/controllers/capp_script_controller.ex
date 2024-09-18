@@ -31,13 +31,11 @@ defmodule CoreWeb.CAPPScriptController do
          {:ok, %CAPP{} = script} <-
            CAPPScripts.create_capp_script(%{
              name: script_name,
-             # TODO: change to a cAPP parser
-             # TODO to_map ?
-             script: capp_script
+             script: capp_script |> Parsers.CAPP.to_map()
            }) do
       conn
       |> put_status(:created)
-      |> render(:show, app_script: script)
+      |> render(:show, capp_script: script)
     end
   end
 

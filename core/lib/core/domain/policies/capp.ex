@@ -148,17 +148,22 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
       ) do
     urls = svc |> Enum.map(fn {_method, url, _request, _response} -> url end)
 
-    # TODO:
-    r = ~r/^eq\(main\([\w,]*\),\w*,\[([\w\(,\)]+\))\],\[[\w,]*\]\)\.$/
+    r = ~r/^eq\(main\([\w,]*\),[\w\(\)]*,\[([\w\(,\)]+\))\],\[[\w,]*\]\)\.$/
     [^main_eq | [inner_block]] = Regex.run(r, main_eq)
 
     new_inner_block =
       args
-      |> Enum.reduce(inner_block, fn {k, v}, block -> String.replace(block, k, to_string(v)) end)
+      |> Enum.reduce(inner_block, fn {k, v}, block ->
+        block
+        |> String.replace(~r/,#{k},/, "," <> to_string(v) <> ",")
+        |> String.replace(~r/\(#{k},/, "(" <> to_string(v) <> ",")
+        |> String.replace(~r/,#{k}\)/, "," <> to_string(v) <> ")")
+      end)
 
     new_equations = [main_eq |> String.replace(inner_block, new_inner_block) | equations]
 
     {:ok, equation} = PubsService.compute_upper_bound(new_equations)
+    equation = equation |> CappEquations.tokenize() |> CappEquations.parse()
 
     filtered_workers =
       block_workers
@@ -205,7 +210,6 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.CAPP do
 
           :min_latency ->
             # map each worker to a list of latencies for each URL
-
             {selected, _} = wrk_latencies |> Enum.min_by(fn {_, lat} -> lat end)
 
             {:ok, selected}

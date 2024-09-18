@@ -23,18 +23,19 @@ defmodule Core.Adapters.PubsService do
   def compute_upper_bound(equations) do
     pubs_url = Application.fetch_env!(:core, :pubs_url)
     pubs_port = Application.fetch_env!(:core, :pubs_port)
+    {:ok, json_body} = Jason.encode(equations)
 
     response =
       :httpc.request(
         :post,
-        {"#{pubs_url}/:#{pubs_port}", [], ~c"application/json", equations},
+        {"#{pubs_url}:#{pubs_port}/", [], ~c"application/json", json_body},
         [],
         []
       )
 
     case response do
       {:ok, {_response_status, _headers, body}} ->
-        {:ok, body}
+        {:ok, body |> to_string()}
 
       {:error, reason} ->
         {:error, reason}
@@ -45,7 +46,7 @@ defmodule Core.Adapters.PubsService do
   def get_equation(function_name, _function_code) do
     pubs_url = Application.fetch_env!(:core, :pubs_url)
     pubs_port = Application.fetch_env!(:core, :pubs_port)
-    response = :httpc.request(:get, {"#{pubs_url}/#{function_name}:#{pubs_port}", []}, [], [])
+    response = :httpc.request(:get, {"#{pubs_url}:#{pubs_port}/#{function_name}", []}, [], [])
 
     case response do
       {:ok, {_response_status, _headers, body}} ->

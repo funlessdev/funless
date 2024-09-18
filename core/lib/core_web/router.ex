@@ -76,9 +76,9 @@ defmodule CoreWeb.Router do
     # delete("/app/:app_name", AppScriptController, :delete)
 
     # cAPP routes
-    get("/capp", CAPPScriptController, :index)
-    post("/capp", CAPPScriptController, :create)
-    get("/capp/:app_name", CAPPScriptController, :show)
+    get("/scripts/capp", CAPPScriptController, :index)
+    post("/scripts/capp", CAPPScriptController, :create)
+    get("/scripts/capp/:app_name", CAPPScriptController, :show)
   end
 
   # Enable LiveDashboard in development

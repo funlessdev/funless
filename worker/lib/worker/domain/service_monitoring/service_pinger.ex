@@ -7,7 +7,7 @@ defmodule Worker.Domain.ServiceMonitoring.ServicePinger do
 
   # Public API
 
-  def start_link({url, interval_ms}) do
+  def start_link({{_, url, _, _}, interval_ms}) do
     Logger.info("Pinger for: '#{url}' with interval: #{interval_ms} ms started")
 
     GenServer.start_link(__MODULE__, {url, interval_ms}, name: String.to_atom(url))
@@ -49,7 +49,7 @@ defmodule Worker.Domain.ServiceMonitoring.ServicePinger do
     Logger.info("Pinging #{url}...")
     start_time = :os.system_time(:millisecond)
 
-    case HTTPoison.get(url) do
+    case HTTPoison.head(url) do
       {:ok, %HTTPoison.Response{status_code: 200}} ->
         end_time = :os.system_time(:millisecond)
         latency = end_time - start_time

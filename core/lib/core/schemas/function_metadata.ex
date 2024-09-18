@@ -22,6 +22,10 @@ defmodule Core.Schemas.FunctionMetadata do
   schema "function_metadata" do
     field(:capacity, :integer)
     field(:tag, :string)
+    field(:main_func, :string)
+    field(:params, {:array, :string})
+    field(:miniSL_services, {:array, :map})
+    field(:miniSL_equation, {:array, :string})
 
     timestamps()
     belongs_to(:function, Core.Schemas.Function, foreign_key: :function_id)
@@ -30,7 +34,15 @@ defmodule Core.Schemas.FunctionMetadata do
   @doc false
   def changeset(function_metadata, attrs) do
     function_metadata
-    |> cast(attrs, [:tag, :capacity, :function_id])
+    |> cast(attrs, [
+      :tag,
+      :capacity,
+      :function_id,
+      :main_func,
+      :params,
+      :miniSL_services,
+      :miniSL_equation
+    ])
     |> validate_required([:function_id])
     |> unique_constraint(:function_id)
     |> foreign_key_constraint(:function_id)
