@@ -85,7 +85,7 @@ defmodule Core.InvokeTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _, _ -> {:error, {:exec_error, "some error"}} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _, _, _ -> {:error, {:exec_error, "some error"}} end)
 
       pars = %InvokeParams{function: function.name, module: module.name}
       assert Invoker.invoke(pars) == {:error, {:exec_error, "some error"}}
@@ -99,7 +99,7 @@ defmodule Core.InvokeTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _, _ -> {:error, {:exec_error, "some error"}} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _, _, _ -> {:error, {:exec_error, "some error"}} end)
 
       {:ok, resources} = Core.Telemetry.Metrics.Mock.resources(:worker@localhost)
       concurrent = resources |> Map.get(:concurrent_functions, 0)
@@ -133,7 +133,7 @@ defmodule Core.InvokeTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:core@somewhere, :worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn worker, _, _, _, _ ->
+      |> Mox.expect(:send_invoke, fn worker, _, _, _, _, _ ->
         {:ok, %InvokeResult{result: worker}}
       end)
 
@@ -168,7 +168,7 @@ defmodule Core.InvokeTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _, _ -> {:error, :code_not_found, self()} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _, _, _ -> {:error, :code_not_found, self()} end)
 
       Core.Commands.Mock
       |> Mox.expect(:send_invoke_with_code, fn _worker, _handler, function ->
