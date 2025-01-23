@@ -19,7 +19,6 @@ defmodule Core.Domain.Invoker do
   require Logger
 
   alias Core.FunctionsMetadata
-  alias Data.FunctionMetadata
 
   alias Core.Domain.{
     Functions,
