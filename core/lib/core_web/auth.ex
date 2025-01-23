@@ -39,7 +39,7 @@ defmodule CoreWeb.Plug.Authenticate do
       _error ->
         conn
         |> put_status(:unauthorized)
-        |> Phoenix.Controller.put_view(CoreWeb.ErrorView)
+        |> Phoenix.Controller.put_view(CoreWeb.ErrorJSON)
         |> Phoenix.Controller.render(:"401")
         |> halt()
     end

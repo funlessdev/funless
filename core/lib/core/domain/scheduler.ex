@@ -29,14 +29,16 @@ defmodule Core.Domain.Scheduler do
   """
   @spec select([worker_atom()], Data.FunctionStruct.t(), configuration()) ::
           {:ok, worker_atom()} | {:error, :no_workers} | {:error, :no_valid_workers}
-  def select([], _, _) do
+  def select(workers, function, config, args \\ %{})
+
+  def select([], _, _, _args) do
     Logger.warn("Scheduler: tried selection with NO workers")
     {:error, :no_workers}
   end
 
   # NOTE: if we move this to a NIF, we should only pass
   # configuration information (to avoid serialising all parameters)
-  def select(workers, function, config) do
+  def select(workers, function, config, args) do
     Logger.info("Scheduler: selection with #{length(workers)} workers")
 
     # Get the resources
@@ -54,7 +56,8 @@ defmodule Core.Domain.Scheduler do
         case SchedulingPolicy.select(
                config,
                resources,
-               function
+               function,
+               args
              ) do
           {:ok, wrk} -> {:ok, wrk.name}
           {:error, err} -> {:error, err}

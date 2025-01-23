@@ -32,9 +32,9 @@ defmodule Core.Adapters.Commands.Worker do
   #                                  Only the send_invoke call should return this.
 
   @impl true
-  def send_invoke(worker, name, mod, hash, args) do
+  def send_invoke(worker, name, mod, hash, args, metadata \\ {}) do
     worker_addr = {:worker, worker}
-    cmd = {:invoke, %{name: name, module: mod, hash: hash}, args}
+    cmd = {:invoke, %{name: name, module: mod, hash: hash, metadata: metadata}, args}
     Logger.info("Sending invoke for #{mod}/#{name} to #{inspect(worker_addr)}")
 
     case GenServer.call(worker_addr, cmd, 60_000) do

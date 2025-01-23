@@ -453,7 +453,7 @@ defmodule CoreWeb.FunctionControllerTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
 
       conn = post(conn, ~p"/v1/fn/#{module_name}/#{function_name}")
       assert response(conn, 200)
@@ -467,7 +467,7 @@ defmodule CoreWeb.FunctionControllerTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _, _, _ -> {:ok, %{result: "Hello, World!"}} end)
 
       conn = post(conn, ~p"/v1/fn/#{module_name}/#{function_name}", args: %{name: "World"})
 
@@ -482,7 +482,7 @@ defmodule CoreWeb.FunctionControllerTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _, _ -> {:error, :code_not_found, self()} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _, _, _ -> {:error, :code_not_found, self()} end)
 
       conn = post(conn, ~p"/v1/fn/#{module_name}/#{function_name}")
       assert response(conn, 200)
@@ -519,7 +519,9 @@ defmodule CoreWeb.FunctionControllerTest do
       Core.Cluster.Mock |> Mox.expect(:all_nodes, fn -> [:worker@localhost] end)
 
       Core.Commands.Mock
-      |> Mox.expect(:send_invoke, fn _, _, _, _, _ -> {:error, {:exec_error, "some reason"}} end)
+      |> Mox.expect(:send_invoke, fn _, _, _, _, _, _ ->
+        {:error, {:exec_error, "some reason"}}
+      end)
 
       conn = post(conn, ~p"/v1/fn/#{module_name}/#{function_name}")
       assert response(conn, 422)
