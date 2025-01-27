@@ -46,7 +46,7 @@ defmodule Worker.Domain.ProvisionResource do
 
     case ResourceCache.get(name, mod, hash) do
       :resource_not_found ->
-        Logger.warn("API: Resource not found in cache, creating one...")
+        Logger.warning("API: Resource not found in cache, creating one...")
         Provisioner.provision(f) |> cache_resource(name, mod, hash)
 
       resource ->
@@ -66,7 +66,7 @@ defmodule Worker.Domain.ProvisionResource do
         ) ::
           {:ok, ExecutionResource.t()} | {:error, any}
   defp cache_resource({:error, :code_not_found}, _, _, _) do
-    Logger.warn("API: resource not found...")
+    Logger.warning("API: resource not found...")
     {:error, :code_not_found}
   end
 

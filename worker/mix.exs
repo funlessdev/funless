@@ -19,7 +19,7 @@ defmodule Worker.MixProject do
     [
       app: :worker,
       version: "0.9.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       dialyzer: [
@@ -45,19 +45,21 @@ defmodule Worker.MixProject do
       {:data, path: "../data"},
       # Prod deps
       {:jason, "~> 1.3"},
-      {:libcluster, "~> 3.3"},
+      {:libcluster, "~> 3.5"},
       {:logger_file_backend, "~> 0.0.13"},
-      {:telemetry, "~> 1.1.0"},
-      {:telemetry_poller, "~> 1.0"},
-      {:prom_ex, "~> 1.8"},
-      {:wasmex, "~> 0.8"},
+      {:telemetry, "~> 1.3"},
+      {:telemetry_poller, "~> 1.1"},
+      {:plug, ">= 1.16.0"},
+      {:plug_cowboy, "~> 2.5"},
+      {:prom_ex, "~> 1.11"},
+      {:wasmex, "~> 0.9"},
       {:httpoison, "~> 2.0"},
       {:cachex, "~> 3.6"},
 
       # Dev deps
-      {:mox, "~> 1.0", only: :test},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
+      {:mox, "~> 1.2", only: :test},
+      {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 

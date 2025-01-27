@@ -159,7 +159,7 @@ defmodule Worker.Adapters.RawResourceStorage do
   end
 
   defp check_and_save(path, nil) do
-    Logger.warn("RawResourceStorage: trying to save on #{path} but content is nil!")
+    Logger.warning("RawResourceStorage: trying to save on #{path} but content is nil!")
   end
 
   defp check_and_save(path, content) do
