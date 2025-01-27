@@ -15,7 +15,7 @@
 import Config
 
 # Print only errors during test, add :console to print logs
-config :logger, level: :warn, backends: []
+config :logger, level: :warning, backends: []
 
 # --- Core Configs ---
 config :core, Core.Domain.Ports.Commands, adapter: Core.Commands.Mock

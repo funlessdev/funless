@@ -87,7 +87,7 @@ defmodule Core.Adapters.Telemetry.Monitor do
 
     case DynamicSupervisor.terminate_child(sup, pid) do
       :ok -> Logger.info("Worker Nodes Monitor: monitoring of #{node} stopped")
-      {:error, _} -> Logger.warn("Worker Nodes Monitor: monitoring of #{node} already stopped")
+      {:error, _} -> Logger.warning("Worker Nodes Monitor: monitoring of #{node} already stopped")
     end
   end
 

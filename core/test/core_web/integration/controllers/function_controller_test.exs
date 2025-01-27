@@ -20,6 +20,7 @@ defmodule CoreWeb.FunctionControllerTest do
 
   alias Core.Domain.Subjects
   alias Core.Schemas.Function
+  alias Ecto.Adapters.SQL.Sandbox
 
   @create_attrs %{
     code: %Plug.Upload{path: "#{__DIR__}/../../../support/fixtures/test_code.txt"},
@@ -78,6 +79,7 @@ defmodule CoreWeb.FunctionControllerTest do
     Core.DataSinks.Manager.Mock |> Mox.stub_with(Core.Adapters.DataSinks.Test)
     Core.Telemetry.Metrics.Mock |> Mox.stub_with(Core.Adapters.Telemetry.Test)
 
+    :ok = Sandbox.checkout(Core.SubjectsRepo)
     user = Subjects.get_subject_by_name("guest")
 
     conn =

@@ -48,11 +48,11 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
              |> Map.put(:module, module)}
 
           {:error, err} ->
-            Logger.warn("MQTT Event Connector failed to start with error: #{inspect(err)}")
+            Logger.warning("MQTT Event Connector failed to start with error: #{inspect(err)}")
             {:stop, :normal}
 
           other ->
-            Logger.warn("MQTT Event Connector failed to start with reason: #{inspect(other)}")
+            Logger.warning("MQTT Event Connector failed to start with reason: #{inspect(other)}")
             {:stop, :normal}
         end
 
@@ -75,12 +75,12 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
       Logger.info("MQTT Event Connector: #{module}/#{function} invoked with res #{inspect(res)}")
     else
       {:error, err} ->
-        Logger.warn(
+        Logger.warning(
           "MQTT Event Connector: invocation of #{module}/#{function} failed with error #{inspect(err)}"
         )
 
       other ->
-        Logger.warn(
+        Logger.warning(
           "MQTT Event Connector: invocation of #{module}/#{function} failed with cause #{inspect(other)}"
         )
     end
@@ -89,7 +89,7 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
   end
 
   def handle_info({:disconnect, _reason, _props}, params) do
-    Logger.warn(
+    Logger.warning(
       "MQTT Event Connector (host #{params.host}, port #{params.port}, topic #{params.topic}): disconnected from broker"
     )
 
@@ -99,13 +99,13 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
         {:noreply, params |> Map.put(:pid, pid)}
 
       _ ->
-        Logger.warn("MQTT Event Connector: reconnect failed, killing Connector")
+        Logger.warning("MQTT Event Connector: reconnect failed, killing Connector")
         {:stop, :normal, params}
     end
   end
 
   def handle_info({:EXIT, pid, reason}, %{pid: pid} = params) do
-    Logger.warn(
+    Logger.warning(
       "MQTT Event Connector (host #{params.host}, port #{params.port}, topic #{params.topic}): emqtt process died with reason #{inspect(reason)}"
     )
 
@@ -115,7 +115,7 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
         {:noreply, params |> Map.put(:pid, pid)}
 
       _ ->
-        Logger.warn("MQTT Event Connector: emqtt process restart failed, killing Connector")
+        Logger.warning("MQTT Event Connector: emqtt process restart failed, killing Connector")
         {:stop, :normal, params}
     end
   end

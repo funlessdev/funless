@@ -81,7 +81,7 @@ defmodule Core.Adapters.Telemetry.Collector do
         save_metrics(worker, metrics)
 
       {:error, reason} ->
-        Logger.warn("Metrics Collector: error pulling metrics #{inspect(reason)}")
+        Logger.warning("Metrics Collector: error pulling metrics #{inspect(reason)}")
     end
 
     Process.send_after(self(), :pull, 5_000)
