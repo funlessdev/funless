@@ -24,5 +24,5 @@ defmodule Data.FunctionMetadata do
           tag: String.t(),
           capacity: integer()
         }
-  defstruct tag: nil, capacity: -1
+  defstruct tag: "", capacity: -1
 end

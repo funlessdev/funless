@@ -19,16 +19,15 @@ export SHELLOPTS:=$(if $(SHELLOPTS),$(SHELLOPTS):)pipefail:errexit
 
 ## Compile core docker image
 build-core-image: 
-	cd core
 	docker build \
+	-f core/Dockerfile \
 	--build-arg SECRET_KEY_BASE=local-make-secret \
 	--build-arg MIX_ENV="prod" \
 	-t core .
 
 ## Compile worker docker image
 build-worker-image: 
-	cd worker
-	docker build --build-arg MIX_ENV="prod" -t worker .
+	docker build -f worker/Dockerfile --build-arg MIX_ENV="prod" -t worker .
 
 ## Run credo --strict
 credo-core: 
