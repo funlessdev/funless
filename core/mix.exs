@@ -19,7 +19,7 @@ defmodule Core.MixProject do
     [
       app: :core,
       version: "0.9.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       dialyzer: [
@@ -50,25 +50,26 @@ defmodule Core.MixProject do
   # Specifies your project dependencies.
   #
   # Type `mix help deps` for examples and options.
+  # TODO: update deps
   defp deps do
     [
       {:data, path: "../data"},
       # prod deps
       {:phoenix, "~> 1.7.2"},
       {:phoenix_ecto, "~> 4.4"},
-      {:phoenix_live_dashboard, "~> 0.7.2"},
+      {:phoenix_live_dashboard, "~> 0.8"},
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.3"},
-      {:libcluster, "~> 3.3"},
+      {:libcluster, "~> 3.5"},
       {:logger_file_backend, "~> 0.0.13"},
-      {:telemetry_metrics, "~> 0.6"},
+      {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:plug_cowboy, "~> 2.5"},
-      {:prom_ex, "~> 1.8"},
-      {:emqtt, github: "emqx/emqtt", tag: "1.6.1", system_env: [{"BUILD_WITHOUT_QUIC", "1"}]},
+      {:prom_ex, "~> 1.11"},
+      {:emqtt, github: "emqx/emqtt", tag: "1.14.0", system_env: [{"BUILD_WITHOUT_QUIC", "1"}]},
       {:ecto_psql_extras, "~> 0.7"},
-      {:yaml_elixir, "~> 2.9.0"},
+      {:yaml_elixir, "~> 2.11.0"},
       {:cowlib, "~> 2.11.0", override: true},
       # dev deps
       {:mox, "~> 1.0", only: :test},

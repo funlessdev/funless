@@ -15,7 +15,7 @@
 import Config
 
 # Print only errors during test, add :console to print logs
-config :logger, level: :warn, backends: []
+config :logger, level: :warning, backends: []
 
 # --- Worker Configs ---
 config :worker, Worker.Domain.Ports.ResourceCache, adapter: Worker.ResourceCache.Mock

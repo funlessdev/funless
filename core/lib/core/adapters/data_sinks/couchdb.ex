@@ -47,8 +47,9 @@ defmodule Core.Adapters.DataSinks.CouchDB do
         response =
           :httpc.request(
             :post,
-            {url, [{'Authorization', 'Basic ' ++ :base64.encode_to_string('#{user}:#{pass}')}],
-             'application/json', json},
+            {url,
+             [{~c"Authorization", ~c"Basic " ++ :base64.encode_to_string(~c"#{user}:#{pass}")}],
+             ~c"application/json", json},
             [],
             []
           )
@@ -56,7 +57,7 @@ defmodule Core.Adapters.DataSinks.CouchDB do
         Logger.debug("CouchDB Sink: response: #{inspect(response)}")
 
       {:error, reason} ->
-        Logger.warn("CouchDB Sink: failed to encode result into JSON: #{reason}")
+        Logger.warning("CouchDB Sink: failed to encode result into JSON: #{reason}")
     end
 
     {:noreply, state}

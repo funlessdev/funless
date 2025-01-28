@@ -58,7 +58,7 @@ defmodule Core.Adapters.Telemetry.Monitor do
 
   @impl true
   def handle_info({:nodeup, node}, dynamic_supervisor) do
-    if is_worker(node) do
+    if worker?(node) do
       _ =
         DynamicSupervisor.start_child(
           dynamic_supervisor,
@@ -87,11 +87,11 @@ defmodule Core.Adapters.Telemetry.Monitor do
 
     case DynamicSupervisor.terminate_child(sup, pid) do
       :ok -> Logger.info("Worker Nodes Monitor: monitoring of #{node} stopped")
-      {:error, _} -> Logger.warn("Worker Nodes Monitor: monitoring of #{node} already stopped")
+      {:error, _} -> Logger.warning("Worker Nodes Monitor: monitoring of #{node} already stopped")
     end
   end
 
-  defp is_worker(node) do
+  defp worker?(node) do
     node |> Atom.to_string() |> String.contains?("worker")
   end
 end

@@ -32,7 +32,7 @@ defmodule Core.Domain.Scheduler do
   def select(workers, function, config, args \\ %{})
 
   def select([], _, _, _args) do
-    Logger.warn("Scheduler: tried selection with NO workers")
+    Logger.warning("Scheduler: tried selection with NO workers")
     {:error, :no_workers}
   end
 

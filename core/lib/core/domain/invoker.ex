@@ -132,7 +132,7 @@ defmodule Core.Domain.Invoker do
   @spec invoke_with_code(atom(), pid(), InvokeParams.t(), FunctionStruct.t()) ::
           {:ok, InvokeResult.t()} | {:error, {:exec_error, any()}}
   def invoke_with_code(worker, handler, _, func) do
-    Logger.warn("Invoker: function not available in worker, re-invoking with code")
+    Logger.warning("Invoker: function not available in worker, re-invoking with code")
     Commands.send_invoke_with_code(worker, handler, func)
   end
 

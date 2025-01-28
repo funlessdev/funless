@@ -39,12 +39,12 @@ defmodule Worker.Adapters.Runtime.Wasm.Provisioner do
   @spec compile_module(FunctionStruct.t()) ::
           {:ok, binary()} | {:error, any()}
   defp compile_module(%{module: mod, name: name, code: nil}) do
-    Logger.warn("Provisioner: wasm binary not provided for #{mod}/#{name}")
+    Logger.warning("Provisioner: wasm binary not provided for #{mod}/#{name}")
     {:error, :code_not_found}
   end
 
   defp compile_module(%{name: name, module: mod, code: code}) when not is_binary(code) do
-    Logger.warn("Provisioner: #{mod}/#{name} wasm code provided is not a binary")
+    Logger.warning("Provisioner: #{mod}/#{name} wasm code provided is not a binary")
     {:error, "invalid wasm code, not a binary"}
   end
 
