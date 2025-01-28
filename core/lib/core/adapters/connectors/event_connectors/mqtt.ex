@@ -78,11 +78,6 @@ defmodule Core.Adapters.Connectors.EventConnectors.Mqtt do
         Logger.warning(
           "MQTT Event Connector: invocation of #{module}/#{function} failed with error #{inspect(err)}"
         )
-
-      other ->
-        Logger.warning(
-          "MQTT Event Connector: invocation of #{module}/#{function} failed with cause #{inspect(other)}"
-        )
     end
 
     {:noreply, params}

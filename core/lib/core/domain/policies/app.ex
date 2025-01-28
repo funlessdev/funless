@@ -143,7 +143,7 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
         end
       end)
       |> Enum.filter(fn w ->
-        is_valid?(w, function, invalidate_capacity, invalidate_invocations)
+        valid?(w, function, invalidate_capacity, invalidate_invocations)
       end)
 
     case filtered_workers do
@@ -188,13 +188,13 @@ defimpl Core.Domain.Policies.SchedulingPolicy, for: Data.Configurations.APP do
   - true if the worker can host the function, given the conditions
   - false otherwise
   """
-  @spec is_valid?(
+  @spec valid?(
           Data.Worker.t(),
           Data.FunctionStruct.t(),
           number() | :infinity,
           number() | :infinity
         ) :: boolean
-  def is_valid?(
+  def valid?(
         %Data.Worker{
           concurrent_functions: c,
           resources: %Data.Worker.Metrics{

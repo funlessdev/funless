@@ -50,8 +50,8 @@ defmodule Core.Unit.Policies.AppPolicyTest do
     end
   end
 
-  describe "is_valid?" do
-    test "is_valid? should return true when invalidate options are :infinity and the worker can host the function",
+  describe "valid?" do
+    test "valid? should return true when invalidate options are :infinity and the worker can host the function",
          %{impl: app_impl} do
       wrk = %Worker{
         name: "worker@localhost",
@@ -73,7 +73,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       invalidate_capacity = :infinity
       invalidate_invocations = :infinity
 
-      assert app_impl.is_valid?(
+      assert app_impl.valid?(
                wrk,
                function,
                invalidate_capacity,
@@ -81,7 +81,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
              ) == true
     end
 
-    test "is_valid? should return true when invalidate options are satisfied and the worker can host the function",
+    test "valid? should return true when invalidate options are satisfied and the worker can host the function",
          %{impl: app_impl} do
       wrk = %Worker{
         name: "worker@localhost",
@@ -103,7 +103,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       invalidate_capacity = 50
       invalidate_invocations = 1
 
-      assert app_impl.is_valid?(
+      assert app_impl.valid?(
                wrk,
                function,
                invalidate_capacity,
@@ -111,7 +111,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
              ) == true
     end
 
-    test "is_valid? should return false when invalidate options are :infinity and the worker can't host the function",
+    test "valid? should return false when invalidate options are :infinity and the worker can't host the function",
          %{impl: app_impl} do
       wrk = %Worker{
         name: "worker@localhost",
@@ -133,7 +133,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       invalidate_capacity = :infinity
       invalidate_invocations = :infinity
 
-      assert app_impl.is_valid?(
+      assert app_impl.valid?(
                wrk,
                function,
                invalidate_capacity,
@@ -141,7 +141,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
              ) == false
     end
 
-    test "is_valid? should return false when invalidate options are not satisfied or the worker can't host the function",
+    test "valid? should return false when invalidate options are not satisfied or the worker can't host the function",
          %{impl: app_impl} do
       wrk = %Worker{
         name: "worker@localhost",
@@ -163,21 +163,21 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       invalidate_capacity = 49
       invalidate_invocations = 1
 
-      assert app_impl.is_valid?(
+      assert app_impl.valid?(
                wrk,
                function,
                invalidate_capacity,
                invalidate_invocations
              ) == false
 
-      assert app_impl.is_valid?(
+      assert app_impl.valid?(
                wrk |> Map.put(:concurrent_functions, 1),
                function,
                invalidate_capacity,
                invalidate_invocations
              ) == false
 
-      assert app_impl.is_valid?(
+      assert app_impl.valid?(
                wrk |> Map.put(:resources, %Metrics{memory: %{available: 127, total: 256}}),
                function,
                invalidate_capacity,
@@ -266,7 +266,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
            function: function
          } do
       assert app_impl.select(script, workers, function) == {:ok, wrk}
-      assert app_impl.is_valid?(wrk, function, :infinity, :infinity)
+      assert app_impl.valid?(wrk, function, :infinity, :infinity)
 
       # invalidating the first worker causes select() to choose "worker2"
       workers_invalid_first = [
@@ -279,13 +279,13 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       ]
 
       assert app_impl.select(script, workers_invalid_first, function) == {:ok, wrk2}
-      assert app_impl.is_valid?(wrk2, function, :infinity, :infinity)
+      assert app_impl.valid?(wrk2, function, :infinity, :infinity)
     end
 
     test "select should return a valid worker in the script when the strategy is :random",
          %{impl: app_impl, workers: workers, script: script, function: function} do
       {:ok, wrk} = app_impl.select(script, workers, function)
-      assert app_impl.is_valid?(wrk, function, :infinity, :infinity)
+      assert app_impl.valid?(wrk, function, :infinity, :infinity)
       assert Enum.member?(workers, wrk) == true
     end
 
@@ -305,7 +305,7 @@ defmodule Core.Unit.Policies.AppPolicyTest do
       {:ok, wrk} = app_impl.select(platform_script, workers, function)
       {:ok, wrk_default} = default_impl.select(%Data.Configurations.Empty{}, workers, function)
 
-      assert app_impl.is_valid?(wrk, function, :infinity, :infinity)
+      assert app_impl.valid?(wrk, function, :infinity, :infinity)
       assert Enum.member?(workers, wrk) == true
       assert wrk_default == wrk
     end
